@@ -9,6 +9,11 @@ See _Setup_ to set up the application for the first time.
 3. Make changes to the application files
 4. Reload in the browser, updated files will be compiled automatically
 
+## Testing
+
+Tests are defined in `tests`, run `make test` to compile and run them.
+
+
 
 # Deployment to Heroku
 
