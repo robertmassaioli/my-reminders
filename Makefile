@@ -9,7 +9,7 @@ dev: $(SOURCE)
 			cabal install -f development
 setup:
 			cabal sandbox init
-			cabal sandbox add-source vendor2/atlassian-connect
+			cabal sandbox add-source vendor/atlassian-connect
 			cabal install --only-dependencies --enable-tests -f development
 
 
