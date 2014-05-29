@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS ping;
 
 CREATE TABLE ping (
        id SERIAL PRIMARY KEY,
-       tenantId SERIAL not null,
+       tenantId INTEGER not null,
        issueLink TEXT not null,
        userID TEXT not null,
        message TEXT not null,
