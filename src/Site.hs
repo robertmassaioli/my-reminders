@@ -22,6 +22,7 @@ import qualified Data.Text as T
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import           Snap.Snaplet.PostgresqlSimple
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
@@ -34,7 +35,6 @@ data Baz = Baz {
 } deriving (Show, Generic)
 
 instance ToJSON Baz
-
 statusCodeHandler :: MonadSnap m => m ()
 statusCodeHandler = do
     modifyResponse $ setResponseCode 400 -- Bad Request
@@ -57,7 +57,6 @@ getHeaderHandler = do
     maybe showError o origin
   where o origin = writeBS ("Origin: " `B.append` origin)
         showError = writeText "Uh, oh"
-
 
 -- | The fooHandler only responds to GET requests
 --
@@ -99,10 +98,11 @@ routes = [ ("/foo"          , fooHandler)
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SnapletInit App App
-app = makeSnaplet "app" "An snaplet example application." Nothing $ do
+app = makeSnaplet "app" "ping-me connect" Nothing $ do
     h <- nestSnaplet "" heist $ heistInit "templates"
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+    db <- nestSnaplet "db" db pgsInit
     addRoutes routes
-    return $ App h s
+    return $ App h s db
 
