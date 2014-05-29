@@ -51,6 +51,8 @@ Executable ping-me-connect
    , network-api-support ==0.1.*
    , http-types ==0.8.*
    , http-client ==0.3.*
+   , atlassian-connect == 0.1.*
+   , jwt == 0.2.*
 
   if flag(old-base)
     build-depends:
@@ -106,4 +108,5 @@ test-suite web-api-testsuite
                           , text                      >= 0.11    && < 0.12
                           , time                      >= 1.1     && < 1.5
                           , xmlhtml                   >= 0.1
-                          , aeson 
+                          , aeson
+                          

@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Model.UserDetails(getUserDetails,UserWithDetails(..),MyError) where
+module Model.UserDetails(getUserDetails,UserWithDetails(..),MyError, Params(..)) where
 
 import Data.Aeson
 import Data.Aeson.Types
+import Data.Time.Clock(NominalDiffTime)
 import qualified Data.Char as C
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.ByteString.Lazy as BL
@@ -18,12 +19,15 @@ import Network.HTTP.Client
 import Network.HTTP.Types
 import Network.Api.Support
 import Data.String.Utils
-import Data.Map (Map(..))
+import qualified Data.Map as M (Map(..),fromList)
+
+import qualified Web.JWT as JWT
+import Web.Connect.QueryStringHash
 
 data UserWithDetails = UserWithDetails {
                                name:: String,
                                emailAddress:: String,
-                               avatarUrls:: Map String String,
+                               avatarUrls:: M.Map String String,
                                displayName:: String,
                                active:: Bool,
                                timeZone:: String
@@ -37,14 +41,34 @@ instance ToJSON UserWithDetails
 
 data MyError = MyError {code::Int, myMessage::String} deriving(Show, Generic)
 
-getUserDetails:: String  -> String -> ((StdMethod,String) -> String) -> IO(Either MyError UserWithDetails)
-getUserDetails baseURL username signer = 
+data Params = Params {jiraBaseURL::String, hostURL::String, username::String, sharedSecret::String }
+
+getUserDetails:: Integer -> Params -> IO(Either MyError UserWithDetails)
+getUserDetails currentTime params = 
   runRequest defaultManagerSettings GET (T.pack url) 
   (
    addHeader ("Accept","application/json") <>                                                                     addHeader ("Authorization", (BS.pack $ "JWT " ++ signature))
   ) (basicResponder responder) where
-    url = baseURL ++ "/rest/api/2/user?username=" ++ username
-    signature = signer (GET, url)
+    url = (params jiraBaseURL) ++ "/rest/api/2/user?username=" ++ (params username)
+    signature = T.unpack $ generateJWTToken currentTime (params sharedSecret) GET (params hostURL) (T.pack url)
+ 
+
+generateJWTToken :: Integer -> String -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text 
+generateJWTToken currentTime sharedSecret  method url text = JWT.encodeSigned algo secret' claims
+    where algo = JWT.HS256
+          diffTime :: Integer -> NominalDiffTime
+          diffTime time = fromRational $ toRational time
+          queryStringHash = createQueryStringHash method url text
+          claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme", 
+                                             JWT.iat = JWT.intDate $ diffTime currentTime, 
+                                             JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000), 
+                                             JWT.sub = Nothing, 
+                                             JWT.aud = Nothing, 
+                                             JWT.nbf = Nothing,
+                                             JWT.jti = Nothing, 
+                                             JWT.unregisteredClaims = (M.fromList [("qsh", String $ fromJust queryStringHash)])}
+          secret' = JWT.secret sharedSecret
+                                  
 
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either MyError a
