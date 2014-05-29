@@ -30,6 +30,7 @@ import           Application
 
 import           Connect.Routes
 import           Model.UserDetails
+import           Persistence.Ping
 
 data Baz = Baz {
     id :: Int
