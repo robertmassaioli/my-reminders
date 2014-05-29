@@ -28,6 +28,8 @@ import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
 import           Application
 
+import           Connect.Routes
+
 data Baz = Baz {
     id :: Int
   , name :: T.Text
@@ -86,13 +88,15 @@ writeJson a = do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [ ("/foo"          , fooHandler)
-         , ("/bar/:id"      , barHandler)
-         , ("/status"       , statusCodeHandler)
-         , ("/header"       , setHeaderHandler)
-         , ("/content-type" , setContentTypeHandler)
-         , (""              , serveDirectory "static")
-         ]
+routes = 
+   connectRoutes
+   ++ [ ("/foo"          , fooHandler)
+      , ("/bar/:id"      , barHandler)
+      , ("/status"       , statusCodeHandler)
+      , ("/header"       , setHeaderHandler)
+      , ("/content-type" , setContentTypeHandler)
+      , (""              , serveDirectory "static")
+      ]
 
 
 ------------------------------------------------------------------------------

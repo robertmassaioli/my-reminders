@@ -4,3 +4,6 @@
 cabal.sandbox.config
 site_key.txt
 tags
+
+# Atlassian Plugin SDK
+/amps-standalone

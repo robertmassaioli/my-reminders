@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings, DeriveGeneric, StandaloneDeriving #-}
-package Connect
-
-module Descriptor where
+module Connect.Descriptor where
 
 import Control.Monad
 import Data.Aeson
