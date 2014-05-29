@@ -18,7 +18,7 @@ Flag old-base
   default: False
   manual: False
 
-Executable atlassian-snap-example
+Executable ping-me-connect
   hs-source-dirs: src
   main-is: Main.hs
   default-language: Haskell2010
