@@ -1,4 +1,6 @@
-.cabal-sandbox
+# Cabal Built
+/dist
+/.cabal-sandbox
 cabal.sandbox.config
 site_key.txt
 tags
