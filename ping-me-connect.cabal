@@ -26,6 +26,7 @@ Executable ping-me-connect
                  , Connect.Routes
                  , Persistence.Tenant
                  , Persistence.PostgreSQL
+                 , Model.UserDetails
   default-language: Haskell2010
   Build-depends:
     bytestring                >= 0.9.1   && < 0.11
@@ -42,9 +43,14 @@ Executable ping-me-connect
    ,time                      >= 1.1     && < 1.5
    ,xmlhtml                   >= 0.1
    ,aeson
+   , MissingH ==1.*
+   , containers ==0.5.*
    , transformers ==0.3.*
    , resource-pool-catchio ==0.2.1.*
    , network ==2.4.*
+   , network-api-support ==0.1.*
+   , http-types ==0.8.*
+   , http-client ==0.3.*
 
   if flag(old-base)
     build-depends:

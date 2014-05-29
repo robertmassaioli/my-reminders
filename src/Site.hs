@@ -29,6 +29,7 @@ import           Snap.Util.FileServe
 import           Application
 
 import           Connect.Routes
+import           Model.UserDetails
 
 data Baz = Baz {
     id :: Int
