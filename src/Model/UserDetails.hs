@@ -41,19 +41,20 @@ instance ToJSON UserWithDetails
 
 data MyError = MyError {code::Int, myMessage::String} deriving(Show, Generic)
 
-data Params = Params {jiraBaseURL::String, hostURL::String, username::String, sharedSecret::String }
+data Params = Params {jiraBaseURL::String, hostURL::URI, username::String, sharedSecret::T.Text}
 
+--TODO: get the current time here, since we're in IO anyways
 getUserDetails:: Integer -> Params -> IO(Either MyError UserWithDetails)
 getUserDetails currentTime params = 
   runRequest defaultManagerSettings GET (T.pack url) 
   (
    addHeader ("Accept","application/json") <>                                                                     addHeader ("Authorization", (BS.pack $ "JWT " ++ signature))
   ) (basicResponder responder) where
-    url = (params jiraBaseURL) ++ "/rest/api/2/user?username=" ++ (params username)
-    signature = T.unpack $ generateJWTToken currentTime (params sharedSecret) GET (params hostURL) (T.pack url)
+    url = (jiraBaseURL params) ++ "/rest/api/2/user?username=" ++ (username params)
+    signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
  
 
-generateJWTToken :: Integer -> String -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text 
+generateJWTToken :: Integer -> T.Text -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text 
 generateJWTToken currentTime sharedSecret  method url text = JWT.encodeSigned algo secret' claims
     where algo = JWT.HS256
           diffTime :: Integer -> NominalDiffTime
