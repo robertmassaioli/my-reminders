@@ -1,10 +1,10 @@
-Name:                atlassian-snap-example
+Name:                ping-me-connect
 Version:             0.1
 Synopsis:            Project Synopsis Here
 Description:         Project Description Here
 License:             AllRightsReserved
-Author:              Stefan Saasen
-Maintainer:          ssaasen@atlassian.com
+Author:              Robert Massaioli & Eero Kaukonen
+Maintainer:          ekaukonen@atlassian.com
 Stability:           Experimental
 Category:            Web
 Build-type:          Simple
