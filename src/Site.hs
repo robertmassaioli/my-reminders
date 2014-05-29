@@ -80,7 +80,6 @@ barHandler :: MonadSnap m => m ()
 barHandler = do
         mUId <- getParam "id"
         maybe (writeText "Bar") writeBS mUId
-
 writeJson :: (MonadSnap m, ToJSON a) => a -> m ()
 writeJson a = do
     modifyResponse $ setContentType "application/json"
@@ -91,9 +90,7 @@ writeJson a = do
 routes :: [(ByteString, Handler App App ())]
 routes = 
    connectRoutes
-   ++ [ ("/foo"          , fooHandler)
-      , ("/bar/:id"      , barHandler)
-      , ("/status"       , statusCodeHandler)
+   ++ [ ("/status"       , statusCodeHandler)
       , ("/header"       , setHeaderHandler)
       , ("/content-type" , setContentTypeHandler)
       , (""              , serveDirectory "static")

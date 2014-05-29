@@ -61,13 +61,13 @@ generateJWTToken currentTime sharedSecret  method url text = JWT.encodeSigned al
           diffTime time = fromRational $ toRational time
           queryStringHash = createQueryStringHash method url text
           claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme", 
-                                             JWT.iat = JWT.intDate $ diffTime currentTime, 
-                                             JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000), 
-                                             JWT.sub = Nothing, 
-                                             JWT.aud = Nothing, 
-                                             JWT.nbf = Nothing,
-                                             JWT.jti = Nothing, 
-                                             JWT.unregisteredClaims = (M.fromList [("qsh", String $ fromJust queryStringHash)])}
+                                      JWT.iat = JWT.intDate $ diffTime currentTime, 
+                                      JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000), 
+                                      JWT.sub = Nothing, 
+                                      JWT.aud = Nothing, 
+                                      JWT.nbf = Nothing,
+                                      JWT.jti = Nothing, 
+                                      JWT.unregisteredClaims = (M.fromList [("qsh", String $ fromJust queryStringHash)])}
           secret' = JWT.secret sharedSecret
                                   
 
