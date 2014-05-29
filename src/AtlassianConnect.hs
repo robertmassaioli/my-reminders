@@ -17,8 +17,8 @@ import           Data.Text
 addonDescriptor :: B.ByteString -> Plugin
 addonDescriptor baseUrl = 
    basePlugin
-      { pluginName         = Just "Peekaboo"
-      , pluginDescription  = Just "Stalk stalk stalk"
+      { pluginName         = Just "PingMe for OnDemand"
+      , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
       , vendor             = Just $ Vendor "Atlassian" (absoluteURI "http://www.atlassian.com/")
       , lifecycle = Just $ Lifecycle
             { installed = uri "/installed"
@@ -29,9 +29,9 @@ addonDescriptor baseUrl =
       , modules = Just $ 
          Modules JiraModules
             { webPanels = [ WebPanel 
-                { key = "peekaboo"
-                , name = NameValue "Peekaboo"
-                , url = "/poller?issue_key={issue.key}"
+                { key = "ping-create-panel"
+                , name = NameValue "Create pings"
+                , url = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
                 , location = "atl.jira.view.issue.right.context" 
                 }
               ]
@@ -43,7 +43,7 @@ addonDescriptor baseUrl =
       basePlugin = pluginDescriptor connectPluginKey baseURI jwtAuthentication
 
       connectPluginKey :: Text -- Stringly typed...
-      connectPluginKey = "com.atlassian.peekaboo" -- TODO should be configurable
+      connectPluginKey = "com.atlassian.pingme" -- TODO should be configurable
 
       baseURI :: URI
       baseURI = absoluteURI $ B.unpack baseUrl
