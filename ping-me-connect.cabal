@@ -50,9 +50,11 @@ Executable ping-me-connect
    , network                   ==2.4.*
    , network-api-support       ==0.1.*
    , http-types                ==0.8.*
+   , http-media                ==0.1.*
    , http-client               ==0.3.*
    , atlassian-connect         == 0.1.*
    , jwt                       == 0.2.*
+   , case-insensitive          == 1.*
 
   if flag(old-base)
     build-depends:

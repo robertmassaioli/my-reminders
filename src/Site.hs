@@ -20,13 +20,15 @@ import           Data.Aeson
 import           GHC.Generics
 import qualified Data.Text as T
 import           Snap.Core
-import           Snap.Snaplet
-import           Snap.Snaplet.Heist
+import qualified Snap.Snaplet as SS
+import qualified Heist as H
+import qualified Snap.Snaplet.Heist as SSH
 import           Snap.Snaplet.PostgresqlSimple
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
 import           Application
+import qualified Heist.Interpreted as I
 
 import           Connect.Routes
 import           Model.UserDetails
@@ -80,31 +82,54 @@ barHandler :: MonadSnap m => m ()
 barHandler = do
         mUId <- getParam "id"
         maybe (writeText "Bar") writeBS mUId
+
 writeJson :: (MonadSnap m, ToJSON a) => a -> m ()
 writeJson a = do
     modifyResponse $ setContentType "application/json"
     writeLBS $ encode a
 
+sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
+sendHomePage = SSH.heistLocal (I.bindSplices (homeSplice getAppVersion 2 3)) $ SSH.render "home"
+
+homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (I.Splice n)
+homeSplice version2 avatarSize pollerInterval = do
+        "version" H.## I.textSplice version2
+        "avatarSize" H.## I.textSplice $ T.pack $ show avatarSize
+        "pollerInterval" H.## I.textSplice $ T.pack $ show pollerInterval
+
+getAppVersion :: T.Text
+getAppVersion = "0.1"
+
+createPingPanel :: SSH.HasHeist b => SS.Handler b v ()
+createPingPanel = undefined
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
-routes :: [(ByteString, Handler App App ())]
+routes :: [(ByteString, SS.Handler App App ())]
 routes = 
    connectRoutes
-   ++ [ ("/status"       , statusCodeHandler)
-      , ("/header"       , setHeaderHandler)
-      , ("/content-type" , setContentTypeHandler)
-      , (""              , serveDirectory "static")
-      ]
+
+applicationRoutes :: [(ByteString, SS.Handler App App ())]
+applicationRoutes = 
+   [ ("/"             , homeHandler sendHomePage)
+   , ("/panel/ping/create", createPingPanel )
+   , ("/foo"          , fooHandler)
+   , ("/bar/:id"      , barHandler)
+   , ("/status"       , statusCodeHandler)
+   , ("/header"       , setHeaderHandler)
+   , ("/content-type" , setContentTypeHandler)
+   , (""              , serveDirectory "static")
+   ]
 
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
-app :: SnapletInit App App
-app = makeSnaplet "app" "ping-me connect" Nothing $ do
-    h <- nestSnaplet "" heist $ heistInit "templates"
-    s <- nestSnaplet "sess" sess $
+app :: SS.SnapletInit App App
+app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
+    h <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+    s <- SS.nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
-    db <- nestSnaplet "db" db pgsInit
-    addRoutes routes
+    db <- SS.nestSnaplet "db" db pgsInit
+    SS.addRoutes routes
     return $ App h s db
 
