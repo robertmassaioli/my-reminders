@@ -32,6 +32,8 @@ import qualified Heist.Interpreted as I
 
 import           Connect.Routes
 import           Model.UserDetails
+import           Persistence.Ping
+import           PingHandlers
 
 data Baz = Baz {
     id :: Int
@@ -123,6 +125,8 @@ applicationRoutes =
    , ("/status"       , statusCodeHandler)
    , ("/header"       , setHeaderHandler)
    , ("/content-type" , setContentTypeHandler)
+   , ("/add-ping"     , addPingHandler)  
+   , ("/execute"      , executePingsHandler)  
    , ("/static"       , serveDirectory "static")
    ]
 
