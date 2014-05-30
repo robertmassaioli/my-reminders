@@ -123,7 +123,7 @@ applicationRoutes =
    , ("/status"       , statusCodeHandler)
    , ("/header"       , setHeaderHandler)
    , ("/content-type" , setContentTypeHandler)
-   , (""              , serveDirectory "static")
+   , ("/static"       , serveDirectory "static")
    ]
 
 
