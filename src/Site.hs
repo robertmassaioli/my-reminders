@@ -95,6 +95,7 @@ routes =
    ++ [ ("/status"       , statusCodeHandler)
       , ("/header"       , setHeaderHandler)
       , ("/content-type" , setContentTypeHandler)
+      , ("/add-ping"     , addPingHandler)  
       , (""              , serveDirectory "static")
       ]
 

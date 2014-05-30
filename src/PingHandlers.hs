@@ -3,7 +3,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module PingHandlers(pingMe, executePings) where
+module PingHandlers(addPingHandler, executePings) where
 
 import Data.Text
 import Snap.Core
@@ -32,8 +32,8 @@ data PingRequest = PingRequest {
 instance FromJSON PingRequest
 instance ToJSON PingRequest
 
-pingMe:: AppHandler ()
-pingMe = do
+addPingHandler:: AppHandler ()
+addPingHandler = do
   request <- readRequestBody (1024 * 10)
   let maybePing = Data.Aeson.decode request :: Maybe PingRequest
   maybe (modifyResponse $ setResponseCode 400) 
