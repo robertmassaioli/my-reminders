@@ -96,6 +96,7 @@ routes =
       , ("/header"       , setHeaderHandler)
       , ("/content-type" , setContentTypeHandler)
       , ("/add-ping"     , addPingHandler)  
+      , ("/execute"      , executePingsHandler)  
       , (""              , serveDirectory "static")
       ]
 

@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Persistence.Ping (addPing, getPings, deletePing) where
+module Persistence.Ping (Ping(..),addPing, getPings, deletePing) where
 
 import qualified Data.Text                            as T
 import qualified Data.ByteString.Char8                as B
@@ -18,6 +18,7 @@ import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad
 import GHC.Generics
+import GHC.Int
 import Network.URI hiding (query)
 import Persistence.PostgreSQL
 
@@ -63,6 +64,6 @@ getPings conn =
              (Only now)
     return pings
 
-deletePing:: Connection -> Integer -> IO(Maybe[Integer])
+deletePing:: Connection -> Integer -> IO(Int64)
 deletePing conn pingId =
-  fmap listToMaybe $ liftIO $ query conn [sql|DELETE FROM ping WHERE id = ?|] (Only pingId)
+  execute conn [sql|DELETE FROM ping WHERE id = ?|] (Only pingId)
