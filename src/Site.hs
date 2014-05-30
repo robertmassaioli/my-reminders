@@ -31,6 +31,7 @@ import           Application
 import           Connect.Routes
 import           Model.UserDetails
 import           Persistence.Ping
+import           PingHandlers
 
 data Baz = Baz {
     id :: Int

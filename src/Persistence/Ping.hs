@@ -41,10 +41,9 @@ instance FromField URI where
 instance ToField URI where
     toField = Escape . B.pack . show
  
-addPing :: Connection -> Integer -> URI -> T.Text -> T.Text -> IO(Maybe Integer)
-addPing conn tenantId issueLink userId message =
+addPing :: Connection -> UTCTime -> Integer -> URI -> T.Text -> T.Text -> IO(Maybe Integer)
+addPing conn date tenantId issueLink userId message =
   do 
-    date <- getCurrentTime
     pingID <- liftIO $ insertReturning conn 
               [sql|
                INSERT INTO ping (tenantId,issueLink,userId,message,date) 
