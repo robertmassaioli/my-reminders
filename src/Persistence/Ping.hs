@@ -42,7 +42,7 @@ instance FromField URI where
 instance ToField URI where
     toField = Escape . B.pack . show
  
-addPing :: Connection -> UTCTime -> Integer -> URI -> T.Text -> T.Text -> IO(Maybe Integer)
+addPing :: Connection -> UTCTime -> Integer -> URI -> T.Text -> T.Text -> IO (Maybe Integer)
 addPing conn date tenantId issueLink userId message =
   do 
     pingID <- liftIO $ insertReturning conn 

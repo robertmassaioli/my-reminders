@@ -37,20 +37,23 @@ instance ToJSON PingRequest
 --TODO: this needs to be authenticated
 addPingHandler:: AppHandler ()
 addPingHandler = do
-  request <- readRequestBody (1024 * 10)
-  let maybePing = Data.Aeson.decode request :: Maybe PingRequest
-  maybe (modifyResponse $ setResponseCode 400) 
-    (\ping -> do
-        let link' = fromMaybe nullURI $ parseURI (issueLink ping)                                             
-        let date' = posixSecondsToUTCTime $ (realToFrac $ timeStamp ping) / 1000
-        pingId <- with db $ withConnection $ \conn -> P.addPing conn date' (tenantId ping) link' (userID ping) (message ping)  
-        case maybePing of
-          Just _ -> modifyResponse $ setResponseCode 204
-          Nothing -> do
-            logError "Failed to insert new tenant"
-            modifyResponse $ setResponseCode 500
-    ) maybePing
-                                                   
+   request <- readRequestBody (1024 * 10)
+   let maybePing = Data.Aeson.decode request :: Maybe PingRequest
+   maybe respondBadRequest addPing maybePing
+   where
+      respondBadRequest = modifyResponse . setResponseCode $ 400
+
+      addPing :: PingRequest -> AppHandler ()
+      addPing ping = do
+         let link' = fromMaybe nullURI $ parseURI (issueLink ping)                                             
+         let date' = posixSecondsToUTCTime $ (realToFrac $ timeStamp ping) / 1000
+         addedPing <- with db $ withConnection $ 
+            \conn -> P.addPing conn date' (tenantId ping) link' (userID ping) (message ping)  
+         case addedPing of
+            Just _ -> modifyResponse $ setResponseCode 204
+            Nothing -> do
+               logError "Failed to insert new tenant"
+               modifyResponse $ setResponseCode 500
 
 --Returns the pingID if ping was a success
 ping:: P.Ping -> IO(Maybe Integer)
