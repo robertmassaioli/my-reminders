@@ -89,7 +89,9 @@ writeJson a = do
     writeLBS $ encode a
 
 sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
-sendHomePage = SSH.heistLocal (I.bindSplices (homeSplice getAppVersion 2 3)) $ SSH.render "home"
+sendHomePage = SSH.heistLocal environment $ SSH.render "home"
+   where
+      environment = I.bindSplices (homeSplice getAppVersion 2 3)
 
 homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (I.Splice n)
 homeSplice version2 avatarSize pollerInterval = do
@@ -100,14 +102,17 @@ homeSplice version2 avatarSize pollerInterval = do
 getAppVersion :: T.Text
 getAppVersion = "0.1"
 
+-- TODO needs the standard page context with the base url. How do you do configuration
+-- settings with the Snap framework? I think that the configuration settings should all
+-- be in the database and that it is loaded once on startup and cached within the application
+-- forever more.
 createPingPanel :: SSH.HasHeist b => SS.Handler b v ()
-createPingPanel = undefined
+createPingPanel = SSH.render "connect-panel"
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = 
-   connectRoutes
+routes = connectRoutes ++ applicationRoutes
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes = 
