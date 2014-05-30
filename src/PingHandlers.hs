@@ -12,11 +12,13 @@ import Data.Aeson
 import Data.Maybe
 import Application
 import Data.Time.Clock
+import Data.Time.Clock.POSIX
 import Snap.Snaplet.PostgresqlSimple
 import Database.PostgreSQL.Simple
 import Persistence.PostgreSQL
 import Persistence.Ping
 import GHC.Generics
+import Network.URI
 
 data PingRequest = PingRequest {
                                userID:: Text,
@@ -36,8 +38,8 @@ pingMe = do
   let maybePing = Data.Aeson.decode request :: Maybe PingRequest
   maybe (modifyResponse $ setResponseCode 400) 
     (\ping -> do
-        let link' = undefined                                             
-        let date' = intToUTCTime $ timeStamp ping
+        let link' = fromMaybe nullURI $ parseURI (issueLink ping)                                             
+        let date' = posixSecondsToUTCTime $ (realToFrac $ timeStamp ping) / 1000
         pingId <- with db $ withConnection $ \conn -> addPing conn date' (tenantId ping) link' (userID ping) (message ping)  
         case maybePing of
           Just _ -> modifyResponse $ setResponseCode 204
@@ -46,7 +48,5 @@ pingMe = do
             modifyResponse $ setResponseCode 500
     ) maybePing
                                                    
-intToUTCTime:: Integer -> UTCTime
-intToUTCTime = undefined
 
 executePings = undefined
