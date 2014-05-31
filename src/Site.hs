@@ -137,6 +137,9 @@ withTenant tennantApply = do
                respondBadRequest -- TODO add the error message
             (Right tenant) -> tennantApply tenant
    where
+      -- TODO we need to verify the signiature and, to do that we need a function that goes
+      -- Secret -> JWT UnverifiedJWT -> JWT VerifiedJWT
+      -- See: https://bitbucket.org/ssaasen/haskell-jwt/issue/3/need-function-of-type-secret-jwt
       getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String Tenant)
       getTenant unverifiedJwt = do
          let potentialKey = getClientKey unverifiedJwt
