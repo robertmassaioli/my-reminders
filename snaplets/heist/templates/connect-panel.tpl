@@ -15,7 +15,7 @@
          - connection. This requires understanding the snap template language.
          - Also, it would be great if there was a Vim plugin for the Heist
          - template language.
-         ->
+         -->
 
       <!-- JQuery -->
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
@@ -37,10 +37,11 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.1.0/moment.min.js"></script>
       <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
 
-      <!-- TODO get the acHostBaseUrl in here -->
-      <meta name="hostBaseUrl" content="${acHostBaseUrl}" />
-      <script type="text/javascript" src="${acHostBaseUrl}/atlassian-connect/all.js"></script>
-      <link rel="stylesheet" type="text/css" href="${acHostBaseUrl}/atlassian-connect/all.css"/>        
+      <!-- TODO get the productBaseUrl in here -->
+      <meta name="hostBaseUrl" content="${productBaseUrl}" />
+      <script type="text/javascript" src="${productBaseUrl}/atlassian-connect/all.js"></script>
+      <link rel="stylesheet" type="text/css" href="${productBaseUrl}/atlassian-connect/all.css"/>        
+      <!-- TODO this will never be served because we do not have code like this... -->
       <script type="text/javascript" src="/js/pagetoken.js"></script>
    </head>
    <body>

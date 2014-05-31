@@ -8,26 +8,26 @@ module Application where
 ------------------------------------------------------------------------------
 import           Snap                (get)
 import           Control.Lens
-import           Snap.Snaplet
-import           Snap.Snaplet.Heist
+import qualified Snap.Snaplet as SS
+import qualified Snap.Snaplet.Heist as SSH
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.PostgresqlSimple
 ------------------------------------------------------------------------------
 data App = App
-    { _heist :: Snaplet (Heist App)
-    , _sess  :: Snaplet SessionManager
-    , _db    :: Snaplet Postgres
+    { _heist :: SS.Snaplet (SSH.Heist App)
+    , _sess  :: SS.Snaplet SessionManager
+    , _db    :: SS.Snaplet Postgres
     }
 
 makeLenses ''App
 
-instance HasHeist App where
-    heistLens = subSnaplet heist
+instance SSH.HasHeist App where
+    heistLens = SS.subSnaplet heist
 
-instance HasPostgres (Handler b App) where
-    getPostgresState = with db get
+instance HasPostgres (SS.Handler b App) where
+    getPostgresState = SS.with db get
 
 ------------------------------------------------------------------------------
-type AppHandler = Handler App App
+type AppHandler = SS.Handler App App
 
 

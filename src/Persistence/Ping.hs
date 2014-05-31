@@ -22,8 +22,6 @@ import GHC.Int
 import Network.URI hiding (query)
 import Persistence.PostgreSQL
 
-
-
 data Ping = Ping {
   pingId :: Integer,
   tenantId :: Integer,               

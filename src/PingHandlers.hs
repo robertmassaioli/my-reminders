@@ -21,6 +21,8 @@ import GHC.Generics
 import Network.URI
 import Control.Monad.IO.Class
 
+import SnapHelpers
+
 data PingRequest = PingRequest {
                                userID:: T.Text,
                                timeStamp :: Integer,
@@ -40,16 +42,6 @@ addPingHandler = do
    let maybePing = Data.Aeson.decode request :: Maybe PingRequest
    maybe respondBadRequest addPing maybePing
 
-respondWith :: MonadSnap m => Int -> m ()
-respondWith = modifyResponse . setResponseCode
-
-respondBadRequest       :: MonadSnap m => m ()
-respondInternalServer   :: MonadSnap m => m ()
-respondNoContent        :: MonadSnap m => m ()
-respondBadRequest       = respondWith 400
-respondInternalServer   = respondWith 500
-respondNoContent        = respondWith 204
-
 addPing :: PingRequest -> AppHandler ()
 addPing pingRequest = do
    addedPing <- with db $ withConnection (addPingFromRequest pingRequest)
@@ -60,9 +52,6 @@ addPing pingRequest = do
          respondInternalServer
    where
       failedInsertPrefix = T.pack "Failed to insert new ping: "
-
-textToByteString :: T.Text -> BSC.ByteString
-textToByteString = BSC.pack . T.unpack
 
 addPingFromRequest :: PingRequest -> Connection -> IO (Maybe Integer)
 addPingFromRequest pingRequest conn = 

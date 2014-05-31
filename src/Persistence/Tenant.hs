@@ -57,7 +57,7 @@ data Tenant = Tenant {
   , key          :: T.Text
   , publicKey    :: T.Text
   , sharedSecret :: T.Text
-  , baseUrl      :: Maybe URI -- TODO why is the URI optional, can you have a tenant without a URI?
+  , baseUrl      :: URI 
   , productType  :: T.Text
 } deriving (Eq, Show, Generic)
 

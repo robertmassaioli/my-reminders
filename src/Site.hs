@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -14,6 +15,7 @@ module Site
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Monad (join)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Aeson
@@ -23,6 +25,7 @@ import           Snap.Core
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Snap.Snaplet.Heist as SSH
+import qualified Database.PostgreSQL.Simple as PS
 import           Snap.Snaplet.PostgresqlSimple
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
@@ -30,10 +33,15 @@ import           Snap.Util.FileServe
 import           Application
 import qualified Heist.Interpreted as I
 
-import           Connect.Routes
-import           Model.UserDetails
-import           Persistence.Ping
-import           PingHandlers
+import qualified Web.JWT as J
+
+import Connect.Routes
+import Model.UserDetails
+import Persistence.PostgreSQL
+import Persistence.Ping
+import Persistence.Tenant
+import PingHandlers
+import SnapHelpers
 
 data Baz = Baz {
     id :: Int
@@ -108,8 +116,48 @@ getAppVersion = "0.1"
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createPingPanel :: SSH.HasHeist b => SS.Handler b v ()
-createPingPanel = SSH.render "connect-panel"
+createPingPanel :: AppHandler ()
+createPingPanel = withTenant $ \tenant -> 
+   SSH.heistLocal (I.bindSplices . context $ tenant) $ SSH.render "connect-panel"
+   where
+      context tenant = do
+         "productBaseUrl" H.## I.textSplice $ T.pack . show . baseUrl $ tenant
+         "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000"
+
+withTenant :: (Tenant -> AppHandler ()) -> AppHandler ()
+withTenant tennantApply = do
+   jwtParam <- fmap (fmap decodeBytestring) $ getParam "jwt"
+   case join jwtParam of
+      Nothing -> respondBadRequest
+      (Just unverifiedJwt) -> do
+         possibleTenant <- getTenant unverifiedJwt
+         case possibleTenant of
+            (Left result) -> do
+               logError . B.pack $ result
+               respondBadRequest -- TODO add the error message
+            (Right tenant) -> tennantApply tenant
+   where
+      getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String Tenant)
+      getTenant unverifiedJwt = do
+         let potentialKey = getClientKey unverifiedJwt
+         case potentialKey of
+            Nothing -> return . Left $ "Could not parse the JWT message."
+            Just key -> do
+               logError . B.pack $ sClientKey
+               withConnection $ \conn -> do
+                  potentialTenant <- lookupTenant conn normalisedClientKey
+                  case potentialTenant of
+                     Nothing -> return . Left $ "Could not find a tenant with that id: " ++ sClientKey
+                     Just tenant -> return . Right $ tenant
+               where
+                  sClientKey          = show key
+                  normalisedClientKey = T.pack sClientKey
+
+
+      decodeBytestring = J.decode . byteStringToText
+   
+getClientKey :: J.JWT a -> Maybe J.StringOrURI
+getClientKey jwt = J.iss . J.claims $ jwt
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
@@ -129,7 +177,6 @@ applicationRoutes =
    , ("/execute"      , executePingsHandler)  
    , ("/static"       , serveDirectory "static")
    ]
-
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
