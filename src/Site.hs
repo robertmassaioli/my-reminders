@@ -15,10 +15,11 @@ module Site
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Monad (join)
+import           Control.Monad (join, guard)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Aeson
+import           Data.Maybe (isJust)
 import           GHC.Generics
 import qualified Data.Text as T
 import           Snap.Core
@@ -39,7 +40,7 @@ import Connect.Routes
 import Model.UserDetails
 import Persistence.PostgreSQL
 import Persistence.Ping
-import Persistence.Tenant
+import qualified Persistence.Tenant as PT
 import PingHandlers
 import SnapHelpers
 
@@ -121,10 +122,10 @@ createPingPanel = withTenant $ \tenant ->
    SSH.heistLocal (I.bindSplices . context $ tenant) $ SSH.render "connect-panel"
    where
       context tenant = do
-         "productBaseUrl" H.## I.textSplice $ T.pack . show . baseUrl $ tenant
+         "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
          "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000"
 
-withTenant :: (Tenant -> AppHandler ()) -> AppHandler ()
+withTenant :: (PT.Tenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
    jwtParam <- fmap (fmap decodeBytestring) $ getParam "jwt"
    case join jwtParam of
@@ -140,22 +141,33 @@ withTenant tennantApply = do
       -- TODO we need to verify the signiature and, to do that we need a function that goes
       -- Secret -> JWT UnverifiedJWT -> JWT VerifiedJWT
       -- See: https://bitbucket.org/ssaasen/haskell-jwt/issue/3/need-function-of-type-secret-jwt
-      getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String Tenant)
+      getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String PT.Tenant)
       getTenant unverifiedJwt = do
          let potentialKey = getClientKey unverifiedJwt
          case potentialKey of
-            Nothing -> return . Left $ "Could not parse the JWT message."
+            Nothing -> retError $ "Could not parse the JWT message."
             Just key -> do
                logError . B.pack $ sClientKey
                withConnection $ \conn -> do
-                  potentialTenant <- lookupTenant conn normalisedClientKey
+                  potentialTenant <- PT.lookupTenant conn normalisedClientKey
                   case potentialTenant of
-                     Nothing -> return . Left $ "Could not find a tenant with that id: " ++ sClientKey
-                     Just tenant -> return . Right $ tenant
+                     Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
+                     Just unverifiedTenant -> 
+                        case verifyTenant unverifiedTenant unverifiedJwt of
+                           Nothing -> retError $ "Invalid request to tenant."
+                           Just verifiedTenant -> ret verifiedTenant
                where
                   sClientKey          = show key
                   normalisedClientKey = T.pack sClientKey
 
+         where 
+            verifyTenant :: PT.Tenant -> J.JWT J.UnverifiedJWT -> Maybe PT.Tenant
+            verifyTenant tenant unverifiedJwt = do
+               guard (isJust $ J.verify (J.secret . PT.sharedSecret $ tenant) unverifiedJwt)
+               pure tenant
+   
+            retError = return . Left
+            ret = return . Right
 
       decodeBytestring = J.decode . byteStringToText
    
