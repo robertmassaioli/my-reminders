@@ -17,35 +17,21 @@
          - template language.
          -->
 
-      <!-- JQuery -->
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+      <apply template="headers/tenant" />
 
-      <!-- CDN AUI -->
-      <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/aui/5.2/css/aui.css" media="all">
-      <!--[if lt IE 9]><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/aui/5.2/css/aui-ie.css" media="all"><![endif]-->
-      <!--[if IE 9]><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/aui/5.2/css/aui-ie9.css" media="all"><![endif]-->
-      <script src="//cdnjs.cloudflare.com/ajax/libs/aui/5.2/js/aui.js"></script>
-      <!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/aui/5.2/js/aui-ie.js"></script><![endif]-->
+      <apply template="headers/aui" />
 
-      <!-- JQuery URL Parser - TODO Required? -->
-      <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-url-parser/2.3.1/purl.min.js"></script>
+      <apply template="headers/jquery-url-parser" />
 
-      <!-- Visibility - TODO Required? -->
-      <script src="//cdnjs.cloudflare.com/ajax/libs/visibility.js/0.6.2/visibility.min.js"></script>
+      <apply template="headers/visibility" />
 
-      <!-- Moment.js - TODO Probably replace with Sugar.js -->
-      <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.1.0/moment.min.js"></script>
-      <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
+      <apply template="headers/moment" />
 
-      <!-- TODO get the productBaseUrl in here -->
-      <meta name="hostBaseUrl" content="${productBaseUrl}" />
-      <script type="text/javascript" src="${productBaseUrl}/atlassian-connect/all.js"></script>
-      <link rel="stylesheet" type="text/css" href="${productBaseUrl}/atlassian-connect/all.css"/>        
       <!-- TODO this will never be served because we do not have code like this... -->
+      <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
       <script type="text/javascript" src="/js/pagetoken.js"></script>
    </head>
    <body>
-      <h1>Test Panel</h1>
-      <p>Create your pings in here...</p>
+      <apply-content />
    </body>
 </html>

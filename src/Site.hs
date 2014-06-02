@@ -119,57 +119,61 @@ getAppVersion = "0.1"
 -- forever more.
 createPingPanel :: AppHandler ()
 createPingPanel = withTenant $ \tenant -> 
-   SSH.heistLocal (I.bindSplices . context $ tenant) $ SSH.render "connect-panel"
+   SSH.heistLocal (I.bindSplices . context $ tenant) $ SSH.render "ping-create"
    where
       context tenant = do
          "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
          "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000"
 
+logErrorS :: String -> AppHandler ()
+logErrorS = logError . B.pack
+
 withTenant :: (PT.Tenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
    jwtParam <- fmap (fmap decodeBytestring) $ getParam "jwt"
    case join jwtParam of
-      Nothing -> respondBadRequest
+      Nothing -> do
+         logErrorS $ "A jwt token is required for this request."
+         respondBadRequest
       (Just unverifiedJwt) -> do
          possibleTenant <- getTenant unverifiedJwt
          case possibleTenant of
             (Left result) -> do
-               logError . B.pack $ result
+               logErrorS result
                respondBadRequest -- TODO add the error message
             (Right tenant) -> tennantApply tenant
    where
-      -- TODO we need to verify the signiature and, to do that we need a function that goes
-      -- Secret -> JWT UnverifiedJWT -> JWT VerifiedJWT
-      -- See: https://bitbucket.org/ssaasen/haskell-jwt/issue/3/need-function-of-type-secret-jwt
-      getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String PT.Tenant)
-      getTenant unverifiedJwt = do
-         let potentialKey = getClientKey unverifiedJwt
-         case potentialKey of
-            Nothing -> retError $ "Could not parse the JWT message."
-            Just key -> do
-               logError . B.pack $ sClientKey
-               withConnection $ \conn -> do
-                  potentialTenant <- PT.lookupTenant conn normalisedClientKey
-                  case potentialTenant of
-                     Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
-                     Just unverifiedTenant -> 
-                        case verifyTenant unverifiedTenant unverifiedJwt of
-                           Nothing -> retError $ "Invalid request to tenant."
-                           Just verifiedTenant -> ret verifiedTenant
-               where
-                  sClientKey          = show key
-                  normalisedClientKey = T.pack sClientKey
-
-         where 
-            verifyTenant :: PT.Tenant -> J.JWT J.UnverifiedJWT -> Maybe PT.Tenant
-            verifyTenant tenant unverifiedJwt = do
-               guard (isJust $ J.verify (J.secret . PT.sharedSecret $ tenant) unverifiedJwt)
-               pure tenant
-   
-            retError = return . Left
-            ret = return . Right
-
       decodeBytestring = J.decode . byteStringToText
+
+getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String PT.Tenant)
+getTenant unverifiedJwt = do
+   let potentialKey = getClientKey unverifiedJwt
+   case potentialKey of
+      Nothing -> retError $ "Could not parse the JWT message."
+      Just key -> do
+         logError . B.pack $ sClientKey
+         withConnection $ \conn -> do
+            potentialTenant <- PT.lookupTenant conn normalisedClientKey
+            case potentialTenant of
+               Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
+               Just unverifiedTenant -> 
+                  case verifyTenant unverifiedTenant unverifiedJwt of
+                     Nothing -> retError $ "Invalid request to tenant."
+                     Just verifiedTenant -> ret verifiedTenant
+         where
+            sClientKey          = show key
+            normalisedClientKey = T.pack sClientKey
+
+   where 
+      retError = return . Left
+      ret = return . Right
+
+verifyTenant :: PT.Tenant -> J.JWT J.UnverifiedJWT -> Maybe PT.Tenant
+verifyTenant tenant unverifiedJwt = do
+   guard (isJust $ J.verify tenantSecret unverifiedJwt)
+   pure tenant
+   where
+      tenantSecret = J.secret . PT.sharedSecret $ tenant
    
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt

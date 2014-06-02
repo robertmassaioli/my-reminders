@@ -53,7 +53,7 @@ Executable ping-me-connect
    , http-media                ==0.1.*
    , http-client               ==0.3.*
    , atlassian-connect         == 0.1.*
-   , jwt                       
+   , jwt                       == 0.3.*
    , case-insensitive          == 1.*
 
   if flag(old-base)
