@@ -3,7 +3,10 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
-module PingHandlers(addPingHandler, executePingsHandler) where
+module PingHandlers
+   ( handlePings
+   , executePingsHandler
+   ) where
 
 import qualified Data.Text as T 
 import qualified Data.ByteString.Char8 as BSC
@@ -15,12 +18,12 @@ import Application
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
 import Database.PostgreSQL.Simple
-import Persistence.PostgreSQL
-import qualified Persistence.Ping as P 
 import GHC.Generics
 import Network.URI
 import Control.Monad.IO.Class
 
+import Persistence.PostgreSQL
+import qualified Persistence.Ping as P 
 import SnapHelpers
 
 data PingRequest = PingRequest {
@@ -35,7 +38,21 @@ data PingRequest = PingRequest {
 instance FromJSON PingRequest
 instance ToJSON PingRequest
 
---TODO: this needs to be authenticated
+handlePings :: AppHandler ()
+handlePings = handleMethods 
+   [ (GET,     getPingHandler)
+   , (PUT,     addPingHandler)
+   , (DELETE,  deletePingHandler)
+   ]
+
+getPingHandler :: AppHandler ()
+getPingHandler = error "Getting an individual ping has not been implimented yet."
+
+deletePingHandler :: AppHandler ()
+deletePingHandler = error "Deleting a ping has not been implimented yet."
+
+--TODO: this needs to be authenticated. But probably using page-token authentication instead of a
+--jwt token.
 addPingHandler:: AppHandler ()
 addPingHandler = do
    request <- readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
@@ -87,6 +104,3 @@ executePings' = with db $ withConnection $ \conn ->
     successes <- sequence $ map ping pings
     sequence $ map (P.deletePing conn) (catMaybes successes)                                     
     return $ catMaybes successes
-    
-                                         
-  

@@ -1,5 +1,6 @@
 module SnapHelpers where
 
+import qualified Control.Applicative as CA
 import qualified Snap.Core as SC
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BSC
@@ -19,3 +20,6 @@ textToByteString = BSC.pack . T.unpack
 
 byteStringToText :: BSC.ByteString -> T.Text
 byteStringToText = T.pack . BSC.unpack
+
+handleMethods :: SC.MonadSnap s => [(SC.Method, s z)] -> s z
+handleMethods = foldl (CA.<|>) CA.empty . fmap (uncurry SC.method)

@@ -13,8 +13,6 @@ See _Setup_ to set up the application for the first time.
 
 Tests are defined in `tests`, run `make test` to compile and run them.
 
-
-
 # Deployment to Heroku
 
 There is an example `Procfile` in the application. 
@@ -50,7 +48,6 @@ The example project was setup using:
     using version 1.18.1.1 of the Cabal library
     
 YMMV
-
 
 ## Optional dependencies
 
