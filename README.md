@@ -49,6 +49,11 @@ The example project was setup using:
     
 YMMV
 
+## Running the Code
+
+There is a useful trick where you can hit /admin/reload on localhost and refresh the entire service
+without having to restart the process. This is excellent for rapid development.
+
 ## Optional dependencies
 
 These are not strictly necessary but make life easier.

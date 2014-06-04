@@ -13,6 +13,8 @@ import qualified Persistence.PostgreSQL as PP
 import qualified Persistence.Tenant as PT
 import qualified SnapHelpers as SH
 
+-- TODO instead of just returning the Tenant also return the extra information that comes in the JWT
+-- token such as the user.
 withTenant :: (PT.Tenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
    jwtParam <- fmap decodeBytestring <$> SC.getParam (B.pack "jwt")

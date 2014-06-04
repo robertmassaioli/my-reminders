@@ -79,11 +79,11 @@ routes = connectRoutes ++ applicationRoutes
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes = 
-   [ ("/"             , homeHandler sendHomePage)
-   , ("/panel/ping/create", createPingPanel )
-   , ("/rest/ping"     , handlePings)  
-   , ("/execute"      , executePingsHandler)  
-   , ("/static"       , serveDirectory "static")
+   [ ("/"                  , homeHandler sendHomePage)
+   , ("/panel/ping/create" , createPingPanel )
+   , ("/rest/ping"         , handlePings)  
+   , ("/execute"           , executePingsHandler)  
+   , ("/static"            , serveDirectory "static")
    ]
 
 ------------------------------------------------------------------------------
