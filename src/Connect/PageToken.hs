@@ -1,5 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Connect.PageToken where
+module Connect.PageToken 
+   ( PageToken(..) -- TODO make it so that you can query the token but nothing else
+   , UserKey
+   , generateToken
+   , generateTokenCurrentTime
+   , encryptPageToken
+   , decryptPageToken
+   ) where
 
 import Data.Aeson
 import Data.Aeson.Types
@@ -58,6 +65,9 @@ generateToken tenant userKey timestamp = PageToken
    , pageTokenTimestamp = timestamp
    , pageTokenAllowInsecurePolling = False
    }
+
+generateTokenCurrentTime :: PT.Tenant -> Maybe UserKey -> IO PageToken
+generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime 
 
 -- TODO in order to write the token out:
 -- 1. Generate the token.

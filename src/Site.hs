@@ -14,12 +14,14 @@ module Site
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Monad (join, guard)
+import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Aeson
 import           GHC.Generics
 import qualified Data.Text as T
 import           Snap.Core
+import qualified Snap.Types as ST
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Snap.Snaplet.Heist as SSH
@@ -41,11 +43,7 @@ import qualified Persistence.Tenant as PT
 import PingHandlers
 import qualified TenantJWT as TJ
 import qualified Connect.PageToken as CPT
-
-writeJson :: (MonadSnap m, ToJSON a) => a -> m ()
-writeJson a = do
-    modifyResponse $ setContentType "application/json"
-    writeLBS $ encode a
+import qualified SnapHelpers as SH
 
 sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
 sendHomePage = SSH.heistLocal environment $ SSH.render "home"
@@ -66,12 +64,18 @@ getAppVersion = "0.1"
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
 createPingPanel :: AppHandler ()
-createPingPanel = TJ.withTenant $ \tenant -> 
-   SSH.heistLocal (I.bindSplices . context $ tenant) $ SSH.render "ping-create"
+createPingPanel = withTokenAndTenant $ \token tenant -> 
+   SSH.heistLocal (I.bindSplices $ context tenant token) $ SSH.render "ping-create"
    where
-      context tenant = do
+      context tenant token = do
          "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
          "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000"
+         "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken undefined token) 
+
+withTokenAndTenant :: (CPT.PageToken -> PT.Tenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant processor = TJ.withTenant $ \tenant -> do
+   token <- liftIO $ CPT.generateTokenCurrentTime tenant Nothing
+   processor token tenant
 
 ------------------------------------------------------------------------------
 -- | The application's routes.

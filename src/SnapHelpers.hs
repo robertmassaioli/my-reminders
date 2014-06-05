@@ -1,5 +1,6 @@
 module SnapHelpers where
 
+import Data.Aeson
 import qualified Control.Applicative as CA
 import qualified Snap.Core as SC
 import qualified Data.Text as T
@@ -23,3 +24,9 @@ byteStringToText = T.pack . BSC.unpack
 
 handleMethods :: SC.MonadSnap s => [(SC.Method, s z)] -> s z
 handleMethods = foldl (CA.<|>) CA.empty . fmap (uncurry SC.method)
+
+writeJson :: (SC.MonadSnap m, ToJSON a) => a -> m ()
+writeJson a = do
+    SC.modifyResponse . SC.setContentType . BSC.pack $"application/json"
+    SC.writeLBS $ encode a
+
