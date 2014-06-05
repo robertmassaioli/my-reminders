@@ -64,7 +64,8 @@ Executable ping-me-connect
    , atlassian-connect         == 0.1.*
    , jwt                       == 0.3.*
    , case-insensitive          == 1.*
-   , cypher-aes                == 0.2.*
+   , cipher-aes                == 0.2.*
+   , base64-bytestring         == 1.0.*
 
   if flag(old-base)
     build-depends:
