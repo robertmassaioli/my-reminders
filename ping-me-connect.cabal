@@ -26,6 +26,7 @@ Executable ping-me-connect
   other-modules: AtlassianConnect
                  , Connect.Descriptor
                  , Connect.Routes
+                 , Connect.Connect
                  , Connect.PageToken
                  , Persistence.Tenant
                  , Persistence.PostgreSQL
@@ -34,7 +35,7 @@ Executable ping-me-connect
                  , SnapHelpers
                  , Site
 
-  -- data-files:
+  data-files:     connect.cfg
 
   default-language: Haskell2010
   Build-depends:
@@ -66,6 +67,7 @@ Executable ping-me-connect
    , case-insensitive          == 1.*
    , cipher-aes                == 0.2.*
    , base64-bytestring         == 1.0.*
+   , configurator              == 0.2.*
 
   if flag(old-base)
     build-depends:

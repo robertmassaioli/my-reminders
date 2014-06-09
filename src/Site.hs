@@ -36,6 +36,7 @@ import qualified Heist.Interpreted as I
 import qualified Web.JWT as J
 
 import Connect.Routes
+import qualified Connect.Connect as CC
 import Model.UserDetails
 import Persistence.PostgreSQL
 import Persistence.Ping
@@ -69,7 +70,7 @@ createPingPanel = withTokenAndTenant $ \token tenant ->
    where
       context tenant token = do
          "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-         "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000"
+         "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000" -- TODO what is the best way to load your own hostname? Is this even required?
          "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken undefined token) 
 
 withTokenAndTenant :: (CPT.PageToken -> PT.Tenant -> AppHandler ()) -> AppHandler ()
@@ -99,6 +100,6 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
     s <- SS.nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
     db <- SS.nestSnaplet "db" db pgsInit
+    connect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
     SS.addRoutes routes
-    return $ App h s db
-
+    return $ App h s db connect

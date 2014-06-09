@@ -7,7 +7,7 @@
       <meta name="hostId" content="${hostId}" />    
       <meta name="resourceId" content="${resourceId}" />
       <meta name="userId" content="${userId}" />
-      <meta name="acpt" content="${acpt}">
+      <meta name="acpt" content="${connectPageToken}">
       <meta content="IE=EDGE" http-equiv="X-UA-Compatible" /> 
 
       <!-- TODO add static versions of all of the resources here so that

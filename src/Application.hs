@@ -12,11 +12,14 @@ import qualified Snap.Snaplet as SS
 import qualified Snap.Snaplet.Heist as SSH
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.PostgresqlSimple
+
+import qualified Connect.Connect as CC
 ------------------------------------------------------------------------------
 data App = App
     { _heist :: SS.Snaplet (SSH.Heist App)
     , _sess  :: SS.Snaplet SessionManager
     , _db    :: SS.Snaplet Postgres
+    , _connect :: SS.Snaplet CC.Connect
     }
 
 makeLenses ''App
@@ -29,5 +32,3 @@ instance HasPostgres (SS.Handler b App) where
 
 ------------------------------------------------------------------------------
 type AppHandler = SS.Handler App App
-
-

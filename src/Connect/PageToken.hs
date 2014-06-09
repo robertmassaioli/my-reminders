@@ -6,6 +6,7 @@ module Connect.PageToken
    , generateTokenCurrentTime
    , encryptPageToken
    , decryptPageToken
+   , defaultTimeoutSeconds
    ) where
 
 import Data.Aeson
@@ -25,6 +26,9 @@ import qualified Persistence.Tenant as PT
 -- 1. Being able to verify a page token.
 
 type UserKey = String
+
+defaultTimeoutSeconds :: Integer
+defaultTimeoutSeconds = 5 * 60
 
 data PageToken = PageToken
    { pageTokenHost      :: PT.TenantKey
