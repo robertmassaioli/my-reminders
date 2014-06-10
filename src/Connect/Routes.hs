@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Connect.Routes 
    ( connectRoutes
    , homeHandler
@@ -21,7 +23,9 @@ import qualified Snap.Snaplet.Heist as SSH
 import qualified Data.ByteString.Char8 as BLC
 import qualified Data.CaseInsensitive as CI
 
-homeHandler :: SSH.HasHeist b => SS.Handler b v () -> SS.Handler b v ()
+import qualified Connect.Data as CD
+
+homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
    where 
       sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> showError unknownHeaderMessage
@@ -58,8 +62,16 @@ simpleConnectRoutes =
    --, ("/uninstalled"            , uninstalledHandler
    ]
 
-atlassianConnectHandler :: SSH.HasHeist b => SS.Handler b v ()
-atlassianConnectHandler = writeJson . AC.addonDescriptor . resolveBaseUrl =<< SC.getRequest
+atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
+atlassianConnectHandler = do
+   connect <- CD.getConnect
+   request <- SC.getRequest
+   let dc = AC.DescriptorConfig
+               { AC.dcPluginName = T.pack . CD.connectPluginName $ connect
+               , AC.dcPluginKey = T.pack . CD.connectPluginKey $ connect
+               , AC.dcBaseUrl = resolveBaseUrl request
+               }
+   writeJson . AC.addonDescriptor $ dc
 
 installedHandler :: AppHandler ()
 installedHandler = do

@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module AtlassianConnect (
-    addonDescriptor
-  , publicKeyUri
-) where
+module AtlassianConnect 
+   ( addonDescriptor
+   , publicKeyUri
+   , DescriptorConfig(..)
+   ) where
 
 import qualified Data.ByteString.Char8 as B
 import           Network.URI
@@ -12,12 +13,18 @@ import           Connect.Descriptor
 
 import           Data.Text
 
+data DescriptorConfig = DescriptorConfig
+   { dcPluginName :: Text
+   , dcPluginKey :: Text
+   , dcBaseUrl :: B.ByteString
+   }
+
 -- TODO Don't accept bytestring if you really wanted a URI, just expect the URI and push
 -- the logic upwards
-addonDescriptor :: B.ByteString -> Plugin
-addonDescriptor baseUrl = 
+addonDescriptor :: DescriptorConfig -> Plugin
+addonDescriptor descriptorConfig = 
    basePlugin
-      { pluginName         = Just "PingMe for OnDemand"
+      { pluginName         = Just . dcPluginName $ descriptorConfig
       , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
       , vendor             = Just $ Vendor "Atlassian" (absoluteURI "http://www.atlassian.com/")
       , lifecycle = Just $ Lifecycle
@@ -36,17 +43,17 @@ addonDescriptor baseUrl =
                 }
               ]
             }
-      , scopes = Just ["READ"] -- TODO Stringly typed
+      , scopes = Just [Read] -- TODO Stringly typed
       , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
       }
    where
       basePlugin = pluginDescriptor connectPluginKey baseURI jwtAuthentication
 
-      connectPluginKey :: Text -- Stringly typed...
-      connectPluginKey = "com.atlassian.pingme" -- TODO should be configurable
+      connectPluginKey :: Text
+      connectPluginKey = dcPluginKey descriptorConfig
 
       baseURI :: URI
-      baseURI = absoluteURI $ B.unpack baseUrl
+      baseURI = absoluteURI . B.unpack . dcBaseUrl $ descriptorConfig
 
       jwtAuthentication = Authentication Jwt Nothing
 

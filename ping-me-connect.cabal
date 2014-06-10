@@ -24,6 +24,7 @@ Executable ping-me-connect
   main-is: Main.hs
 
   other-modules: AtlassianConnect
+                 , Connect.Data
                  , Connect.Descriptor
                  , Connect.Routes
                  , Connect.Connect
@@ -35,7 +36,7 @@ Executable ping-me-connect
                  , SnapHelpers
                  , Site
 
-  data-files:     connect.cfg
+  data-files:  resources/connect.cfg
 
   default-language: Haskell2010
   Build-depends:

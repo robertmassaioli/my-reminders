@@ -23,7 +23,7 @@ data Plugin = Plugin
     , enableLicensing :: Maybe Bool
     , lifecycle :: Maybe Lifecycle
     , links :: Maybe [(Text, URI)]
-    , scopes :: Maybe [Text]
+    , scopes :: Maybe [ProductScope]
     } deriving (Show, Generic)
 
 
@@ -34,6 +34,15 @@ data Authentication = Authentication {authType :: AuthType, publicKey :: Maybe T
 data AuthType = OAuth | Jwt | None deriving (Show, Generic)
 
 data Modules = Modules JiraModules deriving (Show, Generic) -- TODO
+
+data ProductScope
+   = Read 
+   | Write 
+   | Delete 
+   | ProjectAdmin    -- This is a JIRA only Scope (TODO can we serve the correct scope set to the correct plugins?)
+   | SpaceAdmin      -- This is a Confluence only Scope (TODO can we serve the correct scope set to the correct plugins?)
+   | Admin
+   deriving (Show, Generic)
 
 data JiraModules = JiraModules 
     { webPanels :: [WebPanel]
@@ -85,6 +94,23 @@ instance ToJSON Lifecycle where
 
 instance ToJSON Modules where
     toJSON = genericToJSON baseOptions
+
+instance ToJSON ProductScope where
+    toJSON Read            = "read"
+    toJSON Write           = "write"
+    toJSON Delete          = "delete"
+    toJSON ProjectAdmin    = "project_admin"
+    toJSON SpaceAdmin      = "space_admin"
+    toJSON Admin           = "admin"
+
+instance FromJSON ProductScope where
+   parseJSON (String "read")           = return Read
+   parseJSON (String "write")          = return Write
+   parseJSON (String "delete")         = return Delete
+   parseJSON (String "project_admin")  = return ProjectAdmin
+   parseJSON (String "space_admin")    = return SpaceAdmin
+   parseJSON (String "admin")          = return Admin
+   parseJSON _                         = mzero
 
 instance ToJSON JiraModules where
     toJSON = genericToJSON baseOptions

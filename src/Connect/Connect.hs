@@ -15,6 +15,10 @@ import qualified Connect.PageToken as PT
 import qualified Snap.Snaplet as SS
 import qualified System.Exit as SE
 
+import qualified Paths_ping_me_connect as PPMC
+
+import Connect.Data
+
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
 -- We should be able to start a snaplet that actually provides no routes but gives a bunch of
@@ -22,13 +26,6 @@ import qualified System.Exit as SE
 -- great if we could provide our own Atlassian Connect specific routes in here. That way this
 -- connect snaplet could be responsible for providing the Atlassian Connect plugin json descriptor
 -- to the rest of the plugin. That would be great!
-
-data Connect = Connect
-   { connectAES :: CCA.AES
-   , connectPluginName :: String
-   , connectPluginKey :: String
-   , connectPageTokenTimeout :: Integer
-   }
 
 toConnect :: ConnectConfig -> Connect
 toConnect conf = Connect
@@ -39,8 +36,10 @@ toConnect conf = Connect
    }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
-initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." Nothing $ do
+initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $ do
    MI.liftIO $ SS.loadAppConfig "connect.cfg" "connect" >>= loadConnectConfig >>= return . toConnect
+
+dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
    { ccSecretKey :: BSC.ByteString
@@ -51,6 +50,7 @@ data ConnectConfig = ConnectConfig
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
+   dataDir >>= print
    name <- DC.require connectConf "plugin_name"
    key <- DC.require connectConf "plugin_key"
    secret <- DC.require connectConf "secret_key"
