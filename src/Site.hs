@@ -43,6 +43,7 @@ import Persistence.Ping
 import qualified Persistence.Tenant as PT
 import PingHandlers
 import qualified TenantJWT as TJ
+import qualified WithToken as WT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 

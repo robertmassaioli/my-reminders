@@ -37,6 +37,8 @@ Executable ping-me-connect
                  , PingHandlers
                  , SnapHelpers
                  , Site
+                 , TenantJWT
+                 , WithToken
 
   default-language: Haskell2010
   Build-depends:
