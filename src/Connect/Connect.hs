@@ -50,7 +50,6 @@ data ConnectConfig = ConnectConfig
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
-   dataDir >>= print
    name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
    key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
    secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
