@@ -51,9 +51,9 @@ data ConnectConfig = ConnectConfig
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
    dataDir >>= print
-   name <- DC.require connectConf "plugin_name"
-   key <- DC.require connectConf "plugin_key"
-   secret <- DC.require connectConf "secret_key"
+   name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
+   key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
+   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
    let keyLength = BSC.length secret
    CM.when (keyLength /= 32) $ do
       putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
@@ -66,3 +66,9 @@ loadConnectConfig connectConf = do
       , ccPageTokenTimeout = pageTokenTimeoutInSeconds 
       }
 
+require :: DCT.Configured a => DCT.Config -> DCT.Name -> String -> IO a
+require config name errorMessage = do
+   potentialValue <- DC.lookup config name
+   case potentialValue of
+      Nothing -> fail errorMessage
+      Just x -> return x
