@@ -20,39 +20,47 @@ Flag old-base
 
 Executable ping-me-connect
   hs-source-dirs: src
+
   main-is: Main.hs
+
   other-modules: AtlassianConnect
                  , Connect.Descriptor
                  , Connect.Routes
                  , Persistence.Tenant
                  , Persistence.PostgreSQL
                  , Model.UserDetails
+                 , PingHandlers
+                 , SnapHelpers
+                 , Site
+
   default-language: Haskell2010
   Build-depends:
-    bytestring                >= 0.9.1   && < 0.11
-   ,heist                     >= 0.12    && < 0.14
-   ,MonadCatchIO-transformers >= 0.2.1   && < 0.4
-   ,mtl                       >= 2       && < 3
-   ,snap                      >= 0.13    && < 0.14
-   ,snap-core                 >= 0.9     && < 0.11
-   ,snap-server               >= 0.9     && < 0.11
-   ,snap-loader-static        >= 0.9     && < 0.10
-   , postgresql-simple == 0.4.*
-   ,snaplet-postgresql-simple
-   ,text                      >= 0.11    && < 0.12
-   ,time                      >= 1.1     && < 1.5
-   ,xmlhtml                   >= 0.1
-   ,aeson
-   , MissingH ==1.*
-   , containers ==0.5.*
-   , transformers ==0.3.*
-   , resource-pool-catchio ==0.2.1.*
-   , network ==2.4.*
-   , network-api-support ==0.1.*
-   , http-types ==0.8.*
-   , http-client ==0.3.*
-   , atlassian-connect == 0.1.*
-   , jwt == 0.2.*
+   bytestring                  >= 0.9.1   && < 0.11
+   , heist                     >= 0.12    && < 0.14
+   , MonadCatchIO-transformers >= 0.2.1   && < 0.4
+   , mtl                       == 2.*
+   , snap                      == 0.13.*
+   , snap-core                 >= 0.9     && < 0.11
+   , snap-server               >= 0.9     && < 0.11
+   , snap-loader-static        == 0.9.*
+   , postgresql-simple         == 0.4.*
+   , snaplet-postgresql-simple
+   , text                      == 0.11.*
+   , time                      >= 1.1     && < 1.5
+   , xmlhtml                   >= 0.1
+   , aeson
+   , MissingH                  ==1.*
+   , containers                ==0.5.*
+   , transformers              ==0.3.*
+   , resource-pool-catchio     ==0.2.1.*
+   , network                   ==2.4.*
+   , network-api-support       ==0.1.*
+   , http-types                ==0.8.*
+   , http-media                ==0.1.*
+   , http-client               ==0.3.*
+   , atlassian-connect         == 0.1.*
+   , jwt                       == 0.3.*
+   , case-insensitive          == 1.*
 
   if flag(old-base)
     build-depends:

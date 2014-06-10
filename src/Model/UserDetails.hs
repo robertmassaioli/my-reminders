@@ -55,11 +55,11 @@ getUserDetails currentTime params =
  
 
 generateJWTToken :: Integer -> T.Text -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text 
-generateJWTToken currentTime sharedSecret  method url text = JWT.encodeSigned algo secret' claims
+generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encodeSigned algo secret' claims
     where algo = JWT.HS256
           diffTime :: Integer -> NominalDiffTime
           diffTime time = fromRational $ toRational time
-          queryStringHash = createQueryStringHash method url text
+          queryStringHash = createQueryStringHash method ourURL requestURL
           claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme", 
                                       JWT.iat = JWT.intDate $ diffTime currentTime, 
                                       JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000), 
@@ -86,11 +86,6 @@ baseOptions :: Options
 baseOptions = defaultOptions
     { omitNothingFields = True
     }
-
-stripFieldNamePrefix :: String -> String -> String
-stripFieldNamePrefix pre s = toLowerFirst $ fromMaybe s (L.stripPrefix pre s)
-    where toLowerFirst (c : cs) = C.toLower c : cs
-          toLowerFirst [] = []
 
 --TODO: For testing, ignore, delete
 

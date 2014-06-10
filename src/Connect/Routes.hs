@@ -1,18 +1,52 @@
 module Connect.Routes 
    ( connectRoutes
+   , homeHandler
    ) where
 
 import qualified AtlassianConnect as AC
 import Application
 import Persistence.Tenant
 import Persistence.PostgreSQL -- TODO dependency tree of my modules to see the flow
+import qualified Control.Applicative as CA
+import qualified Control.Monad as CM
 import qualified Data.Aeson as A
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as E
+import qualified Network.HTTP.Media.MediaType as NM
 
 import qualified Snap.Snaplet as SS
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet.Heist as SSH
 
 import qualified Data.ByteString.Char8 as BLC
+import qualified Data.CaseInsensitive as CI
+
+homeHandler :: SSH.HasHeist b => SS.Handler b v () -> SS.Handler b v ()
+homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
+   where 
+      sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> showError unknownHeaderMessage
+      unknownHeaderMessage = T.pack "Unknown accept header"
+      (Just jsonMT) = parseString "application/json"
+      (Just textHtmlMT) = parseString "text/html"
+
+-- TODO this should be a helper function somewhere
+parseString :: String -> Maybe NM.MediaType
+parseString = NM.parse . BLC.pack
+
+showError :: SC.MonadSnap m => T.Text -> m ()
+showError msg = do
+   SC.logError $ E.encodeUtf8 msg
+   SC.modifyResponse $ SC.setResponseCode 400
+   SC.writeText msg
+
+ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
+ourAccept mediaType action = do
+   request <- SC.getRequest
+   CM.unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
+   action
+   where
+      bsAccept :: CI.CI BLC.ByteString
+      bsAccept = CI.mk . BLC.pack $ "Accept"
 
 connectRoutes :: [(BLC.ByteString, SS.Handler App App ())]
 connectRoutes = fmap (\(name, handler) -> (BLC.pack name, handler)) simpleConnectRoutes
