@@ -10,8 +10,8 @@ module PingHandlers
 
 import qualified Data.Text as T 
 import qualified Data.ByteString.Char8 as BSC
-import Snap.Core
-import Snap.Snaplet
+import qualified Snap.Core as SC
+import qualified Snap.Snaplet as SS
 import Data.Aeson
 import Data.Maybe
 import Application
@@ -41,22 +41,22 @@ instance ToJSON PingRequest
 
 handlePings :: AppHandler ()
 handlePings = handleMethods 
-   [ (GET,     WT.tenantFromToken getPingHandler)
-   , (PUT,     WT.tenantFromToken addPingHandler)
-   , (DELETE,  WT.tenantFromToken deletePingHandler)
+   [ (SC.GET,     WT.tenantFromToken getPingHandler)
+   , (SC.PUT,     WT.tenantFromToken addPingHandler)
+   , (SC.DELETE,  WT.tenantFromToken deletePingHandler)
    ]
 
 getPingHandler :: TN.Tenant -> AppHandler ()
-getPingHandler tenant = error "Getting an individual ping has not been implimented yet."
+getPingHandler tenant = do
+   params <- SC.getQueryParams
+   error "Getting an individual ping has not been implimented yet."
 
 deletePingHandler :: TN.Tenant -> AppHandler ()
 deletePingHandler = error "Deleting a ping has not been implimented yet."
 
---TODO: this needs to be authenticated. But probably using page-token authentication instead of a
---jwt token.
 addPingHandler :: TN.Tenant -> AppHandler ()
 addPingHandler tenant = do
-   request <- readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
    let maybePing = Data.Aeson.decode request :: Maybe PingRequest
    case maybePing of
       Nothing -> respondBadRequest -- TODO better error message
@@ -64,14 +64,14 @@ addPingHandler tenant = do
 
 addPing :: PingRequest -> TN.Tenant -> AppHandler ()
 addPing pingRequest tenant = do
-   addedPing <- with db $ withConnection (addPingFromRequest pingRequest tenant)
+   addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant)
    case addedPing of
       Just _ -> respondNoContent
       Nothing -> do
-         logError . textToByteString $ failedInsertPrefix `T.append` (T.pack . pingUserKey $ pingRequest)
+         logErrorS $ failedInsertPrefix ++ pingUserKey pingRequest
          respondInternalServer
    where
-      failedInsertPrefix = T.pack "Failed to insert new ping: "
+      failedInsertPrefix = "Failed to insert new ping: "
 
 addPingFromRequest :: PingRequest -> TN.Tenant -> Connection -> IO (Maybe Integer)
 addPingFromRequest pingRequest tenant conn = 
@@ -94,14 +94,14 @@ ping rq = do
   putStrLn("pinged: " ++ show rq)
   return $ Just (P.pingId rq)
   
-executePingsHandler:: AppHandler()
+executePingsHandler:: AppHandler ()
 executePingsHandler = do 
   deleted <- executePings'
-  modifyResponse $ setResponseCode 200
-  writeText (T.pack $ show deleted )
+  SC.writeText (T.pack $ show deleted )
+  respondWith 200
   
-executePings':: AppHandler([Integer]) 
-executePings' = with db $ withConnection $ \conn ->
+executePings':: AppHandler ([Integer]) 
+executePings' = SS.with db $ withConnection $ \conn ->
   do
     pings <- liftIO $ P.getPings conn
     successes <- sequence $ map ping pings

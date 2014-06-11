@@ -31,6 +31,7 @@ Executable ping-me-connect
                  , Connect.Routes
                  , Connect.Connect
                  , Connect.PageToken
+                 , Connect.AtlassianTypes
                  , Persistence.Tenant
                  , Persistence.PostgreSQL
                  , Model.UserDetails
