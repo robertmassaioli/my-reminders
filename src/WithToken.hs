@@ -16,7 +16,7 @@ import qualified SnapHelpers as SH
 import           Application
 
 acHeaderName :: DC.CI BSC.ByteString
-acHeaderName = DC.mk . BSC.pack $ "ac_token" -- See atlassian-connect-play-java Constants.java#AC_TOKEN
+acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
 tenantFromToken :: (TN.Tenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do

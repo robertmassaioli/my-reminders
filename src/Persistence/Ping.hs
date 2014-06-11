@@ -3,7 +3,12 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Persistence.Ping (Ping(..),addPing, getPings, deletePing) where
+module Persistence.Ping 
+   ( Ping(..)
+   , addPing
+   , getPings
+   , deletePing
+   ) where
 
 import qualified Data.Text                            as T
 import qualified Data.ByteString.Char8                as B
@@ -22,13 +27,16 @@ import GHC.Int
 import Network.URI hiding (query)
 import Persistence.PostgreSQL
 
-data Ping = Ping {
-  pingId :: Integer,
-  tenantId :: Integer,               
-  issueLink :: URI,
-  userId :: T.Text,
-  message :: T.Text,
-  date :: UTCTime } deriving (Eq,Show,Generic)
+import qualified Connect.AtlassianTypes as CA
+
+data Ping = Ping 
+   { pingId :: Integer
+   , tenantId :: Integer
+   , issueId :: CA.IssueId
+   , userKey :: CA.UserKey
+   , message :: T.Text
+   , date :: UTCTime 
+   } deriving (Eq,Show,Generic)
 
 instance FromRow Ping where
   fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field
@@ -40,14 +48,14 @@ instance FromField URI where
 instance ToField URI where
     toField = Escape . B.pack . show
  
-addPing :: Connection -> UTCTime -> Integer -> URI -> T.Text -> T.Text -> IO (Maybe Integer)
-addPing conn date tenantId issueLink userId message =
+addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> T.Text -> IO (Maybe Integer)
+addPing conn date tenantId issueId userKey message =
   do 
     pingID <- liftIO $ insertReturning conn 
               [sql|
-               INSERT INTO ping (tenantId,issueLink,userId,message,date) 
+               INSERT INTO ping (tenantId, issueId, userKey, message, date) 
                VALUES (?,?,?,?,?) RETURNING id
-                  |] (tenantId,issueLink,userId,message,date)
+                  |] (tenantId, issueId, userKey, message, date)
     return $ listToMaybe $ join pingID
     
     
@@ -57,7 +65,7 @@ getPings conn =
     now <- getCurrentTime
     pings <- liftIO $ query conn 
              [sql|
-              SELECT id,tenantId,issueLink,userID,message,date FROM ping WHERE date < ? 
+              SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ? 
                  |]
              (Only now)
     return pings

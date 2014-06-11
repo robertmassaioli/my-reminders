@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Connect.PageToken 
    ( PageToken(..) -- TODO make it so that you can query the token but nothing else
-   , UserKey
    , generateToken
    , generateTokenCurrentTime
    , encryptPageToken
@@ -20,19 +19,18 @@ import qualified Data.Text as DT
 import qualified Crypto.Cipher.AES as CCA
 
 import qualified Persistence.Tenant as PT
+import qualified Connect.AtlassianTypes as CA
 
 -- TODO We need to add in page token support. This means
 -- 1. Being able to create a page token.
 -- 1. Being able to verify a page token.
-
-type UserKey = String
 
 defaultTimeoutSeconds :: Integer
 defaultTimeoutSeconds = 5 * 60
 
 data PageToken = PageToken
    { pageTokenHost      :: PT.TenantKey
-   , pageTokenUser      :: Maybe UserKey
+   , pageTokenUser      :: Maybe CA.UserKey
    , pageTokenTimestamp :: UTCTime
    , pageTokenAllowInsecurePolling :: Bool
    }
@@ -46,7 +44,7 @@ instance ToJSON PageToken where
       ++ user potentialUser
       ++ polling insecurePolling
       where
-         user :: Maybe UserKey -> [Pair]
+         user :: Maybe CA.UserKey -> [Pair]
          user (Just userKey)  = [ "u" .= userKey ]
          user Nothing         = []
 
@@ -62,7 +60,7 @@ instance FromJSON PageToken where
       CA.<*> tokenData .:? "p" .!= False
    parseJSON _ = fail "The PageToken should contain a JSON object."
 
-generateToken :: PT.Tenant -> Maybe UserKey -> UTCTime -> PageToken
+generateToken :: PT.Tenant -> Maybe CA.UserKey -> UTCTime -> PageToken
 generateToken tenant userKey timestamp = PageToken
    { pageTokenHost = PT.key tenant
    , pageTokenUser = userKey
@@ -70,7 +68,7 @@ generateToken tenant userKey timestamp = PageToken
    , pageTokenAllowInsecurePolling = False
    }
 
-generateTokenCurrentTime :: PT.Tenant -> Maybe UserKey -> IO PageToken
+generateTokenCurrentTime :: PT.Tenant -> Maybe CA.UserKey -> IO PageToken
 generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime 
 
 -- TODO in order to write the token out:
