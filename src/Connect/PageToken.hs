@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Connect.PageToken 
-   ( PageToken(..) -- TODO make it so that you can query the token but nothing else
-   , generateToken
-   , generateTokenCurrentTime
-   , encryptPageToken
-   , decryptPageToken
-   , defaultTimeoutSeconds
-   ) where
+  ( PageToken(..) -- TODO make it so that you can query the token but nothing else
+  , generateToken
+  , generateTokenCurrentTime
+  , encryptPageToken
+  , decryptPageToken
+  , defaultTimeoutSeconds
+  ) where
 
 import Data.Aeson
 import Data.Aeson.Types
@@ -29,44 +29,44 @@ defaultTimeoutSeconds :: Integer
 defaultTimeoutSeconds = 5 * 60
 
 data PageToken = PageToken
-   { pageTokenHost      :: PT.TenantKey
-   , pageTokenUser      :: Maybe CA.UserKey
-   , pageTokenTimestamp :: UTCTime
-   , pageTokenAllowInsecurePolling :: Bool
-   }
-   deriving (Eq, Show)
+  { pageTokenHost    :: PT.TenantKey
+  , pageTokenUser    :: Maybe CA.UserKey
+  , pageTokenTimestamp :: UTCTime
+  , pageTokenAllowInsecurePolling :: Bool
+  }
+  deriving (Eq, Show)
 
 instance ToJSON PageToken where
-   toJSON (PageToken host potentialUser timestamp insecurePolling) = object $
-      [ "h" .= host
-      , "t" .= timestamp
-      ] 
-      ++ user potentialUser
-      ++ polling insecurePolling
-      where
-         user :: Maybe CA.UserKey -> [Pair]
-         user (Just userKey)  = [ "u" .= userKey ]
-         user Nothing         = []
+  toJSON (PageToken host potentialUser timestamp insecurePolling) = object $
+    [ "h" .= host
+    , "t" .= timestamp
+    ] 
+    ++ user potentialUser
+    ++ polling insecurePolling
+    where
+      user :: Maybe CA.UserKey -> [Pair]
+      user (Just userKey)  = [ "u" .= userKey ]
+      user Nothing      = []
 
-         polling :: Bool -> [Pair]
-         polling True   = [ "p" .= DT.pack "1" ] -- TODO this is stupid, should put a javascript true out
-         polling False  = []
+      polling :: Bool -> [Pair]
+      polling True  = [ "p" .= DT.pack "1" ] -- TODO this is stupid, should put a javascript true out
+      polling False  = []
 
 instance FromJSON PageToken where
-   parseJSON (Object tokenData) = PageToken
-      CA.<$> tokenData .: "h" 
-      CA.<*> tokenData .:? "u"
-      CA.<*> tokenData .: "t"
-      CA.<*> tokenData .:? "p" .!= False
-   parseJSON _ = fail "The PageToken should contain a JSON object."
+  parseJSON (Object tokenData) = PageToken
+    CA.<$> tokenData .: "h" 
+    CA.<*> tokenData .:? "u"
+    CA.<*> tokenData .: "t"
+    CA.<*> tokenData .:? "p" .!= False
+  parseJSON _ = fail "The PageToken should contain a JSON object."
 
 generateToken :: PT.Tenant -> Maybe CA.UserKey -> UTCTime -> PageToken
 generateToken tenant userKey timestamp = PageToken
-   { pageTokenHost = PT.key tenant
-   , pageTokenUser = userKey
-   , pageTokenTimestamp = timestamp
-   , pageTokenAllowInsecurePolling = False
-   }
+  { pageTokenHost = PT.key tenant
+  , pageTokenUser = userKey
+  , pageTokenTimestamp = timestamp
+  , pageTokenAllowInsecurePolling = False
+  }
 
 generateTokenCurrentTime :: PT.Tenant -> Maybe CA.UserKey -> IO PageToken
 generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime 
@@ -78,15 +78,15 @@ generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime
 -- 1. AES ECB encrypt the string
 encryptPageToken :: CCA.AES -> PageToken -> DB.ByteString
 encryptPageToken aes pageToken = encryptedToken
-   where
-      tokenAsJson = encode pageToken
-      tokenAsBase64 = B64.encode . DBL.toStrict $ tokenAsJson
-      encryptedToken = CCA.encryptECB aes tokenAsBase64
+  where
+    tokenAsJson = encode pageToken
+    tokenAsBase64 = B64.encode . DBL.toStrict $ tokenAsJson
+    encryptedToken = CCA.encryptECB aes tokenAsBase64
 
 decryptPageToken :: CCA.AES -> DB.ByteString -> Either String PageToken
 decryptPageToken aes input = B64.decode decryptedToken >>= eitherDecode . DBL.fromStrict
-   where
-      decryptedToken = CCA.decryptECB aes input
+  where
+    decryptedToken = CCA.decryptECB aes input
 
 -- TODO we should write unit tests to ensure that every combination of this encrypt and decrypt
 -- can be translated correctly.

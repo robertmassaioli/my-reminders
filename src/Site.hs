@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 ------------------------------------------------------------------------------
@@ -49,14 +48,13 @@ import qualified SnapHelpers as SH
 
 sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
 sendHomePage = SSH.heistLocal environment $ SSH.render "home"
-   where
-      environment = I.bindSplices (homeSplice getAppVersion 2 3)
+  where environment = I.bindSplices (homeSplice getAppVersion 2 3)
 
 homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (I.Splice n)
 homeSplice version2 avatarSize pollerInterval = do
-        "version" H.## I.textSplice version2
-        "avatarSize" H.## I.textSplice $ T.pack $ show avatarSize
-        "pollerInterval" H.## I.textSplice $ T.pack $ show pollerInterval
+  "version" H.## I.textSplice version2
+  "avatarSize" H.## I.textSplice $ T.pack $ show avatarSize
+  "pollerInterval" H.## I.textSplice $ T.pack $ show pollerInterval
 
 getAppVersion :: T.Text
 getAppVersion = "0.1"
@@ -67,17 +65,17 @@ getAppVersion = "0.1"
 -- forever more.
 createPingPanel :: AppHandler ()
 createPingPanel = withTokenAndTenant $ \token tenant -> 
-   SSH.heistLocal (I.bindSplices $ context tenant token) $ SSH.render "ping-create"
-   where
-      context tenant token = do
-         "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-         "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000" -- TODO what is the best way to load your own hostname? Is this even required?
-         "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken undefined token) 
+  SSH.heistLocal (I.bindSplices $ context tenant token) $ SSH.render "ping-create"
+  where
+    context tenant token = do
+      "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
+      "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000" -- TODO what is the best way to load your own hostname? Is this even required?
+      "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken undefined token) 
 
 withTokenAndTenant :: (CPT.PageToken -> PT.Tenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \tenant -> do
-   token <- liftIO $ CPT.generateTokenCurrentTime tenant Nothing
-   processor token tenant
+  token <- liftIO $ CPT.generateTokenCurrentTime tenant Nothing
+  processor token tenant
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
@@ -86,21 +84,21 @@ routes = connectRoutes ++ applicationRoutes
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes = 
-   [ ("/"                  , homeHandler sendHomePage)
-   , ("/panel/ping/create" , createPingPanel )
-   , ("/rest/ping"         , handlePings)  
-   , ("/execute"           , executePingsHandler)  
-   , ("/static"            , serveDirectory "static")
-   ]
+  [ ("/"                  , homeHandler sendHomePage)
+  , ("/panel/ping/create" , createPingPanel )
+  , ("/rest/ping"         , handlePings)  
+  , ("/execute"           , executePingsHandler)  
+  , ("/static"            , serveDirectory "static")
+  ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
-    h <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
-    s <- SS.nestSnaplet "sess" sess $
-           initCookieSessionManager "site_key.txt" "sess" (Just 3600)
-    db <- SS.nestSnaplet "db" db pgsInit
-    connect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
-    SS.addRoutes routes
-    return $ App h s db connect
+  h <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+  s <- SS.nestSnaplet "sess" sess $
+         initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+  db <- SS.nestSnaplet "db" db pgsInit
+  connect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
+  SS.addRoutes routes
+  return $ App h s db connect

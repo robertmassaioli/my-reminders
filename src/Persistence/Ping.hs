@@ -1,6 +1,5 @@
-{-# LANGUAGE OverloadedStrings, FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module Persistence.Ping 
@@ -10,8 +9,6 @@ module Persistence.Ping
    , deletePing
    ) where
 
-import qualified Data.Text                            as T
-import qualified Data.ByteString.Char8                as B
 import Data.Maybe
 import Data.Time.Clock
 import Database.PostgreSQL.Simple
@@ -27,49 +24,49 @@ import GHC.Int
 import Network.URI hiding (query)
 import Persistence.PostgreSQL
 
+import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as B
+
 import qualified Connect.AtlassianTypes as CA
 
 data Ping = Ping 
-   { pingId :: Integer
+   { pingId   :: Integer
    , tenantId :: Integer
-   , issueId :: CA.IssueId
-   , userKey :: CA.UserKey
-   , message :: T.Text
-   , date :: UTCTime 
+   , issueId  :: CA.IssueId
+   , userKey  :: CA.UserKey
+   , message  :: T.Text
+   , date     :: UTCTime 
    } deriving (Eq,Show,Generic)
 
 instance FromRow Ping where
   fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field
   
 instance FromField URI where
-    fromField _ (Just bstr) = pure $ fromMaybe nullURI $ parseURI (B.unpack bstr)
-    fromField f _           = returnError ConversionFailed f "data is not a valid URI value"
+  fromField _ (Just bstr) = pure $ fromMaybe nullURI $ parseURI (B.unpack bstr)
+  fromField f _       = returnError ConversionFailed f "data is not a valid URI value"
 
 instance ToField URI where
-    toField = Escape . B.pack . show
+  toField = Escape . B.pack . show
  
 addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> T.Text -> IO (Maybe Integer)
-addPing conn date tenantId issueId userKey message =
-  do 
-    pingID <- liftIO $ insertReturning conn 
-              [sql|
-               INSERT INTO ping (tenantId, issueId, userKey, message, date) 
-               VALUES (?,?,?,?,?) RETURNING id
-                  |] (tenantId, issueId, userKey, message, date)
-    return $ listToMaybe $ join pingID
-    
-    
-getPings:: Connection -> IO([Ping])
-getPings conn = 
-  do 
-    now <- getCurrentTime
-    pings <- liftIO $ query conn 
-             [sql|
-              SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ? 
-                 |]
-             (Only now)
-    return pings
+addPing conn date tenantId issueId userKey message = do 
+  pingID <- liftIO $ insertReturning conn 
+    [sql|
+      INSERT INTO ping (tenantId, issueId, userKey, message, date) 
+      VALUES (?,?,?,?,?) RETURNING id
+    |] (tenantId, issueId, userKey, message, date)
+  return $ listToMaybe $ join pingID
+  
+  
+getPings :: Connection -> IO [Ping]
+getPings conn = do 
+  now <- getCurrentTime
+  liftIO $ query conn 
+    [sql|
+      SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ? 
+    |]
+    (Only now)
 
-deletePing:: Connection -> Integer -> IO(Int64)
+deletePing :: Connection -> Integer -> IO Int64
 deletePing conn pingId =
-  execute conn [sql|DELETE FROM ping WHERE id = ?|] (Only pingId)
+  execute conn [sql| DELETE FROM ping WHERE id = ? |] (Only pingId)
