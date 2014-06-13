@@ -48,7 +48,7 @@ Executable ping-me-connect
    , text                      == 0.11.*
    , time                      >= 1.1     && < 1.5
    , xmlhtml                   >= 0.1
-   , aeson
+   , aeson                     > 0.7.0.3  && < 0.8
    , MissingH                  ==1.*
    , containers                ==0.5.*
    , transformers              ==0.3.*
@@ -94,27 +94,4 @@ test-suite web-api-testsuite
   type:                     exitcode-stdio-1.0
   main-is:                  TestRunner.hs
   hs-source-dirs:           tests/src, src
-  build-depends:            base < 5 && >= 4.4
-                          , tasty >= 0.7
-                          , tasty-th >= 0.1
-                          , tasty-hspec >= 0.1
-                          , tasty-hunit >= 0.4
-                          , tasty-quickcheck >= 0.3
-                          , HUnit
-                          , lens                      >= 3.7.6
-                          , QuickCheck >= 2.4.0.1
-                          , ghc-prim
-                          , containers                >= 0.5
-                          , bytestring                >= 0.9.1   && < 0.11
-                          , heist                     >= 0.12    && < 0.14
-                          , MonadCatchIO-transformers >= 0.2.1   && < 0.4
-                          , mtl                       >= 2       && < 3
-                          , snap                      >= 0.13    && < 0.14
-                          , snap-core                 >= 0.9     && < 0.11
-                          , snap-server               >= 0.9     && < 0.11
-                          , snap-loader-static        >= 0.9     && < 0.10
-                          , text                      >= 0.11    && < 0.12
-                          , time                      >= 1.1     && < 1.5
-                          , xmlhtml                   >= 0.1
-                          , aeson
-                          
+  build-depends:
