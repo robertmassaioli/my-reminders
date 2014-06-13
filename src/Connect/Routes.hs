@@ -98,8 +98,8 @@ writeJson a = do
 resolveBaseUrl :: SC.Request -> BLC.ByteString
 resolveBaseUrl req =
    let serverName = SC.rqServerName req
-      serverPort = SC.rqServerPort req
-      proto = if SC.rqIsSecure req then "https" else "http"
+       serverPort = SC.rqServerPort req
+       proto = if SC.rqIsSecure req then "https" else "http"
    in toAbsoluteUrl proto serverName serverPort
 
 -- |
