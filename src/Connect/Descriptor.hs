@@ -135,7 +135,7 @@ baseOptions = defaultOptions
 stripFieldNamePrefix :: String -> String -> String
 stripFieldNamePrefix pre s = toLowerFirst $ fromMaybe s (L.stripPrefix pre s)
    where toLowerFirst (c : cs) = C.toLower c : cs
-       toLowerFirst [] = []
+         toLowerFirst [] = []
 
 defaultLifecycle :: Lifecycle
 defaultLifecycle = Lifecycle
