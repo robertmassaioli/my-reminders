@@ -36,7 +36,7 @@
       <apply-content />
       <hasSplice name="connectPageToken">
       <script type="text/javascript">(window.AJS && window.AJS.$) || document.write("<script type='text/javascript' src='//code.jquery.com/jquery-1.10.2.min.js'>\x3C/script>")</script>
-      <script type="text/javascript" src="static/pagetoken.js"></script>
+      <script type="text/javascript" src="/static/pagetoken.js"></script>
       </hasSplice>
    </body>
 </html>

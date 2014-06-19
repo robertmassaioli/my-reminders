@@ -78,17 +78,19 @@ generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime
 -- 1. Base64 encode the json.
 -- 1. AES ECB encrypt the string
 encryptPageToken :: CCA.AES -> PageToken -> DB.ByteString
-encryptPageToken aes pageToken = encryptedToken
+encryptPageToken aes pageToken = encryptedEncodedToken
    where
       tokenAsJson = encode pageToken
       tokenAsBase64 = B64.encode . DBL.toStrict $ tokenAsJson
       paddedBase64 = DP.zeroPad 16 tokenAsBase64
       encryptedToken = CCA.encryptECB aes paddedBase64
+      encryptedEncodedToken = B64.encode encryptedToken
 
 decryptPageToken :: CCA.AES -> DB.ByteString -> Either String PageToken
-decryptPageToken aes input = fmap DP.zeroUnpad (B64.decode decryptedToken) >>= eitherDecode . DBL.fromStrict
-   where
-      decryptedToken = CCA.decryptECB aes input
+decryptPageToken aes input = do
+   undecodedEncryptedToken <- B64.decode input
+   let decryptedToken = CCA.decryptECB aes undecodedEncryptedToken
+   fmap DP.zeroUnpad (B64.decode decryptedToken) >>= eitherDecode . DBL.fromStrict
 
 -- TODO we should write unit tests to ensure that every combination of this encrypt and decrypt
 -- can be translated correctly.
