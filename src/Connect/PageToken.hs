@@ -15,6 +15,7 @@ import qualified Control.Applicative as CA
 import qualified Data.ByteString as DB
 import qualified Data.ByteString.Lazy as DBL
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.Padding as DP
 import qualified Data.Text as DT
 import qualified Crypto.Cipher.AES as CCA
 
@@ -81,10 +82,11 @@ encryptPageToken aes pageToken = encryptedToken
    where
       tokenAsJson = encode pageToken
       tokenAsBase64 = B64.encode . DBL.toStrict $ tokenAsJson
-      encryptedToken = CCA.encryptECB aes tokenAsBase64
+      paddedBase64 = DP.zeroPad 16 tokenAsBase64
+      encryptedToken = CCA.encryptECB aes paddedBase64
 
 decryptPageToken :: CCA.AES -> DB.ByteString -> Either String PageToken
-decryptPageToken aes input = B64.decode decryptedToken >>= eitherDecode . DBL.fromStrict
+decryptPageToken aes input = fmap DP.zeroUnpad (B64.decode decryptedToken) >>= eitherDecode . DBL.fromStrict
    where
       decryptedToken = CCA.decryptECB aes input
 

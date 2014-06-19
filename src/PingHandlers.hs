@@ -49,10 +49,14 @@ handlePings = handleMethods
 getPingHandler :: TN.Tenant -> AppHandler ()
 getPingHandler tenant = do
    params <- SC.getQueryParams
+   -- TODO it should have a valid ID
+   -- TODO the user making the request should own the ping
    error "Getting an individual ping has not been implimented yet."
 
 deletePingHandler :: TN.Tenant -> AppHandler ()
 deletePingHandler = error "Deleting a ping has not been implimented yet."
+-- TODO the ping to delete should have a valid request and the user making the request should own
+-- the ping
 
 addPingHandler :: TN.Tenant -> AppHandler ()
 addPingHandler tenant = do

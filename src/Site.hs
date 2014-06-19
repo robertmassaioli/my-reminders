@@ -15,15 +15,19 @@ module Site
 import           Control.Applicative
 import           Control.Monad (join, guard)
 import           Control.Monad.IO.Class (liftIO)
+import qualified Control.Monad.State.Class as MS
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Aeson
+import           Data.Monoid (mempty)
 import           GHC.Generics
 import qualified Data.Text as T
 import           Snap.Core
 import qualified Snap.Types as ST
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
+import qualified Heist.Interpreted as HI
+import qualified Heist.Splices as HS
 import qualified Snap.Snaplet.Heist as SSH
 import qualified Database.PostgreSQL.Simple as PS
 import           Snap.Snaplet.PostgresqlSimple
@@ -32,11 +36,13 @@ import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
 import           Application
 import qualified Heist.Interpreted as I
+import qualified Text.XmlHtml as X
 
 import qualified Web.JWT as J
 
 import Connect.Routes
 import qualified Connect.Connect as CC
+import qualified Connect.Data as CD
 import Model.UserDetails
 import Persistence.PostgreSQL
 import Persistence.Ping
@@ -66,13 +72,27 @@ getAppVersion = "0.1"
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
 createPingPanel :: AppHandler ()
-createPingPanel = withTokenAndTenant $ \token tenant -> 
-   SSH.heistLocal (I.bindSplices $ context tenant token) $ SSH.render "ping-create"
+createPingPanel = withTokenAndTenant $ \token tenant -> do
+   connect <- CD.getConnect
+   SSH.heistLocal (I.bindSplices $ context connect tenant token) $ SSH.render "ping-create"
    where
-      context tenant token = do
+      context connect tenant token = do
          "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
          "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000" -- TODO what is the best way to load your own hostname? Is this even required?
-         "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken undefined token) 
+         "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connect) token) 
+
+hasSplice :: SSH.SnapletISplice App
+hasSplice = do
+   potentialTokenName <- fmap (X.getAttribute "name") H.getParamNode
+   case potentialTokenName of
+      Just tokenName -> do
+         tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS 
+         case tokenSplice of
+            Just _ -> HI.runChildren
+            Nothing -> return . comment . T.pack $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
+      Nothing -> return . comment $ "Could not find 'name' attribute."
+   where
+      comment x = [X.Comment x]
 
 withTokenAndTenant :: (CPT.PageToken -> PT.Tenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \tenant -> do
@@ -93,11 +113,17 @@ applicationRoutes =
    , ("/static"            , serveDirectory "static")
    ]
 
+heistConfig = mempty
+   { H.hcInterpretedSplices = do
+      "hasSplice" H.## hasSplice
+      H.defaultInterpretedSplices
+   }
+
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
-    h <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+    h <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
     s <- SS.nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
     db <- SS.nestSnaplet "db" db pgsInit
