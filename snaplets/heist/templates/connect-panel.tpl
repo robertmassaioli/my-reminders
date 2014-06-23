@@ -22,12 +22,15 @@
       <apply template="headers/tenant" />
 
       <apply template="headers/aui" />
+      <apply template="headers/aui-experimental" />
 
       <apply template="headers/jquery-url-parser" />
 
       <apply template="headers/visibility" />
 
       <apply template="headers/moment" />
+
+      <header-extra />
 
       <!-- TODO this will never be served because we do not have code like this... -->
       <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />

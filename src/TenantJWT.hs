@@ -1,4 +1,7 @@
-module TenantJWT (withTenant) where
+module TenantJWT 
+   ( withTenant
+   , ConnectTenant
+   ) where
 
 import           Control.Applicative
 import           Control.Monad (join, guard)
@@ -12,10 +15,13 @@ import           Application
 import qualified Persistence.PostgreSQL as PP
 import qualified Persistence.Tenant as PT
 import qualified SnapHelpers as SH
+import qualified Connect.AtlassianTypes as CA
+
+type ConnectTenant = (PT.Tenant, Maybe CA.UserKey)
 
 -- TODO instead of just returning the Tenant also return the extra information that comes in the JWT
 -- token such as the user.
-withTenant :: (PT.Tenant -> AppHandler ()) -> AppHandler ()
+withTenant :: (ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
    jwtParam <- fmap decodeBytestring <$> SC.getParam (B.pack "jwt")
    case join jwtParam of
@@ -35,7 +41,7 @@ withTenant tennantApply = do
       decodeBytestring = J.decode . SH.byteStringToText
       missingTokenMessage = "A jwt token is required for this request."
 
-getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String PT.Tenant)
+getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String ConnectTenant)
 getTenant unverifiedJwt = do
    let potentialKey = getClientKey unverifiedJwt
    case potentialKey of
@@ -48,7 +54,7 @@ getTenant unverifiedJwt = do
                Just unverifiedTenant -> 
                   case verifyTenant unverifiedTenant unverifiedJwt of
                      Nothing -> retError "Invalid signature for request. Danger! Request ignored."
-                     Just verifiedTenant -> ret verifiedTenant
+                     Just verifiedTenant -> ret (verifiedTenant, Nothing)
          where
             sClientKey          = show key
             normalisedClientKey = T.pack sClientKey

@@ -37,7 +37,7 @@ addonDescriptor descriptorConfig =
          Modules JiraModules
             { webPanels = [ WebPanel 
                 { key = "ping-create-panel"
-                , name = NameValue "Create pings"
+                , name = NameValue "My reminders"
                 , url = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
                 , location = "atl.jira.view.issue.right.context" 
                 }

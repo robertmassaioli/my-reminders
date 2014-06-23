@@ -72,7 +72,7 @@ getAppVersion = "0.1"
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
 createPingPanel :: AppHandler ()
-createPingPanel = withTokenAndTenant $ \token tenant -> do
+createPingPanel = withTokenAndTenant $ \token (tenant, _) -> do
    connect <- CD.getConnect
    SSH.heistLocal (I.bindSplices $ context connect tenant token) $ SSH.render "ping-create"
    where
@@ -94,10 +94,10 @@ hasSplice = do
    where
       comment x = [X.Comment x]
 
-withTokenAndTenant :: (CPT.PageToken -> PT.Tenant -> AppHandler ()) -> AppHandler ()
-withTokenAndTenant processor = TJ.withTenant $ \tenant -> do
+withTokenAndTenant :: (CPT.PageToken -> TJ.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant processor = TJ.withTenant $ \ct@(tenant, _) -> do
    token <- liftIO $ CPT.generateTokenCurrentTime tenant Nothing
-   processor token tenant
+   processor token ct
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
