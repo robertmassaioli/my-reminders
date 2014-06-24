@@ -21,6 +21,7 @@ import qualified Crypto.Cipher.AES as CCA
 
 import qualified Persistence.Tenant as PT
 import qualified Connect.AtlassianTypes as CA
+import qualified Connect.Tenant as CT
 
 -- TODO We need to add in page token support. This means
 -- 1. Being able to create a page token.
@@ -61,16 +62,16 @@ instance FromJSON PageToken where
       CA.<*> tokenData .:? "p" .!= False
    parseJSON _ = fail "The PageToken should contain a JSON object."
 
-generateToken :: PT.Tenant -> Maybe CA.UserKey -> UTCTime -> PageToken
-generateToken tenant userKey timestamp = PageToken
+generateToken :: CT.ConnectTenant -> UTCTime -> PageToken
+generateToken (tenant, userKey) timestamp = PageToken
    { pageTokenHost = PT.key tenant
    , pageTokenUser = userKey
    , pageTokenTimestamp = timestamp
    , pageTokenAllowInsecurePolling = False
    }
 
-generateTokenCurrentTime :: PT.Tenant -> Maybe CA.UserKey -> IO PageToken
-generateTokenCurrentTime t u = fmap (generateToken t u) getCurrentTime 
+generateTokenCurrentTime :: CT.ConnectTenant -> IO PageToken
+generateTokenCurrentTime ct = fmap (generateToken ct) getCurrentTime 
 
 -- TODO in order to write the token out:
 -- 1. Generate the token.

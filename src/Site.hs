@@ -49,6 +49,7 @@ import Persistence.Ping
 import qualified Persistence.Tenant as PT
 import PingHandlers
 import qualified TenantJWT as TJ
+import qualified Connect.Tenant as CT
 import qualified WithToken as WT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
@@ -94,9 +95,9 @@ hasSplice = do
    where
       comment x = [X.Comment x]
 
-withTokenAndTenant :: (CPT.PageToken -> TJ.ConnectTenant -> AppHandler ()) -> AppHandler ()
-withTokenAndTenant processor = TJ.withTenant $ \ct@(tenant, _) -> do
-   token <- liftIO $ CPT.generateTokenCurrentTime tenant Nothing
+withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant processor = TJ.withTenant $ \ct -> do
+   token <- liftIO $ CPT.generateTokenCurrentTime ct
    processor token ct
 
 ------------------------------------------------------------------------------

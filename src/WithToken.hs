@@ -14,11 +14,12 @@ import qualified Snap.Core as SC
 import qualified SnapHelpers as SH
 
 import           Application
+import qualified Connect.Tenant as CT
 
 acHeaderName :: DC.CI BSC.ByteString
 acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
-tenantFromToken :: (TN.Tenant -> AppHandler ()) -> AppHandler ()
+tenantFromToken :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
    request <- SC.getRequest
    let potentialTokens = SC.getHeaders acHeaderName request
@@ -28,11 +29,11 @@ tenantFromToken tenantApply = do
          connect <- CD.getConnect
          let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connect) acTokenHeader
          case potentiallyDecodedToken of
-            Left error -> respondWithMessageAndLog error
+            Left error -> respondWithMessageAndLog $ "Error decoding token: " ++ error
             Right pageToken -> do
                let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connect) (PT.pageTokenTimestamp pageToken)
                currentTime <- liftIO DTC.getCurrentTime
-               if DTC.diffUTCTime currentTime tokenExpiryTime > 0
+               if DTC.diffUTCTime currentTime tokenExpiryTime < 0
                   then do
                      -- TODO the token has not expired, so we need to load the tenant and give it
                      -- back to the program
@@ -52,7 +53,7 @@ respondWithMessageAndLog message = do
    SC.writeText . T.pack $ message
    SH.respondBadRequest
 
-lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe TN.Tenant)
+lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
 lookupTenantWithPageToken pageToken = do
-   PP.withConnection $ \conn ->
-      TN.lookupTenant conn (PT.pageTokenHost pageToken)
+   PP.withConnection $ \conn -> 
+      fmap (fmap (\x -> (x, PT.pageTokenUser pageToken))) $ TN.lookupTenant conn (PT.pageTokenHost pageToken)

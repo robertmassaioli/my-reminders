@@ -2,16 +2,35 @@ AJS.$(function() {
    console.log("Create reminder loaded...");
    
    var createPing = function(createData) {
+      AJS.$.ajax({
+         url: "/rest/ping",
+         type: "GET",
+         cache: false,
+         contentType: "application/json"
+      });
+
       return AJS.$.ajax({
          url: "/rest/ping",
          type: "PUT",
          cache: false,
-         dataType: "json",
-         data: createData
+         contentType: "application/json",
+         data: JSON.stringify(createData)
       });
    };
 
    var init = function() {
+      AJS.$('#create-reminder-form .custom-operations .submit').click(function(event) {
+          event.preventDefault();
+
+          createPing({
+            pingMagnitude: 1,
+            pingTimeUnit: "Day",
+            pingIssueId: 10000,
+            pingMessage: 'This is a message.',
+          });
+
+      });
+
       AJS.$("#add-reminder").click(function(event) {
           event.preventDefault();
           showCustomCreate(true);
