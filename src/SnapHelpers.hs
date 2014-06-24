@@ -1,12 +1,13 @@
 module SnapHelpers where
 
 import Data.Aeson
+
 import qualified Control.Applicative as CA
 import qualified Snap.Core as SC
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BSC
 
-import           Application
+import Application
 
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
@@ -29,8 +30,8 @@ handleMethods = foldl (CA.<|>) CA.empty . fmap (uncurry SC.method)
 
 writeJson :: (SC.MonadSnap m, ToJSON a) => a -> m ()
 writeJson a = do
-    SC.modifyResponse . SC.setContentType . BSC.pack $"application/json"
-    SC.writeLBS $ encode a
+  SC.modifyResponse . SC.setContentType . BSC.pack $"application/json"
+  SC.writeLBS $ encode a
 
 logErrorS :: String -> AppHandler ()
 logErrorS = SC.logError . BSC.pack

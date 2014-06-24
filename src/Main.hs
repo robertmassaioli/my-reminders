@@ -67,17 +67,17 @@ import           Snap.Loader.Static
 --
 main :: IO ()
 main = do
-    -- Depending on the version of loadSnapTH in scope, this either enables
-    -- dynamic reloading, or compiles it without. The last argument to
-    -- loadSnapTH is a list of additional directories to watch for changes to
-    -- trigger reloads in development mode. It doesn't need to include source
-    -- directories, those are picked up automatically by the splice.
-    (conf, site, cleanup) <- $(loadSnapTH [| getConf |]
-                                          'getActions
-                                          ["snaplets/heist/templates"])
+  -- Depending on the version of loadSnapTH in scope, this either enables
+  -- dynamic reloading, or compiles it without. The last argument to
+  -- loadSnapTH is a list of additional directories to watch for changes to
+  -- trigger reloads in development mode. It doesn't need to include source
+  -- directories, those are picked up automatically by the splice.
+  (conf, site, cleanup) <- $(loadSnapTH [| getConf |]
+                                        'getActions
+                                        ["snaplets/heist/templates"])
 
-    _ <- try $ httpServe conf site :: IO (Either SomeException ())
-    cleanup
+  _ <- try $ httpServe conf site :: IO (Either SomeException ())
+  cleanup
 
 
 ------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ getConf = commandLineAppConfig defaultConfig
 -- sophisticated code might.
 getActions :: Config Snap AppConfig -> IO (Snap (), IO ())
 getActions conf = do
-    (msgs, site, cleanup) <- runSnaplet
-        (appEnvironment =<< getOther conf) S.app
-    hPutStrLn stderr $ T.unpack msgs
-    return (site, cleanup)
+  (msgs, site, cleanup) <- runSnaplet
+      (appEnvironment =<< getOther conf) S.app
+  hPutStrLn stderr $ T.unpack msgs
+  return (site, cleanup)

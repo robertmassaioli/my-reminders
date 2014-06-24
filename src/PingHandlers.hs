@@ -1,12 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 module PingHandlers
-   ( handlePings
-   , executePingsHandler
-   ) where
+  ( handlePings
+  , executePingsHandler
+  ) where
 
 import qualified Data.Text as T 
 import qualified Data.ByteString.Char8 as BSC
@@ -42,11 +41,11 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data PingRequest = PingRequest 
-   { pingMagnitude    :: TimeMagnitude
-   , pingTimeUnit     :: TimeUnit
-   , pingIssueId      :: CA.IssueId
-   , pingMessage      :: T.Text -- TODO turn this into a maybe type
-   } deriving (Show, Generic)
+  { pingMagnitude    :: TimeMagnitude
+  , pingTimeUnit     :: TimeUnit
+  , pingIssueId      :: CA.IssueId
+  , pingMessage      :: T.Text -- TODO turn this into a maybe type
+  } deriving (Show, Generic)
 
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
@@ -56,10 +55,10 @@ instance FromJSON PingRequest
 
 handlePings :: AppHandler ()
 handlePings = handleMethods 
-   [ (SC.GET,     WT.tenantFromToken getPingHandler)
-   , (SC.PUT,     WT.tenantFromToken addPingHandler)
-   , (SC.DELETE,  WT.tenantFromToken deletePingHandler)
-   ]
+  [ (SC.GET,     WT.tenantFromToken getPingHandler)
+  , (SC.PUT,     WT.tenantFromToken addPingHandler)
+  , (SC.DELETE,  WT.tenantFromToken deletePingHandler)
+  ]
 
 getPingHandler :: CT.ConnectTenant -> AppHandler ()
 getPingHandler tenant = do
@@ -83,45 +82,45 @@ deletePingHandler = error "Deleting a ping has not been implimented yet."
 
 logMessage :: String -> AppHandler ()
 logMessage message = do
-   logErrorS message
-   SC.writeText . T.pack $ message
+  logErrorS message
+  SC.writeText . T.pack $ message
 
 addPingHandler :: CT.ConnectTenant -> AppHandler ()
 addPingHandler ct = do
-   logMessage "Started handling the ping..."
-   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-   let maybePing = Data.Aeson.decode request :: Maybe PingRequest
-   case maybePing of
-      Nothing -> do
-         logMessage "Failed to parse the ping that we were given."
-         respondBadRequest -- TODO better error message
-      Just pingRequest -> addPing pingRequest ct
+  logMessage "Started handling the ping..."
+  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+  let maybePing = Data.Aeson.decode request :: Maybe PingRequest
+  case maybePing of
+    Nothing -> do
+      logMessage "Failed to parse the ping that we were given."
+      respondBadRequest -- TODO better error message
+    Just pingRequest -> addPing pingRequest ct
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
 addPing _ (_, Nothing) = error "The user that is attempting to make the ping has not logged in."
 addPing pingRequest (tenant, Just userKey) = do
-   addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant userKey)
-   case addedPing of
-      Just _ -> respondNoContent
-      Nothing -> do
-         logErrorS $ failedInsertPrefix ++ userKey
-         respondInternalServer
-   where
+  addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant userKey)
+  case addedPing of
+    Just _ -> respondNoContent
+    Nothing -> do
+      logErrorS $ failedInsertPrefix ++ userKey
+      respondInternalServer
+    where
       failedInsertPrefix = "Failed to insert new ping: "
 
 addPingFromRequest :: PingRequest -> TN.Tenant -> CA.UserKey -> Connection -> IO (Maybe Integer)
 addPingFromRequest pingRequest tenant userKey' conn = do
-   currentTime <- getCurrentTime
-   let date' = addUTCTime dateDiff currentTime
-   P.addPing conn date' tenantId' link' userKey' message'
-   where
-      dateDiff = timeDiffForPingRequest pingRequest
-      tenantId' = TN.tenantId tenant
-      link' = pingIssueId pingRequest
-      message' = pingMessage pingRequest
+  currentTime <- getCurrentTime
+  let date' = addUTCTime dateDiff currentTime
+  P.addPing conn date' tenantId' link' userKey' message'
+  where
+    dateDiff = timeDiffForPingRequest pingRequest
+    tenantId' = TN.tenantId tenant
+    link' = pingIssueId pingRequest
+    message' = pingMessage pingRequest
 
 --Returns the pingID if ping was a success
-ping :: P.Ping -> IO(Maybe Integer)
+ping :: P.Ping -> IO (Maybe Integer)
 ping rq = do
   putStrLn("pinged: " ++ show rq)
   return $ Just (P.pingId rq)
@@ -132,13 +131,12 @@ executePingsHandler = do
   SC.writeText (T.pack $ show deleted )
   respondWith 200
   
-executePings':: AppHandler ([Integer]) 
-executePings' = SS.with db $ withConnection $ \conn ->
-  do
-    pings <- liftIO $ P.getPings conn
-    successes <- sequence $ map ping pings
-    sequence $ map (P.deletePing conn) (catMaybes successes)                                     
-    return $ catMaybes successes
+executePings':: AppHandler [Integer]
+executePings' = SS.with db $ withConnection $ \conn -> do
+  pings <- liftIO $ P.getPings conn
+  successes <- mapM ping pings
+  mapM_ (P.deletePing conn) (catMaybes successes)                         
+  return $ catMaybes successes
 
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime
 timeDiffForPingRequest request = toDiffTime (pingMagnitude request) (pingTimeUnit request)

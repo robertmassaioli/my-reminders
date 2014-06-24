@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Connect.Connect 
-   ( Connect(..)
-   , initConnectSnaplet
-   ) where
+  ( Connect(..)
+  , initConnectSnaplet
+  ) where
 
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator as DC
@@ -29,45 +29,45 @@ import Connect.Data
 
 toConnect :: ConnectConfig -> Connect
 toConnect conf = Connect
-   { connectAES = CCA.initAES $ ccSecretKey conf
-   , connectPluginName = ccPluginName conf
-   , connectPluginKey = ccPluginKey conf
-   , connectPageTokenTimeout = ccPageTokenTimeout conf
-   }
+  { connectAES = CCA.initAES $ ccSecretKey conf
+  , connectPluginName = ccPluginName conf
+  , connectPluginKey = ccPluginKey conf
+  , connectPageTokenTimeout = ccPageTokenTimeout conf
+  }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
-initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $ do
-   MI.liftIO $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig >>= return . toConnect
+initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $
+  MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
 
 dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
-   { ccSecretKey :: BSC.ByteString
-   , ccPluginName :: String
-   , ccPluginKey :: String
-   , ccPageTokenTimeout :: Integer
-   }
+  { ccSecretKey :: BSC.ByteString
+  , ccPluginName :: String
+  , ccPluginKey :: String
+  , ccPageTokenTimeout :: Integer
+  }
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
-   name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
-   key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
-   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
-   let keyLength = BSC.length secret
-   CM.when (keyLength /= 32) $ do
-      putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
-      SE.exitWith (SE.ExitFailure 1)
-   pageTokenTimeoutInSeconds <- DC.lookupDefault PT.defaultTimeoutSeconds connectConf "page_token_timeout_seconds"
-   return $ ConnectConfig 
-      { ccPluginName = name
-      , ccPluginKey = key
-      , ccSecretKey = secret
-      , ccPageTokenTimeout = pageTokenTimeoutInSeconds 
-      }
+  name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
+  key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
+  secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
+  let keyLength = BSC.length secret
+  CM.when (keyLength /= 32) $ do
+    putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
+    SE.exitWith (SE.ExitFailure 1)
+  pageTokenTimeoutInSeconds <- DC.lookupDefault PT.defaultTimeoutSeconds connectConf "page_token_timeout_seconds"
+  return ConnectConfig 
+    { ccPluginName = name
+    , ccPluginKey = key
+    , ccSecretKey = secret
+    , ccPageTokenTimeout = pageTokenTimeoutInSeconds 
+    }
 
 require :: DCT.Configured a => DCT.Config -> DCT.Name -> String -> IO a
 require config name errorMessage = do
-   potentialValue <- DC.lookup config name
-   case potentialValue of
-      Nothing -> fail errorMessage
-      Just x -> return x
+  potentialValue <- DC.lookup config name
+  case potentialValue of
+    Nothing -> fail errorMessage
+    Just x -> return x
