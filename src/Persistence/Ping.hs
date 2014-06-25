@@ -34,7 +34,7 @@ data Ping = Ping
    , tenantId :: Integer
    , issueId  :: CA.IssueId
    , userKey  :: CA.UserKey
-   , message  :: T.Text
+   , message  :: Maybe T.Text
    , date     :: UTCTime 
    } deriving (Eq,Show,Generic)
 
@@ -48,7 +48,7 @@ instance FromField URI where
 instance ToField URI where
   toField = Escape . B.pack . show
  
-addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> T.Text -> IO (Maybe Integer)
+addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> Maybe T.Text -> IO (Maybe Integer)
 addPing conn date tenantId issueId userKey message = do 
   pingID <- liftIO $ insertReturning conn 
     [sql|

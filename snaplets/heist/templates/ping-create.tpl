@@ -10,6 +10,8 @@
    <bind tag="header-extra">
       <js><bind tag="href">/static/create-reminder.js</bind></js>
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
+
+      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/URI.js/1.11.2/URI.min.js</bind></js>
    </bind>
 
    <!-- TODO use aui experimental here too so that you get the advantage of all features -->
@@ -36,18 +38,18 @@
     <fieldset>
         <div class="field-group custom-container">
             <label for="d-fname">When<span class="aui-icon icon-required"> required</span></label>
-            <input class="text short-field" type="text" id="d-fname" name="d-fname" title="first name" value="1">
-            <select class="select short-field" id="dBase" name="dBase" title="database select">
-                <option selected="selected">Day</option>
-                <option>Week</option>
-                <option>Month</option>
-                <option>Year</option>
+            <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1">
+            <select id="custom-ping-timeunit" class="select short-field" title="time unit">
+                <option value="Day" selected="selected">Day</option>
+                <option value="Week">Week</option>
+                <option value="Month">Month</option>
+                <option value="Year">Year</option>
             </select>
             <div class="description">The time when you should be notified</div>
         </div>
         <div class="field-group custom-container">
             <label for="licenseKey">Message</label>
-            <textarea class="textarea" rows="3" cols="10" name="licenseKey" id="licenseKey"></textarea>
+            <textarea id="custom-ping-message" class="textarea" rows="3" cols="10"></textarea>
             <div class="description">A short optional reminder mesage</div>
         </div>
     </fieldset>

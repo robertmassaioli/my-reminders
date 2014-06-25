@@ -38,7 +38,7 @@ data PingRequest = PingRequest
   { pingMagnitude    :: TimeMagnitude
   , pingTimeUnit     :: TimeUnit
   , pingIssueId      :: CA.IssueId
-  , pingMessage      :: T.Text -- TODO turn this into a maybe type
+  , pingMessage      :: Maybe T.Text -- TODO turn this into a maybe type
   } deriving (Show, Generic)
 
 instance ToJSON TimeUnit
@@ -46,6 +46,18 @@ instance FromJSON TimeUnit
 
 instance ToJSON PingRequest
 instance FromJSON PingRequest
+
+handleMultiPings :: AppHandler ()
+handleMultiPings = handleMethods
+   [ (SC.GET, WT.tenantFromToken getPingsForIssue)
+   , (SC.DELETE, WT.tenantFromToken clearPingsForIssue)
+   ]
+
+getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
+getPingsForIssue tenant = undefined
+
+clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
+clearPingsForIssue tenant = undefined
 
 handlePings :: AppHandler ()
 handlePings = handleMethods 
@@ -66,7 +78,7 @@ getPingHandler tenant = do
          { pingMagnitude = 1
          , pingTimeUnit = Day
          , pingIssueId = 10000
-         , pingMessage = "This is a cool message with text and stuff."
+         , pingMessage = Just "This is a cool message with text and stuff."
          }
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
