@@ -4,22 +4,16 @@
 
 module PingHandlers
   ( handlePings
-  , executePingsHandler
   ) where
 
 import qualified Data.Text as T 
-import qualified Data.ByteString.Char8 as BSC
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import Data.Aeson
-import Data.Maybe
 import Application
 import Data.Time.Clock
-import Data.Time.Clock.POSIX
 import Database.PostgreSQL.Simple
 import GHC.Generics
-import Network.URI
-import Control.Monad.IO.Class
 
 import Persistence.PostgreSQL
 import qualified Persistence.Ping as P 
@@ -118,25 +112,6 @@ addPingFromRequest pingRequest tenant userKey' conn = do
     tenantId' = TN.tenantId tenant
     link' = pingIssueId pingRequest
     message' = pingMessage pingRequest
-
---Returns the pingID if ping was a success
-ping :: P.Ping -> IO (Maybe Integer)
-ping rq = do
-  putStrLn("pinged: " ++ show rq)
-  return $ Just (P.pingId rq)
-  
-executePingsHandler:: AppHandler ()
-executePingsHandler = do 
-  deleted <- executePings'
-  SC.writeText (T.pack $ show deleted )
-  respondWith 200
-  
-executePings':: AppHandler [Integer]
-executePings' = SS.with db $ withConnection $ \conn -> do
-  pings <- liftIO $ P.getPings conn
-  successes <- mapM ping pings
-  mapM_ (P.deletePing conn) (catMaybes successes)                         
-  return $ catMaybes successes
 
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime
 timeDiffForPingRequest request = toDiffTime (pingMagnitude request) (pingTimeUnit request)

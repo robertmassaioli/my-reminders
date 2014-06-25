@@ -108,7 +108,6 @@ applicationRoutes =
   [ ("/"                  , homeHandler sendHomePage)
   , ("/panel/ping/create" , createPingPanel )
   , ("/rest/ping"         , handlePings)  
-  , ("/execute"           , executePingsHandler)  
   , ("/static"            , serveDirectory "static")
   ]
 
