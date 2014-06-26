@@ -20,17 +20,11 @@
       </script>
    </bind>
 
-   <!-- TODO use aui experimental here too so that you get the advantage of all features -->
    <!-- TODO work out per user which one gets pressed the most and optimise for that -->
-<!-- TODO add AUI validation -->
-<!-- TODO textinput instead of textarea because textinputs can have a maxlength -->
-<!-- TODO Test showing the form permenantly -->
+   <!-- TODO add AUI validation, think about validating time -->
+   <!-- TODO textinput instead of textarea because textinputs can have a maxlength -->
+   <!-- TODO Test showing the form permenantly -->
     
-<div>
-   <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-info">Info</span></div>
-   <div id="upcoming-reminders" class="reminders"></div>
-</div>
-<!-- TODO maybe aria-pressed="true" -->
 <div class="reminder-actions aui-buttons">
    <button id="add-reminder" class="aui-button">Add reminder</button>
    <button id="add-reminder-tomorrow" class="aui-button aui-button-link">Tomorrow</button>
@@ -67,4 +61,8 @@
         </div>
     </div>
 </form>
+<div class="reminders-container">
+   <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-info">Info</span></div>
+   <div id="upcoming-reminders" class="reminders"></div>
+</div>
 </apply>

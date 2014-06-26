@@ -2,16 +2,12 @@ body {
    background-color: white;
 }
 
-#add-reminder {
+.reminders-container {
     margin-top: 15px;
  }
 
 .reminder.aui-label.error {
    border-color: red;
-}
-
-.reminder-actions button {
-   margin-top: 15px;
 }
 
 .status-container {
@@ -21,4 +17,8 @@ body {
 .status-container .hidden,
 #reminder-help.hidden {
    display: none;
+}
+
+.aui-button:focus {
+   outline: 0;
 }
