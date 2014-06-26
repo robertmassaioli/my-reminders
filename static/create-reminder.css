@@ -5,3 +5,11 @@ body {
 .reminder-actions button {
    margin-top: 15px;
 }
+
+.status-container {
+   margin-left: 10px;
+}
+
+.status-container .hidden {
+   display: none;
+}

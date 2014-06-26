@@ -35,10 +35,10 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data PingRequest = PingRequest 
-  { pingMagnitude    :: TimeMagnitude
-  , pingTimeUnit     :: TimeUnit
-  , pingIssueId      :: CA.IssueId
-  , pingMessage      :: Maybe T.Text -- TODO turn this into a maybe type
+  { prMagnitude    :: TimeMagnitude
+  , prTimeUnit     :: TimeUnit
+  , prIssueId      :: CA.IssueId
+  , prMessage      :: Maybe T.Text -- TODO turn this into a maybe type
   } deriving (Show, Generic)
 
 instance ToJSON TimeUnit
@@ -54,7 +54,14 @@ handleMultiPings = handleMethods
    ]
 
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-getPingsForIssue tenant = undefined
+getPingsForIssue (_, Nothing) = error "Tried to get the pings for an issue without logging in."
+getPingsForIssue (tenant, Just userKey) = do
+   potentialIssueId <- fmap read (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
+   case potentialIssueId of
+      Just issueId -> do
+         issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
+         SC.writeLBS . encode $ issuePings
+      Nothing -> error "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
 clearPingsForIssue tenant = undefined
@@ -75,10 +82,10 @@ getPingHandler tenant = do
    --error "Getting an individual ping has not been implimented yet."
    where
       exampleData = PingRequest 
-         { pingMagnitude = 1
-         , pingTimeUnit = Day
-         , pingIssueId = 10000
-         , pingMessage = Just "This is a cool message with text and stuff."
+         { prMagnitude = 1
+         , prTimeUnit = Day
+         , prIssueId = 10000
+         , prMessage = Just "This is a cool message with text and stuff."
          }
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
@@ -122,11 +129,11 @@ addPingFromRequest pingRequest tenant userKey' conn = do
   where
     dateDiff = timeDiffForPingRequest pingRequest
     tenantId' = TN.tenantId tenant
-    link' = pingIssueId pingRequest
-    message' = pingMessage pingRequest
+    link' = prIssueId pingRequest
+    message' = prMessage pingRequest
 
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime
-timeDiffForPingRequest request = toDiffTime (pingMagnitude request) (pingTimeUnit request)
+timeDiffForPingRequest request = toDiffTime (prMagnitude request) (prTimeUnit request)
 
 toDiffTime :: TimeMagnitude -> TimeUnit -> NominalDiffTime
 toDiffTime mag unit = case unit of

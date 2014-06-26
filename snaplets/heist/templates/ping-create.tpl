@@ -33,6 +33,11 @@
    <button id="add-reminder" class="aui-button">Add reminder</button>
    <button id="add-reminder-tomorrow" class="aui-button aui-button-link">Tomorrow</button>
    <button id="add-reminder-next-week" class="aui-button aui-button-link">Next Week</button>
+   <span class="status-container">
+        <span id="reminder-creation-pending" class="aui-icon aui-icon-wait">Wait</span>
+        <span id="reminder-creation-success" class="aui-icon aui-icon-success">Success</span>
+        <span id="reminder-creation-error"   class="aui-icon aui-icon-error">Error</span>
+    </span>
 </div>
 <form action="#" method="post" id="create-reminder-form" class="aui hidden">
     <fieldset>
