@@ -16,7 +16,7 @@
       <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
-         <span data-reminder-id="{{PingId}}"{{#Message}} title="{{Message}} ({{fullDate}})"{{/Message}} class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+         <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}}" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
       </script>
    </bind>
 
@@ -27,14 +27,14 @@
 <!-- TODO Test showing the form permenantly -->
     
 <div>
-   <div>Upcoming reminders:</div>
+   <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-info">Info</span></div>
    <div id="upcoming-reminders" class="reminders"></div>
 </div>
 <!-- TODO maybe aria-pressed="true" -->
 <div class="reminder-actions aui-buttons">
    <button id="add-reminder" class="aui-button">Add reminder</button>
    <button id="add-reminder-tomorrow" class="aui-button aui-button-link">Tomorrow</button>
-   <button id="add-reminder-next-week" class="aui-button aui-button-link">Next Week</button>
+   <button id="add-reminder-next-week" class="aui-button aui-button-link">In a week</button>
    <span class="status-container">
         <span id="reminder-creation-pending" class="aui-icon aui-icon-wait">Wait</span>
         <span id="reminder-creation-success" class="aui-icon aui-icon-success">Success</span>

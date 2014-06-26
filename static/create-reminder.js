@@ -157,30 +157,36 @@ AJS.$(function() {
          var remindersContainer = AJS.$("#upcoming-reminders");
          remindersContainer.empty();
 
-         // Parse the dates in each of the reminders
-         AJS.$.each(reminders, function(index, reminder) {
-            var tzDate = moment(reminder["Date"]).tz(user.timeZone);
-            reminder.momentDate = tzDate;
-            reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
-            // Regex to follow the ADG: https://developer.atlassian.com/design/latest/foundations/dates/
-            reminder.prettyDate = reminder.momentDate.fromNow().replace(/^in/, "In");
-         });
+         var haveReminders = reminders.length > 0;
+         AJS.$("#no-reminders").toggleClass("hidden", haveReminders);
+         AJS.$("#reminder-help").toggleClass("hidden", !haveReminders);
+         if(haveReminders) {
+            // Parse the dates in each of the reminders
+            AJS.$.each(reminders, function(index, reminder) {
+               var tzDate = moment(reminder["Date"]).tz(user.timeZone);
+               reminder.momentDate = tzDate;
+               reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
+               // Regex to follow the ADG: https://developer.atlassian.com/design/latest/foundations/dates/
+               reminder.prettyDate = reminder.momentDate.fromNow().replace(/^in/, "In");
+            });
 
-         // Sort the reminders by date
-         reminders.sort(function(a, b) {
-            return a.momentDate.isBefore(b.momentDate) ? -1 : 1;
-         });
+            // Sort the reminders by date
+            reminders.sort(function(a, b) {
+               return a.momentDate.isBefore(b.momentDate) ? -1 : 1;
+            });
 
-         // Output the reminders
-         AJS.$.each(reminders, function(index, reminder) {
-            remindersContainer.append(Mustache.render(templates.reminderLozenge, reminder));
-         });
+            // Output the reminders
+            AJS.$.each(reminders, function(index, reminder) {
+               remindersContainer.append(Mustache.render(templates.reminderLozenge, reminder));
+            });
 
-         // Surface the messages in tooltips.
-         AJS.$(".reminders .reminder").tooltip({
-            aria: true,
-            title: setTooltipTitle
-         });
+            // Surface the messages in tooltips.
+            AJS.$(".reminders .reminder").tooltip({
+               aria: true,
+               title: setTooltipTitle,
+               gravity: "nw"
+            });
+         }
 
          // resize the container to compensate
          AP.resize();
@@ -190,6 +196,12 @@ AJS.$(function() {
    var init = function() {
       setupTemplates();
       setTimeout(refreshReminders, 1); // So that the Acpt token has time to be injected
+
+      AJS.$("#reminder-help").tooltip({
+         aria: true,
+         title: setTooltipTitle,
+         gravity: "nw"
+      });
 
       AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
          var magnitude = parseInt(AJS.$("#custom-ping-magnitude").val());
