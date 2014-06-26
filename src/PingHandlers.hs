@@ -4,14 +4,17 @@
 
 module PingHandlers
   ( handlePings
+  , handleMultiPings
   ) where
 
 import qualified Data.Text as T 
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import Data.Aeson
+import Data.Aeson.Types (defaultOptions, fieldLabelModifier)
 import Application
 import Data.Time.Clock
+import qualified Data.ByteString.Char8 as BC
 import Database.PostgreSQL.Simple
 import GHC.Generics
 
@@ -35,11 +38,18 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data PingRequest = PingRequest 
-  { prMagnitude    :: TimeMagnitude
-  , prTimeUnit     :: TimeUnit
-  , prIssueId      :: CA.IssueId
-  , prMessage      :: Maybe T.Text -- TODO turn this into a maybe type
+  { prqTimeDelay    :: TimeMagnitude
+  , prqTimeUnit     :: TimeUnit
+  , prqIssueId      :: CA.IssueId
+  , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
+
+data PingResponse = PingResponse
+   { prsDate :: UTCTime
+   , prsPingId :: Integer
+   , prsIssueId :: CA.IssueId
+   , prsMessage :: Maybe T.Text
+   } deriving (Show, Generic)
 
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
@@ -47,20 +57,34 @@ instance FromJSON TimeUnit
 instance ToJSON PingRequest
 instance FromJSON PingRequest
 
+instance ToJSON PingResponse where
+   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
+
+instance FromJSON PingResponse where
+   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
+
 handleMultiPings :: AppHandler ()
 handleMultiPings = handleMethods
    [ (SC.GET, WT.tenantFromToken getPingsForIssue)
    , (SC.DELETE, WT.tenantFromToken clearPingsForIssue)
    ]
 
+toPingResponse :: P.Ping -> PingResponse
+toPingResponse ping = PingResponse
+   { prsDate = P.pingDate ping
+   , prsPingId = P.pingId ping
+   , prsIssueId = P.pingIssueId ping
+   , prsMessage = P.pingMessage ping
+   }
+
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
 getPingsForIssue (_, Nothing) = error "Tried to get the pings for an issue without logging in."
 getPingsForIssue (tenant, Just userKey) = do
-   potentialIssueId <- fmap read (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
+   potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
    case potentialIssueId of
       Just issueId -> do
          issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
-         SC.writeLBS . encode $ issuePings
+         SC.writeLBS . encode . fmap toPingResponse $ issuePings
       Nothing -> error "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
@@ -82,10 +106,10 @@ getPingHandler tenant = do
    --error "Getting an individual ping has not been implimented yet."
    where
       exampleData = PingRequest 
-         { prMagnitude = 1
-         , prTimeUnit = Day
-         , prIssueId = 10000
-         , prMessage = Just "This is a cool message with text and stuff."
+         { prqTimeDelay = 1
+         , prqTimeUnit = Day
+         , prqIssueId = 10000
+         , prqMessage = Just "This is a cool message with text and stuff."
          }
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
@@ -129,11 +153,11 @@ addPingFromRequest pingRequest tenant userKey' conn = do
   where
     dateDiff = timeDiffForPingRequest pingRequest
     tenantId' = TN.tenantId tenant
-    link' = prIssueId pingRequest
-    message' = prMessage pingRequest
+    link' = prqIssueId pingRequest
+    message' = prqMessage pingRequest
 
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime
-timeDiffForPingRequest request = toDiffTime (prMagnitude request) (prTimeUnit request)
+timeDiffForPingRequest request = toDiffTime (prqTimeDelay request) (prqTimeUnit request)
 
 toDiffTime :: TimeMagnitude -> TimeUnit -> NominalDiffTime
 toDiffTime mag unit = case unit of

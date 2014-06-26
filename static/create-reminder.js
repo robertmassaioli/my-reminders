@@ -91,6 +91,17 @@ AJS.$(function() {
    };
 
    var init = function() {
+      setTimeout(function() {
+         AJS.$.ajax({
+            url: "/rest/pings", 
+            type: "GET", 
+            cache: false,
+            data: {
+               issueId: issueId
+            }
+         }).done(function(json) { console.log(json) });
+      }, 20);
+
       AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
          var magnitude = parseInt(AJS.$("#custom-ping-magnitude").val());
          var timeUnit = AJS.$("#custom-ping-timeunit").val();
