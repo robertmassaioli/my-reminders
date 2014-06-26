@@ -92,14 +92,14 @@ toPingResponse ping = PingResponse
    }
 
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-getPingsForIssue (_, Nothing) = error "Tried to get the pings for an issue without logging in."
+getPingsForIssue (_, Nothing) = respondWithError unauthorised "You need to login before you query for reminders."
 getPingsForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
    case potentialIssueId of
       Just issueId -> do
          issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
          SC.writeLBS . encode . fmap toPingResponse $ issuePings
-      Nothing -> error "No issueId is passed into the get call."
+      Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
 clearPingsForIssue tenant = undefined
@@ -112,9 +112,9 @@ handlePings = handleMethods
   ]
 
 getPingHandler :: CT.ConnectTenant -> AppHandler ()
-getPingHandler (_, Nothing) = error "Tried to get a ping for an issue without logging in."
+getPingHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 getPingHandler (tenant, Just userKey) = do
-   rawPingId <- SC.getQueryParam "pingId"
+   rawPingId <- SC.getQueryParam "reminderId"
    let potentialPingId = fmap (read . BC.unpack) rawPingId :: Maybe Integer
    case potentialPingId of
       Just pingId -> do
@@ -122,12 +122,10 @@ getPingHandler (tenant, Just userKey) = do
          case potentialPing of 
             Nothing -> respondNotFound
             Just ping -> SC.writeLBS . encode . toPingResponse $ ping
-      Nothing -> do
-         SC.writeBS . BC.pack $ "Did not pass the pingId in the request. Do not know which ping to return."
-         respondBadRequest
+      Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
-deletePingHandler (_, Nothing) = error "Tried to get the pings for an issue without logging in."
+deletePingHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 deletePingHandler (tenant, Just userKey) = do
    potentialRawReminderId <- SC.getPostParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
@@ -140,37 +138,23 @@ deletePingHandler (tenant, Just userKey) = do
             _ -> do
                logErrorS $ "Deleted " ++ show deletedPings ++ " reminders with a single delete request. Primary key invalid on: " ++ show reminderId
                respondInternalServer
-      Nothing -> do
-         SC.writeBS . BC.pack $ "Did not pass through a reminderId with the request."
-         respondBadRequest
--- TODO the ping to delete should have a valid request and the user making the request should own
--- the ping
-
-logMessage :: String -> AppHandler ()
-logMessage message = do
-  logErrorS message
-  SC.writeText . T.pack $ message
+      Nothing -> respondWithError badRequest "A reminderId is required to see which reminder should be deleted."
 
 addPingHandler :: CT.ConnectTenant -> AppHandler ()
 addPingHandler ct = do
-  logMessage "Started handling the ping..."
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
   let maybePing = eitherDecode request :: Either String PingRequest
   case maybePing of
-    Left errorMessage -> do
-      SC.writeBS . BC.pack $ errorMessage
-      respondBadRequest -- TODO better error message
+    Left errorMessage -> respondWithError badRequest errorMessage
     Right pingRequest -> addPing pingRequest ct
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
-addPing _ (_, Nothing) = error "The user that is attempting to make the ping has not logged in."
+addPing _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addPing pingRequest (tenant, Just userKey) = do
   addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant userKey)
   case addedPing of
     Just _ -> respondNoContent
-    Nothing -> do
-      logErrorS $ failedInsertPrefix ++ userKey
-      respondInternalServer
+    Nothing -> respondWithError internalServer (failedInsertPrefix ++ userKey)
     where
       failedInsertPrefix = "Failed to insert new ping: "
 
