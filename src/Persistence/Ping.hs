@@ -6,6 +6,7 @@
 module Persistence.Ping 
    ( Ping(..)
    , addPing
+   , getReminderByUser
    , getExpiredPings
    , getLivePingsByUser
    , getLivePingsForIssueByUser
@@ -33,8 +34,10 @@ import qualified Data.ByteString.Char8 as B
 
 import qualified Connect.AtlassianTypes as CA
 
+type PingId = Integer
+
 data Ping = Ping 
-   { pingId   :: Integer
+   { pingId       :: PingId
    , pingTenantId :: Integer
    , pingIssueId  :: CA.IssueId
    , pingUserKey  :: CA.UserKey
@@ -60,6 +63,16 @@ addPing conn date tenantId issueId userKey message = do
       VALUES (?,?,?,?,?) RETURNING id
     |] (tenantId, issueId, userKey, message, date)
   return $ listToMaybe $ join pingID
+
+getReminderByUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO (Maybe Ping)
+getReminderByUser tenant userKey pid conn = do
+   result <- liftIO $ query conn
+      [sql|
+         SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
+      |] (pid, PT.tenantId tenant, B.pack userKey)
+   case result of
+      [x] -> return $ Just x
+      _   -> return Nothing
   
 getLivePingsByUser :: Connection -> PT.Tenant -> CA.UserKey -> IO [Ping]
 getLivePingsByUser connection tenant userKey = do

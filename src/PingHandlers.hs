@@ -112,19 +112,19 @@ handlePings = handleMethods
   ]
 
 getPingHandler :: CT.ConnectTenant -> AppHandler ()
-getPingHandler tenant = do
-   params <- SC.getQueryParams
-   -- TODO it should have a valid ID
-   -- TODO the user making the request should own the ping
-   SC.writeLBS . encode $ exampleData
-   --error "Getting an individual ping has not been implimented yet."
-   where
-      exampleData = PingRequest 
-         { prqTimeDelay = 1
-         , prqTimeUnit = Day
-         , prqIssueId = 10000
-         , prqMessage = Just "This is a cool message with text and stuff."
-         }
+getPingHandler (_, Nothing) = error "Tried to get a ping for an issue without logging in."
+getPingHandler (tenant, Just userKey) = do
+   rawPingId <- SC.getQueryParam "pingId"
+   let potentialPingId = fmap (read . BC.unpack) rawPingId :: Maybe Integer
+   case potentialPingId of
+      Just pingId -> do
+         potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
+         case potentialPing of 
+            Nothing -> respondNotFound
+            Just ping -> SC.writeLBS . encode . toPingResponse $ ping
+      Nothing -> do
+         SC.writeBS . BC.pack $ "Did not pass the pingId in the request. Do not know which ping to return."
+         respondBadRequest
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
 deletePingHandler (_, Nothing) = error "Tried to get the pings for an issue without logging in."
