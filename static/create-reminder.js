@@ -34,12 +34,6 @@ AJS.$(function() {
    var createReminder = function(timeDelay, timeUnit, message) {
       setCreationState(creationState.creating);
 
-      AJS.$.ajax({
-         url: "/rest/ping",
-         type: "GET",
-         cache: false
-      });
-
       var requestData = {
          IssueId: issueId,
          TimeDelay: timeDelay,
@@ -213,15 +207,13 @@ AJS.$(function() {
          var message = AJS.$("#custom-ping-message").val();
 
          if(!isNaN(magnitude)) {
-            var request = createReminder(magnitude, timeUnit, message);
-            request.done(resetCreateForm);
+            createReminder(magnitude, timeUnit, message).done(resetCreateForm);
          }
       }));
 
       AJS.$(".reminders").on("click", ".reminder .aui-icon-close", function() {
          var $reminder = AJS.$(this).parent();
          var reminderId = $reminder.data("reminder-id");
-         console.log(reminderId);
 
          var deleteRequest = deleteReminder(reminderId);
 
@@ -258,7 +250,7 @@ AJS.$(function() {
    };
    
    var setTooltipTitle = function() { 
-      setTimeout(AP.resize, 2); // Dirty because tipsy lacks a callback function.
+      setTimeout(AP.resize, 2); // Dirty because tipsy lacks a callback function for after it displays an element.
       return this.getAttribute('original-title'); 
    };
 
