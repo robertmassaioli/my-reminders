@@ -22,5 +22,5 @@ CREATE TABLE ping (
        tenantId INTEGER not null,
        issueId INTEGER not null,
        userKey TEXT not null,
-       message TEXT not null,
+       message TEXT,
        date TIMESTAMP WITH TIME ZONE);

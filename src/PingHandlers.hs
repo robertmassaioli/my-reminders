@@ -26,7 +26,7 @@ import qualified Persistence.Tenant as TN
 import qualified Connect.AtlassianTypes as CA
 import qualified Connect.Tenant as CT
 
-type TimeMagnitude = Integer
+type TimeDelay = Integer
 
 -- No Month time because month's are not always the same length. Approximate months as four weeks.
 data TimeUnit 
@@ -38,7 +38,7 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data PingRequest = PingRequest 
-  { prqTimeDelay    :: TimeMagnitude
+  { prqTimeDelay    :: TimeDelay
   , prqTimeUnit     :: TimeUnit
   , prqIssueId      :: CA.IssueId
   , prqMessage      :: Maybe T.Text
@@ -54,8 +54,22 @@ data PingResponse = PingResponse
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
-instance ToJSON PingRequest
-instance FromJSON PingRequest
+instance ToJSON PingRequest where
+   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
+
+instance FromJSON PingRequest where
+   parseJSON (Object o) = do
+      delay    <- o .:  "TimeDelay"
+      unit     <- o .:  "TimeUnit" 
+      issue    <- o .:  "IssueId"
+      message  <- o .:? "Message"
+      return $ PingRequest 
+         { prqTimeDelay = delay
+         , prqTimeUnit = unit
+         , prqIssueId = issue
+         , prqMessage = message
+         }
+   parseJSON _ = fail "Expect the PingRequest to be a JSON object but it was not."
 
 instance ToJSON PingResponse where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
@@ -113,7 +127,14 @@ getPingHandler tenant = do
          }
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
-deletePingHandler = error "Deleting a ping has not been implimented yet."
+deletePingHandler tenant = do
+   potentialRawReminderId <- SC.getPostParam "reminderId"
+   let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
+   case potentialReminderId of
+      Just reminderId -> undefined
+      Nothing -> do
+         SC.writeBS . BC.pack $ "Did not pass through a reminderId with the request."
+         respondBadRequest
 -- TODO the ping to delete should have a valid request and the user making the request should own
 -- the ping
 
@@ -126,12 +147,12 @@ addPingHandler :: CT.ConnectTenant -> AppHandler ()
 addPingHandler ct = do
   logMessage "Started handling the ping..."
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-  let maybePing = Data.Aeson.decode request :: Maybe PingRequest
+  let maybePing = eitherDecode request :: Either String PingRequest
   case maybePing of
-    Nothing -> do
-      logMessage "Failed to parse the ping that we were given."
+    Left errorMessage -> do
+      SC.writeBS . BC.pack $ errorMessage
       respondBadRequest -- TODO better error message
-    Just pingRequest -> addPing pingRequest ct
+    Right pingRequest -> addPing pingRequest ct
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
 addPing _ (_, Nothing) = error "The user that is attempting to make the ping has not logged in."
@@ -159,7 +180,7 @@ addPingFromRequest pingRequest tenant userKey' conn = do
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime
 timeDiffForPingRequest request = toDiffTime (prqTimeDelay request) (prqTimeUnit request)
 
-toDiffTime :: TimeMagnitude -> TimeUnit -> NominalDiffTime
+toDiffTime :: TimeDelay -> TimeUnit -> NominalDiffTime
 toDiffTime mag unit = case unit of
    Minute   -> fromIntegral $ mag * 60
    Hour     -> toDiffTime (mag * 60)   Minute

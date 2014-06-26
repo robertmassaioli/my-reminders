@@ -31,19 +31,36 @@ AJS.$(function() {
       });
    };
    
-   var createPing = function(createData) {
+   var createReminder = function(timeDelay, timeUnit, message) {
       setCreationState(creationState.creating);
+
+      AJS.$.ajax({
+         url: "/rest/ping",
+         type: "GET",
+         cache: false
+      });
+
+      var requestData = {
+         IssueId: issueId,
+         TimeDelay: timeDelay,
+         TimeUnit: timeUnit
+      };
+
+      if(message) {
+         requestData.Message = message;
+      }
 
       var request = AJS.$.ajax({
          url: "/rest/ping",
          type: "PUT",
          cache: false,
          contentType: "application/json",
-         data: JSON.stringify(createData)
+         data: JSON.stringify(requestData)
       });
 
       request.done(function() {
          setCreationState(creationState.created);
+         refreshReminders();
       });
 
       request.fail(function() {
@@ -53,13 +70,13 @@ AJS.$(function() {
       return request;
    };
 
-   var deletePing = function(pingId) {
-      var request = AJS.$.ajax({
+   var deleteReminder = function(reminderId) {
+      return AJS.$.ajax({
          url: "/rest/ping",
          type: "DELETE",
          cache: false,
          data: {
-            pingId: pingId
+            reminderId: reminderId
          }
       });
    };
@@ -99,7 +116,7 @@ AJS.$(function() {
       if(state === creationState.created || state == creationState.failed) {
          timeoutHandle = setTimeout(function() {
             setCreationState(creationState.notCreating);
-         }, 4000);
+         }, 1500);
       }
    };
 
@@ -180,20 +197,28 @@ AJS.$(function() {
          var message = AJS.$("#custom-ping-message").val();
 
          if(!isNaN(magnitude)) {
-            var request = createPing({
-               pingMagnitude: magnitude,
-               pingTimeUnit: timeUnit,
-               pingIssueId: issueId,
-               pingMessage: message,
-            });
-
+            var request = createReminder(magnitude, timeUnit, message);
             request.done(resetCreateForm);
          }
       }));
 
       AJS.$(".reminders").on("click", ".reminder .aui-icon-close", function() {
-         var reminderId = AJS.$(this).parent().data("reminder-id");
+         var $reminder = AJS.$(this).parent();
+         var reminderId = $reminder.data("reminder-id");
          console.log(reminderId);
+
+         var deleteRequest = deleteReminder(reminderId);
+
+         deleteRequest.done(function() {
+            $reminder.remove();
+         });
+
+         deleteRequest.fail(function() {
+            $reminder.addClass("error");
+            setTimeout(function() {
+               $reminder.removeClass("error");
+            }, 1500);
+         });
       });
 
       AJS.$("#add-reminder").click(handle(function() {
@@ -201,19 +226,11 @@ AJS.$(function() {
       }));
 
       AJS.$("#add-reminder-tomorrow").click(handle(function() {
-         createPing({
-            pingMagnitude: 1,
-            pingTimeUnit: timeUnits.day,
-            pingIssueID: issueId
-         });
+         createReminder(1, timeUnits.day);
       }));
 
       AJS.$("#add-reminder-next-week").click(handle(function() {
-         createPing({
-            pingMagnitude: 1,
-            pingTimeUnit: timeUnits.week,
-            pingIssueID: issueId
-         });
+         createReminder(1, timeUnits.week);
       }));
 
       AJS.$(".custom-operations .cancel").click(handle(function() {

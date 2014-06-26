@@ -6,6 +6,10 @@ body {
     margin-top: 15px;
  }
 
+.reminder.aui-label.error {
+   border-color: red;
+}
+
 .reminder-actions button {
    margin-top: 15px;
 }

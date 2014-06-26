@@ -14,3 +14,6 @@ tags
 
 # Log Files
 /log
+
+# OSX Files
+.DS_store
