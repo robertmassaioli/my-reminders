@@ -34,12 +34,6 @@ AJS.$(function() {
    var createPing = function(createData) {
       setCreationState(creationState.creating);
 
-      AJS.$.ajax({
-         url: "/rest/ping",
-         type: "GET",
-         cache: false
-      });
-
       var request = AJS.$.ajax({
          url: "/rest/ping",
          type: "PUT",
@@ -57,6 +51,17 @@ AJS.$(function() {
       });
 
       return request;
+   };
+
+   var deletePing = function(pingId) {
+      var request = AJS.$.ajax({
+         url: "/rest/ping",
+         type: "DELETE",
+         cache: false,
+         data: {
+            pingId: pingId
+         }
+      });
    };
 
    // Handle the event prevention and still fire off a handler function
@@ -135,6 +140,7 @@ AJS.$(function() {
          AJS.$.each(reminders, function(index, reminder) {
             var tzDate = moment(reminder["Date"]).tz(user.timeZone);
             reminder.momentDate = tzDate;
+            reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
             // Regex to follow the ADG: https://developer.atlassian.com/design/latest/foundations/dates/
             reminder.prettyDate = reminder.momentDate.fromNow().replace(/^in/, "In");
          });
@@ -184,6 +190,11 @@ AJS.$(function() {
             request.done(resetCreateForm);
          }
       }));
+
+      AJS.$(".reminders").on("click", ".reminder .aui-icon-close", function() {
+         var reminderId = AJS.$(this).parent().data("reminder-id");
+         console.log(reminderId);
+      });
 
       AJS.$("#add-reminder").click(handle(function() {
           showCustomCreate(true);
