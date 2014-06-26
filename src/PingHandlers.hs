@@ -127,11 +127,19 @@ getPingHandler tenant = do
          }
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
-deletePingHandler tenant = do
+deletePingHandler (_, Nothing) = error "Tried to get the pings for an issue without logging in."
+deletePingHandler (tenant, Just userKey) = do
    potentialRawReminderId <- SC.getPostParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
-      Just reminderId -> undefined
+      Just reminderId -> do
+         deletedPings <- SS.with db $ withConnection (P.deletePingForUser tenant userKey reminderId)
+         case deletedPings of
+            1 -> respondNoContent
+            0 -> respondNotFound
+            _ -> do
+               logErrorS $ "Deleted " ++ show deletedPings ++ " reminders with a single delete request. Primary key invalid on: " ++ show reminderId
+               respondInternalServer
       Nothing -> do
          SC.writeBS . BC.pack $ "Did not pass through a reminderId with the request."
          respondBadRequest

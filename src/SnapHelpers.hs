@@ -13,9 +13,11 @@ respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
 
 respondBadRequest       :: SC.MonadSnap m => m ()
+respondNotFound         :: SC.MonadSnap m => m ()
 respondInternalServer   :: SC.MonadSnap m => m ()
 respondNoContent        :: SC.MonadSnap m => m ()
 respondBadRequest       = respondWith 400
+respondNotFound         = respondWith 404
 respondInternalServer   = respondWith 500
 respondNoContent        = respondWith 204
 

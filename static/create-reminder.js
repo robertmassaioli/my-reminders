@@ -71,7 +71,7 @@ AJS.$(function() {
    };
 
    var deleteReminder = function(reminderId) {
-      return AJS.$.ajax({
+      var request = AJS.$.ajax({
          url: "/rest/ping",
          type: "DELETE",
          cache: false,
@@ -79,6 +79,10 @@ AJS.$(function() {
             reminderId: reminderId
          }
       });
+
+      request.done(refreshReminders);
+
+      return request;
    };
 
    // Handle the event prevention and still fire off a handler function
