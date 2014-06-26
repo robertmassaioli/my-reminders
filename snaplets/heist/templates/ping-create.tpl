@@ -12,6 +12,12 @@
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
 
       <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/URI.js/1.11.2/URI.min.js</bind></js>
+      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js</bind></js>
+      <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
+
+      <script id="reminder-lozenge" type="x-tmpl-mustache">
+         <span data-reminder-id="{{PingId}}"{{#Message}} title="{{Message}}"{{/Message}} class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+      </script>
    </bind>
 
    <!-- TODO use aui experimental here too so that you get the advantage of all features -->
@@ -20,13 +26,27 @@
 <!-- TODO textinput instead of textarea because textinputs can have a maxlength -->
 <!-- TODO Test showing the form permenantly -->
     
-<div id="upcoming-reminders" class="reminders">
-    <span>Upcoming reminders:</span>
-    <span title="Ping me, when I am needed..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">Tomorrow<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
-    <span title="Friday, friday, gotta view issues on friday..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 2 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
-    <span id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 5 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
-    <span title="Baby come back, I don't wanna loose you." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">20 Dec 2013<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
-    <span title="I am bad, and that is good. I will never be good and that's not bad, because there's no person that I would rather be than me." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">1 Jan 2014<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+<div>
+   <div>Upcoming reminders:</div>
+   <div id="upcoming-reminders" class="reminders">
+      <!--
+       <span title="Ping me, when I am needed..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">Tomorrow<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Friday, friday, gotta view issues on friday..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 2 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 5 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Baby come back, I don't wanna loose you." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">20 Dec 2013<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="I am bad, and that is good. I will never be good and that's not bad, because there's no person that I would rather be than me." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">1 Jan 2014<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Ping me, when I am needed..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">Tomorrow<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Ping me, when I am needed..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">Tomorrow<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Friday, friday, gotta view issues on friday..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 2 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 5 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Baby come back, I don't wanna loose you." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">20 Dec 2013<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="I am bad, and that is good. I will never be good and that's not bad, because there's no person that I would rather be than me." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">1 Jan 2014<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Friday, friday, gotta view issues on friday..." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 2 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">In 5 days<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="Baby come back, I don't wanna loose you." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">20 Dec 2013<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       <span title="I am bad, and that is good. I will never be good and that's not bad, because there's no person that I would rather be than me." id="closeable-label-nourl" class="reminder aui-label aui-label-closeable">1 Jan 2014<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+       -->
+   </div>
 </div>
 <!-- TODO maybe aria-pressed="true" -->
 <div class="reminder-actions aui-buttons">

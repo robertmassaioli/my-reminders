@@ -6,6 +6,7 @@ AJS.$(function() {
       console.log("This is an error and we need to block everything...");
    }
    AJS.log("Issue id: " + issueId);
+   var userKey = queryParams["user_id"];
 
    var timeUnits = {
       minute: "Minute",
@@ -13,6 +14,21 @@ AJS.$(function() {
       day: "Day",
       week: "Week",
       year: "Year"
+   };
+
+   var requestUserDetails = function(userkey) {
+      return AJS.$.Deferred(function() {
+         var self = this;
+         AP.request({ 
+            url: "/rest/api/latest/user", 
+            cache: true,
+            data: { 
+               key: userkey
+            },
+            success: self.resolve,
+            fail: self.reject
+         });
+      });
    };
    
    var createPing = function(createData) {
@@ -90,17 +106,63 @@ AJS.$(function() {
       showCustomCreate(false);
    };
 
+   var templates = {};
+
+   var setupTemplates = function() {
+      templates.reminderLozenge = $('#reminder-lozenge').html();
+      Mustache.parse(templates.reminderLozenge);
+   };
+
+   var refreshReminders = function() {
+      var pingsRequest = AJS.$.ajax({
+         url: "/rest/pings", 
+         type: "GET", 
+         cache: false,
+         data: {
+            issueId: issueId
+         }
+      });
+
+      AJS.$.when(pingsRequest, requestUserDetails(userKey)).done(function(pingsResponse, userResponse) {
+         var reminders = JSON.parse(pingsResponse[0]);
+         var user = JSON.parse(userResponse[0]);
+
+         // Clear the reminders container
+         var remindersContainer = AJS.$("#upcoming-reminders");
+         remindersContainer.empty();
+
+         // Parse the dates in each of the reminders
+         AJS.$.each(reminders, function(index, reminder) {
+            var tzDate = moment(reminder["Date"]).tz(user.timeZone);
+            reminder.momentDate = tzDate;
+            // Regex to follow the ADG: https://developer.atlassian.com/design/latest/foundations/dates/
+            reminder.prettyDate = reminder.momentDate.fromNow().replace(/^in/, "In");
+         });
+
+         // Sort the reminders by date
+         reminders.sort(function(a, b) {
+            return a.momentDate.isBefore(b.momentDate) ? -1 : 1;
+         });
+
+         // Output the reminders
+         AJS.$.each(reminders, function(index, reminder) {
+            remindersContainer.append(Mustache.render(templates.reminderLozenge, reminder));
+         });
+
+         // Surface the messages in tooltips.
+         AJS.$(".reminders .reminder").tooltip({
+            aria: true,
+            title: setTooltipTitle
+         });
+
+         // resize the container to compensate
+         AP.resize();
+      });
+   };
+
    var init = function() {
-      setTimeout(function() {
-         AJS.$.ajax({
-            url: "/rest/pings", 
-            type: "GET", 
-            cache: false,
-            data: {
-               issueId: issueId
-            }
-         }).done(function(json) { console.log(json) });
-      }, 20);
+      setupTemplates();
+      setTimeout(refreshReminders, 1); // So that the Acpt token has time to be injected
 
       AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
          var magnitude = parseInt(AJS.$("#custom-ping-magnitude").val());
@@ -146,11 +208,6 @@ AJS.$(function() {
       AJS.$(".custom-operations .cancel").click(handle(function() {
          resetCreateForm();
       }));
-
-      AJS.$(".reminders .reminder").tooltip({
-         aria: true,
-         title: setTooltipTitle
-      });
 
       setCreationState(creationState.notCreating);
       resetCreateForm();

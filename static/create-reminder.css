@@ -2,6 +2,10 @@ body {
    background-color: white;
 }
 
+#add-reminder {
+    margin-top: 15px;
+ }
+
 .reminder-actions button {
    margin-top: 15px;
 }
