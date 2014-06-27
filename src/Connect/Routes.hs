@@ -25,11 +25,12 @@ import qualified Data.ByteString.Char8 as BLC
 import qualified Data.CaseInsensitive as CI
 
 import qualified Connect.Data as CD
+import qualified SnapHelpers as SH
 
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
   where 
-    sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> showError unknownHeaderMessage
+    sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
     unknownHeaderMessage = T.pack "Unknown accept header"
     (Just jsonMT) = parseString "application/json"
     (Just textHtmlMT) = parseString "text/html"
@@ -37,12 +38,6 @@ homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT
 -- TODO this should be a helper function somewhere
 parseString :: String -> Maybe NM.MediaType
 parseString = NM.parse . BLC.pack
-
-showError :: SC.MonadSnap m => T.Text -> m ()
-showError msg = do
-  SC.logError $ E.encodeUtf8 msg
-  SC.modifyResponse $ SC.setResponseCode 400
-  SC.writeText msg
 
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
@@ -83,9 +78,7 @@ installedHandler = do
        mTenantId <- SS.with db $ withConnection $ \conn -> insertTenantInformation conn tenantInfo
        case mTenantId of
           Just _ -> SC.modifyResponse $ SC.setResponseCode 204
-          Nothing -> do
-           SC.logError . BLC.pack $ "Failed to insert new tenant"
-           SC.modifyResponse $ SC.setResponseCode 500
+          Nothing -> SH.respondWithError SH.internalServer "Failed to insert the new tenant."
       ) mTenantInfo
 
 -- TODO extract this into a helper module

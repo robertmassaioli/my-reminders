@@ -20,14 +20,11 @@ withTenant :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
   jwtParam <- fmap decodeBytestring <$> SC.getParam (B.pack "jwt")
   case join jwtParam of
-    Nothing -> do
-      SH.logErrorS missingTokenMessage
-      SC.writeText . T.pack $ missingTokenMessage
-      SH.respondBadRequest
+    Nothing -> SH.respondPlainWithError SH.badRequest missingTokenMessage
     Just unverifiedJwt -> do
       possibleTenant <- getTenant unverifiedJwt
       case possibleTenant of
-        Left result -> SH.respondWithError SH.badRequest result
+        Left result -> SH.respondPlainWithError SH.badRequest result
         Right tenant -> tennantApply tenant
   where
     decodeBytestring = J.decode . SH.byteStringToText

@@ -48,13 +48,6 @@ data Ping = Ping
 instance FromRow Ping where
   fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field
   
---instance FromField URI where
---  fromField _ (Just bstr) = pure $ fromMaybe nullURI $ parseURI (B.unpack bstr)
---  fromField f _       = returnError ConversionFailed f "data is not a valid URI value"
-
---instance ToField URI where
---  toField = Escape . B.pack . show
- 
 addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> Maybe T.Text -> IO (Maybe Integer)
 addPing conn date tenantId issueId userKey message = do 
   pingID <- liftIO $ insertReturning conn 
@@ -62,7 +55,7 @@ addPing conn date tenantId issueId userKey message = do
       INSERT INTO ping (tenantId, issueId, userKey, message, date) 
       VALUES (?,?,?,?,?) RETURNING id
     |] (tenantId, issueId, userKey, message, date)
-  return $ listToMaybe $ join pingID
+  return . listToMaybe $ join pingID
 
 getReminderByUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO (Maybe Ping)
 getReminderByUser tenant userKey pid conn = do
@@ -70,9 +63,7 @@ getReminderByUser tenant userKey pid conn = do
       [sql|
          SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
       |] (pid, PT.tenantId tenant, B.pack userKey)
-   case result of
-      [x] -> return $ Just x
-      _   -> return Nothing
+   return . listToMaybe $ result
   
 getLivePingsByUser :: Connection -> PT.Tenant -> CA.UserKey -> IO [Ping]
 getLivePingsByUser connection tenant userKey = do

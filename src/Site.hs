@@ -77,7 +77,6 @@ createPingPanel = withTokenAndTenant $ \token (tenant, _) -> do
   where
     context connect tenant token = do
       "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-      "connectBaseUrl" H.## I.textSplice $ T.pack "http://localhost:9000" -- TODO what is the best way to load your own hostname? Is this even required?
       "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connect) token) 
 
 hasSplice :: SSH.SnapletISplice App

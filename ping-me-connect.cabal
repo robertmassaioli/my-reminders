@@ -33,6 +33,7 @@ Executable ping-me-connect
                  , Connect.PageToken
                  , Connect.AtlassianTypes
                  , Persistence.Tenant
+                 , Persistence.Ping
                  , Persistence.PostgreSQL
                  , Model.UserDetails
                  , PingHandlers

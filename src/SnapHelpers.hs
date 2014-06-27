@@ -60,9 +60,14 @@ data ErrorResponse = ErrorResponse
 
 instance ToJSON ErrorResponse
 
-respondWithError :: Int -> String -> AppHandler ()
+respondWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondWithError errorCode response = do
    SC.writeLBS . encode $ errorResponse
    respondWith errorCode
    where
       errorResponse = ErrorResponse response
+
+respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
+respondPlainWithError errorCode response = do
+   SC.writeBS . BSC.pack $ response
+   respondWith errorCode

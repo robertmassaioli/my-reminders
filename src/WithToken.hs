@@ -6,7 +6,6 @@ import qualified Connect.PageToken as PT
 import qualified Connect.Data as CD
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.CaseInsensitive as DC
-import qualified Data.Text as T
 import qualified Data.Time.Clock as DTC
 import qualified Persistence.PostgreSQL as PP
 import qualified Persistence.Tenant as TN
@@ -29,7 +28,7 @@ tenantFromToken tenantApply = do
       connect <- CD.getConnect
       let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connect) acTokenHeader
       case potentiallyDecodedToken of
-         Left error -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ error
+         Left errorMessage -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ errorMessage
          Right pageToken -> do
             let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connect) (PT.pageTokenTimestamp pageToken)
             currentTime <- liftIO DTC.getCurrentTime
