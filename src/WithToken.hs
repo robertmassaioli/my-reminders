@@ -1,5 +1,6 @@
 module WithToken where
 
+import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
 
 import qualified Connect.PageToken as PT
@@ -44,6 +45,9 @@ tenantFromToken tenantApply = do
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
 
 lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
-lookupTenantWithPageToken pageToken = do
+lookupTenantWithPageToken pageToken =
   PP.withConnection $ \conn -> 
-    fmap (fmap (\x -> (x, PT.pageTokenUser pageToken))) $ TN.lookupTenant conn (PT.pageTokenHost pageToken)
+    fmap (flip (,) (PT.pageTokenUser pageToken)) <$> TN.lookupTenant conn (PT.pageTokenHost pageToken)
+
+inSecond :: b -> a -> (a, b)
+inSecond x y = (y, x)

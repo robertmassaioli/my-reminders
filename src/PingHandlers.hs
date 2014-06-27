@@ -63,7 +63,7 @@ instance FromJSON PingRequest where
       unit     <- o .:  "TimeUnit" 
       issue    <- o .:  "IssueId"
       message  <- o .:? "Message"
-      return $ PingRequest 
+      return PingRequest 
          { prqTimeDelay = delay
          , prqTimeUnit = unit
          , prqIssueId = issue
