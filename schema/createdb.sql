@@ -20,7 +20,7 @@ DROP TABLE IF EXISTS ping;
 CREATE TABLE ping (
        id SERIAL PRIMARY KEY,
        tenantId INTEGER not null,
-       issueLink TEXT not null,
-       userID TEXT not null,
-       message TEXT not null,
+       issueId INTEGER not null,
+       userKey TEXT not null,
+       message TEXT,
        date TIMESTAMP WITH TIME ZONE);

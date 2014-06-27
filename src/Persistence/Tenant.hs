@@ -8,6 +8,7 @@ module Persistence.Tenant (
   , insertTenantInformation
   , removeTenantInformation
   , Tenant(..)
+  , TenantKey
   , LifecycleResponse(..)
 ) where
 
@@ -52,9 +53,11 @@ instance FromJSON LifecycleResponse where
 
 instance FromJSON Tenant
 
+type TenantKey = T.Text
+
 data Tenant = Tenant {
     tenantId     :: Integer
-  , key          :: T.Text
+  , key          :: TenantKey
   , publicKey    :: T.Text
   , sharedSecret :: T.Text
   , baseUrl      :: URI 

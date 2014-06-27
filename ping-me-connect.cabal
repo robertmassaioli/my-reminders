@@ -10,6 +10,8 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.18
 
+data-files:  resources/connect.cfg
+
 Flag development
   Description: Whether to build the server in development (interpreted) mode
   Default: False
@@ -24,14 +26,21 @@ Executable ping-me-connect
   main-is: Main.hs
 
   other-modules: AtlassianConnect
+                 , Connect.Data
                  , Connect.Descriptor
                  , Connect.Routes
+                 , Connect.Connect
+                 , Connect.PageToken
+                 , Connect.AtlassianTypes
                  , Persistence.Tenant
+                 , Persistence.Ping
                  , Persistence.PostgreSQL
                  , Model.UserDetails
                  , PingHandlers
                  , SnapHelpers
                  , Site
+                 , TenantJWT
+                 , WithToken
 
   default-language: Haskell2010
   Build-depends:
@@ -61,6 +70,10 @@ Executable ping-me-connect
    , atlassian-connect         == 0.1.*
    , jwt                       == 0.3.*
    , case-insensitive          == 1.*
+   , cipher-aes                == 0.2.*
+   , base64-bytestring         == 1.0.*
+   , configurator              == 0.2.*
+   , padding
 
   if flag(old-base)
     build-depends:
