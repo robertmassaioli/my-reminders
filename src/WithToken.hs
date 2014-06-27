@@ -24,12 +24,12 @@ tenantFromToken tenantApply = do
   request <- SC.getRequest
   let potentialTokens = SC.getHeaders acHeaderName request
   case potentialTokens of
-    Nothing -> respondWithMessageAndLog missingPageTokenMessage
+    Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
     Just [acTokenHeader] -> do
       connect <- CD.getConnect
       let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connect) acTokenHeader
       case potentiallyDecodedToken of
-         Left error -> respondWithMessageAndLog $ "Error decoding token: " ++ error
+         Left error -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ error
          Right pageToken -> do
             let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connect) (PT.pageTokenTimestamp pageToken)
             currentTime <- liftIO DTC.getCurrentTime
@@ -39,19 +39,10 @@ tenantFromToken tenantApply = do
                   -- back to the program
                   potentialTenant <- lookupTenantWithPageToken pageToken
                   case potentialTenant of
-                     Nothing -> respondWithMessageAndLog "Error: Your page token was valid but the tenant could not be found. Maybe it no longer exists."
+                     Nothing -> SH.respondWithError SH.notFound "Your page token was valid but the tenant could not be found. Maybe it no longer exists."
                      Just tenant -> tenantApply tenant
-               else respondWithMessageAndLog "Error: your token has expired."      
-    Just _ -> respondWithMessageAndLog tooManyPageTokensMessage
-  where
-    missingPageTokenMessage = "Error: expected page token for request and recieved none."
-    tooManyPageTokensMessage = "Error: Expected only one page token but recieved several. Please only send one page token."
-
-respondWithMessageAndLog :: String -> AppHandler ()
-respondWithMessageAndLog message = do
-  SH.logErrorS message
-  SC.writeText . T.pack $ message
-  SH.respondBadRequest
+               else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
+    Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
 
 lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
 lookupTenantWithPageToken pageToken = do

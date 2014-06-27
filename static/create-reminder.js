@@ -133,8 +133,21 @@ AJS.$(function() {
       Mustache.parse(templates.reminderLozenge);
    };
 
+   var currentRemindersRequest;
+   var currentUserRequest;
+
    var refreshReminders = function() {
-      var pingsRequest = AJS.$.ajax({
+      if(currentRemindersRequest) {
+         currentRemindersRequest.abort();
+         currentRemindersRequest = null;
+      }
+
+      if(currentUserRequest) {
+         currentUserRequest.abort();
+         currentUserRequest = null;
+      }
+
+      currentRemindersRequest = AJS.$.ajax({
          url: "/rest/pings", 
          type: "GET", 
          cache: false,
@@ -143,7 +156,12 @@ AJS.$(function() {
          }
       });
 
-      AJS.$.when(pingsRequest, requestUserDetails(userKey)).done(function(pingsResponse, userResponse) {
+      currentUserRequest = requestUserDetails(userKey);
+
+      AJS.$.when(currentRemindersRequest, currentUserRequest).done(function(pingsResponse, userResponse) {
+         currentRemindersRequest = null;
+         currentUserRequest = null;
+
          var reminders = JSON.parse(pingsResponse[0]);
          var user = JSON.parse(userResponse[0]);
 
@@ -187,7 +205,32 @@ AJS.$(function() {
       });
    };
 
+   var genericErrorTimer;
+
+   var handleGenericError = function(jqXHR) {
+      var jsonError = JSON.parse(jqXHR.responseText);
+      console.log("Error response: ", jsonError);
+      if(jsonError && jsonError.errorMessage) {
+         // Clear the previous token
+         if(genericErrorTimer) {
+            clearTimeout(genericErrorTimer);
+            genericErrorTimer = null;
+         }
+
+         AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessage);
+         AP.resize();
+         genericErrorTimer = setTimeout(function() {
+            AJS.$("#error-message").addClass("hidden");
+            AP.resize();
+         }, 10000);
+      }
+   };
+
    var init = function() {
+      AJS.$(document).ajaxError(function(e, jqXHR) {
+         handleGenericError(jqXHR);
+      });
+
       setupTemplates();
       setTimeout(refreshReminders, 1); // So that the Acpt token has time to be injected
 
@@ -218,6 +261,7 @@ AJS.$(function() {
          var deleteRequest = deleteReminder(reminderId);
 
          deleteRequest.done(function() {
+            $reminder.mouseout(); // IMPORTANT: This mouseout is the solution to: https://github.com/jaz303/tipsy/issues/19
             $reminder.remove();
          });
 
@@ -250,7 +294,7 @@ AJS.$(function() {
    };
    
    var setTooltipTitle = function() { 
-      setTimeout(AP.resize, 2); // Dirty because tipsy lacks a callback function for after it displays an element.
+      setTimeout(AP.resize, 1); // Dirty because tipsy lacks a callback function for after it displays an element.
       return this.getAttribute('original-title'); 
    };
 

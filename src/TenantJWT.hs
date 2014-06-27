@@ -27,10 +27,7 @@ withTenant tennantApply = do
     Just unverifiedJwt -> do
       possibleTenant <- getTenant unverifiedJwt
       case possibleTenant of
-        Left result -> do
-          SH.logErrorS result
-          SC.writeText . T.pack $ result
-          SH.respondBadRequest -- TODO add the error message
+        Left result -> SH.respondWithError SH.badRequest result
         Right tenant -> tennantApply tenant
   where
     decodeBytestring = J.decode . SH.byteStringToText
