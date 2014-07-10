@@ -21,7 +21,7 @@ Executable ping-me-connect
 
   main-is: Main.hs
 
-  other-modules:   AtlassianConnect  
+  other-modules:   AtlassianConnect
                  , Connect.AtlassianTypes
                  , Connect.Connect
                  , Connect.Data
@@ -43,41 +43,42 @@ Executable ping-me-connect
 
   default-language: Haskell2010
   Build-depends:
-     base                      >= 4.4      && < 5
-   , MissingH                  == 1.*
-   , MonadCatchIO-transformers >= 0.2.1   && < 0.4
-   , aeson                     >  0.7.0.3   && < 0.8
-   , atlassian-connect         == 0.1.*
-   , base64-bytestring         == 1.0.*
-   , bytestring                >= 0.9.1   && < 0.11
-   , case-insensitive          == 1.*
-   , cipher-aes                == 0.2.*
-   , configurator              == 0.2.*
-   , containers                == 0.5.*
-   , heist                     >= 0.12    && < 0.14
-   , http-client               == 0.3.*
-   , http-media                == 0.1.*
-   , http-types                == 0.8.*
-   , jwt                       == 0.3.*
-   , lens                      >= 3.7.6    && < 3.10
-   , mtl                       == 2.*
-   , network                   == 2.4.*
-   , network-api-support       == 0.1.*
-   , postgresql-simple         == 0.4.*
-   , resource-pool-catchio     == 0.2.1.*
-   , snap                      == 0.13.*
-   , snap-core                 >= 0.9     && < 0.11
-   , snap-loader-static        == 0.9.*
-   , snap-server               >= 0.9     && < 0.11
-   , snaplet-postgresql-simple
-   , text                      == 0.11.*
-   , time                      >= 1.1     && < 1.5
-   , transformers              == 0.3.*
-   , xmlhtml                   >= 0.1
+      base                      >= 4.4      && < 5
+    , MissingH                  == 1.*
+    , MonadCatchIO-transformers >= 0.2.1   && < 0.4
+    , aeson                     >  0.7.0.3   && < 0.8
+    , atlassian-connect         == 0.1.*
+    , base64-bytestring         == 1.0.*
+    , bytestring                >= 0.9.1   && < 0.11
+    , case-insensitive          == 1.*
+    , cipher-aes                == 0.2.*
+    , configurator              == 0.2.*
+    , containers                == 0.5.*
+    , heist                     >= 0.12    && < 0.14
+    , http-client               == 0.3.*
+    , http-media                == 0.1.*
+    , http-types                == 0.8.*
+    , jwt                       == 0.3.*
+    , lens                      >= 3.7.6    && < 3.10
+    , mtl                       == 2.*
+    , network                   == 2.4.*
+    , network-api-support       == 0.1.*
+    , postgresql-simple         == 0.4.*
+    , resource-pool-catchio     == 0.2.1.*
+    , snap                      == 0.13.*
+    , snap-core                 >= 0.9     && < 0.11
+    , snap-loader-static        == 0.9.*
+    , snap-server               >= 0.9     && < 0.11
+    , snaplet-postgresql-simple
+    , text                      == 0.11.*
+    , time                      >= 1.1     && < 1.5
+    , transformers              == 0.3.*
+    , xmlhtml                   >= 0.1
 
   if flag(development)
     build-depends:
-      snap-loader-dynamic -- no explicit version bounds, dependent on snap-core version
+      -- no explicit version bounds, dependent on snap-core version
+      snap-loader-dynamic
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags. Additionally, disable all
