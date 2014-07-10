@@ -91,7 +91,7 @@ Executable ping-me-connect
       snap-loader-dynamic == 0.10.*
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
-    -- the fancy optimization flags.  Additionally, disable all
+    -- the fancy optimization flags. Additionally, disable all
     -- warnings.  The hint library doesn't give an option to execute
     -- compiled code when there were also warnings, so disabling
     -- warnings allows quicker workflow.
