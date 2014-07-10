@@ -25,57 +25,57 @@ Executable ping-me-connect
 
   main-is: Main.hs
 
-  other-modules: AtlassianConnect
+  other-modules:   AtlassianConnect  
+                 , Connect.AtlassianTypes
+                 , Connect.Connect
                  , Connect.Data
                  , Connect.Descriptor
-                 , Connect.Routes
-                 , Connect.Connect
                  , Connect.PageToken
-                 , Connect.AtlassianTypes
-                 , Persistence.Tenant
-                 , Persistence.Ping
-                 , Persistence.PostgreSQL
-                 , Model.UserDetails
-                 , PingHandlers
-                 , SnapHelpers
-                 , Site
-                 , TenantJWT
-                 , WithToken
+                 , Connect.Routes
                  , Data.Padding
                  , Data.Padding.PKCS
                  , Data.Padding.Util
+                 , Model.UserDetails
+                 , Persistence.Ping
+                 , Persistence.PostgreSQL
+                 , Persistence.Tenant
+                 , PingHandlers
+                 , Site
+                 , SnapHelpers
+                 , TenantJWT
+                 , WithToken
 
   default-language: Haskell2010
   Build-depends:
-   bytestring                  >= 0.9.1   && < 0.11
-   , heist                     >= 0.12    && < 0.14
+     aeson                     >  0.7.0.3   && < 0.8
+   , bytestring                >= 0.9.1   && < 0.11
+   , MissingH                  == 1.*
    , MonadCatchIO-transformers >= 0.2.1   && < 0.4
+   , atlassian-connect         == 0.1.*
+   , base64-bytestring         == 1.0.*
+   , case-insensitive          == 1.*
+   , cipher-aes                == 0.2.*
+   , configurator              == 0.2.*
+   , containers                == 0.5.*
+   , heist                     >= 0.12    && < 0.14
+   , http-client               == 0.3.*
+   , http-media                == 0.1.*
+   , http-types                == 0.8.*
+   , jwt                       == 0.3.*
    , mtl                       == 2.*
+   , network                   == 2.4.*
+   , network-api-support       == 0.1.*
+   , postgresql-simple         == 0.4.*
+   , resource-pool-catchio     == 0.2.1.*
    , snap                      == 0.13.*
    , snap-core                 >= 0.9     && < 0.11
-   , snap-server               >= 0.9     && < 0.11
    , snap-loader-static        == 0.9.*
-   , postgresql-simple         == 0.4.*
+   , snap-server               >= 0.9     && < 0.11
    , snaplet-postgresql-simple
    , text                      == 0.11.*
    , time                      >= 1.1     && < 1.5
+   , transformers              == 0.3.*
    , xmlhtml                   >= 0.1
-   , aeson                     >  7.0.3   && < 8
-   , MissingH                  ==1.*
-   , containers                ==0.5.*
-   , transformers              ==0.3.*
-   , resource-pool-catchio     ==0.2.1.*
-   , network                   ==2.4.*
-   , network-api-support       ==0.1.*
-   , http-types                ==0.8.*
-   , http-media                ==0.1.*
-   , http-client               ==0.3.*
-   , atlassian-connect         == 0.1.*
-   , jwt                       == 0.3.*
-   , case-insensitive          == 1.*
-   , cipher-aes                == 0.2.*
-   , base64-bytestring         == 1.0.*
-   , configurator              == 0.2.*
 
   if flag(old-base)
     build-depends:
