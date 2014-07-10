@@ -1,14 +1,14 @@
 Name:                ping-me-connect
 Version:             0.1
-Synopsis:            Project Synopsis Here
-Description:         Project Description Here
+Synopsis:            Pingme plugin for Atlassian JIRA
+Description:         Send yourself issue reminders in the future!
 License:             AllRightsReserved
-Author:              Robert Massaioli & Eero Kaukonen
+Author:              Robert Massaioli, Eero Kaukonen, and Avi Knoll
 Maintainer:          ekaukonen@atlassian.com
 Stability:           Experimental
 Category:            Web
 Build-type:          Simple
-Cabal-version:       >=1.18
+Cabal-version:       >= 1.20
 
 data-files:  resources/connect.cfg
 
