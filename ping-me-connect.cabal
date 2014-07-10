@@ -77,7 +77,7 @@ Executable ping-me-connect
 
   if flag(development)
     build-depends:
-      snap-loader-dynamic == 0.10.*
+      snap-loader-dynamic -- no explicit version bounds, dependent on snap-core version
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags. Additionally, disable all
