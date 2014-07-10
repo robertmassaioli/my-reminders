@@ -11,24 +11,14 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
-import           Control.Monad (join, guard)
 import           Control.Monad.IO.Class (liftIO)
-import qualified Control.Monad.State.Class as MS
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
-import           Data.Aeson
 import           Data.Monoid (mempty)
-import           GHC.Generics
 import qualified Data.Text as T
-import           Snap.Core
-import qualified Snap.Types as ST
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
-import qualified Heist.Splices as HS
 import qualified Snap.Snaplet.Heist as SSH
-import qualified Database.PostgreSQL.Simple as PS
 import           Snap.Snaplet.PostgresqlSimple
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
@@ -37,19 +27,14 @@ import           Application
 import qualified Heist.Interpreted as I
 import qualified Text.XmlHtml as X
 
-import qualified Web.JWT as J
 
 import Connect.Routes
 import qualified Connect.Connect as CC
 import qualified Connect.Data as CD
-import Model.UserDetails
-import Persistence.PostgreSQL
-import Persistence.Ping
 import qualified Persistence.Tenant as PT
 import PingHandlers
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
-import qualified WithToken as WT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
@@ -72,19 +57,19 @@ getAppVersion = "0.1"
 -- forever more.
 createPingPanel :: AppHandler ()
 createPingPanel = withTokenAndTenant $ \token (tenant, _) -> do
-  connect <- CD.getConnect
-  SSH.heistLocal (I.bindSplices $ context connect tenant token) $ SSH.render "ping-create"
+  connectData <- CD.getConnect
+  SSH.heistLocal (I.bindSplices $ context connectData tenant token) $ SSH.render "ping-create"
   where
-    context connect tenant token = do
+    context connectData tenant token = do
       "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-      "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connect) token) 
+      "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
 
 hasSplice :: SSH.SnapletISplice App
 hasSplice = do
    potentialTokenName <- fmap (X.getAttribute "name") H.getParamNode
    case potentialTokenName of
       Just tokenName -> do
-         tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS 
+         tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS
          case tokenSplice of
             Just _ -> HI.runChildren
             Nothing -> return . comment . T.pack $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
@@ -103,14 +88,15 @@ routes :: [(ByteString, SS.Handler App App ())]
 routes = connectRoutes ++ applicationRoutes
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
-applicationRoutes = 
+applicationRoutes =
   [ ("/"                  , homeHandler sendHomePage)
   , ("/panel/ping/create" , createPingPanel )
-  , ("/rest/ping"         , handlePings)  
+  , ("/rest/ping"         , handlePings)
   , ("/rest/pings"        , handleMultiPings)
   , ("/static"            , serveDirectory "static")
   ]
 
+heistConfig :: H.HeistConfig (SS.Handler App App)
 heistConfig = mempty
    { H.hcInterpretedSplices = do
       "hasSplice" H.## hasSplice
@@ -121,9 +107,9 @@ heistConfig = mempty
 -- | The application initializer.
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
-  h <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
-  s <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
-  db <- SS.nestSnaplet "db" db pgsInit
-  connect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
+  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
+  appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+  appDb      <- SS.nestSnaplet "db" db pgsInit
+  appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
   SS.addRoutes routes
-  return $ App h s db connect
+  return $ App appHeist appSession appDb appConnect

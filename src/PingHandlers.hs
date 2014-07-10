@@ -7,7 +7,7 @@ module PingHandlers
   , handleMultiPings
   ) where
 
-import qualified Data.Text as T 
+import qualified Data.Text as T
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import Data.Aeson
@@ -19,7 +19,7 @@ import Database.PostgreSQL.Simple
 import GHC.Generics
 
 import Persistence.PostgreSQL
-import qualified Persistence.Ping as P 
+import qualified Persistence.Ping as P
 import SnapHelpers
 import qualified WithToken as WT
 import qualified Persistence.Tenant as TN
@@ -29,7 +29,7 @@ import qualified Connect.Tenant as CT
 type TimeDelay = Integer
 
 -- No Month time because month's are not always the same length. Approximate months as four weeks.
-data TimeUnit 
+data TimeUnit
    = Minute
    | Hour
    | Day
@@ -37,7 +37,7 @@ data TimeUnit
    | Year
    deriving (Show, Eq, Generic)
 
-data PingRequest = PingRequest 
+data PingRequest = PingRequest
   { prqTimeDelay    :: TimeDelay
   , prqTimeUnit     :: TimeUnit
   , prqIssueId      :: CA.IssueId
@@ -60,10 +60,10 @@ instance ToJSON PingRequest where
 instance FromJSON PingRequest where
    parseJSON (Object o) = do
       delay    <- o .:  "TimeDelay"
-      unit     <- o .:  "TimeUnit" 
+      unit     <- o .:  "TimeUnit"
       issue    <- o .:  "IssueId"
       message  <- o .:? "Message"
-      return PingRequest 
+      return PingRequest
          { prqTimeDelay = delay
          , prqTimeUnit = unit
          , prqIssueId = issue
@@ -86,7 +86,7 @@ handleMultiPings = handleMethods
 toPingResponse :: P.Ping -> PingResponse
 toPingResponse ping = PingResponse
    { prsDate = P.pingDate ping
-   , prsPingId = P.pingId ping
+   , prsPingId = P.pingPingId ping
    , prsIssueId = P.pingIssueId ping
    , prsMessage = P.pingMessage ping
    }
@@ -102,10 +102,10 @@ getPingsForIssue (tenant, Just userKey) = do
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-clearPingsForIssue tenant = undefined
+clearPingsForIssue _ = undefined
 
 handlePings :: AppHandler ()
-handlePings = handleMethods 
+handlePings = handleMethods
   [ (SC.GET,     WT.tenantFromToken getPingHandler)
   , (SC.PUT,     WT.tenantFromToken addPingHandler)
   , (SC.DELETE,  WT.tenantFromToken deletePingHandler)
@@ -119,7 +119,7 @@ getPingHandler (tenant, Just userKey) = do
    case potentialPingId of
       Just pingId -> do
          potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
-         case potentialPing of 
+         case potentialPing of
             Nothing -> respondNotFound
             Just ping -> SC.writeLBS . encode . toPingResponse $ ping
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
@@ -145,7 +145,7 @@ addPingHandler ct = do
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
   let maybePing = eitherDecode request :: Either String PingRequest
   case maybePing of
-    Left errorMessage -> respondWithError badRequest errorMessage
+    Left err -> respondWithError badRequest err
     Right pingRequest -> addPing pingRequest ct
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
