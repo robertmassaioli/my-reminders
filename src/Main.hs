@@ -24,12 +24,7 @@ import           Snap.Snaplet.Config
 import           Snap.Core
 import           System.IO
 import qualified Site as S
-
-#ifdef DEVELOPMENT
-import           Snap.Loader.Dynamic
-#else
 import           Snap.Loader.Static
-#endif
 
 
 ------------------------------------------------------------------------------
