@@ -41,6 +41,9 @@ Executable ping-me-connect
                  , Site
                  , TenantJWT
                  , WithToken
+                 , Data.Padding
+                 , Data.Padding.PKCS
+                 , Data.Padding.Util
 
   default-language: Haskell2010
   Build-depends:
@@ -73,7 +76,6 @@ Executable ping-me-connect
    , cipher-aes                == 0.2.*
    , base64-bytestring         == 1.0.*
    , configurator              == 0.2.*
-   , padding
 
   if flag(old-base)
     build-depends:
