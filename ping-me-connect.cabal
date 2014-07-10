@@ -60,7 +60,7 @@ Executable ping-me-connect
    , text                      == 0.11.*
    , time                      >= 1.1     && < 1.5
    , xmlhtml                   >= 0.1
-   , aeson                     == 0.7.*
+   , aeson                     >  7.0.3   && < 8
    , MissingH                  ==1.*
    , containers                ==0.5.*
    , transformers              ==0.3.*
