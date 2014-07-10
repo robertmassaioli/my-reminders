@@ -37,6 +37,7 @@ test-compile:
 			cabal build
 
 test:
+			cabal configure --enable-tests
 			cabal test --show-details=always
 
 doctest:
