@@ -25,6 +25,18 @@ import qualified Data.CaseInsensitive as CI
 import qualified Connect.Data as CD
 import qualified SnapHelpers as SH
 
+data Protocol = HTTP | HTTPS
+
+instance Show (Protocol) where
+  show HTTP = "http"
+  show HTTPS = "https"
+
+type Port = Int
+
+serverPortSuffix :: Protocol -> Port -> BLC.ByteString
+serverPortSuffix HTTP  port = BLC.pack $ if port /= 0 && port /= 80 then ":" ++ show port else ""
+serverPortSuffix HTTPS port = BLC.pack $ if port /= 0 && port /= 443 then ":" ++ show port else ""
+
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
   where
@@ -89,20 +101,15 @@ resolveBaseUrl :: SC.Request -> BLC.ByteString
 resolveBaseUrl req =
    let serverName = SC.rqServerName req
        serverPort = SC.rqServerPort req
-       proto = if SC.rqIsSecure req then "https" else "http"
+       proto = if SC.rqIsSecure req then HTTPS else HTTP
    in toAbsoluteUrl proto serverName serverPort
 
 -- |
 -- >>> toAbsoluteUrl "http" "example.com" 9000
 -- http://example.com:9000/
-toAbsoluteUrl :: String -> BLC.ByteString -> Int -> BLC.ByteString
-toAbsoluteUrl proto serverName port =
-  bsProto `BLC.append` protocolSeparator `BLC.append` serverName `BLC.append` serverPortSuffix proto
+toAbsoluteUrl :: Protocol -> BLC.ByteString -> Int -> BLC.ByteString
+toAbsoluteUrl protocol serverName port =
+  bsProtocol `BLC.append` protocolSeparator `BLC.append` serverName `BLC.append` serverPortSuffix protocol port
   where
-    serverPortSuffix :: String -> BLC.ByteString
-    serverPortSuffix "http"  = BLC.pack $ if port /= 0 && port /= 80 then ":" ++ show port else ""
-    serverPortSuffix "https" = BLC.pack $ if port /= 0 && port /= 443 then ":" ++ show port else ""
-    serverPortSuffix s = error $ "Undefined protocol for server port suffix: " ++ s
-
-    bsProto = BLC.pack proto
+    bsProtocol = BLC.pack $ show protocol
     protocolSeparator = BLC.pack "://"
