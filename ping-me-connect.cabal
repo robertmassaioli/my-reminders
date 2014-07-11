@@ -76,7 +76,7 @@ Executable ping-me-connect
     , xmlhtml                   == 0.2.*
 
   if flag(development)
-    -- TODO: Fix snap-loader-dynamic dependency conflicts
+    -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
     -- build-depends:
     --   snap-loader-dynamic
     cpp-options: -DDEVELOPMENT
