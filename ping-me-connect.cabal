@@ -3,7 +3,7 @@ Version:             0.1
 Synopsis:            Pingme plugin for Atlassian JIRA
 Description:         Send yourself issue reminders in the future!
 License:             AllRightsReserved
-Author:              Robert Massaioli, Eero Kaukonen, and Avi Knoll
+Author:              Robert Massaioli, Eero Kaukonen, Sidney Shek, Avi Knoll
 Maintainer:          ekaukonen@atlassian.com
 Stability:           Experimental
 Category:            Web
