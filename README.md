@@ -1,11 +1,12 @@
-# Simple Snap Example Application
+# Pingme for JIRA
 
 See _Setup_ to set up the application for the first time.
 
 ## Dev Loop
 
 1. Execute `make`
-2. Run the application (by default compiled in development mode)
+2. Run the application (by default compiled in development mode, which will
+   disable warnings)
 3. Make changes to the application files
 4. Reload in the browser, updated files will be compiled automatically
 
@@ -21,6 +22,9 @@ Heroku setup instructions: TBD
 
 # Setup
 
+Note: This project uses submodules, so you will need to run `git submodule init; git submodule update`
+before compilation will succeed.
+
 Check the required and optional dependencies below, then run:
 
     » make setup
@@ -33,21 +37,19 @@ The project can be build (in `development` mode which enables dynamic reloading)
     
 The snap application can then be started by running (listening on port 9000):
 
-    » .cabal-sandbox/bin/atlassian-snap-example -p 9000
+    » .cabal-sandbox/bin/ping-me-connect -p 9000
     Listening on http://0.0.0.0:9000/
 
 
 ## Dependencies
 
-The example project was setup using:
+Pingme is built against the Haskell Platform, currently version `2013.2.0.0`.
+The latest version of Cabal is always recommended, we have tested with at least
+`cabal-install version 1.20.0.2`.
 
-    » ghc --version
-    The Glorious Glasgow Haskell Compilation System, version 7.6.3
-    » cabal --version
-    cabal-install version 1.18.0.2
-    using version 1.18.1.1 of the Cabal library
-    
-YMMV
+Additional dependencies required on `PATH` include:
+
+- `pg_config` (e.g. `apt-get install libpq-dev` on Debian/Ubuntu)
 
 ## Running the Code
 
