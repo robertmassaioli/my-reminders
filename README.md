@@ -22,6 +22,9 @@ Heroku setup instructions: TBD
 
 # Setup
 
+Note: This project uses submodules, so you will need to run `git submodule init; git submodule update`
+before compilation will succeed.
+
 Check the required and optional dependencies below, then run:
 
     » make setup
