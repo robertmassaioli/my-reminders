@@ -37,15 +37,15 @@ data AuthType = OAuth | Jwt | None deriving (Show, Generic)
 data Modules = Modules JiraModules deriving (Show, Generic) -- TODO
 
 data ProductScope
-  = Read 
-  | Write 
-  | Delete 
+  = Read
+  | Write
+  | Delete
   | ProjectAdmin   -- This is a JIRA only Scope (TODO can we serve the correct scope set to the correct plugins?)
   | SpaceAdmin    -- This is a Confluence only Scope (TODO can we serve the correct scope set to the correct plugins?)
   | Admin
   deriving (Show, Generic)
 
-data JiraModules = JiraModules 
+data JiraModules = JiraModules
    { webPanels :: [WebPanel]
    } deriving (Show, Generic)
 
@@ -56,10 +56,10 @@ data WebPanel = WebPanel
    , location :: Text
    } deriving (Show, Generic)
 
-data NameValue = NameValue 
+data NameValue = NameValue
    { value :: Text
    } deriving (Show, Generic)
-      
+
 data Lifecycle = Lifecycle
    { installed :: Maybe URI
    , uninstalled :: Maybe URI
@@ -118,10 +118,10 @@ instance ToJSON JiraModules where
 
 instance ToJSON WebPanel where
    toJSON = genericToJSON baseOptions
-   
+
 instance ToJSON NameValue where
    toJSON = genericToJSON baseOptions
-      
+
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)
    parseJSON _ = mzero
@@ -146,11 +146,11 @@ defaultLifecycle = Lifecycle
    }
 
 pluginDescriptor :: Text -> URI -> Authentication -> Plugin
-pluginDescriptor key url auth = Plugin
+pluginDescriptor key' url' auth = Plugin
    { pluginName = Nothing
    , pluginDescription = Nothing
-   , pluginKey = key
-   , pluginBaseUrl = url
+   , pluginKey = key'
+   , pluginBaseUrl = url'
    , vendor = Nothing
    , authentication = auth
    , apiVersion = Nothing

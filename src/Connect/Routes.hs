@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Connect.Routes 
+module Connect.Routes
   ( connectRoutes
   , homeHandler
   ) where
@@ -14,12 +14,10 @@ import qualified Control.Arrow as ARO
 import qualified Control.Monad as CM
 import qualified Data.Aeson as A
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as E
 import qualified Network.HTTP.Media.MediaType as NM
 
 import qualified Snap.Snaplet as SS
 import qualified Snap.Core as SC
-import qualified Snap.Snaplet.Heist as SSH
 
 import qualified Data.ByteString.Char8 as BLC
 import qualified Data.CaseInsensitive as CI
@@ -27,11 +25,22 @@ import qualified Data.CaseInsensitive as CI
 import qualified Connect.Data as CD
 import qualified SnapHelpers as SH
 
+data Protocol = HTTP | HTTPS
+
+instance Show (Protocol) where
+  show HTTP = "http"
+  show HTTPS = "https"
+
+type Port = Int
+
+serverPortSuffix :: Protocol -> Port -> BLC.ByteString
+serverPortSuffix HTTP  port = BLC.pack $ if port /= 0 && port /= 80 then ":" ++ show port else ""
+serverPortSuffix HTTPS port = BLC.pack $ if port /= 0 && port /= 443 then ":" ++ show port else ""
+
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
-  where 
+  where
     sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
-    unknownHeaderMessage = T.pack "Unknown accept header"
     (Just jsonMT) = parseString "application/json"
     (Just textHtmlMT) = parseString "text/html"
 
@@ -52,7 +61,7 @@ connectRoutes :: [(BLC.ByteString, SS.Handler App App ())]
 connectRoutes = fmap (ARO.first BLC.pack) simpleConnectRoutes
 
 simpleConnectRoutes :: [(String, SS.Handler App App ())]
-simpleConnectRoutes = 
+simpleConnectRoutes =
   [ ("/atlassian-connect.json" , atlassianConnectHandler)
   , ("/installed"          , installedHandler)
   --, ("/uninstalled"        , uninstalledHandler
@@ -60,11 +69,11 @@ simpleConnectRoutes =
 
 atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
 atlassianConnectHandler = do
-  connect <- CD.getConnect
+  connectData <- CD.getConnect
   request <- SC.getRequest
   let dc = AC.DescriptorConfig
-          { AC.dcPluginName = T.pack . CD.connectPluginName $ connect
-          , AC.dcPluginKey = T.pack . CD.connectPluginKey $ connect
+          { AC.dcPluginName = T.pack . CD.connectPluginName $ connectData
+          , AC.dcPluginKey = T.pack . CD.connectPluginKey $ connectData
           , AC.dcBaseUrl = resolveBaseUrl request
           }
   writeJson . AC.addonDescriptor $ dc
@@ -92,19 +101,15 @@ resolveBaseUrl :: SC.Request -> BLC.ByteString
 resolveBaseUrl req =
    let serverName = SC.rqServerName req
        serverPort = SC.rqServerPort req
-       proto = if SC.rqIsSecure req then "https" else "http"
+       proto = if SC.rqIsSecure req then HTTPS else HTTP
    in toAbsoluteUrl proto serverName serverPort
 
 -- |
 -- >>> toAbsoluteUrl "http" "example.com" 9000
 -- http://example.com:9000/
-toAbsoluteUrl :: String -> BLC.ByteString -> Int -> BLC.ByteString
-toAbsoluteUrl proto serverName port = 
-  bsProto `BLC.append` protocolSeparator `BLC.append` serverName `BLC.append` serverPortSuffix proto
+toAbsoluteUrl :: Protocol -> BLC.ByteString -> Int -> BLC.ByteString
+toAbsoluteUrl protocol serverName port =
+  bsProtocol `BLC.append` protocolSeparator `BLC.append` serverName `BLC.append` serverPortSuffix protocol port
   where
-    serverPortSuffix :: String -> BLC.ByteString
-    serverPortSuffix "http"  = BLC.pack $ if port /= 0 && port /= 80 then ":" ++ show port else ""
-    serverPortSuffix "https" = BLC.pack $ if port /= 0 && port /= 443 then ":" ++ show port else ""
-
-    bsProto = BLC.pack proto
+    bsProtocol = BLC.pack $ show protocol
     protocolSeparator = BLC.pack "://"

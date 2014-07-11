@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Persistence.Ping 
+module Persistence.Ping
    ( Ping(..)
    , addPing
    , getReminderByUser
@@ -16,8 +16,6 @@ module Persistence.Ping
 import Data.Maybe
 import Data.Time.Clock
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.FromField
-import Database.PostgreSQL.Simple.ToField
 import Database.PostgreSQL.Simple.FromRow
 import Database.PostgreSQL.Simple.SqlQQ
 import Control.Applicative
@@ -25,7 +23,6 @@ import Control.Monad.IO.Class
 import Control.Monad
 import GHC.Generics
 import GHC.Int
-import Network.URI hiding (query)
 import Persistence.PostgreSQL
 import qualified Persistence.Tenant as PT
 
@@ -36,23 +33,23 @@ import qualified Connect.AtlassianTypes as CA
 
 type PingId = Integer
 
-data Ping = Ping 
-   { pingId       :: PingId
+data Ping = Ping
+   { pingPingId   :: PingId
    , pingTenantId :: Integer
    , pingIssueId  :: CA.IssueId
    , pingUserKey  :: CA.UserKey
    , pingMessage  :: Maybe T.Text
-   , pingDate     :: UTCTime 
+   , pingDate     :: UTCTime
    } deriving (Eq,Show,Generic)
 
 instance FromRow Ping where
   fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field
-  
+
 addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> Maybe T.Text -> IO (Maybe Integer)
-addPing conn date tenantId issueId userKey message = do 
-  pingID <- liftIO $ insertReturning conn 
+addPing conn date tenantId issueId userKey message = do
+  pingID <- liftIO $ insertReturning conn
     [sql|
-      INSERT INTO ping (tenantId, issueId, userKey, message, date) 
+      INSERT INTO ping (tenantId, issueId, userKey, message, date)
       VALUES (?,?,?,?,?) RETURNING id
     |] (tenantId, issueId, userKey, message, date)
   return . listToMaybe $ join pingID
@@ -64,7 +61,7 @@ getReminderByUser tenant userKey pid conn = do
          SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
       |] (pid, PT.tenantId tenant, B.pack userKey)
    return . listToMaybe $ result
-  
+
 getLivePingsByUser :: Connection -> PT.Tenant -> CA.UserKey -> IO [Ping]
 getLivePingsByUser connection tenant userKey = do
    now <- getCurrentTime
@@ -84,16 +81,16 @@ getLivePingsForIssueByUser connection tenant userKey issueId = do
       (PT.tenantId tenant, issueId, B.pack userKey, now)
 
 getExpiredPings :: Connection -> IO [Ping]
-getExpiredPings conn = do 
+getExpiredPings conn = do
   now <- getCurrentTime
-  liftIO $ query conn 
+  liftIO $ query conn
     [sql|
-      SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ? 
+      SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ?
     |]
     (Only now)
 
-deletePingForUser :: PT.Tenant -> CA.UserKey -> Integer -> Connection -> IO Int64
-deletePingForUser tenant userKey pingId conn = execute conn 
-   [sql| 
-      DELETE from ping WHERE id = ? AND tenantId = ? AND userKey = ? 
+deletePingForUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO Int64
+deletePingForUser tenant userKey pingId conn = execute conn
+   [sql|
+      DELETE from ping WHERE id = ? AND tenantId = ? AND userKey = ?
    |] (pingId, PT.tenantId tenant, B.pack userKey)

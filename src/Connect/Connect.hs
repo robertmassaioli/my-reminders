@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Connect.Connect 
+module Connect.Connect
   ( Connect(..)
   , initConnectSnaplet
   ) where
@@ -39,6 +39,7 @@ initConnectSnaplet :: SS.SnapletInit b Connect
 initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $
   MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
 
+dataDir :: IO [Char]
 dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
@@ -58,11 +59,11 @@ loadConnectConfig connectConf = do
     putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
     SE.exitWith (SE.ExitFailure 1)
   pageTokenTimeoutInSeconds <- DC.lookupDefault PT.defaultTimeoutSeconds connectConf "page_token_timeout_seconds"
-  return ConnectConfig 
+  return ConnectConfig
     { ccPluginName = name
     , ccPluginKey = key
     , ccSecretKey = secret
-    , ccPageTokenTimeout = pageTokenTimeoutInSeconds 
+    , ccPageTokenTimeout = pageTokenTimeoutInSeconds
     }
 
 require :: DCT.Configured a => DCT.Config -> DCT.Name -> String -> IO a

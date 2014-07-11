@@ -1,4 +1,4 @@
-module Connect.Data 
+module Connect.Data
   ( Connect(..)
   , HasConnect(..)
   ) where

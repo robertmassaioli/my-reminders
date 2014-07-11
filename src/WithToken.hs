@@ -26,12 +26,12 @@ tenantFromToken tenantApply = do
   case potentialTokens of
     Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
     Just [acTokenHeader] -> do
-      connect <- CD.getConnect
-      let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connect) acTokenHeader
+      connectData <- CD.getConnect
+      let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
       case potentiallyDecodedToken of
          Left errorMessage -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ errorMessage
          Right pageToken -> do
-            let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connect) (PT.pageTokenTimestamp pageToken)
+            let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connectData) (PT.pageTokenTimestamp pageToken)
             currentTime <- liftIO DTC.getCurrentTime
             if DTC.diffUTCTime currentTime tokenExpiryTime < 0
                then do
@@ -46,7 +46,7 @@ tenantFromToken tenantApply = do
 
 lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
 lookupTenantWithPageToken pageToken =
-  PP.withConnection $ \conn -> 
+  PP.withConnection $ \conn ->
     fmap (flip (,) (PT.pageTokenUser pageToken)) <$> TN.lookupTenant conn (PT.pageTokenHost pageToken)
 
 inSecond :: b -> a -> (a, b)
