@@ -12,15 +12,21 @@ import Persistence.PostgreSQL -- TODO dependency tree of my modules to see the f
 import qualified Control.Applicative as CA
 import qualified Control.Arrow as ARO
 import qualified Control.Monad as CM
+import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 import qualified Data.Text as T
+import Data.List
+import Data.Maybe(isJust)
 import qualified Network.HTTP.Media.MediaType as NM
+import Network.URI
+import Network.HostName
 
 import qualified Snap.Snaplet as SS
 import qualified Snap.Core as SC
 
 import qualified Data.ByteString.Char8 as BLC
 import qualified Data.CaseInsensitive as CI
+import Data.Char as DC
 
 import qualified Connect.Data as CD
 import qualified SnapHelpers as SH
@@ -81,14 +87,35 @@ atlassianConnectHandler = do
 installedHandler :: AppHandler ()
 installedHandler = do
    request <- SC.readRequestBody (1024 * 10)
+   hostname <- liftIO getHostName
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
    maybe (SC.modifyResponse $ SC.setResponseCode 400) (\tenantInfo -> do
-       --isValidPubKey <- checkPubKey $ publicKey tenant
-       mTenantId <- SS.with db $ withConnection $ \conn -> insertTenantInformation conn tenantInfo
+       let validHost = isValidHost hostname tenantInfo
+       mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
        case mTenantId of
           Just _ -> SC.modifyResponse $ SC.setResponseCode 204
-          Nothing -> SH.respondWithError SH.internalServer "Failed to insert the new tenant."
+          Nothing -> if validHost then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
+                     else SH.respondWithError SH.unauthorised "Invalid host"
       ) mTenantInfo
+
+insertTenantInfo info = SS.with db $ withConnection $ \conn -> insertTenantInformation conn info
+
+
+validHosts:: [String]
+validHosts = ["localhost","jira-dev.com","jira.com","atlassian.net", "localhost"]
+
+
+isValidHost:: String -> LifecycleResponse -> Bool
+isValidHost localhost tenantInfo = validHostName localhost (baseUrl' tenantInfo)
+
+validHostName:: String -> URI -> Bool
+validHostName localhost uri = isJust maybeValidhost where
+    compare authority elem = (map DC.toLower elem) == (map DC.toLower $ (uriRegName authority))
+    maybeValidhost = do
+      authority <- uriAuthority uri
+      validHost <- find (compare authority) (localhost:validHosts)
+      return validHost
+ 
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()

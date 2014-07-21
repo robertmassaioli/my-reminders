@@ -58,6 +58,7 @@ Executable ping-me-connect
     , http-client               == 0.3.*
     , http-media                == 0.1.*
     , http-types                == 0.8.*
+    , hostname                  == 1.0
     , jwt                       == 0.3.*
     , lens                      == 4.*
     , mtl                       == 2.*
