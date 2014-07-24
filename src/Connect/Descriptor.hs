@@ -57,14 +57,10 @@ data JiraModules = JiraModules
    } deriving (Show, Generic)
 
 data WebPanel = WebPanel
-   { key :: Text
-   , name :: NameValue
-   , url :: Text
-   , location :: Text
-   } deriving (Show, Generic)
-
-data NameValue = NameValue
-   { value :: Text
+   { wpKey :: Text
+   , wpName :: Name WebPanel
+   , wpUrl :: Text
+   , wpLocation :: Text
    } deriving (Show, Generic)
 
 data Lifecycle = Lifecycle
@@ -130,13 +126,9 @@ instance ToJSON JiraModules where
 instance ToJSON WebPanel where
    toJSON = genericToJSON baseOptions
 
-instance ToJSON NameValue where
-   toJSON = genericToJSON baseOptions
-
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)
    parseJSON _ = mzero
-
 
 baseOptions :: Options
 baseOptions = defaultOptions

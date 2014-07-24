@@ -34,10 +34,10 @@ addonDescriptor descriptorConfig =
         }
     , modules = Just $ Modules JiraModules
           { webPanels = [ WebPanel
-              { key = "ping-create-panel"
-              , name = NameValue "My reminders"
-              , url = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
-              , location = "atl.jira.view.issue.right.context"
+              { wpKey = "ping-create-panel"
+              , wpName = Name "My reminders"
+              , wpUrl = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
+              , wpLocation = "atl.jira.view.issue.right.context"
               }
             ]
           }
