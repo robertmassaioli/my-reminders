@@ -11,7 +11,6 @@ import qualified Control.Applicative as CA
 import qualified Control.Arrow as ARO
 import qualified Control.Monad as CM
 import qualified Data.Aeson as A
-import qualified Data.Text as T
 import qualified Network.HTTP.Media.MediaType as NM
 import Network.URI
 import Persistence.Tenant
@@ -73,8 +72,8 @@ atlassianConnectHandler = do
   connectData <- CD.getConnect
   request <- SC.getRequest
   let dc = AC.DescriptorConfig
-          { AC.dcPluginName = T.pack . CD.connectPluginName $ connectData
-          , AC.dcPluginKey = T.pack . CD.connectPluginKey $ connectData
+          { AC.dcPluginName = CD.connectPluginName $ connectData
+          , AC.dcPluginKey = CD.connectPluginKey $ connectData
           , AC.dcBaseUrl = resolveBaseUrl request
           }
   writeJson . AC.addonDescriptor $ dc

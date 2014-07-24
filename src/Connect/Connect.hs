@@ -8,6 +8,7 @@ module Connect.Connect
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator as DC
 import qualified Data.Configurator.Types as DCT
+import Data.Text
 import qualified Control.Monad as CM
 import qualified Control.Monad.IO.Class as MI
 import qualified Crypto.Cipher.AES as CCA
@@ -44,8 +45,8 @@ dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey :: BSC.ByteString
-  , ccPluginName :: String
-  , ccPluginKey :: String
+  , ccPluginName :: Text
+  , ccPluginKey :: Text
   , ccPageTokenTimeout :: Integer
   }
 

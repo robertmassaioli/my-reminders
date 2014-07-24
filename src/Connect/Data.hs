@@ -4,11 +4,12 @@ module Connect.Data
   ) where
 
 import qualified Crypto.Cipher.AES as CCA
+import Data.Text
 
 data Connect = Connect
   { connectAES :: CCA.AES
-  , connectPluginName :: String
-  , connectPluginKey :: String
+  , connectPluginName :: Text
+  , connectPluginKey :: Text
   , connectPageTokenTimeout :: Integer
   }
 

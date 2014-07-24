@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import Data.Maybe
 import qualified Data.List as L
-import GHC.Generics 
+import GHC.Generics
 import Network.URI
 import Network.HTTP.Client
 import Network.HTTP.Types
@@ -30,7 +30,7 @@ data UserWithDetails = UserWithDetails { name:: String
                                        , displayName:: String
                                        , active:: Bool
                                        , timeZone:: String
-                                       } 
+                                       }
   deriving(Show,Generic)
 --TODO: parse url here
 
@@ -44,16 +44,16 @@ data Params = Params {jiraBaseURL::String, hostURL::URI, username::String, share
 
 --TODO: get the current time here, since we're in IO anyways
 getUserDetails:: Integer -> Params -> IO(Either MyError UserWithDetails)
-getUserDetails currentTime params = 
+getUserDetails currentTime params =
   runRequest defaultManagerSettings GET (T.pack url)
     (addHeader ("Accept","application/json") <> addHeader ("Authorization", BS.pack $ "JWT " ++ signature))
     (basicResponder responder)
   where
     url = jiraBaseURL params ++ "/rest/api/2/user?username=" ++ username params
     signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
- 
 
-generateJWTToken :: Integer -> T.Text -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text 
+
+generateJWTToken :: Integer -> T.Text -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text
 generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encodeSigned algo secret' claims
   where
     algo = JWT.HS256
@@ -72,7 +72,7 @@ generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encode
     secret' = JWT.secret sharedSecret
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either MyError a
-responder 200 body = f (eitherDecode body) where 
+responder 200 body = f (eitherDecode body) where
   f (Right user) = Right user
   f (Left error) = Left (MyError 200 ("can't parse: " ++ show error))
 responder code body = Left (MyError code (BS.unpack $ BL.toStrict body))
