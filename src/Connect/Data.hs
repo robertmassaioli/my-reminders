@@ -3,14 +3,14 @@ module Connect.Data
   , HasConnect(..)
   ) where
 
+import Connect.Descriptor
 import qualified Crypto.Cipher.AES as CCA
-import Data.Text
 
 data Connect = Connect
   { connectAES :: CCA.AES
-  , connectPluginName :: Text
-  , connectPluginKey :: Text
-  , connectPageTokenTimeout :: Integer
+  , connectPluginName :: Name Connect
+  , connectPluginKey :: PluginKey
+  , connectPageTokenTimeout :: Timeout
   }
 
 class HasConnect m where

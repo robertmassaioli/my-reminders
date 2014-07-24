@@ -9,12 +9,11 @@ module AtlassianConnect
 import Network.URI
 import Data.Maybe
 import Connect.Descriptor
-
-import Data.Text
+import Connect.Data
 
 data DescriptorConfig = DescriptorConfig
-  { dcPluginName :: Text
-  , dcPluginKey :: Text
+  { dcPluginName :: Name Connect
+  , dcPluginKey :: PluginKey
   , dcBaseUrl :: URI
   }
 
@@ -24,7 +23,7 @@ atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 addonDescriptor :: DescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
-    { pluginName      = Just . dcPluginName $ descriptorConfig
+    { pluginName      = Just $ case (dcPluginName descriptorConfig) of Name t -> Name t
     , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just Lifecycle
@@ -46,14 +45,8 @@ addonDescriptor descriptorConfig =
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     }
   where
-    basePlugin = pluginDescriptor connectPluginKey baseURI jwtAuthentication
-
-    connectPluginKey :: Text
-    connectPluginKey = dcPluginKey descriptorConfig
-
-    baseURI :: URI
+    basePlugin = pluginDescriptor (dcPluginKey descriptorConfig) baseURI jwtAuthentication
     baseURI = dcBaseUrl descriptorConfig
-
     jwtAuthentication = Authentication Jwt Nothing
 
 publicKeyUri :: URI
