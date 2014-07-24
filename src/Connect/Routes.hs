@@ -41,12 +41,9 @@ homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler
 homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT sendHomePage
   where
     sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
-    (Just jsonMT) = parseString "application/json"
-    (Just textHtmlMT) = parseString "text/html"
-
--- TODO this should be a helper function somewhere
-parseString :: String -> Maybe NM.MediaType
-parseString = NM.parse . BLC.pack
+    (Just jsonMT) = parseMediaType "application/json"
+    (Just textHtmlMT) = parseMediaType "text/html"
+    parseMediaType = NM.parse . BLC.pack
 
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
