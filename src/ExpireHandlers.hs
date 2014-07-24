@@ -8,12 +8,15 @@ import           Application
 import           Control.Applicative ((<$>))
 import qualified Control.Monad as CM
 import qualified Data.ByteString.Char8 as BC
+import           Data.Time.Clock (UTCTime)
 import           Data.Time.Clock.POSIX
 import           Database.PostgreSQL.Simple
 import           Mail.Hailgun
 import           Persistence.Ping
+import           Persistence.PostgreSQL (withConnection)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
+import qualified Snap.Snaplet as SS
 import           SnapHelpers
 
 
@@ -38,22 +41,43 @@ expireForTimestamp = do
       (Nothing, _) -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
       (_      , Nothing) -> respondWithError badRequest "You need to provide a timestamp for expiry to work."
       (Just expireKey, Just timestamp) -> do
-         realExpireKey <- fmap RC.rmExpireKey RC.getRMConf
-         if realExpireKey /= (BC.unpack expireKey)
+         rmConf <- RC.getRMConf
+         if RC.rmExpireKey rmConf /= (BC.unpack expireKey)
             then respondWithError forbidden "You lack the required permissions."
-            else return ()
+            else SS.with db (withConnection $ expireUsingTimestamp (integerPosixToUTCTime timestamp) rmConf)
          -- otherwise expire the tokens that need to be expired, do so in a brand new method
+
+integerPosixToUTCTime :: Integer -> UTCTime
+integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+
+expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
+expireUsingTimestamp timestamp rmConf conn = do
+   expiredReminders <- getExpiredReminders timestamp conn
+   sentReminders <- sendReminders rmConf expiredReminders
+   removeSentReminders sentReminders conn
+   return ()
          
-sendReminders :: [Ping] -> IO [Ping]
-sendReminders = CM.filterM sendReminder
+sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
+sendReminders rmConf = CM.filterM (sendReminder rmConf)
 
-sendReminder :: Ping -> IO Bool
-sendReminder ping = undefined
+sendReminder :: RC.RMConf -> EmailReminder -> IO Bool
+sendReminder rmConf reminder = do
+   case pingToHailgunMessage rmConf reminder of
+      Left _ -> return False
+      Right message -> isRight <$> (sendEmail (RC.rmHailgunContext rmConf) message)
 
-pingToHailgunMessage :: Ping -> HailgunMessage
-pingToHailgunMessage ping = undefined
+isRight :: Either a b -> Bool
+isRight (Right _) = True
+isRight _         = False
 
-removeSentReminders :: [Ping] -> Connection -> IO Bool
-removeSentReminders pings conn = do
-   deletedCount <- deleteManyPings (fmap pingPingId pings) conn
-   return $ deletedCount == (fromIntegral $ length pings)
+pingToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
+pingToHailgunMessage rmConf reminder = hailgunMessage subject undefined from recipients
+   where 
+      subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSubject reminder
+      from = RC.rmFromAddress rmConf
+      recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
+
+removeSentReminders :: [EmailReminder] -> Connection -> IO Bool
+removeSentReminders reminders conn = do
+   deletedCount <- deleteManyPings (fmap erPingId reminders) conn
+   return $ deletedCount == (fromIntegral $ length reminders)
