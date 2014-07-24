@@ -25,13 +25,19 @@ import qualified Data.CaseInsensitive as CI
 import qualified Connect.Data as CD
 import qualified SnapHelpers as SH
 
-data Protocol = HTTP | HTTPS
+data Protocol = HTTP | HTTPS deriving (Eq)
 
 instance Show (Protocol) where
   show HTTP = "http"
   show HTTPS = "https"
 
 type Port = Int
+
+data MediaType = ApplicationJson | TextHtml deriving (Eq)
+
+instance Show (MediaType) where
+  show ApplicationJson = "application/json"
+  show TextHtml = "text/html"
 
 serverPortSuffix :: Protocol -> Port -> String
 serverPortSuffix HTTP  port = if port /= 0 && port /= 80 then ":" ++ show port else ""
@@ -41,9 +47,9 @@ homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler
 homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT sendHomePage
   where
     sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
-    (Just jsonMT) = parseMediaType "application/json"
-    (Just textHtmlMT) = parseMediaType "text/html"
-    parseMediaType = NM.parse . BLC.pack
+    (Just jsonMT) = parseMediaType ApplicationJson
+    (Just textHtmlMT) = parseMediaType TextHtml
+    parseMediaType = NM.parse . BLC.pack . show
 
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
@@ -90,7 +96,7 @@ installedHandler = do
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
 writeJson a = do
-   SC.modifyResponse . SC.setContentType . BLC.pack $ "application/json"
+   SC.modifyResponse . SC.setContentType . BLC.pack . show $ ApplicationJson
    SC.writeLBS $ A.encode a
 
 -- TODO extract into helper module
