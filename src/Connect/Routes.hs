@@ -74,7 +74,7 @@ atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
 atlassianConnectHandler = do
   connectData <- CD.getConnect
   request <- SC.getRequest
-  let dc = AC.DescriptorConfig
+  let dc = AC.DynamicDescriptorConfig
           { AC.dcPluginName = CD.connectPluginName $ connectData
           , AC.dcPluginKey = CD.connectPluginKey $ connectData
           , AC.dcBaseUrl = resolveBaseUrl request

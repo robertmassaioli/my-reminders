@@ -3,7 +3,7 @@
 module AtlassianConnect
   ( addonDescriptor
   , publicKeyUri
-  , DescriptorConfig(..)
+  , DynamicDescriptorConfig(..)
   ) where
 
 import Network.URI
@@ -11,7 +11,7 @@ import Data.Maybe
 import Connect.Descriptor
 import Connect.Data
 
-data DescriptorConfig = DescriptorConfig
+data DynamicDescriptorConfig = DynamicDescriptorConfig
   { dcPluginName :: Name Connect
   , dcPluginKey :: PluginKey
   , dcBaseUrl :: URI
@@ -20,7 +20,7 @@ data DescriptorConfig = DescriptorConfig
 atlassianHomepage :: URI
 atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 
-addonDescriptor :: DescriptorConfig -> Plugin
+addonDescriptor :: DynamicDescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
     { pluginName      = Just $ case (dcPluginName descriptorConfig) of Name t -> Name t
