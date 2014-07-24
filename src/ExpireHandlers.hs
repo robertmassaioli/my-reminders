@@ -6,10 +6,16 @@ module ExpireHandlers
 
 import           Application
 import           Control.Applicative ((<$>))
+import qualified Control.Monad as CM
 import qualified Data.ByteString.Char8 as BC
+import           Data.Time.Clock.POSIX
+import           Database.PostgreSQL.Simple
+import           Mail.Hailgun
+import           Persistence.Ping
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
 import           SnapHelpers
+
 
 handleExpireRequest :: AppHandler ()
 handleExpireRequest = handleMethods
@@ -32,7 +38,22 @@ expireForTimestamp = do
       (Nothing, _) -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
       (_      , Nothing) -> respondWithError badRequest "You need to provide a timestamp for expiry to work."
       (Just expireKey, Just timestamp) -> do
-         conf <- RC.getRMConf
-         return ()
-         -- check to ensure that the key is correct, if not then show a forbidden
+         realExpireKey <- fmap RC.rmExpireKey RC.getRMConf
+         if realExpireKey /= (BC.unpack expireKey)
+            then respondWithError forbidden "You lack the required permissions."
+            else return ()
          -- otherwise expire the tokens that need to be expired, do so in a brand new method
+         
+sendReminders :: [Ping] -> IO [Ping]
+sendReminders = CM.filterM sendReminder
+
+sendReminder :: Ping -> IO Bool
+sendReminder ping = undefined
+
+pingToHailgunMessage :: Ping -> HailgunMessage
+pingToHailgunMessage ping = undefined
+
+removeSentReminders :: [Ping] -> Connection -> IO Bool
+removeSentReminders pings conn = do
+   deletedCount <- deleteManyPings (fmap pingPingId pings) conn
+   return $ deletedCount == (fromIntegral $ length pings)

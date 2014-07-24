@@ -11,6 +11,8 @@ module Persistence.Ping
    , getLivePingsByUser
    , getLivePingsForIssueByUser
    , deletePingForUser
+   , deletePing
+   , deleteManyPings
    ) where
 
 import Data.Maybe
@@ -88,6 +90,18 @@ getExpiredPings conn = do
       SELECT id,tenantId,issueId,userKey,message,date FROM ping WHERE date < ?
     |]
     (Only now)
+
+deletePing :: PingId -> Connection -> IO Int64
+deletePing pingId conn = execute conn
+   [sql|
+      DELETE from ping WHERE id = ?
+   |] (Only pingId)
+
+deleteManyPings :: [PingId] -> Connection -> IO Int64
+deleteManyPings pingIds conn = executeMany conn
+   [sql|
+      DELETE from ping WHERE id = ?
+   |] (fmap Only pingIds)
 
 deletePingForUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO Int64
 deletePingForUser tenant userKey pingId conn = execute conn
