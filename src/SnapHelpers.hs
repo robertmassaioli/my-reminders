@@ -24,10 +24,7 @@ forbidden      = 403
 notFound       = 404
 internalServer = 500
 
-respondBadRequest       :: SC.MonadSnap m => m ()
-respondNotFound         :: SC.MonadSnap m => m ()
-respondInternalServer   :: SC.MonadSnap m => m ()
-respondNoContent        :: SC.MonadSnap m => m ()
+respondBadRequest, respondNotFound, respondInternalServer, respondNoContent :: SC.MonadSnap m => m ()
 respondBadRequest       = respondWith badRequest
 respondNotFound         = respondWith notFound
 respondInternalServer   = respondWith internalServer
