@@ -20,8 +20,8 @@ data DescriptorConfig = DescriptorConfig
   , dcBaseUrl :: B.ByteString
   }
 
-atlassianUri :: URI
-atlassianUri = fromJust $ parseURI "http://www.atlassian.com/"
+atlassianHomepage :: URI
+atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 
 -- TODO Don't accept bytestring if you really wanted a URI, just expect the URI and push
 -- the logic upwards
@@ -30,7 +30,7 @@ addonDescriptor descriptorConfig =
   basePlugin
     { pluginName      = Just . dcPluginName $ descriptorConfig
     , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
-    , vendor         = Just $ Vendor "Atlassian" atlassianUri
+    , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just Lifecycle
         { installed = parseRelativeReference "/installed"
         , uninstalled = Nothing
