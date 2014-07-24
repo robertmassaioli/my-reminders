@@ -15,9 +15,8 @@ import qualified Connect.PageToken as PT
 import qualified Snap.Snaplet as SS
 import qualified System.Exit as SE
 
-import qualified Paths_ping_me_connect as PPMC
-
-import Connect.Data
+import           Connect.Data
+import           ConfigurationHelpers
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -36,11 +35,8 @@ toConnect conf = Connect
   }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
-initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $
+initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
   MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
-
-dataDir :: IO [Char]
-dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey :: BSC.ByteString
@@ -65,10 +61,3 @@ loadConnectConfig connectConf = do
     , ccSecretKey = secret
     , ccPageTokenTimeout = pageTokenTimeoutInSeconds
     }
-
-require :: DCT.Configured a => DCT.Config -> DCT.Name -> String -> IO a
-require config name errorMessage = do
-  potentialValue <- DC.lookup config name
-  case potentialValue of
-    Nothing -> fail errorMessage
-    Just x -> return x

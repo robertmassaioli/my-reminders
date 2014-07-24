@@ -20,7 +20,7 @@ import GHC.Generics
 
 import Persistence.PostgreSQL
 import qualified Persistence.Ping as P
-import SnapHelpers
+import           SnapHelpers
 import qualified WithToken as WT
 import qualified Persistence.Tenant as TN
 import qualified Connect.AtlassianTypes as CA

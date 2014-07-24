@@ -35,7 +35,10 @@ Executable ping-me-connect
                  , Persistence.Ping
                  , Persistence.PostgreSQL
                  , Persistence.Tenant
+                 , ConfigurationHelpers
+                 , RemindMeConfiguration
                  , PingHandlers
+                 , ExpireHandlers
                  , Site
                  , SnapHelpers
                  , TenantJWT
