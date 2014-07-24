@@ -7,14 +7,15 @@ module Connect.Routes
 
 import qualified AtlassianConnect as AC
 import Application
-import Persistence.Tenant
-import Persistence.PostgreSQL -- TODO dependency tree of my modules to see the flow
 import qualified Control.Applicative as CA
 import qualified Control.Arrow as ARO
 import qualified Control.Monad as CM
 import qualified Data.Aeson as A
 import qualified Data.Text as T
 import qualified Network.HTTP.Media.MediaType as NM
+import Network.URI
+import Persistence.Tenant
+import Persistence.PostgreSQL -- TODO dependency tree of my modules to see the flow
 
 import qualified Snap.Snaplet as SS
 import qualified Snap.Core as SC
@@ -33,9 +34,9 @@ instance Show (Protocol) where
 
 type Port = Int
 
-serverPortSuffix :: Protocol -> Port -> BLC.ByteString
-serverPortSuffix HTTP  port = BLC.pack $ if port /= 0 && port /= 80 then ":" ++ show port else ""
-serverPortSuffix HTTPS port = BLC.pack $ if port /= 0 && port /= 443 then ":" ++ show port else ""
+serverPortSuffix :: Protocol -> Port -> String
+serverPortSuffix HTTP  port = if port /= 0 && port /= 80 then ":" ++ show port else ""
+serverPortSuffix HTTPS port = if port /= 0 && port /= 443 then ":" ++ show port else ""
 
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
@@ -97,9 +98,9 @@ writeJson a = do
    SC.writeLBS $ A.encode a
 
 -- TODO extract into helper module
-resolveBaseUrl :: SC.Request -> BLC.ByteString
+resolveBaseUrl :: SC.Request -> URI
 resolveBaseUrl req =
-   let serverName = SC.rqServerName req
+   let serverName = BLC.unpack $ SC.rqServerName req
        serverPort = SC.rqServerPort req
        proto = if SC.rqIsSecure req then HTTPS else HTTP
    in toAbsoluteUrl proto serverName serverPort
@@ -107,9 +108,11 @@ resolveBaseUrl req =
 -- |
 -- >>> toAbsoluteUrl "http" "example.com" 9000
 -- http://example.com:9000/
-toAbsoluteUrl :: Protocol -> BLC.ByteString -> Int -> BLC.ByteString
+toAbsoluteUrl :: Protocol -> String -> Int -> URI
 toAbsoluteUrl protocol serverName port =
-  bsProtocol `BLC.append` protocolSeparator `BLC.append` serverName `BLC.append` serverPortSuffix protocol port
-  where
-    bsProtocol = BLC.pack $ show protocol
-    protocolSeparator = BLC.pack "://"
+  nullURI
+    { uriScheme = show protocol
+    , uriAuthority = Just URIAuth { uriUserInfo = ""
+                                  , uriRegName = serverName
+                                  , uriPort = serverPortSuffix protocol port }
+    }

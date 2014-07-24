@@ -12,19 +12,15 @@ import Connect.Descriptor
 
 import Data.Text
 
-import qualified Data.ByteString.Char8 as B
-
 data DescriptorConfig = DescriptorConfig
   { dcPluginName :: Text
   , dcPluginKey :: Text
-  , dcBaseUrl :: B.ByteString
+  , dcBaseUrl :: URI
   }
 
 atlassianHomepage :: URI
 atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 
--- TODO Don't accept bytestring if you really wanted a URI, just expect the URI and push
--- the logic upwards
 addonDescriptor :: DescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
@@ -56,7 +52,7 @@ addonDescriptor descriptorConfig =
     connectPluginKey = dcPluginKey descriptorConfig
 
     baseURI :: URI
-    baseURI = fromMaybe nullURI . parseURI . B.unpack . dcBaseUrl $ descriptorConfig
+    baseURI = dcBaseUrl descriptorConfig
 
     jwtAuthentication = Authentication Jwt Nothing
 
