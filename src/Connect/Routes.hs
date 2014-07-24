@@ -83,13 +83,13 @@ atlassianConnectHandler = do
 
 installedHandler :: AppHandler ()
 installedHandler = do
-   request <- SC.readRequestBody (1024 * 10)
+   request <- SC.readRequestBody (1024 * 10) -- TODO where do these numbers come from?
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
-   maybe (SC.modifyResponse $ SC.setResponseCode 400) (\tenantInfo -> do
+   maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
        --isValidPubKey <- checkPubKey $ publicKey tenant
        mTenantId <- SS.with db $ withConnection $ \conn -> insertTenantInformation conn tenantInfo
        case mTenantId of
-          Just _ -> SC.modifyResponse $ SC.setResponseCode 204
+          Just _ -> SC.modifyResponse $ SC.setResponseCode SH.noContent
           Nothing -> SH.respondWithError SH.internalServer "Failed to insert the new tenant."
       ) mTenantInfo
 
