@@ -7,9 +7,9 @@ module Connect.Routes
 
 import qualified AtlassianConnect as AC
 import Application
-import qualified Control.Applicative as CA
+import Control.Applicative
 import qualified Control.Arrow as ARO
-import qualified Control.Monad as CM
+import Control.Monad
 import qualified Data.Aeson as A
 import qualified Network.HTTP.Media.MediaType as NM
 import Network.URI
@@ -38,9 +38,9 @@ serverPortSuffix HTTP  port = if port /= 0 && port /= 80 then ":" ++ show port e
 serverPortSuffix HTTPS port = if port /= 0 && port /= 443 then ":" ++ show port else ""
 
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
-homeHandler sendHomePage = ourAccept jsonMT sendJson CA.<|> ourAccept textHtmlMT sendHomePage
+homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT sendHomePage
   where
-    sendJson = SC.method SC.GET atlassianConnectHandler CA.<|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
+    sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
     (Just jsonMT) = parseString "application/json"
     (Just textHtmlMT) = parseString "text/html"
 
@@ -51,7 +51,7 @@ parseString = NM.parse . BLC.pack
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
   request <- SC.getRequest
-  CM.unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
+  unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
   action
   where
     bsAccept :: CI.CI BLC.ByteString
