@@ -43,6 +43,7 @@ Executable ping-me-connect
                  , SnapHelpers
                  , TenantJWT
                  , WithToken
+                 , EmailContent
 
   default-language: Haskell2010
   Build-depends:
@@ -78,6 +79,7 @@ Executable ping-me-connect
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
     , hailgun                   > 0.1.0.0 && < 0.2
+    , pandoc                    == 1.12.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
