@@ -72,9 +72,10 @@ isRight (Right _) = True
 isRight _         = False
 
 pingToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
-pingToHailgunMessage rmConf reminder = hailgunMessage subject undefined from recipients
+pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
    where 
       subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSubject reminder
+      message = reminderEmail reminder
       from = RC.rmFromAddress rmConf
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
 
