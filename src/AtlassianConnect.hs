@@ -9,10 +9,9 @@ module AtlassianConnect
 import Network.URI
 import Data.Maybe
 import Connect.Descriptor
-import Connect.Data
 
 data DynamicDescriptorConfig = DynamicDescriptorConfig
-  { dcPluginName :: Name Connect
+  { dcPluginName :: Name Plugin
   , dcPluginKey :: PluginKey
   , dcBaseUrl :: URI
   }
@@ -23,7 +22,7 @@ atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 addonDescriptor :: DynamicDescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
-    { pluginName      = Just $ case (dcPluginName descriptorConfig) of Name t -> Name t
+    { pluginName      = Just $ dcPluginName descriptorConfig
     , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just Lifecycle

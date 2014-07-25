@@ -23,6 +23,7 @@ import qualified Data.ByteString.Char8 as BLC
 import qualified Data.CaseInsensitive as CI
 
 import qualified Connect.Data as CD
+import Connect.Descriptor (Name(..))
 import qualified SnapHelpers as SH
 
 data Protocol = HTTP | HTTPS deriving (Eq)
@@ -75,7 +76,7 @@ atlassianConnectHandler = do
   connectData <- CD.getConnect
   request <- SC.getRequest
   let dc = AC.DynamicDescriptorConfig
-          { AC.dcPluginName = CD.connectPluginName $ connectData
+          { AC.dcPluginName = case (CD.connectPluginName connectData) of Name t -> Name t
           , AC.dcPluginKey = CD.connectPluginKey $ connectData
           , AC.dcBaseUrl = resolveBaseUrl request
           }
