@@ -67,14 +67,20 @@ data EmailReminder = EmailReminder
 instance FromRow EmailReminder where
    fromRow = EmailReminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
-addPing :: Connection -> UTCTime -> Integer -> CA.IssueId -> CA.UserKey -> Maybe T.Text -> IO (Maybe Integer)
-addPing conn date tenantId issueId userKey message = do
+addPing :: Connection -> UTCTime -> Integer -> CA.IssueDetails -> CA.UserDetails -> Maybe T.Text -> IO (Maybe Integer)
+addPing conn date tenantId issueDetails userDetails message = do
   pingID <- liftIO $ insertReturning conn
     [sql|
-      INSERT INTO ping (tenantId, issueId, userKey, message, date)
+      INSERT INTO ping (tenantId, issueId, issueKey, issueSubject, userKey, userEmail, message, date)
       VALUES (?,?,?,?,?) RETURNING id
-    |] (tenantId, issueId, userKey, message, date)
+    |] (tenantId, iid, ikey, isub, ukey, uemail, message, date)
   return . listToMaybe $ join pingID
+  where
+    iid = CA.issueId issueDetails
+    ikey = CA.issueKey issueDetails
+    isub = CA.issueSubject issueDetails
+    ukey = CA.userKey userDetails
+    uemail = CA.userEmail userDetails
 
 getReminderByUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO (Maybe Ping)
 getReminderByUser tenant userKey pid conn = do
