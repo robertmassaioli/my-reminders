@@ -40,7 +40,7 @@ addonDescriptor descriptorConfig =
               }
             ]
           }
-    , scopes = Just [Read] -- TODO Stringly typed
+    , scopes = Just [Read]
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     }
   where
