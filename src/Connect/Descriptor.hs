@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Connect.Descriptor where
 
 import Control.Monad
@@ -13,9 +15,9 @@ import GHC.Generics
 import Network.URI
 
 data Plugin = Plugin
-   { pluginName :: Maybe Text
+   { pluginName :: Maybe (Name Plugin)
    , pluginDescription :: Maybe Text
-   , pluginKey :: Text
+   , pluginKey :: PluginKey
    , pluginBaseUrl :: URI
    , vendor :: Maybe Vendor
    , authentication :: Authentication
@@ -27,12 +29,17 @@ data Plugin = Plugin
    , scopes :: Maybe [ProductScope]
    } deriving (Show, Generic)
 
+data Name a = Name Text deriving (Show, Eq, Generic)
 
-data Vendor = Vendor {vendorName :: Text, vendorUrl :: URI} deriving (Show, Generic)
+data PluginKey = PluginKey Text deriving (Show, Eq, Generic)
 
-data Authentication = Authentication {authType :: AuthType, publicKey :: Maybe Text} deriving (Show, Generic)
+newtype Timeout = Timeout Integer deriving (Show, Eq, Enum, Num, Ord, Real, Integral)
 
-data AuthType = OAuth | Jwt | None deriving (Show, Generic)
+data Vendor = Vendor {vendorName :: Text, vendorUrl :: URI} deriving (Show, Eq, Generic)
+
+data Authentication = Authentication {authType :: AuthType, publicKey :: Maybe Text} deriving (Show, Eq, Generic)
+
+data AuthType = OAuth | Jwt | None deriving (Show, Eq, Generic)
 
 data Modules = Modules JiraModules deriving (Show, Generic) -- TODO
 
@@ -43,21 +50,17 @@ data ProductScope
   | ProjectAdmin   -- This is a JIRA only Scope (TODO can we serve the correct scope set to the correct plugins?)
   | SpaceAdmin    -- This is a Confluence only Scope (TODO can we serve the correct scope set to the correct plugins?)
   | Admin
-  deriving (Show, Generic)
+  deriving (Show, Eq, Generic)
 
 data JiraModules = JiraModules
    { webPanels :: [WebPanel]
    } deriving (Show, Generic)
 
 data WebPanel = WebPanel
-   { key :: Text
-   , name :: NameValue
-   , url :: Text
-   , location :: Text
-   } deriving (Show, Generic)
-
-data NameValue = NameValue
-   { value :: Text
+   { wpKey :: Text
+   , wpName :: Name WebPanel
+   , wpUrl :: Text
+   , wpLocation :: Text
    } deriving (Show, Generic)
 
 data Lifecycle = Lifecycle
@@ -66,6 +69,10 @@ data Lifecycle = Lifecycle
    , enabled :: Maybe URI
    , disabled :: Maybe URI
    } deriving (Show, Generic) -- TODO
+
+instance ToJSON PluginKey
+
+instance ToJSON (Name a)
 
 instance ToJSON Plugin where
    toJSON = genericToJSON baseOptions
@@ -119,13 +126,9 @@ instance ToJSON JiraModules where
 instance ToJSON WebPanel where
    toJSON = genericToJSON baseOptions
 
-instance ToJSON NameValue where
-   toJSON = genericToJSON baseOptions
-
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)
    parseJSON _ = mzero
-
 
 baseOptions :: Options
 baseOptions = defaultOptions
@@ -145,7 +148,7 @@ defaultLifecycle = Lifecycle
    , disabled = parseURI "/disabled"
    }
 
-pluginDescriptor :: Text -> URI -> Authentication -> Plugin
+pluginDescriptor :: PluginKey -> URI -> Authentication -> Plugin
 pluginDescriptor key' url' auth = Plugin
    { pluginName = Nothing
    , pluginDescription = Nothing

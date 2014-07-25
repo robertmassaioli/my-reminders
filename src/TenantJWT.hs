@@ -33,14 +33,15 @@ withTenant tennantApply = do
 getTenant :: J.JWT J.UnverifiedJWT -> AppHandler (Either String CT.ConnectTenant)
 getTenant unverifiedJwt = do
   let potentialKey = getClientKey unverifiedJwt
+  -- TODO collapse these cases
   case potentialKey of
     Nothing -> retError "Could not parse the JWT message."
-    Just key -> 
+    Just key ->
       PP.withConnection $ \conn -> do
         potentialTenant <- PT.lookupTenant conn normalisedClientKey
         case potentialTenant of
           Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
-          Just unverifiedTenant -> 
+          Just unverifiedTenant ->
             case verifyTenant unverifiedTenant unverifiedJwt of
               Nothing -> retError "Invalid signature for request. Danger! Request ignored."
               Just verifiedTenant -> ret (verifiedTenant, getUserKey unverifiedJwt)
@@ -48,7 +49,7 @@ getTenant unverifiedJwt = do
         sClientKey          = show key
         normalisedClientKey = T.pack sClientKey
 
-  where 
+  where
     retError :: Monad m => x -> m (Either x y)
     retError = return . Left
 
@@ -61,7 +62,7 @@ verifyTenant tenant unverifiedJwt = do
   pure tenant
   where
     tenantSecret = J.secret . PT.sharedSecret $ tenant
-  
+
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt
 

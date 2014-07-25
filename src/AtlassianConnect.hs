@@ -3,28 +3,26 @@
 module AtlassianConnect
   ( addonDescriptor
   , publicKeyUri
-  , DescriptorConfig(..)
+  , DynamicDescriptorConfig(..)
   ) where
 
 import Network.URI
 import Data.Maybe
 import Connect.Descriptor
 
-import Data.Text
-
-data DescriptorConfig = DescriptorConfig
-  { dcPluginName :: Text
-  , dcPluginKey :: Text
+data DynamicDescriptorConfig = DynamicDescriptorConfig
+  { dcPluginName :: Name Plugin
+  , dcPluginKey :: PluginKey
   , dcBaseUrl :: URI
   }
 
 atlassianHomepage :: URI
 atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 
-addonDescriptor :: DescriptorConfig -> Plugin
+addonDescriptor :: DynamicDescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
-    { pluginName      = Just . dcPluginName $ descriptorConfig
+    { pluginName      = Just $ dcPluginName descriptorConfig
     , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just Lifecycle
@@ -35,10 +33,10 @@ addonDescriptor descriptorConfig =
         }
     , modules = Just $ Modules JiraModules
           { webPanels = [ WebPanel
-              { key = "ping-create-panel"
-              , name = NameValue "My reminders"
-              , url = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
-              , location = "atl.jira.view.issue.right.context"
+              { wpKey = "ping-create-panel"
+              , wpName = Name "My reminders"
+              , wpUrl = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
+              , wpLocation = "atl.jira.view.issue.right.context"
               }
             ]
           }
@@ -46,14 +44,8 @@ addonDescriptor descriptorConfig =
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     }
   where
-    basePlugin = pluginDescriptor connectPluginKey baseURI jwtAuthentication
-
-    connectPluginKey :: Text
-    connectPluginKey = dcPluginKey descriptorConfig
-
-    baseURI :: URI
+    basePlugin = pluginDescriptor (dcPluginKey descriptorConfig) baseURI jwtAuthentication
     baseURI = dcBaseUrl descriptorConfig
-
     jwtAuthentication = Authentication Jwt Nothing
 
 publicKeyUri :: URI
