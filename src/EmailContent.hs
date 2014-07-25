@@ -7,12 +7,19 @@ module EmailContent
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import           Text.Pandoc
+import qualified Text.Pandoc.Writers.Markdown as PM
+import qualified Text.Pandoc.Writers.HTML as PH
 import           Persistence.Ping
 import           Mail.Hailgun
 import           Network.URI
 
 reminderEmail :: EmailReminder -> MessageContent
-reminderEmail = undefined
+reminderEmail reminder = TextAndHTML
+   { textContent = BC.pack $ PM.writePlain emailWriterDefaults reminderDoc
+   , htmlContent = BC.pack $ PH.writeHtmlString emailWriterDefaults reminderDoc
+   }
+   where
+      reminderDoc = genericReminderEmail reminder
 
 genericReminderEmail :: EmailReminder -> Pandoc
 genericReminderEmail reminder = Pandoc nullMeta $
@@ -37,3 +44,8 @@ genericReminderEmail reminder = Pandoc nullMeta $
       issueURI = (erTenantBaseUrl reminder) 
          { uriPath = "/browse/" ++ erIssueKey reminder
          }
+
+emailWriterDefaults :: WriterOptions
+emailWriterDefaults = def 
+   { writerStandalone = True
+   }
