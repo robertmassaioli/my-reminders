@@ -54,7 +54,9 @@ integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
 expireUsingTimestamp timestamp rmConf conn = do
    expiredReminders <- getExpiredReminders timestamp conn
+   putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
    sentReminders <- sendReminders rmConf expiredReminders
+   putStrLn $ "Sent reminders: " ++ (show sentReminders)
    removeSentReminders sentReminders conn
    return ()
          
@@ -65,7 +67,12 @@ sendReminder :: RC.RMConf -> EmailReminder -> IO Bool
 sendReminder rmConf reminder = do
    case pingToHailgunMessage rmConf reminder of
       Left _ -> return False
-      Right message -> isRight <$> (sendEmail (RC.rmHailgunContext rmConf) message)
+      Right message -> do
+         --putStrLn . show . textContent . messageContent $ message
+         response <- sendEmail (RC.rmHailgunContext rmConf) message
+         case response of
+            Left err -> (putStrLn . show . herMessage $ err) >> return False
+            Right _ -> return True
 
 isRight :: Either a b -> Bool
 isRight (Right _) = True
@@ -74,7 +81,7 @@ isRight _         = False
 pingToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
 pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
    where 
-      subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSubject reminder
+      subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
       message = reminderEmail reminder
       from = RC.rmFromAddress rmConf
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }

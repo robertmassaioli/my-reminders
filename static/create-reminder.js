@@ -3,9 +3,9 @@ AJS.$(function() {
    var queryParams = URI(window.location.href).query(true);
    var issueId = parseInt(queryParams["issue_id"]);
    if(isNaN(issueId)) {
-      console.log("This is an error and we need to block everything...");
+      throw "No issue id on the page. Cannot do anything.";
    }
-   AJS.log("Issue id: " + issueId);
+   var issueKey = queryParams["issue_key"];
    var userKey = queryParams["user_id"];
 
    var timeUnits = {
@@ -21,10 +21,24 @@ AJS.$(function() {
          var self = this;
          AP.request({ 
             url: "/rest/api/latest/user", 
-            cache: true,
+            type: "GET",
+            cache: true,   // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
             data: { 
                key: userkey
             },
+            success: self.resolve,
+            fail: self.reject
+         });
+      });
+   };
+
+   var requestIssueDetalis = function(issueKey) {
+      return AJS.$.Deferred(function() {
+         var self = this;
+         AP.request({
+            url: "/rest/api/latest/issue/" + issueKey,
+            type: "GET",
+            cache: true,  // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
             success: self.resolve,
             fail: self.reject
          });
@@ -34,34 +48,52 @@ AJS.$(function() {
    var createReminder = function(timeDelay, timeUnit, message) {
       setCreationState(creationState.creating);
 
-      var requestData = {
-         IssueId: issueId,
-         TimeDelay: timeDelay,
-         TimeUnit: timeUnit
-      };
+      var userRequest = requestUserDetails(userKey);
+      var issueRequest = requestIssueDetalis(issueKey);
 
-      if(message) {
-         requestData.Message = message;
-      }
+      return AJS.$.when(userRequest, issueRequest).then(function(userResponse, issueResponse) {
+         var user = JSON.parse(userResponse[0]);
+         var issue = JSON.parse(issueResponse[0]);
+         var requestData = {
+            Issue: {
+                Key: issueKey,
+                Id: issueId,
+                Summary: issue.fields.summary,
+                ReturnUrl: window.location.href
+            },
+            User: {
+               Key: user.key,
+               Email: user.emailAddress,
+            },
+            TimeDelay: timeDelay,
+            TimeUnit: timeUnit
+         };
 
-      var request = AJS.$.ajax({
-         url: "/rest/ping",
-         type: "PUT",
-         cache: false,
-         contentType: "application/json",
-         data: JSON.stringify(requestData)
+         if(message) {
+            requestData.Message = message;
+         }
+
+         var request = AJS.$.ajax({
+            url: "/rest/ping",
+            type: "PUT",
+            cache: false,
+            contentType: "application/json",
+            data: JSON.stringify(requestData)
+         });
+
+         request.done(function() {
+            setCreationState(creationState.created);
+            refreshReminders();
+         });
+
+         request.fail(function() {
+            setCreationState(creationState.failed);
+         });
+
+         return request;
       });
+      
 
-      request.done(function() {
-         setCreationState(creationState.created);
-         refreshReminders();
-      });
-
-      request.fail(function() {
-         setCreationState(creationState.failed);
-      });
-
-      return request;
    };
 
    var deleteReminder = function(reminderId) {

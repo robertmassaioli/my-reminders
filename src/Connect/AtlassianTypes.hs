@@ -5,7 +5,7 @@ module Connect.AtlassianTypes
    , UserEmail
    , IssueKey
    , IssueId
-   , IssueSubject
+   , IssueSummary
    , UserDetails(..)
    , IssueDetails(..)
    ) where
@@ -17,7 +17,7 @@ type UserKey   = String    -- TODO does this need to be a Text type? What does S
 type UserEmail = UnverifiedEmailAddress
 type IssueKey  = String    -- TODO does this need to be a Text type? What does String not support?
 type IssueId   = Integer
-type IssueSubject = String
+type IssueSummary = String
 
 data UserDetails = UserDetails
    { userKey :: UserKey
@@ -27,5 +27,5 @@ data UserDetails = UserDetails
 data IssueDetails = IssueDetails
    { issueKey :: IssueKey
    , issueId :: IssueId
-   , issueSubject :: IssueSubject
+   , issueSummary :: IssueSummary
    } deriving (Show, Generic)

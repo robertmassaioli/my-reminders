@@ -42,7 +42,7 @@ data Ping = Ping
    , pingTenantId       :: Integer
    , pingIssueId        :: CA.IssueId
    , pingIssueKey       :: CA.IssueKey
-   , pingIssueSubject   :: CA.IssueSubject
+   , pingIssueSummary   :: CA.IssueSummary
    , pingUserKey        :: CA.UserKey
    , pingUserEmail      :: CA.UserEmail
    , pingMessage        :: Maybe T.Text
@@ -56,7 +56,7 @@ data EmailReminder = EmailReminder
    { erPingId           :: PingId
    , erIssueId          :: CA.IssueId
    , erIssueKey         :: CA.IssueKey
-   , erIssueSubject     :: CA.IssueSubject
+   , erIssueSummary     :: CA.IssueSummary
    , erUserKey          :: CA.UserKey
    , erUserEmail        :: CA.UserEmail
    , erPingMessage      :: Maybe T.Text
@@ -71,14 +71,14 @@ addPing :: Connection -> UTCTime -> Integer -> CA.IssueDetails -> CA.UserDetails
 addPing conn date tenantId issueDetails userDetails message = do
   pingID <- liftIO $ insertReturning conn
     [sql|
-      INSERT INTO ping (tenantId, issueId, issueKey, issueSubject, userKey, userEmail, message, date)
-      VALUES (?,?,?,?,?) RETURNING id
-    |] (tenantId, iid, ikey, isub, ukey, uemail, message, date)
+      INSERT INTO ping (tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date)
+      VALUES (?,?,?,?,?,?,?,?) RETURNING id
+    |] (tenantId, iid, ikey, isum, ukey, uemail, message, date)
   return . listToMaybe $ join pingID
   where
     iid = CA.issueId issueDetails
     ikey = CA.issueKey issueDetails
-    isub = CA.issueSubject issueDetails
+    isum = CA.issueSummary issueDetails
     ukey = CA.userKey userDetails
     uemail = CA.userEmail userDetails
 
@@ -86,7 +86,7 @@ getReminderByUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO (Mayb
 getReminderByUser tenant userKey pid conn = do
    result <- liftIO $ query conn
       [sql|
-         SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
+         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
       |] (pid, PT.tenantId tenant, B.pack userKey)
    return . listToMaybe $ result
 
@@ -95,7 +95,7 @@ getLivePingsByUser connection tenant userKey = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
-         SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ?
+         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ?
       |]
       (PT.tenantId tenant, B.pack userKey, now)
 
@@ -104,14 +104,14 @@ getLivePingsForIssueByUser connection tenant userKey issueId = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
-         SELECT id, tenantId, issueId, userKey, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
+         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
       |]
       (PT.tenantId tenant, issueId, B.pack userKey, now)
 
 getExpiredReminders :: UTCTime -> Connection -> IO [EmailReminder]
 getExpiredReminders expireTime conn = liftIO $ query conn
     [sql|
-      SELECT p.id, p.issueid, p.issuekey, p.issuesubject, p.userkey, p.useremail, p.message, p.date, t.baseurl FROM ping p, tenant t WHERE p.tenantid = t.id AND p.date < ?
+      SELECT p.id, p.issueId, p.issueKey, p.issueSummary, p.userKey, p.userEmail, p.message, p.date, t.baseUrl FROM ping p, tenant t WHERE p.tenantId = t.id AND p.date < ?
     |]
     (Only expireTime)
 
