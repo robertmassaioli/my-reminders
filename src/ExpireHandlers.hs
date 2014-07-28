@@ -6,7 +6,7 @@ module ExpireHandlers
 
 import           Application
 import           Control.Applicative ((<$>))
-import qualified Control.Monad as CM
+import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString.Char8 as BC
 import           Data.Time.Clock (UTCTime)
 import           Data.Time.Clock.POSIX
@@ -54,25 +54,23 @@ integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
 expireUsingTimestamp timestamp rmConf conn = do
    expiredReminders <- getExpiredReminders timestamp conn
-   putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
+   --putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
    sentReminders <- sendReminders rmConf expiredReminders
-   putStrLn $ "Sent reminders: " ++ (show sentReminders)
+   --putStrLn $ "Sent reminders: " ++ (show sentReminders)
    removeSentReminders sentReminders conn
    return ()
          
 sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
-sendReminders rmConf = CM.filterM (sendReminder rmConf)
+sendReminders rmConf reminders =
+   fmap fst <$> (filter snd) <$> withPool 10 (flip parallel (fmap send reminders))
+   where
+      send = sendReminder rmConf
 
-sendReminder :: RC.RMConf -> EmailReminder -> IO Bool
+sendReminder :: RC.RMConf -> EmailReminder -> IO (EmailReminder, Bool)
 sendReminder rmConf reminder = do
    case pingToHailgunMessage rmConf reminder of
-      Left _ -> return False
-      Right message -> do
-         --putStrLn . show . textContent . messageContent $ message
-         response <- sendEmail (RC.rmHailgunContext rmConf) message
-         case response of
-            Left err -> (putStrLn . show . herMessage $ err) >> return False
-            Right _ -> return True
+      Left _ -> return (reminder, False)
+      Right message -> (,) reminder <$> isRight <$> sendEmail (RC.rmHailgunContext rmConf) message
 
 isRight :: Either a b -> Bool
 isRight (Right _) = True

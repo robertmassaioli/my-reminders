@@ -19,6 +19,9 @@ reminderEmail reminder = TextAndHTML
    where
       reminderDoc = genericReminderEmail reminder
 
+-- Note: The following email was initially generated from: pandoc-email-templates/example-email.markdown
+-- And then it was modified to contain dynamic content.
+-- You can generate this outline using: pandoc -t native pandoc-email-templates/example-email.markdown
 genericReminderEmail :: EmailReminder -> Pandoc
 genericReminderEmail reminder = Pandoc nullMeta $
    [ Header 2 ("issue-reminder--", [], []) [Str "Issue", Space, Str "Reminder", Space, Str "-", Space, Str . erIssueKey $ reminder]
@@ -37,11 +40,9 @@ genericReminderEmail reminder = Pandoc nullMeta $
          , BlockQuote [Para [Str . T.unpack $ content]]
          ]
 
-      issueURI = tenantURI
-         { uriPath = uriPath tenantURI ++ "/browse/" ++ erIssueKey reminder
-         }
-
       tenantURI = erTenantBaseUrl reminder
+      issuePath = uriPath tenantURI ++ "/browse/" ++ erIssueKey reminder
+      issueURI = tenantURI { uriPath = issuePath }
 
 emailWriterDefaults :: WriterOptions
 emailWriterDefaults = def 

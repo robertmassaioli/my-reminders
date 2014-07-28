@@ -80,6 +80,7 @@ Executable ping-me-connect
     , xmlhtml                   == 0.2.*
     , hailgun                   > 0.1.0.0 && < 0.2
     , pandoc                    == 1.12.*
+    , parallel-io               == 0.3.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
