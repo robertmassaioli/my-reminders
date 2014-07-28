@@ -37,9 +37,11 @@ genericReminderEmail reminder = Pandoc nullMeta $
          , BlockQuote [Para [Str . T.unpack $ content]]
          ]
 
-      issueURI = (erTenantBaseUrl reminder) 
-         { uriPath = "/browse/" ++ erIssueKey reminder
+      issueURI = tenantURI
+         { uriPath = uriPath tenantURI ++ "/browse/" ++ erIssueKey reminder
          }
+
+      tenantURI = erTenantBaseUrl reminder
 
 emailWriterDefaults :: WriterOptions
 emailWriterDefaults = def 

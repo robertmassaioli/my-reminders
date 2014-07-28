@@ -122,10 +122,10 @@ deletePing pingId conn = execute conn
    |] (Only pingId)
 
 deleteManyPings :: [PingId] -> Connection -> IO Int64
-deleteManyPings pingIds conn = executeMany conn
+deleteManyPings pingIds conn = execute conn
    [sql|
-      DELETE from ping WHERE id = ?
-   |] (fmap Only pingIds)
+      DELETE from ping WHERE id in ?
+   |] (Only . In $ pingIds)
 
 deletePingForUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO Int64
 deletePingForUser tenant userKey pingId conn = execute conn
