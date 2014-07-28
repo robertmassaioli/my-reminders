@@ -15,12 +15,8 @@ import Application
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
 
-noContent :: Int      
-badRequest :: Int
-unauthorised :: Int
-forbidden :: Int
-notFound :: Int
-internalServer :: Int
+noContent, badRequest, unauthorised, forbidden, notFound, internalServer, ok :: Int
+ok             = 200
 noContent      = 204
 badRequest     = 400
 unauthorised   = 401
@@ -28,10 +24,7 @@ forbidden      = 403
 notFound       = 404
 internalServer = 500
 
-respondBadRequest       :: SC.MonadSnap m => m ()
-respondNotFound         :: SC.MonadSnap m => m ()
-respondInternalServer   :: SC.MonadSnap m => m ()
-respondNoContent        :: SC.MonadSnap m => m ()
+respondBadRequest, respondNotFound, respondInternalServer, respondNoContent :: SC.MonadSnap m => m ()
 respondBadRequest       = respondWith badRequest
 respondNotFound         = respondWith notFound
 respondInternalServer   = respondWith internalServer
