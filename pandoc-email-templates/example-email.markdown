@@ -10,7 +10,7 @@ With the following message:
 
 Follow the link to see more about the issue.
 
-Cheers,
+Cheers,  
 Your friendly RemindMe plugin.
 
  [1]: http://example.com
