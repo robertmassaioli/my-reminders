@@ -59,7 +59,7 @@ issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
 
 instance ToJSON CA.UserDetails where
    toJSON o = object 
-      [ "Key" .= (CA.userKey o)
+      [ "Key" .= CA.userKey o
       , "Email" .= (BC.unpack . CA.userEmail $ o)
       ]
 
@@ -177,7 +177,7 @@ addPingHandler ct = do
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
 addPing _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addPing pingRequest (tenant, Just userKey) = do
+addPing pingRequest (tenant, Just userKey) =
   if userKey /= requestUK
     then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey) 
     else do

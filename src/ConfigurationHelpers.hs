@@ -16,5 +16,5 @@ require config name errorMessage = do
     Nothing -> fail errorMessage
     Just x -> return x
 
-configDataDir :: IO [Char]
+configDataDir :: IO String
 configDataDir = CM.liftM (++ "/resources") PPMC.getDataDir

@@ -76,8 +76,8 @@ atlassianConnectHandler = do
   connectData <- CD.getConnect
   request <- SC.getRequest
   let dc = AC.DynamicDescriptorConfig
-          { AC.dcPluginName = case (CD.connectPluginName connectData) of Name t -> Name t
-          , AC.dcPluginKey = CD.connectPluginKey $ connectData
+          { AC.dcPluginName = case CD.connectPluginName connectData of Name t -> Name t
+          , AC.dcPluginKey = CD.connectPluginKey connectData
           , AC.dcBaseUrl = resolveBaseUrl request
           }
   writeJson . AC.addonDescriptor $ dc

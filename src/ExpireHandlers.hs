@@ -26,13 +26,11 @@ handleExpireRequest = handleMethods
    [ (SC.PUT, expireForTimestamp)
    ]
 
--- TODO we expect that we will be given a timestamp and that we can expire everything before that
--- timestamp.
+-- We expect that we will be given a timestamp by a trusted source; if that is no longer true then
+-- this code needs to be changed.
 -- TODO extra: we should check to make sure that the timestamp given is reasonably close to the
--- current timestamp (within the day). 
+-- current timestamp (within the day) and turn it of for testing. 
 -- TODO Each timestamp should only be processed once. Need to ensure that this is thread safe.
--- TODO a hash should need to be provided such that only those that have the hash can trigger the
--- rest calls.
 expireForTimestamp :: AppHandler ()
 expireForTimestamp = do
    potentialExpireKey <- SC.getQueryParam "key"
@@ -43,10 +41,9 @@ expireForTimestamp = do
       (_      , Nothing) -> respondWithError badRequest "You need to provide a timestamp for expiry to work."
       (Just expireKey, Just timestamp) -> do
          rmConf <- RC.getRMConf
-         if RC.rmExpireKey rmConf /= (BC.unpack expireKey)
+         if RC.rmExpireKey rmConf /= BC.unpack expireKey
             then respondWithError forbidden "You lack the required permissions."
             else SS.with db (withConnection $ expireUsingTimestamp (integerPosixToUTCTime timestamp) rmConf)
-         -- otherwise expire the tokens that need to be expired, do so in a brand new method
 
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
@@ -70,12 +67,12 @@ expireUsingTimestamp timestamp rmConf conn = do
 -- it going into the future.
 sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
 sendReminders rmConf reminders =
-   fmap fst <$> (filter snd) <$> withPool 10 (flip parallel (fmap send reminders))
+   fmap fst <$> filter snd <$> withPool 10 (flip parallel (fmap send reminders))
    where
       send = sendReminder rmConf
 
 sendReminder :: RC.RMConf -> EmailReminder -> IO (EmailReminder, Bool)
-sendReminder rmConf reminder = do
+sendReminder rmConf reminder =
    case pingToHailgunMessage rmConf reminder of
       Left _ -> return (reminder, False)
       Right message -> (,) reminder <$> isRight <$> sendEmail (RC.rmHailgunContext rmConf) message
@@ -95,4 +92,4 @@ pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recip
 removeSentReminders :: [EmailReminder] -> Connection -> IO Bool
 removeSentReminders reminders conn = do
    deletedCount <- deleteManyPings (fmap erPingId reminders) conn
-   return $ deletedCount == (fromIntegral $ length reminders)
+   return $ deletedCount == fromIntegral (length reminders)

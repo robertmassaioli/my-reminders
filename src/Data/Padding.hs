@@ -17,4 +17,4 @@ zeroPad boundary input = input `B.append` padding
       inputLength = B.length input
 
 zeroUnpad :: B.ByteString -> B.ByteString
-zeroUnpad = fst . BC.spanEnd (== (chr 0))
+zeroUnpad = fst . BC.spanEnd (== chr 0)
