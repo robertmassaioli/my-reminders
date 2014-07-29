@@ -50,6 +50,7 @@ data PingResponse = PingResponse
    , prsPingId :: Integer
    , prsIssueId :: CA.IssueId
    , prsMessage :: Maybe T.Text
+   , prsEmail :: String
    } deriving (Show, Generic)
 
 instance ToJSON TimeUnit
@@ -116,6 +117,7 @@ toPingResponse ping = PingResponse
    , prsPingId = P.pingPingId ping
    , prsIssueId = P.pingIssueId ping
    , prsMessage = P.pingMessage ping
+   , prsEmail = BC.unpack $ P.pingUserEmail ping
    }
 
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
