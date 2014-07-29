@@ -60,6 +60,14 @@ expireUsingTimestamp timestamp rmConf conn = do
    removeSentReminders sentReminders conn
    return ()
          
+-- Performance: In my local testing with a Mailgun sandbox account I have seen that it takes
+-- approximately 1.6s for every 10 emails that you send. You pay an extra 1.6s for every 10 emails.
+-- With these numbers we can send 1875 emails in 5 minutes and implies a maximum throughput of
+-- 540000 emails / day. This is a massive number of emails and would mean that:
+-- 1. Our plugin is insanely popular.
+-- 2. We would be in Mailgun's upper tier at ~ 16 million reminders a month.
+-- I don't think this will happen instantly so this performs well enough for now and we can monitor
+-- it going into the future.
 sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
 sendReminders rmConf reminders =
    fmap fst <$> (filter snd) <$> withPool 10 (flip parallel (fmap send reminders))
