@@ -30,7 +30,6 @@
       <button id="add-reminder-next-week" class="aui-button aui-button-subtle">In a week</button>
       <span class="status-container">
            <span id="reminder-creation-pending" class="aui-icon aui-icon-wait">Wait</span>
-           <span id="reminder-creation-success" class="aui-icon aui-icon-success">Success</span>
            <span id="reminder-creation-error"   class="aui-icon aui-icon-error">Error</span>
        </span>
    </div>
@@ -69,5 +68,11 @@
            <span class="aui-icon icon-error"></span>
            <strong class="title">Destructive operation!</strong>
        </p>
+   </div>
+   <div id="success-message" class="aui-message success hidden">
+      <p class="title">
+         <span class="aui-icon icon-success"></span>
+         <strong class="title">Reminder set for <span class="email"></span></strong>
+      </p>
    </div>
 </apply>
