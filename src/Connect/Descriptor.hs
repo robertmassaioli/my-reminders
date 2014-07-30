@@ -125,6 +125,8 @@ instance ToJSON JiraModules where
 
 instance ToJSON WebPanel where
    toJSON = genericToJSON baseOptions
+      { fieldLabelModifier = stripFieldNamePrefix "wp"
+      }
 
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)
