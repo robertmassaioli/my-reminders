@@ -14,6 +14,7 @@ module Site
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import           Data.Monoid (mempty)
+import           Data.Maybe
 import qualified Data.Text as T
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
@@ -64,13 +65,14 @@ viewRemindersPanel :: AppHandler ()
 viewRemindersPanel = createConnectPanel "view-jira-reminders"
 
 createConnectPanel :: ByteString -> AppHandler ()
-createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, _) -> do
+createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- CD.getConnect
-  SSH.heistLocal (I.bindSplices $ context connectData tenant token) $ SSH.render panelTemplate
+  SSH.heistLocal (I.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
-    context connectData tenant token = do
+    context connectData tenant token userKey = do
       "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
       "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      "userKey" H.## I.textSplice $ maybe T.empty T.pack userKey
 
 hasSplice :: SSH.SnapletISplice App
 hasSplice = do
@@ -102,6 +104,7 @@ applicationRoutes =
   , ("/panel/jira/reminders/view", viewRemindersPanel)
   , ("/rest/ping"         , handlePings)
   , ("/rest/pings"        , handleMultiPings)
+  , ("/rest/user/reminders", handleUserReminders)
   , ("/rest/expire"       , handleExpireRequest)
   , ("/static"            , serveDirectory "static")
   ]

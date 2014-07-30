@@ -90,8 +90,8 @@ getReminderByUser tenant userKey pid conn = do
       |] (pid, PT.tenantId tenant, B.pack userKey)
    return . listToMaybe $ result
 
-getLivePingsByUser :: Connection -> PT.Tenant -> CA.UserKey -> IO [Ping]
-getLivePingsByUser connection tenant userKey = do
+getLivePingsByUser :: PT.Tenant -> CA.UserKey -> Connection -> IO [Ping]
+getLivePingsByUser tenant userKey connection = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|

@@ -39,11 +39,16 @@ addonDescriptor descriptorConfig =
                , wpUrl = "/panel/jira/ping/create?issue_key={issue.key}&issue_id={issue.id}"
                , wpLocation = "atl.jira.view.issue.right.context"
                }
-            , WebPanel
-               { wpKey = "view-my-reminders"
-               , wpName = Name "My reminders"
-               , wpUrl = "/panel/jira/reminders/view"
-               , wpLocation = "system.user.options/personal" -- See: https://developer.atlassian.com/display/JIRADEV/User+Accessible+Locations#UserAccessibleLocations-AddingNewItemstoExistingWebSections
+            ]
+          , generalPages = 
+            [ GeneralPage
+               { generalPageName = Name "My Reminders"
+               , generalPageKey = "view-my-reminders"
+               , generalPageUrl = "/panel/jira/reminders/view"
+               -- See: https://developer.atlassian.com/display/JIRADEV/User+Accessible+Locations#UserAccessibleLocations-AddingNewItemstoExistingWebSections
+               , generalPageLocation = Just "system.user.options/personal"
+               , generalPageIcon = Nothing
+               , generalPageWeight = Nothing
                }
             ]
           }

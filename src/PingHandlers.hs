@@ -5,6 +5,7 @@
 module PingHandlers
   ( handlePings
   , handleMultiPings
+  , handleUserReminders
   ) where
 
 import qualified Data.Text as T
@@ -118,8 +119,11 @@ toPingResponse ping = PingResponse
    , prsMessage = P.pingMessage ping
    }
 
+standardAuthError :: AppHandler ()
+standardAuthError = respondWithError unauthorised "You need to login before you query for reminders."
+
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-getPingsForIssue (_, Nothing) = respondWithError unauthorised "You need to login before you query for reminders."
+getPingsForIssue (_, Nothing) = standardAuthError
 getPingsForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
    case potentialIssueId of
@@ -130,6 +134,18 @@ getPingsForIssue (tenant, Just userKey) = do
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
 clearPingsForIssue _ = undefined
+
+handleUserReminders :: AppHandler ()
+handleUserReminders = handleMethods
+   [ (SC.GET, WT.tenantFromToken getUserReminders)
+   ]
+
+getUserReminders :: CT.ConnectTenant -> AppHandler ()
+getUserReminders (_, Nothing) = standardAuthError
+getUserReminders (tenant, Just userKey) = do
+   userReminders <- SS.with db $ withConnection (P.getLivePingsByUser tenant userKey)
+   SC.writeLBS . encode . fmap toPingResponse $ userReminders
+   
 
 handlePings :: AppHandler ()
 handlePings = handleMethods

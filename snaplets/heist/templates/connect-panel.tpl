@@ -6,7 +6,7 @@
       <meta name="avatarSize" content="${avatarSize}" />
       <meta name="hostId" content="${hostId}" />    
       <meta name="resourceId" content="${resourceId}" />
-      <meta name="userId" content="${userId}" />
+      <meta name="userKey" content="${userKey}" />
       <hasSplice name="connectPageToken">
       <meta name="acpt" content="${connectPageToken}">
       </hasSplice>
