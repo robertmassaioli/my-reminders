@@ -114,7 +114,7 @@ resolveBaseUrl req =
 toAbsoluteUrl :: Protocol -> String -> Int -> URI
 toAbsoluteUrl protocol serverName port =
   nullURI
-    { uriScheme = show protocol
+    { uriScheme = show protocol ++ ":"
     , uriAuthority = Just URIAuth { uriUserInfo = ""
                                   , uriRegName = serverName
                                   , uriPort = serverPortSuffix protocol port }
