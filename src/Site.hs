@@ -58,9 +58,15 @@ getAppVersion = "0.1"
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
 createPingPanel :: AppHandler ()
-createPingPanel = withTokenAndTenant $ \token (tenant, _) -> do
+createPingPanel = createConnectPanel "ping-create"
+
+viewRemindersPanel :: AppHandler ()
+viewRemindersPanel = createConnectPanel "view-jira-reminders"
+
+createConnectPanel :: ByteString -> AppHandler ()
+createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, _) -> do
   connectData <- CD.getConnect
-  SSH.heistLocal (I.bindSplices $ context connectData tenant token) $ SSH.render "ping-create"
+  SSH.heistLocal (I.bindSplices $ context connectData tenant token) $ SSH.render panelTemplate
   where
     context connectData tenant token = do
       "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
@@ -92,7 +98,8 @@ routes = connectRoutes ++ applicationRoutes
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                  , homeHandler sendHomePage)
-  , ("/panel/ping/create" , createPingPanel )
+  , ("/panel/jira/ping/create" , createPingPanel )
+  , ("/panel/jira/reminders/view", viewRemindersPanel)
   , ("/rest/ping"         , handlePings)
   , ("/rest/pings"        , handleMultiPings)
   , ("/rest/expire"       , handleExpireRequest)
