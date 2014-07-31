@@ -30,24 +30,33 @@
    <div class="aui-page-panel atlassian-connect-infinite-expand-fix"><div class="aui-page-panel-inner"><section class="aui-page-panel-content">
       <h2>My reminders</h2>
 
-      <p>
-          <button id="update-email" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-build"></span> Update email</button>
-          <button id="delete-reminders" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-delete">Delete</span> Delete</button>
-      </p>
+      <div id="not-logged-in" class="aui-message aui-message-error hidden">
+          <p class="title">
+              <strong>You are not logged in</strong>
+          </p>
+          <p>Your reminders cannot be loaded until you login.</p>
+      </div>
 
-      <table id="reminders" class="aui">
-          <thead>
-              <tr>
-                  <th><input type="checkbox" id="master-selector" /></th>
-                  <th>Date</th>
-                  <th>Issue</th>
-                  <th>Email</th>
-                  <th>Message</th>
-              </tr>
-          </thead>
-          <tbody class="container">
-          </tbody>
-      </table>
-      <!-- TODO have a message here in case no reminders exist -->
+      <div id="logged-in-content">
+         <p>
+             <button id="update-email" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-build"></span> Update email</button>
+             <button id="delete-reminders" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-delete">Delete</span> Delete</button>
+         </p>
+
+         <table id="reminders" class="aui">
+             <thead>
+                 <tr>
+                     <th><input type="checkbox" id="master-selector" /></th>
+                     <th>Date</th>
+                     <th>Issue</th>
+                     <th>Email</th>
+                     <th>Message</th>
+                 </tr>
+             </thead>
+             <tbody class="container">
+             </tbody>
+         </table>
+         <!-- TODO have a message here in case no reminders exist -->
+      </div>
    </section></div></div>
 </apply>

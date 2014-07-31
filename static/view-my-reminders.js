@@ -14,6 +14,11 @@ AJS.$(function() {
    var userKey = getMeta("userKey");
    var baseurl = getMeta("hostBaseUrl");
 
+   if(userKey === "") {
+      AJS.$("#not-logged-in").removeClass("hidden");
+      AJS.$("#logged-in-content").addClass("hidden");
+   }
+
    AJS.log("The user key is: " + userKey);
 
    // TODO when you begin load all of the reminders
