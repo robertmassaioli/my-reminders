@@ -8,6 +8,7 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
+      <js><bind tag="href">/static/host-request.js</bind></js>
       <js><bind tag="href">/static/view-my-reminders.js</bind></js>
       <stylesheet><bind tag="href">/static/view-my-reminders.css</bind></stylesheet>
 
@@ -18,9 +19,10 @@
       <script id="reminder-row" type="x-tmpl-mustache">
          <tr class="reminder" data-reminder-id="{{PingId}}">
             <td><input type="checkbox" class="select" /></td>
-            <td>{{prettyDate}}</td>
-            <td><a href="{{issueLink}}">[{{IssueKey}}] {{IssueSubject}}</a></td>
-            <td>{{Email}}</td>
+            <td>{{fullDate}}</td>
+            <td><a href="{{{issueLink}}}">[{{IssueKey}}] {{IssueSummary}}</a></td>
+            <td>{{UserEmail}}</td>
+            <td>{{#Message}}{{Message}}{{/Message}}{{^Message}}NA{{/Message}}</td>
          </tr>
       </script>
    </bind>
@@ -40,28 +42,12 @@
                   <th>Date</th>
                   <th>Issue</th>
                   <th>Email</th>
+                  <th>Message</th>
               </tr>
           </thead>
           <tbody class="container">
-              <tr class="reminder">
-                  <td><input type="checkbox" class="select" /></td>
-                  <td headers="basic-number">31 Jul 2014 05:49PM </td>
-                  <td headers="basic-fname"><a href="/some/link">[DEMO-1]  What is an issue?</a></td>
-                  <td>robertmassaioli@gmail.com</td>
-              </tr>
-              <tr class="reminder">
-                  <td><input type="checkbox" class="select" /></td>
-                  <td headers="basic-number">31 Jul 2014 05:49PM </td>
-                  <td headers="basic-fname"><a href="/some/link">[DEMO-1]  What is an issue?</a></td>
-                  <td>robertmassaioli@gmail.com</td>
-              </tr>
-              <tr class="reminder">
-                  <td><input type="checkbox" class="select" /></td>
-                  <td headers="basic-number">31 Jul 2014 05:49PM </td>
-                  <td headers="basic-fname"><a href="/some/link">[DEMO-1]  What is an issue?</a></td>
-                  <td>robertmassaioli@gmail.com</td>
-              </tr>
           </tbody>
       </table>
+      <!-- TODO have a message here in case no reminders exist -->
    </section></div></div>
 </apply>

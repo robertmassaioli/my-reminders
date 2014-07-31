@@ -46,12 +46,16 @@ data PingRequest = PingRequest
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
-data PingResponse = PingResponse
-   { prsDate :: UTCTime
-   , prsPingId :: Integer
-   , prsIssueId :: CA.IssueId
-   , prsMessage :: Maybe T.Text
-   } deriving (Show, Generic)
+data ReminderResponse = ReminderResponse
+   { prsPingId         :: Integer
+   , prsIssueId        :: CA.IssueId
+   , prsIssueKey       :: CA.IssueKey
+   , prsIssueSummary   :: CA.IssueSummary
+   , prsUserKey        :: CA.UserKey
+   , prsUserEmail      :: String
+   , prsMessage        :: Maybe T.Text
+   , prsDate           :: UTCTime
+   } deriving (Eq, Show, Generic)
 
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
@@ -99,10 +103,10 @@ instance FromJSON PingRequest where
          }
    parseJSON _ = fail "Expect the PingRequest to be a JSON object but it was not."
 
-instance ToJSON PingResponse where
+instance ToJSON ReminderResponse where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
-instance FromJSON PingResponse where
+instance FromJSON ReminderResponse where
    parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
 handleMultiPings :: AppHandler ()
@@ -111,12 +115,16 @@ handleMultiPings = handleMethods
    , (SC.DELETE, WT.tenantFromToken clearPingsForIssue)
    ]
 
-toPingResponse :: P.Ping -> PingResponse
-toPingResponse ping = PingResponse
-   { prsDate = P.pingDate ping
-   , prsPingId = P.pingPingId ping
-   , prsIssueId = P.pingIssueId ping
-   , prsMessage = P.pingMessage ping
+toReminderResponse :: P.Ping -> ReminderResponse
+toReminderResponse ping = ReminderResponse
+   { prsPingId         = P.pingPingId ping
+   , prsIssueId        = P.pingIssueId ping
+   , prsIssueKey       = P.pingIssueKey ping
+   , prsIssueSummary   = P.pingIssueSummary ping
+   , prsUserKey        = P.pingUserKey ping
+   , prsUserEmail      = BC.unpack . P.pingUserEmail $ ping
+   , prsMessage        = P.pingMessage ping
+   , prsDate           = P.pingDate ping
    }
 
 standardAuthError :: AppHandler ()
@@ -129,7 +137,7 @@ getPingsForIssue (tenant, Just userKey) = do
    case potentialIssueId of
       Just issueId -> do
          issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
-         SC.writeLBS . encode . fmap toPingResponse $ issuePings
+         SC.writeLBS . encode . fmap toReminderResponse $ issuePings
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
@@ -144,7 +152,7 @@ getUserReminders :: CT.ConnectTenant -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
    userReminders <- SS.with db $ withConnection (P.getLivePingsByUser tenant userKey)
-   SC.writeLBS . encode . fmap toPingResponse $ userReminders
+   SC.writeLBS . encode . fmap toReminderResponse $ userReminders
    
 
 handlePings :: AppHandler ()
@@ -164,7 +172,7 @@ getPingHandler (tenant, Just userKey) = do
          potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
          case potentialPing of
             Nothing -> respondNotFound
-            Just ping -> SC.writeLBS . encode . toPingResponse $ ping
+            Just ping -> SC.writeLBS . encode . toReminderResponse $ ping
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
