@@ -21,6 +21,37 @@ AJS.$(function() {
 
    AJS.log("The user key is: " + userKey);
 
+   var allReminderSelects = function() {
+      return  AJS.$("#reminders .container .reminder .select");
+   };
+
+   var check = function(element, checked) {
+      if(checked) {
+         element.attr("checked", "checked");
+      } else {
+         element.removeAttr("checked");
+      }
+   };
+
+   var isChecked = function(rawElement) {
+      return AJS.$(rawElement).attr("checked") === "checked";
+   };
+
+   var setIndeterminateState = function() {
+      var allSelects = allReminderSelects();
+      var selectedReminders = AJS.$.grep(allSelects, isChecked);
+
+      var masterSelect = AJS.$("#master-selector");
+      masterSelect.prop("indeterminate", selectedReminders.length > 0 && selectedReminders.length != allSelects.length);
+      check(masterSelect, selectedReminders.length > 0 && selectedReminders.length === allSelects.length);
+   };
+
+   var getSelectedReminderIds = function() {
+      return AJS.$.map(AJS.$.grep(allReminderSelects(), isChecked), function(reminder) {
+         return parseInt(AJS.$(reminder).closest(".reminder").attr("data-reminder-id"));
+      });
+   };
+
    // TODO when you begin load all of the reminders
    var init = function() {
       setupTemplates();
@@ -52,6 +83,15 @@ AJS.$(function() {
 
             container.append(Mustache.render(templates.reminderRow, reminder));
          });
+      });
+
+      AJS.$("#master-selector").click(function() {
+         check(allReminderSelects(), !!AJS.$(this).attr("checked"));
+      });
+
+      AJS.$("#reminders .container").on("click", ".reminder .select", function() {
+         setIndeterminateState();
+         console.log(getSelectedReminderIds());
       });
    };
 

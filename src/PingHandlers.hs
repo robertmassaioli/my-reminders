@@ -57,6 +57,13 @@ data ReminderResponse = ReminderResponse
    , prsDate           :: UTCTime
    } deriving (Eq, Show, Generic)
 
+data PingIdList = PingIdList
+   { pids :: [Integer]
+   } deriving (Eq, Show, Generic)
+
+instance ToJSON PingIdList
+instance FromJSON PingIdList
+
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
@@ -146,6 +153,8 @@ clearPingsForIssue _ = undefined
 handleUserReminders :: AppHandler ()
 handleUserReminders = handleMethods
    [ (SC.GET, WT.tenantFromToken getUserReminders)
+   , (SC.POST, WT.tenantFromToken bulkUpdateUserEmails)
+   , (SC.DELETE, WT.tenantFromToken bulkDeleteEmails)
    ]
 
 getUserReminders :: CT.ConnectTenant -> AppHandler ()
@@ -154,6 +163,19 @@ getUserReminders (tenant, Just userKey) = do
    userReminders <- SS.with db $ withConnection (P.getLivePingsByUser tenant userKey)
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
    
+bulkUpdateUserEmails :: CT.ConnectTenant -> AppHandler ()
+bulkUpdateUserEmails (_, Nothing) = standardAuthError
+bulkUpdateUserEmails (tenant, Just userKey) = do
+  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+  let maybePing = eitherDecode request :: Either String PingIdList
+  case maybePing of
+    Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
+    Right pingIds -> do
+      SS.with db $ withConnection (P.updateEmailForUser tenant undefined (pids pingIds))
+      return ()
+
+bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
+bulkDeleteEmails = undefined
 
 handlePings :: AppHandler ()
 handlePings = handleMethods

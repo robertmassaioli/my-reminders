@@ -22,7 +22,7 @@
             <td>{{fullDate}}</td>
             <td><a href="{{{issueLink}}}">[{{IssueKey}}] {{IssueSummary}}</a></td>
             <td>{{UserEmail}}</td>
-            <td>{{#Message}}{{Message}}{{/Message}}{{^Message}}NA{{/Message}}</td>
+            <td>{{Message}}</td>
          </tr>
       </script>
    </bind>

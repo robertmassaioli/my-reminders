@@ -20,7 +20,7 @@ AJS.$(function() {
       setCreationState(creationState.creating);
 
       var userRequest = HostRequest.userDetails(userKey);
-      var issueRequest = HostRequest.issueDetalis(issueKey);
+      var issueRequest = HostRequest.issueDetails(issueKey);
 
       return AJS.$.when(userRequest, issueRequest).then(function(userResponse, issueResponse) {
          var user = JSON.parse(userResponse[0]);

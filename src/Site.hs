@@ -14,7 +14,6 @@ module Site
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import           Data.Monoid (mempty)
-import           Data.Maybe
 import qualified Data.Text as T
 import qualified Snap.Snaplet as SS
 import qualified Heist as H

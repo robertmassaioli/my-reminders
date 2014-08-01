@@ -10,6 +10,7 @@ module Persistence.Ping
    , getReminderByUser
    , getExpiredReminders
    , getLivePingsByUser
+   , updateEmailForUser
    , getLivePingsForIssueByUser
    , deletePingForUser
    , deletePing
@@ -95,7 +96,7 @@ getLivePingsByUser tenant userKey connection = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
-         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ?
+         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ? ORDER BY date ASC
       |]
       (PT.tenantId tenant, B.pack userKey, now)
 
@@ -107,6 +108,13 @@ getLivePingsForIssueByUser connection tenant userKey issueId = do
          SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
       |]
       (PT.tenantId tenant, issueId, B.pack userKey, now)
+
+updateEmailForUser :: PT.Tenant -> CA.UserDetails -> [PingId] -> Connection -> IO Int64
+updateEmailForUser tenant userDetails pingIds conn = liftIO $ execute conn
+   [sql|
+      UPDATE ping SET userEmail = ? WHERE tenantId = ? AND userKey = ? AND id in ?
+   |]
+   (PT.tenantId tenant, B.pack . CA.userKey $ userDetails, In pingIds)
 
 getExpiredReminders :: UTCTime -> Connection -> IO [EmailReminder]
 getExpiredReminders expireTime conn = liftIO $ query conn
