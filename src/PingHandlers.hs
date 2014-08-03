@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import Data.Aeson
-import Data.Aeson.Types (defaultOptions, fieldLabelModifier)
+import Data.Aeson.Types (defaultOptions, fieldLabelModifier, Options)
 import Application
 import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BC
@@ -26,6 +26,7 @@ import qualified WithToken as WT
 import qualified Persistence.Tenant as TN
 import qualified Connect.AtlassianTypes as CA
 import qualified Connect.Tenant as CT
+import qualified Model.UserDetails as UD
 
 type TimeDelay = Integer
 
@@ -67,6 +68,7 @@ instance FromJSON PingIdList
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
+issueDetailsOptions :: Options
 issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
 
 instance ToJSON CA.UserDetails where

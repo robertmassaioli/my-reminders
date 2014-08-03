@@ -4,40 +4,34 @@
 module Model.UserDetails
    ( getUserDetails
    , UserWithDetails(..)
-   , MyError
+   , MyError(..)
    , Params(..)
    ) where
-
+ 
 import Data.Aeson
-import Data.Aeson.Types
-import Data.Time.Clock(NominalDiffTime)
-import qualified Data.Char as C
-import qualified Data.ByteString.Lazy.Char8 as B
+import Data.Time.Clock (NominalDiffTime)
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import Data.Maybe
-import qualified Data.List as L
 import GHC.Generics
 import Network.URI
 import Network.HTTP.Client
 import Network.HTTP.Types
 import Network.Api.Support
-import Data.String.Utils
-import qualified Data.Map as M (Map(..),fromList)
+import qualified Data.Map as M (Map, fromList)
 
 import qualified Web.JWT as JWT
 import Web.Connect.QueryStringHash
 
 data UserWithDetails = UserWithDetails 
-   { name:: String
-   , emailAddress:: String
-   , avatarUrls:: M.Map String String
-   , displayName:: String
-   , active:: Bool
-   , timeZone:: String
-   }
-  deriving (Show, Generic)
+   { name            :: String
+   , emailAddress    :: String
+   , avatarUrls      :: M.Map String String
+   , displayName     :: String
+   , active          :: Bool
+   , timeZone        :: String
+   } deriving (Show, Generic)
 --TODO: parse url here
 
 instance FromJSON UserWithDetails
@@ -46,8 +40,9 @@ instance ToJSON UserWithDetails
 data MyError = MyError 
    { code      :: Int
    , myMessage :: String
-   } deriving(Show, Generic)
+   } deriving (Show, Generic)
 
+-- TODO Replace with a connect tenant
 data Params = Params 
    { jiraBaseURL  :: String
    , hostURL      :: URI
@@ -59,14 +54,14 @@ data Params = Params
 getUserDetails:: Integer -> Params -> IO (Either MyError UserWithDetails)
 getUserDetails currentTime params =
   runRequest defaultManagerSettings GET (T.pack url)
-    (addHeader ("Accept","application/json") <> addHeader ("Authorization", BS.pack $ "JWT " ++ signature))
+    (addHeader ("Accept","application/json") <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature))
     (basicResponder responder)
   where
     url = jiraBaseURL params ++ "/rest/api/2/user?username=" ++ username params
     signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
 
-generateJWTToken :: Integer -> T.Text -> StdMethod ->  Network.URI.URI -> T.Text -> T.Text
-generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encodeSigned algo secret' claims
+generateJWTToken :: Integer -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
+generateJWTToken currentTime sharedSecret'  method' ourURL requestURL = JWT.encodeSigned algo secret' claims
   where
     algo = JWT.HS256
 
@@ -74,12 +69,12 @@ generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encode
     diffTime :: Integer -> NominalDiffTime
     diffTime = fromRational . toRational
     
-    queryStringHash = createQueryStringHash method ourURL requestURL
+    queryStringHash = createQueryStringHash method' ourURL requestURL
     
     -- TODO Some of these details are hard coded and should be derived. Like the plugin key.
     claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme"
                               , JWT.iat = JWT.intDate $ diffTime currentTime
-                              , JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000) -- Generating a token that never expires is a big problem. Make it expire in 3 min.
+                              , JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000) -- TODO Generating a token that never expires is a big problem. Make it expire in 3 min.
                               , JWT.sub = Nothing
                               , JWT.aud = Nothing
                               , JWT.nbf = Nothing
@@ -87,98 +82,10 @@ generateJWTToken currentTime sharedSecret  method ourURL requestURL = JWT.encode
                               , JWT.unregisteredClaims = M.fromList [("qsh", String $ fromJust queryStringHash)] -- TODO fromJust is horrible. Remove it's use.
                               }
     
-    secret' = JWT.secret sharedSecret
+    secret' = JWT.secret sharedSecret'
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either MyError a
 responder 200 body = f (eitherDecode body) where
   f (Right user) = Right user
-  f (Left error) = Left (MyError 200 ("can't parse: " ++ show error))
-responder code body = Left (MyError code (BS.unpack $ BL.toStrict body))
-
-parseUser:: String -> Maybe UserWithDetails
-parseUser input = decode $ B.pack input
-
-baseOptions :: Options
-baseOptions = defaultOptions
-  { omitNothingFields = True
-  }
-
---TODO: For testing, ignore, delete
-
-parseUser':: String -> Either String UserWithDetails
-parseUser' input = eitherDecode $ B.pack input
-
-testuser2:: String
-testuser2 = replace "'" "\"" testuser
-
---testUser' = test
-testuser:: String
-testuser = "{ \n\
-\  'self': 'http://www.example.com/jira/rest/api/2/user?username=fred',\
-\  'name': 'fred',\
-\  'emailAddress': 'fred@example.com',\
-\  'avatarUrls': {\
-\    '24x24': 'http://www.example.com/jira/secure/useravatar?size=small&ownerId=fred',\
-\    '16x16': 'http://www.example.com/jira/secure/useravatar?size=xsmall&ownerId=fred',\
-\    '32x32': 'http://www.example.com/jira/secure/useravatar?size=medium&ownerId=fred',\
-\    '48x48': 'http://www.example.com/jira/secure/useravatar?size=large&ownerId=fred'\
-\  },\
-\  'displayName': 'Fred F. User',\
-\  'active': true,\
-\  'timeZone': 'Australia/Sydney',\
-\  'groups': {\
-\    'size': 3,\
-\    'items': [\
-\      {\
-\        'name': 'jira-user',\
-\        'self': 'http://www.example.com/jira/rest/api/2/group?groupname=jira-user'\
-\      },\
-\      {\
-\        'name': 'jira-admin',\
-\        'self': 'http://www.example.com/jira/rest/api/2/group?groupname=jira-admin'\
-\      },\
-\      {\
-\        'name': 'important',\
-\         'self': 'http://www.example.com/jira/rest/api/2/group?groupname=important'\
-\      }\
-\    ]\
-\  },\
-\  'expand': 'groups'\
-\}"
-
-
-{--
-testuser' = "{\
-\  \"self\": \"http://www.example.com/jira/rest/api/2/user?username=fred\",\
-\  \"name\": \"fred\",\
-\  \"emailAddress\": \"fred@example.com\",\
-\  \"avatarUrls\": {\
-\    \"24x24\": \"http://www.example.com/jira/secure/useravatar?size=small&ownerId=fred\",\
-\    \"16x16\": \"http://www.example.com/jira/secure/useravatar?size=xsmall&ownerId=fred\",\
-\    \"32x32\": \"http://www.example.com/jira/secure/useravatar?size=medium&ownerId=fred\",\
-\    \"48x48\": \"http://www.example.com/jira/secure/useravatar?size=large&ownerId=fred\"\
-\  },\
-\  \"displayName\": \"Fred F. User\",\
-\  \"active\": true,\
-\  \"timeZone\": \"Australia/Sydney\",\
-\  \"groups\": {\
-\    \"size\": 3,\
-\    \"items\": [\
-\      {\
-\        \"name\": \"jira-user\",\
-\        \"self\": \"http://www.example.com/jira/rest/api/2/group?groupname=jira-user\"\
-\      }\
-\      {\
-\        \"name\": \"jira-admin\",\
-\        \"self\": \"http://www.example.com/jira/rest/api/2/group?groupname=jira-admin\"\
-\      },\
-\      {\
-\        \"name\": \"important\",\
-\         \"self\": \"http://www.example.com/jira/rest/api/2/group?groupname=important\"\
-\      }\
-\    ]\
-\  },\
-\  \"expand\": \"groups\"\
-\}"
-
---}
+  f (Left err) = Left (MyError 200 ("can't parse: " ++ show err))
+responder responseCode body = Left (MyError responseCode (BC.unpack . BL.toStrict $ body))
