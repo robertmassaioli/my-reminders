@@ -9,10 +9,10 @@ module Model.UserDetails
    ) where
  
 import Data.Aeson
-import Data.Time.Clock (NominalDiffTime)
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
+import qualified Data.Time.Clock.POSIX as P
 import Data.Maybe
 import GHC.Generics
 import Network.URI
@@ -51,38 +51,39 @@ data Params = Params
    }
 
 --TODO: get the current time here, since we're in IO anyways
-getUserDetails:: Integer -> Params -> IO (Either MyError UserWithDetails)
-getUserDetails currentTime params =
+getUserDetails:: Params -> IO (Either MyError UserWithDetails)
+getUserDetails params = do
+  currentTime <- P.getPOSIXTime
+  let signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
   runRequest defaultManagerSettings GET (T.pack url)
     (addHeader ("Accept","application/json") <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature))
     (basicResponder responder)
   where
     url = jiraBaseURL params ++ "/rest/api/2/user?username=" ++ username params
-    signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
 
-generateJWTToken :: Integer -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
-generateJWTToken currentTime sharedSecret'  method' ourURL requestURL = JWT.encodeSigned algo secret' claims
+generateJWTToken :: P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
+generateJWTToken currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims
   where
     algo = JWT.HS256
-
-    -- TODO this function should not need to exist. Should accept a time in the type.
-    diffTime :: Integer -> NominalDiffTime
-    diffTime = fromRational . toRational
-    
+    secret' = JWT.secret sharedSecret'
     queryStringHash = createQueryStringHash method' ourURL requestURL
     
     -- TODO Some of these details are hard coded and should be derived. Like the plugin key.
     claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme"
-                              , JWT.iat = JWT.intDate $ diffTime currentTime
-                              , JWT.exp = JWT.intDate $ diffTime (currentTime  + 10000000) -- TODO Generating a token that never expires is a big problem. Make it expire in 3 min.
+                              , JWT.iat = JWT.intDate currentTime
+                              , JWT.exp = JWT.intDate (currentTime + expiryPeriodSeconds)
                               , JWT.sub = Nothing
                               , JWT.aud = Nothing
                               , JWT.nbf = Nothing
                               , JWT.jti = Nothing
                               , JWT.unregisteredClaims = M.fromList [("qsh", String $ fromJust queryStringHash)] -- TODO fromJust is horrible. Remove it's use.
                               }
-    
-    secret' = JWT.secret sharedSecret'
+
+    expiryPeriodSeconds :: Num a => a
+    expiryPeriodSeconds = minutesToSeconds 3
+
+minutesToSeconds :: (Num a) => a -> a
+minutesToSeconds = (*) 60
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either MyError a
 responder 200 body = f (eitherDecode body) where
