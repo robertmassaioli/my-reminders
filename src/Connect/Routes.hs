@@ -76,8 +76,8 @@ atlassianConnectHandler = do
   connectData <- CD.getConnect
   request <- SC.getRequest
   let dc = AC.DynamicDescriptorConfig
-          { AC.dcPluginName = case (CD.connectPluginName connectData) of Name t -> Name t
-          , AC.dcPluginKey = CD.connectPluginKey $ connectData
+          { AC.dcPluginName = case CD.connectPluginName connectData of Name t -> Name t
+          , AC.dcPluginKey = CD.connectPluginKey connectData
           , AC.dcBaseUrl = resolveBaseUrl request
           }
   writeJson . AC.addonDescriptor $ dc
@@ -114,7 +114,7 @@ resolveBaseUrl req =
 toAbsoluteUrl :: Protocol -> String -> Int -> URI
 toAbsoluteUrl protocol serverName port =
   nullURI
-    { uriScheme = show protocol
+    { uriScheme = show protocol ++ ":"
     , uriAuthority = Just URIAuth { uriUserInfo = ""
                                   , uriRegName = serverName
                                   , uriPort = serverPortSuffix protocol port }

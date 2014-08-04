@@ -2,6 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Connect.Descriptor where
 
 import Control.Monad
@@ -72,7 +73,11 @@ data Lifecycle = Lifecycle
 
 instance ToJSON PluginKey
 
-instance ToJSON (Name a)
+instance ToJSON (Name Plugin)
+instance ToJSON (Name PluginKey)
+
+instance ToJSON (Name WebPanel) where
+   toJSON (Name name) = object [ "value" .= name ]
 
 instance ToJSON Plugin where
    toJSON = genericToJSON baseOptions
@@ -125,6 +130,8 @@ instance ToJSON JiraModules where
 
 instance ToJSON WebPanel where
    toJSON = genericToJSON baseOptions
+      { fieldLabelModifier = stripFieldNamePrefix "wp"
+      }
 
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)

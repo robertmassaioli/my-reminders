@@ -1,0 +1,95 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module ExpireHandlers 
+   ( handleExpireRequest
+   ) where
+
+import           Application
+import           Control.Applicative ((<$>))
+import           Control.Concurrent.ParallelIO.Local
+import qualified Data.ByteString.Char8 as BC
+import           Data.Time.Clock (UTCTime)
+import           Data.Time.Clock.POSIX
+import           Database.PostgreSQL.Simple
+import           EmailContent
+import           Mail.Hailgun
+import           Persistence.Ping
+import           Persistence.PostgreSQL (withConnection)
+import qualified RemindMeConfiguration as RC
+import qualified Snap.Core as SC
+import qualified Snap.Snaplet as SS
+import           SnapHelpers
+
+
+handleExpireRequest :: AppHandler ()
+handleExpireRequest = handleMethods
+   [ (SC.PUT, expireForTimestamp)
+   ]
+
+-- We expect that we will be given a timestamp by a trusted source; if that is no longer true then
+-- this code needs to be changed.
+-- TODO extra: we should check to make sure that the timestamp given is reasonably close to the
+-- current timestamp (within the day) and turn it of for testing. 
+-- TODO Each timestamp should only be processed once. Need to ensure that this is thread safe.
+expireForTimestamp :: AppHandler ()
+expireForTimestamp = do
+   potentialExpireKey <- SC.getQueryParam "key"
+   potentialRawTimestamp <- SC.getQueryParam "timestamp"
+   let potentialTimestamp = (read . BC.unpack) <$> potentialRawTimestamp :: Maybe Integer
+   case (potentialExpireKey, potentialTimestamp) of
+      (Nothing, _) -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
+      (_      , Nothing) -> respondWithError badRequest "You need to provide a timestamp for expiry to work."
+      (Just expireKey, Just timestamp) -> do
+         rmConf <- RC.getRMConf
+         if RC.rmExpireKey rmConf /= BC.unpack expireKey
+            then respondWithError forbidden "You lack the required permissions."
+            else SS.with db (withConnection $ expireUsingTimestamp (integerPosixToUTCTime timestamp) rmConf)
+
+integerPosixToUTCTime :: Integer -> UTCTime
+integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+
+expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
+expireUsingTimestamp timestamp rmConf conn = do
+   expiredReminders <- getExpiredReminders timestamp conn
+   --putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
+   sentReminders <- sendReminders rmConf expiredReminders
+   --putStrLn $ "Sent reminders: " ++ (show sentReminders)
+   removeSentReminders sentReminders conn
+   return ()
+         
+-- Performance: In my local testing with a Mailgun sandbox account I have seen that it takes
+-- approximately 1.6s for every 10 emails that you send. You pay an extra 1.6s for every 10 emails.
+-- With these numbers we can send 1875 emails in 5 minutes and implies a maximum throughput of
+-- 540000 emails / day. This is a massive number of emails and would mean that:
+-- 1. Our plugin is insanely popular.
+-- 2. We would be in Mailgun's upper tier at ~ 16 million reminders a month.
+-- I don't think this will happen instantly so this performs well enough for now and we can monitor
+-- it going into the future.
+sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
+sendReminders rmConf reminders =
+   fmap fst <$> filter snd <$> withPool 10 (flip parallel (fmap send reminders))
+   where
+      send = sendReminder rmConf
+
+sendReminder :: RC.RMConf -> EmailReminder -> IO (EmailReminder, Bool)
+sendReminder rmConf reminder =
+   case pingToHailgunMessage rmConf reminder of
+      Left _ -> return (reminder, False)
+      Right message -> (,) reminder <$> isRight <$> sendEmail (RC.rmHailgunContext rmConf) message
+
+isRight :: Either a b -> Bool
+isRight (Right _) = True
+isRight _         = False
+
+pingToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
+pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
+   where 
+      subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
+      message = reminderEmail reminder
+      from = RC.rmFromAddress rmConf
+      recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
+
+removeSentReminders :: [EmailReminder] -> Connection -> IO Bool
+removeSentReminders reminders conn = do
+   deletedCount <- deleteManyPings (fmap erPingId reminders) conn
+   return $ deletedCount == fromIntegral (length reminders)
