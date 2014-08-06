@@ -4,16 +4,22 @@
 module Model.UserDetails
    ( getUserDetails
    , UserWithDetails(..)
-   , MyError(..)
+   , ProductErrorResponse(..)
    , Params(..)
    ) where
  
+import Application
+import qualified Connect.AtlassianTypes as AT
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import qualified Data.Time.Clock.POSIX as P
 import Data.Maybe
+import qualified Control.Monad.IO.Class as MI
+import qualified Connect.Descriptor as CD
+import qualified Connect.Data as CDT
+import qualified Persistence.Tenant as PT
 import GHC.Generics
 import Network.URI
 import Network.HTTP.Client
@@ -37,9 +43,10 @@ data UserWithDetails = UserWithDetails
 instance FromJSON UserWithDetails
 instance ToJSON UserWithDetails
 
-data MyError = MyError 
-   { code      :: Int
-   , myMessage :: String
+-- TODO replace with a request error
+data ProductErrorResponse = ProductErrorResponse
+   { perCode      :: Int
+   , perMessage :: String
    } deriving (Show, Generic)
 
 -- TODO Replace with a connect tenant
@@ -51,25 +58,27 @@ data Params = Params
    }
 
 --TODO: get the current time here, since we're in IO anyways
-getUserDetails:: Params -> IO (Either MyError UserWithDetails)
-getUserDetails params = do
-  currentTime <- P.getPOSIXTime
-  let signature = T.unpack $ generateJWTToken currentTime (sharedSecret params) GET (hostURL params) (T.pack url)
-  runRequest defaultManagerSettings GET (T.pack url)
+getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
+getUserDetails userKey tenant = do
+  currentTime <- MI.liftIO P.getPOSIXTime
+  connectData <- CDT.getConnect
+  let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (PT.sharedSecret tenant) GET (PT.baseUrl tenant) url
+  MI.liftIO $ runRequest defaultManagerSettings GET url
     (addHeader ("Accept","application/json") <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature))
     (basicResponder responder)
   where
-    url = jiraBaseURL params ++ "/rest/api/2/user?username=" ++ username params
+    url :: T.Text
+    url = T.pack $ (show . PT.baseUrl $ tenant) ++ "/rest/api/2/user?username=" ++ userKey
 
-generateJWTToken :: P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
-generateJWTToken currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims
+generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
+generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims
   where
     algo = JWT.HS256
     secret' = JWT.secret sharedSecret'
     queryStringHash = createQueryStringHash method' ourURL requestURL
     
     -- TODO Some of these details are hard coded and should be derived. Like the plugin key.
-    claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI "com.atlassian.pingme"
+    claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI pluginKey
                               , JWT.iat = JWT.intDate currentTime
                               , JWT.exp = JWT.intDate (currentTime + expiryPeriodSeconds)
                               , JWT.sub = Nothing
@@ -85,8 +94,8 @@ generateJWTToken currentTime sharedSecret' method' ourURL requestURL = JWT.encod
 minutesToSeconds :: (Num a) => a -> a
 minutesToSeconds = (*) 60
 
-responder :: FromJSON a => Int -> BL.ByteString -> Either MyError a
-responder 200 body = f (eitherDecode body) where
-  f (Right user) = Right user
-  f (Left err) = Left (MyError 200 ("can't parse: " ++ show err))
-responder responseCode body = Left (MyError responseCode (BC.unpack . BL.toStrict $ body))
+responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
+responder 200 body = case eitherDecode body of
+   Right user -> Right user
+   Left err -> Left $ ProductErrorResponse 200 ("Can't parse json response: " ++ show err)
+responder responseCode body = Left $ ProductErrorResponse responseCode (BC.unpack . BL.toStrict $ body)

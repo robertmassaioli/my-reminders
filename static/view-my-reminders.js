@@ -93,6 +93,16 @@ AJS.$(function() {
          setIndeterminateState();
          console.log(getSelectedReminderIds());
       });
+
+      AJS.$("#update-email").click(function(e) {
+         e.preventDefault();
+
+         AJS.$.ajax({
+            url: "/rest/user/reminders",
+            type: "POST",
+            cache: false
+         });
+      });
    };
 
    // Give time for the page token to be put in place

@@ -173,8 +173,18 @@ bulkUpdateUserEmails (tenant, Just userKey) = do
   case maybePing of
     Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
     Right pingIds -> do
-      SS.with db $ withConnection (P.updateEmailForUser tenant undefined (pids pingIds))
-      return ()
+      potentialUserDetails <- UD.getUserDetails userKey tenant
+      case potentialUserDetails of
+         Left error -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ UD.perMessage error)
+         Right userDetails -> do
+            SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
+            return ()
+  where
+    userDetailsConvert :: UD.UserWithDetails -> CA.UserDetails
+    userDetailsConvert uwd = CA.UserDetails
+      { CA.userKey = UD.name uwd
+      , CA.userEmail = BC.pack $ UD.emailAddress uwd
+      }
 
 bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
 bulkDeleteEmails = undefined
