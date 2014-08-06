@@ -80,6 +80,8 @@ AJS.$(function() {
 
             container.append(Mustache.render(templates.reminderRow, reminder));
          });
+
+         setIndeterminateState();
       });
    };
 
