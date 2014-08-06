@@ -114,7 +114,7 @@ updateEmailForUser tenant userDetails pingIds conn = liftIO $ execute conn
    [sql|
       UPDATE ping SET userEmail = ? WHERE tenantId = ? AND userKey = ? AND id in ?
    |]
-   (PT.tenantId tenant, B.pack . CA.userKey $ userDetails, In pingIds)
+   (CA.userEmail userDetails, PT.tenantId tenant, B.pack . CA.userKey $ userDetails, In pingIds)
 
 getExpiredReminders :: UTCTime -> Connection -> IO [EmailReminder]
 getExpiredReminders expireTime conn = liftIO $ query conn

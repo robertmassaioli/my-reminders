@@ -52,10 +52,7 @@ AJS.$(function() {
       });
    };
 
-   // TODO when you begin load all of the reminders
-   var init = function() {
-      setupTemplates();
-
+   var reloadReminders = function() {
       var loadReminders = AJS.$.ajax({
          url: "/rest/user/reminders",
          cache: false,
@@ -84,6 +81,13 @@ AJS.$(function() {
             container.append(Mustache.render(templates.reminderRow, reminder));
          });
       });
+   };
+
+   // TODO when you begin load all of the reminders
+   var init = function() {
+      setupTemplates();
+
+      reloadReminders();
 
       AJS.$("#master-selector").click(function() {
          check(allReminderSelects(), !!AJS.$(this).attr("checked"));
@@ -97,12 +101,24 @@ AJS.$(function() {
       AJS.$("#update-email").click(function(e) {
          e.preventDefault();
 
-         AJS.$.ajax({
+         var updateRequest = AJS.$.ajax({
             url: "/rest/user/reminders",
             type: "POST",
-            cache: false
+            cache: false,
+            data: JSON.stringify({
+               pids: getSelectedReminderIds()
+            })
          });
+
+         updateRequest.done(blank(reloadReminders));
       });
+   };
+
+   var blank = function(f) {
+      // Blanks out all of the arguments that may be passed in
+      return function() {
+         f && f();
+      };
    };
 
    // Give time for the page token to be put in place
