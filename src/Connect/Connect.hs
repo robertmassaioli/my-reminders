@@ -13,7 +13,6 @@ import qualified Control.Monad as CM
 import qualified Control.Monad.IO.Class as MI
 import qualified Crypto.Cipher.AES as CCA
 import qualified Connect.PageToken as PT
---import           Network.URI
 import qualified Snap.Snaplet as SS
 import qualified System.Exit as SE
 
@@ -35,7 +34,6 @@ toConnect conf = Connect
   , connectPluginName = Name $ ccPluginName conf
   , connectPluginKey = PluginKey $ ccPluginKey conf
   , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
-  --, connectBaseUrl = ccBaseUrl conf
   }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
@@ -47,12 +45,10 @@ data ConnectConfig = ConnectConfig
   , ccPluginName :: Text
   , ccPluginKey :: Text
   , ccPageTokenTimeout :: Integer
-  --, ccBaseUrl :: URI
   }
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
-  --baseUrl <- require connectConf "plugin_base_url" "Missing the plugin base url in the configuration file."
   name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
   key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
@@ -66,11 +62,4 @@ loadConnectConfig connectConf = do
     , ccPluginKey = key
     , ccSecretKey = secret
     , ccPageTokenTimeout = pageTokenTimeoutInSeconds
-    --, ccBaseUrl = baseUrl
     }
-
-{-
-instance DCT.Configured URI where
-   convert (DCT.String s) = parseURI . unpack $ s
-   convert _              = Nothing
--}
