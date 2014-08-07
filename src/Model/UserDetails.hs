@@ -43,21 +43,11 @@ data UserWithDetails = UserWithDetails
 instance FromJSON UserWithDetails
 instance ToJSON UserWithDetails
 
--- TODO replace with a request error
 data ProductErrorResponse = ProductErrorResponse
    { perCode      :: Int
    , perMessage :: String
    } deriving (Show, Generic)
 
--- TODO Replace with a connect tenant
-data Params = Params 
-   { jiraBaseURL  :: String
-   , hostURL      :: URI
-   , username     :: String
-   , sharedSecret :: T.Text
-   }
-
---TODO: get the current time here, since we're in IO anyways
 getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
@@ -77,7 +67,6 @@ generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourU
     secret' = JWT.secret sharedSecret'
     queryStringHash = createQueryStringHash method' ourURL requestURL
     
-    -- TODO Some of these details are hard coded and should be derived. Like the plugin key.
     claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI pluginKey
                               , JWT.iat = JWT.intDate currentTime
                               , JWT.exp = JWT.intDate (currentTime + expiryPeriodSeconds)
