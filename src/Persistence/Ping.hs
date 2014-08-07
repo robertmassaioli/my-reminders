@@ -146,4 +146,4 @@ deleteManyPingsForUser :: PT.Tenant -> [PingId] -> CA.UserKey -> Connection -> I
 deleteManyPingsForUser tenant pingIds userKey conn = execute conn
    [sql|
       DELETE from ping WHERE tenantId = ? AND userKey = ? AND id in ?
-   |] (PT.tenantId tenant, userKey, In $ pingIds)
+   |] (PT.tenantId tenant, userKey, In pingIds)
