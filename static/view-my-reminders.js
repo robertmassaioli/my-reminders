@@ -114,6 +114,21 @@ AJS.$(function() {
 
          updateRequest.done(blank(reloadReminders));
       });
+
+      AJS.$("#delete-reminders").click(function(e) {
+         e.preventDefault();
+
+         var deleteRequest = AJS.$.ajax({
+            url: "/rest/user/reminders",
+            type: "DELETE",
+            cache: false,
+            data: JSON.stringify({
+               pids: getSelectedReminderIds()
+            })
+         });
+
+         deleteRequest.done(blank(reloadReminders));
+      });
    };
 
    var blank = function(f) {

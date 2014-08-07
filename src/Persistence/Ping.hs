@@ -15,6 +15,7 @@ module Persistence.Ping
    , deletePingForUser
    , deletePing
    , deleteManyPings
+   , deleteManyPingsForUser
    ) where
 
 import Data.Maybe
@@ -140,3 +141,9 @@ deletePingForUser tenant userKey pingId conn = execute conn
    [sql|
       DELETE from ping WHERE id = ? AND tenantId = ? AND userKey = ?
    |] (pingId, PT.tenantId tenant, B.pack userKey)
+
+deleteManyPingsForUser :: PT.Tenant -> [PingId] -> CA.UserKey -> Connection -> IO Int64
+deleteManyPingsForUser tenant pingIds userKey conn = execute conn
+   [sql|
+      DELETE from ping WHERE tenantId = ? AND userKey = ? AND id in ?
+   |] (PT.tenantId tenant, userKey, In $ pingIds)

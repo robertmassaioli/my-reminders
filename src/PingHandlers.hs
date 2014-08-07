@@ -167,18 +167,13 @@ getUserReminders (tenant, Just userKey) = do
    
 bulkUpdateUserEmails :: CT.ConnectTenant -> AppHandler ()
 bulkUpdateUserEmails (_, Nothing) = standardAuthError
-bulkUpdateUserEmails (tenant, Just userKey) = do
-  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-  let maybePing = eitherDecode request :: Either String PingIdList
-  case maybePing of
-    Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
-    Right pingIds -> do
-      potentialUserDetails <- UD.getUserDetails userKey tenant
-      case potentialUserDetails of
-         Left error -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ UD.perMessage error)
-         Right userDetails -> do
-            SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
-            return ()
+bulkUpdateUserEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
+  potentialUserDetails <- UD.getUserDetails userKey tenant
+  case potentialUserDetails of
+    Left error -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ UD.perMessage error)
+    Right userDetails -> do
+      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
+      return ()
   where
     userDetailsConvert :: UD.UserWithDetails -> CA.UserDetails
     userDetailsConvert uwd = CA.UserDetails
@@ -187,7 +182,18 @@ bulkUpdateUserEmails (tenant, Just userKey) = do
       }
 
 bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
-bulkDeleteEmails = undefined
+bulkDeleteEmails (_, Nothing) = standardAuthError
+bulkDeleteEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
+   SS.with db $ withConnection (P.deleteManyPingsForUser tenant (pids pingIds) userKey)
+   return ()
+
+parsePingIdListFromRequest :: (PingIdList -> AppHandler ()) -> AppHandler ()
+parsePingIdListFromRequest f = do
+  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+  let maybePing = eitherDecode request :: Either String PingIdList
+  case maybePing of
+    Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
+    Right pingIds -> f pingIds
 
 handlePings :: AppHandler ()
 handlePings = handleMethods
