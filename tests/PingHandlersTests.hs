@@ -10,6 +10,8 @@ import Snap.Snaplet.Test
 
 import PingHandlers (handlePings, handleMultiPings)
 import Site (app)
+import SnapHelpers
+import TestHelpers
 
 prop_trivial :: Bool
 prop_trivial = True
@@ -20,6 +22,7 @@ tests =
   , testProperty "also trivial" prop_postFails
   ]
 
-prop_postFails = monadicIO $ do
-  errorOrResponse <- runHandler Nothing (postRaw C.empty C.empty C.empty) handlePings app
-  assert True
+prop_postFails :: C.ByteString -> C.ByteString -> C.ByteString -> Property
+prop_postFails path contentType body = monadicIO $ do
+  errorOrResponse <- runHandler Nothing (postRaw path contentType body) handlePings app
+  assert $ responseCodeIs notFound errorOrResponse
