@@ -57,6 +57,7 @@ AJS.$(function() {
          url: "/rest/user/reminders",
          cache: false,
          type: "GET",
+         dataType: "text", 
          data: {
             userKey: userKey
          }
@@ -107,6 +108,7 @@ AJS.$(function() {
             url: "/rest/user/reminders",
             type: "POST",
             cache: false,
+            dataType: "text", 
             data: JSON.stringify({
                pids: getSelectedReminderIds()
             })
@@ -122,6 +124,7 @@ AJS.$(function() {
             url: "/rest/user/reminders",
             type: "DELETE",
             cache: false,
+            dataType: "text", 
             data: JSON.stringify({
                pids: getSelectedReminderIds()
             })

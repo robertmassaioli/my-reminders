@@ -49,6 +49,7 @@ AJS.$(function() {
             type: "PUT",
             cache: false,
             contentType: "application/json",
+            dataType: "text", 
             data: JSON.stringify(requestData)
          });
 
@@ -72,6 +73,7 @@ AJS.$(function() {
          url: "/rest/ping",
          type: "DELETE",
          cache: false,
+         dataType: "text",
          data: {
             reminderId: reminderId
          }
@@ -154,6 +156,7 @@ AJS.$(function() {
          url: "/rest/pings", 
          type: "GET", 
          cache: false,
+         dataType: "text",
          data: {
             issueId: issueId
          }

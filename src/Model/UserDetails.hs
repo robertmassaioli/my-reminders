@@ -5,7 +5,6 @@ module Model.UserDetails
    ( getUserDetails
    , UserWithDetails(..)
    , ProductErrorResponse(..)
-   , Params(..)
    ) where
  
 import Application
