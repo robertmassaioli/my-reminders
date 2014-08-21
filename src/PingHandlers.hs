@@ -20,7 +20,7 @@ import GHC.Generics
 
 import Persistence.PostgreSQL
 import qualified Persistence.Ping as P
-import SnapHelpers
+import           SnapHelpers
 import qualified WithToken as WT
 import qualified Persistence.Tenant as TN
 import qualified Connect.AtlassianTypes as CA
@@ -40,7 +40,8 @@ data TimeUnit
 data PingRequest = PingRequest
   { prqTimeDelay    :: TimeDelay
   , prqTimeUnit     :: TimeUnit
-  , prqIssueId      :: CA.IssueId
+  , prqIssue        :: CA.IssueDetails
+  , prqUser         :: CA.UserDetails
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
@@ -54,6 +55,30 @@ data PingResponse = PingResponse
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
+issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
+
+instance ToJSON CA.UserDetails where
+   toJSON o = object 
+      [ "Key" .= CA.userKey o
+      , "Email" .= (BC.unpack . CA.userEmail $ o)
+      ]
+
+instance FromJSON CA.UserDetails where
+   parseJSON (Object o) = do
+      key <- o .: "Key"
+      email <- o .: "Email"
+      return CA.UserDetails 
+         { CA.userKey = key
+         , CA.userEmail = BC.pack email
+         }
+   parseJSON _ = fail "Expect the User to be a JSON object but it was not."
+
+instance ToJSON CA.IssueDetails where
+   toJSON = genericToJSON issueDetailsOptions
+
+instance FromJSON CA.IssueDetails where
+   parseJSON = genericParseJSON issueDetailsOptions
+
 instance ToJSON PingRequest where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
@@ -61,12 +86,14 @@ instance FromJSON PingRequest where
    parseJSON (Object o) = do
       delay    <- o .:  "TimeDelay"
       unit     <- o .:  "TimeUnit"
-      issue    <- o .:  "IssueId"
+      issue    <- o .:  "Issue"
+      user     <- o .:  "User"
       message  <- o .:? "Message"
       return PingRequest
          { prqTimeDelay = delay
          , prqTimeUnit = unit
-         , prqIssueId = issue
+         , prqIssue = issue
+         , prqUser = user
          , prqMessage = message
          }
    parseJSON _ = fail "Expect the PingRequest to be a JSON object but it was not."
@@ -150,23 +177,26 @@ addPingHandler ct = do
 
 addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
 addPing _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addPing pingRequest (tenant, Just userKey) = do
-  addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant userKey)
-  case addedPing of
-    Just _ -> respondNoContent
-    Nothing -> respondWithError internalServer (failedInsertPrefix ++ userKey)
-    where
-      failedInsertPrefix = "Failed to insert new ping: "
+addPing pingRequest (tenant, Just userKey) =
+  if userKey /= requestUK
+    then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey) 
+    else do
+      addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant (prqUser pingRequest))
+      case addedPing of
+        Just _ -> respondNoContent
+        Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ userKey)
+  where
+    requestUK = CA.userKey . prqUser $ pingRequest
 
-addPingFromRequest :: PingRequest -> TN.Tenant -> CA.UserKey -> Connection -> IO (Maybe Integer)
-addPingFromRequest pingRequest tenant userKey' conn = do
+addPingFromRequest :: PingRequest -> TN.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
+addPingFromRequest pingRequest tenant userDetails conn = do
   currentTime <- getCurrentTime
   let date' = addUTCTime dateDiff currentTime
-  P.addPing conn date' tenantId' link' userKey' message'
+  P.addPing conn date' tenantId' iDetails userDetails message'
   where
     dateDiff = timeDiffForPingRequest pingRequest
     tenantId' = TN.tenantId tenant
-    link' = prqIssueId pingRequest
+    iDetails = prqIssue pingRequest
     message' = prqMessage pingRequest
 
 timeDiffForPingRequest :: PingRequest -> NominalDiffTime

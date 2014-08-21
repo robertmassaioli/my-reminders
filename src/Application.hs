@@ -14,12 +14,14 @@ import           Snap.Snaplet.Session
 import           Snap.Snaplet.PostgresqlSimple
 
 import qualified Connect.Data as CD
+import qualified RemindMeConfiguration as RC
 ------------------------------------------------------------------------------
 data App = App
   { _heist   :: SS.Snaplet (SSH.Heist App)
   , _sess    :: SS.Snaplet SessionManager
   , _db      :: SS.Snaplet Postgres
   , _connect :: SS.Snaplet CD.Connect
+  , _rmconf  :: SS.Snaplet RC.RMConf
   }
 
 makeLenses ''App
@@ -32,6 +34,9 @@ instance HasPostgres (SS.Handler b App) where
 
 instance CD.HasConnect (SS.Handler b App) where
    getConnect = SS.with connect get
+
+instance RC.HasRMConf (SS.Handler b App) where
+   getRMConf = SS.with rmconf get
 
 ------------------------------------------------------------------------------
 type AppHandler = SS.Handler App App

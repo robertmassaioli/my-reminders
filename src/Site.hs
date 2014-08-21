@@ -32,7 +32,9 @@ import Connect.Routes
 import qualified Connect.Connect as CC
 import qualified Connect.Data as CD
 import qualified Persistence.Tenant as PT
-import PingHandlers
+import qualified RemindMeConfiguration as RC
+import           PingHandlers
+import           ExpireHandlers
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
@@ -93,6 +95,7 @@ applicationRoutes =
   , ("/panel/ping/create" , createPingPanel )
   , ("/rest/ping"         , handlePings)
   , ("/rest/pings"        , handleMultiPings)
+  , ("/rest/expire"       , handleExpireRequest)
   , ("/static"            , serveDirectory "static")
   ]
 
@@ -111,5 +114,6 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db pgsInit
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
+  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConf 
   SS.addRoutes routes
-  return $ App appHeist appSession appDb appConnect
+  return $ App appHeist appSession appDb appConnect appRMConf
