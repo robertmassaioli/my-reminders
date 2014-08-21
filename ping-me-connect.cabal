@@ -124,6 +124,7 @@ test-suite ping-me-props
     , cipher-aes
     , configurator
     , containers
+    , hailgun
     , heist
     , http-client
     , http-media
@@ -133,6 +134,8 @@ test-suite ping-me-props
     , mtl
     , network
     , network-api-support
+    , pandoc
+    , parallel-io
     , postgresql-simple
     , resource-pool-catchio
     , snap
