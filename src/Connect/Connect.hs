@@ -39,7 +39,7 @@ initConnectSnaplet :: SS.SnapletInit b Connect
 initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $
   MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
 
-dataDir :: IO [Char]
+dataDir :: IO String
 dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig

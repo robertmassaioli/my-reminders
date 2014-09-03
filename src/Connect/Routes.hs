@@ -110,11 +110,11 @@ isValidHost localhost tenantInfo = validHostName localhost (baseUrl' tenantInfo)
 
 validHostName:: String -> URI -> Bool
 validHostName localhost uri = isJust maybeValidhost where
-    compare authority elem = (map DC.toLower elem) == (map DC.toLower $ (uriRegName authority))
+    compare authority elem = map DC.toLower elem == map DC.toLower (uriRegName authority)
     maybeValidhost = do
       authority <- uriAuthority uri
-      validHost <- find (compare authority) (localhost:validHosts)
-      return validHost
+      find (compare authority) (localhost:validHosts)
+
  
 
 -- TODO extract this into a helper module

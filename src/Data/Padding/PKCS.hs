@@ -22,10 +22,10 @@ pkcs7Unpad blockBoundary input = if validLength
       else Just removedPadding
    else Nothing
    where
-      removedPadding = if B.length padding == (fromIntegral lastChar)
+      removedPadding = if B.length padding == fromIntegral lastChar
          then potentialGoodData
          else input
       (potentialGoodData, padding) = B.spanEnd (== lastChar) input
       inputLength = B.length input
       lastChar = B.last input
-      validLength = inputLength `mod` (fromIntegral blockBoundary) == 0
+      validLength = inputLength `mod` fromIntegral blockBoundary == 0
