@@ -5,34 +5,29 @@ module Connect.Routes
   , homeHandler
   ) where
 
-import qualified AtlassianConnect as AC
-import Application
-import Control.Applicative
-import qualified Control.Arrow as ARO
-import qualified Control.Monad as CM
-import           Control.Monad.IO.Class (liftIO)
-import qualified Data.Aeson as A
-import qualified Data.Text as T
-import Data.List
-import Data.Maybe(isJust)
+import           Application
+import qualified AtlassianConnect             as AC
+import qualified Connect.Data                 as CD
+import           Connect.Descriptor           (Name (..))
+import           Control.Applicative
+import qualified Control.Arrow                as ARO
+import qualified Control.Monad                as CM
+import           Control.Monad.IO.Class       (liftIO)
+import qualified Data.Aeson                   as A
+import qualified Data.ByteString.Char8        as BLC
+import qualified Data.CaseInsensitive         as CI
+import           Data.Char                    as DC
+import           Data.List
+import           Data.Maybe                   (isJust)
+import qualified Data.Text                    as T
+import           Network.HostName
 import qualified Network.HTTP.Media.MediaType as NM
-import Network.URI
-import Network.HostName
-import qualified Data.Aeson as A
-import qualified Network.HTTP.Media.MediaType as NM
-import Persistence.Tenant
-import Persistence.PostgreSQL -- TODO dependency tree of my modules to see the flow
-
-import qualified Snap.Snaplet as SS
-import qualified Snap.Core as SC
-
-import qualified Data.ByteString.Char8 as BLC
-import qualified Data.CaseInsensitive as CI
-import Data.Char as DC
-
-import qualified Connect.Data as CD
-import Connect.Descriptor (Name(..))
-import qualified SnapHelpers as SH
+import           Network.URI
+import           Persistence.PostgreSQL
+import           Persistence.Tenant
+import qualified Snap.Core                    as SC
+import qualified Snap.Snaplet                 as SS
+import qualified SnapHelpers                  as SH
 
 data Protocol = HTTP | HTTPS deriving (Eq)
 
@@ -90,13 +85,14 @@ atlassianConnectHandler = do
           }
   writeJson . AC.addonDescriptor $ dc
 
-installedHandler :: AppHandler ()
+installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
+   connectData <- CD.getConnect
    request <- SC.readRequestBody (1024 * 10)
-   hostname <- liftIO getHostName
+   let validHosts = CD.connectHostWhitelist connectData
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
    maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
-       let validHost = isValidHost hostname tenantInfo
+       let validHost = validHostName validHosts tenantInfo
        mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
        case mTenantId of
           Just _ -> SC.modifyResponse $ SC.setResponseCode SH.noContent
@@ -106,22 +102,13 @@ installedHandler = do
 
 insertTenantInfo info = SS.with db $ withConnection $ \conn -> insertTenantInformation conn info
 
-
-validHosts:: [String]
-validHosts = ["localhost","jira-dev.com","jira.com","atlassian.net", "localhost"]
-
-
-isValidHost:: String -> LifecycleResponse -> Bool
-isValidHost localhost tenantInfo = validHostName localhost (baseUrl' tenantInfo)
-
-validHostName:: String -> URI -> Bool
-validHostName localhost uri = isJust maybeValidhost where
-    compare authority elem = map DC.toLower elem == map DC.toLower (uriRegName authority)
+validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
+validHostName validHosts tenantInfo = isJust maybeValidhost where
+    compare authority elem = map DC.toLower (T.unpack elem) == map DC.toLower (uriRegName authority)
     maybeValidhost = do
+      let uri = baseUrl' tenantInfo
       authority <- uriAuthority uri
-      find (compare authority) (localhost:validHosts)
-
- 
+      find (compare authority) validHosts
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()

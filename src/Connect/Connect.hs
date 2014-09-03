@@ -5,21 +5,21 @@ module Connect.Connect
   , initConnectSnaplet
   ) where
 
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.Configurator as DC
-import qualified Data.Configurator.Types as DCT
-import Data.Text
-import qualified Control.Monad as CM
-import qualified Control.Monad.IO.Class as MI
-import qualified Crypto.Cipher.AES as CCA
-import qualified Connect.PageToken as PT
-import qualified Snap.Snaplet as SS
-import qualified System.Exit as SE
-import qualified Paths_ping_me_connect as PPMC
-
+import           ConfigurationHelpers
 import           Connect.Data
 import           Connect.Descriptor
-import           ConfigurationHelpers
+import qualified Connect.PageToken       as PT
+import qualified Control.Monad           as CM
+import qualified Control.Monad.IO.Class  as MI
+import qualified Crypto.Cipher.AES       as CCA
+import qualified Data.ByteString.Char8   as BSC
+import qualified Data.Configurator       as DC
+import qualified Data.Configurator.Types as DCT
+import           Data.Text
+import qualified Network.HostName        as HN
+import qualified Paths_ping_me_connect   as PPMC
+import qualified Snap.Snaplet            as SS
+import qualified System.Exit             as SE
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -35,6 +35,7 @@ toConnect conf = Connect
   , connectPluginName = Name $ ccPluginName conf
   , connectPluginKey = PluginKey $ ccPluginKey conf
   , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
+  , connectHostWhitelist = ccHostWhiteList conf
   }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
@@ -45,17 +46,27 @@ dataDir :: IO String
 dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
-  { ccSecretKey :: BSC.ByteString
-  , ccPluginName :: Text
-  , ccPluginKey :: Text
+  { ccSecretKey        :: BSC.ByteString
+  , ccPluginName       :: Text
+  , ccPluginKey        :: Text
   , ccPageTokenTimeout :: Integer
+  , ccHostWhiteList    :: [Text]
   }
+
+hosts:: String -> [String]
+hosts localhost = localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"]
+
+validHosts :: IO[Text]
+validHosts = do
+  host <- HN.getHostName
+  return $ fmap pack (hosts (show host))
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
   name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
   key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
+  hostWhiteList <- validHosts
   let keyLength = BSC.length secret
   CM.when (keyLength /= 32) $ do
     putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
@@ -66,4 +77,5 @@ loadConnectConfig connectConf = do
     , ccPluginKey = key
     , ccSecretKey = secret
     , ccPageTokenTimeout = pageTokenTimeoutInSeconds
+    , ccHostWhiteList = hostWhiteList
     }
