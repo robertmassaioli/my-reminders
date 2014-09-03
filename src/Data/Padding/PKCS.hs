@@ -17,9 +17,7 @@ pkcs7Pad blockBoundary input = input `B.append` padding
 
 pkcs7Unpad :: Word8 -> B.ByteString -> Maybe B.ByteString
 pkcs7Unpad blockBoundary input = if validLength
-   then if lastChar >= blockBoundary
-      then Just input
-      else Just removedPadding
+   then Just (if lastChar >= blockBoundary then input else removedPadding)
    else Nothing
    where
       removedPadding = if B.length padding == fromIntegral lastChar

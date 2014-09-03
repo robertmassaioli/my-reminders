@@ -8,16 +8,18 @@ module Connect.Connect
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator as DC
 import qualified Data.Configurator.Types as DCT
+import Data.Text
 import qualified Control.Monad as CM
 import qualified Control.Monad.IO.Class as MI
 import qualified Crypto.Cipher.AES as CCA
 import qualified Connect.PageToken as PT
 import qualified Snap.Snaplet as SS
 import qualified System.Exit as SE
-
 import qualified Paths_ping_me_connect as PPMC
 
-import Connect.Data
+import           Connect.Data
+import           Connect.Descriptor
+import           ConfigurationHelpers
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -30,13 +32,13 @@ import Connect.Data
 toConnect :: ConnectConfig -> Connect
 toConnect conf = Connect
   { connectAES = CCA.initAES $ ccSecretKey conf
-  , connectPluginName = ccPluginName conf
-  , connectPluginKey = ccPluginKey conf
-  , connectPageTokenTimeout = ccPageTokenTimeout conf
+  , connectPluginName = Name $ ccPluginName conf
+  , connectPluginKey = PluginKey $ ccPluginKey conf
+  , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
   }
 
 initConnectSnaplet :: SS.SnapletInit b Connect
-initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just dataDir) $
+initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
   MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
 
 dataDir :: IO String
@@ -44,8 +46,8 @@ dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey :: BSC.ByteString
-  , ccPluginName :: String
-  , ccPluginKey :: String
+  , ccPluginName :: Text
+  , ccPluginKey :: Text
   , ccPageTokenTimeout :: Integer
   }
 
@@ -65,10 +67,3 @@ loadConnectConfig connectConf = do
     , ccSecretKey = secret
     , ccPageTokenTimeout = pageTokenTimeoutInSeconds
     }
-
-require :: DCT.Configured a => DCT.Config -> DCT.Name -> String -> IO a
-require config name errorMessage = do
-  potentialValue <- DC.lookup config name
-  case potentialValue of
-    Nothing -> fail errorMessage
-    Just x -> return x
