@@ -94,13 +94,14 @@ installedHandler = do
    maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
        let validHost = validHostName validHosts tenantInfo
        mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
-       case mTenantId of
-          Just _ -> SC.modifyResponse $ SC.setResponseCode SH.noContent
-          Nothing -> if validHost then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
-                     else SH.respondWithError SH.unauthorised "Invalid host"
+       if isJust mTenantId
+       then SC.modifyResponse $ SC.setResponseCode SH.noContent
+       else if validHost
+            then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
+            else SH.respondWithError SH.unauthorised "Invalid host"
       ) mTenantInfo
 
-insertTenantInfo info = SS.with db $ withConnection $ \conn -> insertTenantInformation conn info
+insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
 validHostName validHosts tenantInfo = isJust maybeValidhost where
