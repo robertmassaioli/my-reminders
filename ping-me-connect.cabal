@@ -130,6 +130,7 @@ test-suite ping-me-props
     , http-client
     , http-media
     , http-types
+    , hostname
     , jwt
     , lens
     , mtl
