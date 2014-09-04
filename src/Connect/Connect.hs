@@ -53,13 +53,9 @@ data ConnectConfig = ConnectConfig
   , ccHostWhiteList    :: [Text]
   }
 
-hosts:: String -> [String]
-hosts localhost = localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"]
-
 validHosts :: IO[Text]
-validHosts = do
-  host <- HN.getHostName
-  return $ fmap pack (hosts (show host))
+validHosts = fmap hosts HN.getHostName
+    where hosts localhost = fmap pack (localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"])
 
 loadConnectConfig :: DCT.Config -> IO ConnectConfig
 loadConnectConfig connectConf = do
