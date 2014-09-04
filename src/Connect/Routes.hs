@@ -1,8 +1,11 @@
+{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
-
 module Connect.Routes
   ( connectRoutes
   , homeHandler
+#ifndef TESTING
+  , validHostName
+#endif
   ) where
 
 import           Application
