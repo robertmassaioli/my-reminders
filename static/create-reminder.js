@@ -22,6 +22,7 @@ AJS.$(function() {
          AP.request({ 
             url: "/rest/api/latest/user", 
             type: "GET",
+            dataType: "text",
             cache: true,   // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
             data: { 
                key: userkey
@@ -37,6 +38,7 @@ AJS.$(function() {
          var self = this;
          AP.request({
             url: "/rest/api/latest/issue/" + issueKey,
+            dataType: "text",
             type: "GET",
             cache: true,  // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
             success: self.resolve,
@@ -181,6 +183,7 @@ AJS.$(function() {
 
       currentRemindersRequest = AJS.$.ajax({
          url: "/rest/pings", 
+         dataType: "text",
          type: "GET", 
          cache: false,
          data: {
