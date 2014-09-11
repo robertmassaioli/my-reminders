@@ -39,8 +39,9 @@
 
       <div id="logged-in-content">
          <p>
-             <button id="update-email" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-build"></span> Update email</button>
-             <button id="delete-reminders" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-delete">Delete</span> Delete</button>
+            Bulk Update:
+            <button id="update-email" class="aui-button">Update email address</button>
+            <button id="delete-reminders" class="aui-button">Delete</button>
          </p>
 
          <table id="reminders" class="aui">
