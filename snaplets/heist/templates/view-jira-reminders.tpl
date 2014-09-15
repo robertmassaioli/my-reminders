@@ -44,14 +44,15 @@
             <button id="delete-reminders" class="aui-button">Delete</button>
          </p>
 
+         <!-- TODO When https://ecosystem.atlassian.net/browse/AUI-2846 is resolved then please make this table use aui-table-sortable -->
          <table id="reminders" class="aui">
              <thead>
                  <tr>
-                     <th><input type="checkbox" id="master-selector" /></th>
+                     <th class="aui-table-column-unsortable"><input type="checkbox" id="master-selector" /></th>
                      <th>Date</th>
                      <th>Issue</th>
                      <th>Email</th>
-                     <th>Message</th>
+                     <th class="aui-table-column-unsortable">Message</th>
                  </tr>
              </thead>
              <tbody class="container">

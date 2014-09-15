@@ -42,9 +42,11 @@ data UserWithDetails = UserWithDetails
 instance FromJSON UserWithDetails
 instance ToJSON UserWithDetails
 
+type HttpResponseCode = Int
+
 data ProductErrorResponse = ProductErrorResponse
-   { perCode      :: Int
-   , perMessage :: String
+   { perCode      :: HttpResponseCode
+   , perMessage   :: T.Text
    } deriving (Show, Generic)
 
 getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
@@ -85,5 +87,5 @@ minutesToSeconds = (*) 60
 responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
 responder 200 body = case eitherDecode body of
    Right user -> Right user
-   Left err -> Left $ ProductErrorResponse 200 ("Can't parse json response: " ++ show err)
-responder responseCode body = Left $ ProductErrorResponse responseCode (BC.unpack . BL.toStrict $ body)
+   Left err -> Left $ ProductErrorResponse 200 (T.pack $ "Can't parse json response: " ++ show err)
+responder responseCode body = Left $ ProductErrorResponse responseCode (T.pack $ BC.unpack . BL.toStrict $ body)

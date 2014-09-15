@@ -21,8 +21,10 @@ AJS.$(function() {
 
    AJS.log("The user key is: " + userKey);
 
+   var remindersContainer = AJS.$("#reminders tbody.container");
+
    var allReminderSelects = function() {
-      return  AJS.$("#reminders .container .reminder .select");
+      return remindersContainer.find(".reminder .select");
    };
 
    var check = function(element, checked) {
@@ -71,15 +73,14 @@ AJS.$(function() {
          var reminders = JSON.parse(reminderResponse[0]);
          var user = JSON.parse(userResponse[0]);
 
-         var container = AJS.$("#reminders .container");
-         container.empty();
+         remindersContainer.empty();
          AJS.$.each(reminders, function(index, reminder) {
             reminder.issueLink = baseurl + "/browse/" + reminder.IssueKey;
             var tzDate = moment(reminder["Date"]).tz(user.timeZone);
             reminder.momentDate = tzDate;
             reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
 
-            container.append(Mustache.render(templates.reminderRow, reminder));
+            remindersContainer.append(Mustache.render(templates.reminderRow, reminder));
          });
 
          setIndeterminateState();
@@ -96,7 +97,7 @@ AJS.$(function() {
          check(allReminderSelects(), !!AJS.$(this).attr("checked"));
       });
 
-      AJS.$("#reminders .container").on("click", ".reminder .select", function() {
+      remindersContainer.on("click", ".reminder .select", function() {
          setIndeterminateState();
          console.log(getSelectedReminderIds());
       });

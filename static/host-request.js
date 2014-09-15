@@ -18,7 +18,7 @@ var HostRequest = (function() {
       });
    };
 
-   var requestIssueDetalis = function(issueKey) {
+   var requestIssueDetails = function(issueKey) {
       return AJS.$.Deferred(function() {
          var self = this;
          AP.request({
@@ -34,6 +34,6 @@ var HostRequest = (function() {
    
    return {
       userDetails: requestUserDetails,
-      issueDetails: requestIssueDetalis
+      issueDetails: requestIssueDetails
    };
 }());

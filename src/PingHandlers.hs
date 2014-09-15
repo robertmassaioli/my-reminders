@@ -170,7 +170,7 @@ bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
   potentialUserDetails <- UD.getUserDetails userKey tenant
   case potentialUserDetails of
-    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ UD.perMessage err)
+    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
     Right userDetails -> do
       SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
       return ()
