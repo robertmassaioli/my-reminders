@@ -8,6 +8,7 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
+      <js><bind tag="href">/static/host-request.js</bind></js>
       <js><bind tag="href">/static/create-reminder.js</bind></js>
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
 
