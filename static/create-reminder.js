@@ -32,40 +32,11 @@ AJS.$(function() {
       year: "Year"
    };
 
-   var requestUserDetails = function(userkey) {
-      return AJS.$.Deferred(function() {
-         var self = this;
-         AP.request({ 
-            url: "/rest/api/latest/user", 
-            type: "GET",
-            cache: true,   // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
-            data: { 
-               key: userkey
-            },
-            success: self.resolve,
-            fail: self.reject
-         });
-      });
-   };
-
-   var requestIssueDetalis = function(issueKey) {
-      return AJS.$.Deferred(function() {
-         var self = this;
-         AP.request({
-            url: "/rest/api/latest/issue/" + issueKey,
-            type: "GET",
-            cache: true,  // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
-            success: self.resolve,
-            fail: self.reject
-         });
-      });
-   };
-   
    var createReminder = function(timeDelay, timeUnit, message) {
       setCreationState(creationState.creating);
 
-      var userRequest = requestUserDetails(userKey);
-      var issueRequest = requestIssueDetalis(issueKey);
+      var userRequest = HostRequest.userDetails(userKey);
+      var issueRequest = HostRequest.issueDetails(issueKey);
 
       return AJS.$.when(userRequest, issueRequest).then(function(userResponse, issueResponse) {
          var user = JSON.parse(userResponse[0]);
@@ -94,6 +65,7 @@ AJS.$(function() {
             type: "PUT",
             cache: false,
             contentType: "application/json",
+            dataType: "text", 
             data: JSON.stringify(requestData)
          });
 
@@ -117,6 +89,7 @@ AJS.$(function() {
          url: "/rest/ping",
          type: "DELETE",
          cache: false,
+         dataType: "text",
          data: {
             reminderId: reminderId
          }
@@ -199,12 +172,13 @@ AJS.$(function() {
          url: "/rest/pings", 
          type: "GET", 
          cache: false,
+         dataType: "text",
          data: {
             issueId: issueId
          }
       });
 
-      currentUserRequest = requestUserDetails(userKey);
+      currentUserRequest = HostRequest.userDetails(userKey);
 
       AJS.$.when(currentRemindersRequest, currentUserRequest).done(function(pingsResponse, userResponse) {
          currentRemindersRequest = null;

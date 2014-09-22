@@ -8,6 +8,7 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
+      <js><bind tag="href">/static/host-request.js</bind></js>
       <js><bind tag="href">/static/create-reminder.js</bind></js>
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
 
@@ -16,7 +17,7 @@
       <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
-         <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{Email}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+         <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
       </script>
    </bind>
 

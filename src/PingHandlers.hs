@@ -5,13 +5,14 @@
 module PingHandlers
   ( handlePings
   , handleMultiPings
+  , handleUserReminders
   ) where
 
 import qualified Data.Text as T
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import Data.Aeson
-import Data.Aeson.Types (defaultOptions, fieldLabelModifier)
+import Data.Aeson.Types (defaultOptions, fieldLabelModifier, Options)
 import Application
 import Data.Time.Clock
 import qualified Data.ByteString.Char8 as BC
@@ -25,6 +26,7 @@ import qualified WithToken as WT
 import qualified Persistence.Tenant as TN
 import qualified Connect.AtlassianTypes as CA
 import qualified Connect.Tenant as CT
+import qualified Model.UserDetails as UD
 
 type TimeDelay = Integer
 
@@ -45,17 +47,28 @@ data PingRequest = PingRequest
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
-data PingResponse = PingResponse
-   { prsDate :: UTCTime
-   , prsPingId :: Integer
-   , prsIssueId :: CA.IssueId
-   , prsMessage :: Maybe T.Text
-   , prsEmail :: String
-   } deriving (Show, Generic)
+data ReminderResponse = ReminderResponse
+   { prsPingId         :: Integer
+   , prsIssueId        :: CA.IssueId
+   , prsIssueKey       :: CA.IssueKey
+   , prsIssueSummary   :: CA.IssueSummary
+   , prsUserKey        :: CA.UserKey
+   , prsUserEmail      :: String
+   , prsMessage        :: Maybe T.Text
+   , prsDate           :: UTCTime
+   } deriving (Eq, Show, Generic)
+
+data PingIdList = PingIdList
+   { pids :: [Integer]
+   } deriving (Eq, Show, Generic)
+
+instance ToJSON PingIdList
+instance FromJSON PingIdList
 
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
+issueDetailsOptions :: Options
 issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
 
 instance ToJSON CA.UserDetails where
@@ -99,10 +112,10 @@ instance FromJSON PingRequest where
          }
    parseJSON _ = fail "Expect the PingRequest to be a JSON object but it was not."
 
-instance ToJSON PingResponse where
+instance ToJSON ReminderResponse where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
-instance FromJSON PingResponse where
+instance FromJSON ReminderResponse where
    parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
 handleMultiPings :: AppHandler ()
@@ -111,27 +124,76 @@ handleMultiPings = handleMethods
    , (SC.DELETE, WT.tenantFromToken clearPingsForIssue)
    ]
 
-toPingResponse :: P.Ping -> PingResponse
-toPingResponse ping = PingResponse
-   { prsDate = P.pingDate ping
-   , prsPingId = P.pingPingId ping
-   , prsIssueId = P.pingIssueId ping
-   , prsMessage = P.pingMessage ping
-   , prsEmail = BC.unpack $ P.pingUserEmail ping
+toReminderResponse :: P.Ping -> ReminderResponse
+toReminderResponse ping = ReminderResponse
+   { prsPingId         = P.pingPingId ping
+   , prsIssueId        = P.pingIssueId ping
+   , prsIssueKey       = P.pingIssueKey ping
+   , prsIssueSummary   = P.pingIssueSummary ping
+   , prsUserKey        = P.pingUserKey ping
+   , prsUserEmail      = BC.unpack . P.pingUserEmail $ ping
+   , prsMessage        = P.pingMessage ping
+   , prsDate           = P.pingDate ping
    }
 
+standardAuthError :: AppHandler ()
+standardAuthError = respondWithError unauthorised "You need to login before you query for reminders."
+
 getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-getPingsForIssue (_, Nothing) = respondWithError unauthorised "You need to login before you query for reminders."
+getPingsForIssue (_, Nothing) = standardAuthError
 getPingsForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
    case potentialIssueId of
       Just issueId -> do
          issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
-         SC.writeLBS . encode . fmap toPingResponse $ issuePings
+         SC.writeLBS . encode . fmap toReminderResponse $ issuePings
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
 clearPingsForIssue _ = undefined
+
+handleUserReminders :: AppHandler ()
+handleUserReminders = handleMethods
+   [ (SC.GET, WT.tenantFromToken getUserReminders)
+   , (SC.POST, WT.tenantFromToken bulkUpdateUserEmails)
+   , (SC.DELETE, WT.tenantFromToken bulkDeleteEmails)
+   ]
+
+getUserReminders :: CT.ConnectTenant -> AppHandler ()
+getUserReminders (_, Nothing) = standardAuthError
+getUserReminders (tenant, Just userKey) = do
+   userReminders <- SS.with db $ withConnection (P.getLivePingsByUser tenant userKey)
+   SC.writeLBS . encode . fmap toReminderResponse $ userReminders
+   
+bulkUpdateUserEmails :: CT.ConnectTenant -> AppHandler ()
+bulkUpdateUserEmails (_, Nothing) = standardAuthError
+bulkUpdateUserEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
+  potentialUserDetails <- UD.getUserDetails userKey tenant
+  case potentialUserDetails of
+    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
+    Right userDetails -> do
+      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
+      return ()
+  where
+    userDetailsConvert :: UD.UserWithDetails -> CA.UserDetails
+    userDetailsConvert uwd = CA.UserDetails
+      { CA.userKey = UD.name uwd
+      , CA.userEmail = BC.pack $ UD.emailAddress uwd
+      }
+
+bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
+bulkDeleteEmails (_, Nothing) = standardAuthError
+bulkDeleteEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
+   SS.with db $ withConnection (P.deleteManyPingsForUser tenant (pids pingIds) userKey)
+   return ()
+
+parsePingIdListFromRequest :: (PingIdList -> AppHandler ()) -> AppHandler ()
+parsePingIdListFromRequest f = do
+  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+  let maybePing = eitherDecode request :: Either String PingIdList
+  case maybePing of
+    Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
+    Right pingIds -> f pingIds
 
 handlePings :: AppHandler ()
 handlePings = handleMethods
@@ -150,7 +212,7 @@ getPingHandler (tenant, Just userKey) = do
          potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
          case potentialPing of
             Nothing -> respondNotFound
-            Just ping -> SC.writeLBS . encode . toPingResponse $ ping
+            Just ping -> SC.writeLBS . encode . toReminderResponse $ ping
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
