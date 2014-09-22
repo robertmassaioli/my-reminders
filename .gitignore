@@ -9,6 +9,10 @@ cabal.sandbox.config
 site_key.txt
 tags
 
+# Snap generated files
+snaplets/Connect/
+snaplets/Remind\ Me\ Configuration/
+
 # Atlassian Plugin SDK
 /amps-standalone
 

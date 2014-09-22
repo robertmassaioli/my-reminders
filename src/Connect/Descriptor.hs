@@ -55,13 +55,32 @@ data ProductScope
 
 data JiraModules = JiraModules
    { webPanels :: [WebPanel]
+   , generalPages :: [GeneralPage]
    } deriving (Show, Generic)
+
+emptyJiraModules :: JiraModules
+emptyJiraModules = JiraModules [] []
 
 data WebPanel = WebPanel
    { wpKey :: Text
    , wpName :: Name WebPanel
    , wpUrl :: Text
    , wpLocation :: Text
+   } deriving (Show, Generic)
+
+data GeneralPage = GeneralPage
+   { generalPageUrl :: Text
+   , generalPageName :: Name GeneralPage
+   , generalPageKey :: Text
+   , generalPageLocation :: Maybe Text
+   , generalPageIcon :: Maybe IconDetails
+   , generalPageWeight :: Maybe Integer
+   } deriving (Show, Generic)
+
+data IconDetails = IconDetails
+   { iconUrl :: Text
+   , iconWidth :: Maybe Integer
+   , iconHeight :: Maybe Integer
    } deriving (Show, Generic)
 
 data Lifecycle = Lifecycle
@@ -77,11 +96,27 @@ instance ToJSON (Name Plugin)
 instance ToJSON (Name PluginKey)
 
 instance ToJSON (Name WebPanel) where
-   toJSON (Name name) = object [ "value" .= name ]
+   toJSON = nameToValue
+
+instance ToJSON (Name GeneralPage) where
+   toJSON = nameToValue
+
+nameToValue :: Name a -> Value
+nameToValue (Name name) = object [ "value" .= name ]
 
 instance ToJSON Plugin where
    toJSON = genericToJSON baseOptions
       { fieldLabelModifier = stripFieldNamePrefix "plugin"
+      }
+
+instance ToJSON GeneralPage where
+   toJSON = genericToJSON baseOptions
+      { fieldLabelModifier = stripFieldNamePrefix "generalPage"
+      }
+
+instance ToJSON IconDetails where
+   toJSON = genericToJSON baseOptions
+      { fieldLabelModifier = stripFieldNamePrefix "icon"
       }
 
 instance ToJSON Vendor where
