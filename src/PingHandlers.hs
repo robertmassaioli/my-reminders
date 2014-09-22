@@ -1,6 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 module PingHandlers
   ( handlePings
@@ -8,24 +8,24 @@ module PingHandlers
   , handleUserReminders
   ) where
 
-import qualified Data.Text as T
-import qualified Snap.Core as SC
-import qualified Snap.Snaplet as SS
-import Data.Aeson
-import Data.Aeson.Types (defaultOptions, fieldLabelModifier, Options)
-import Application
-import Data.Time.Clock
-import qualified Data.ByteString.Char8 as BC
-import Database.PostgreSQL.Simple
-import GHC.Generics
+import           Application
+import           Data.Aeson
+import           Data.Aeson.Types           (defaultOptions, fieldLabelModifier, Options)
+import qualified Data.ByteString.Char8      as BC
+import qualified Data.Text                  as T
+import           Data.Time.Clock
+import           Database.PostgreSQL.Simple
+import           GHC.Generics
+import qualified Snap.Core                  as SC
+import qualified Snap.Snaplet               as SS
 
-import Persistence.PostgreSQL
-import qualified Persistence.Ping as P
+import qualified Connect.AtlassianTypes     as CA
+import qualified Connect.Tenant             as CT
+import qualified Persistence.Ping           as P
+import           Persistence.PostgreSQL
+import qualified Persistence.Tenant         as TN
 import           SnapHelpers
-import qualified WithToken as WT
-import qualified Persistence.Tenant as TN
-import qualified Connect.AtlassianTypes as CA
-import qualified Connect.Tenant as CT
+import qualified WithToken                  as WT
 import qualified Model.UserDetails as UD
 
 type TimeDelay = Integer
@@ -40,11 +40,11 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data PingRequest = PingRequest
-  { prqTimeDelay    :: TimeDelay
-  , prqTimeUnit     :: TimeUnit
-  , prqIssue        :: CA.IssueDetails
-  , prqUser         :: CA.UserDetails
-  , prqMessage      :: Maybe T.Text
+  { prqTimeDelay :: TimeDelay
+  , prqTimeUnit  :: TimeUnit
+  , prqIssue     :: CA.IssueDetails
+  , prqUser      :: CA.UserDetails
+  , prqMessage   :: Maybe T.Text
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
@@ -72,7 +72,7 @@ issueDetailsOptions :: Options
 issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
 
 instance ToJSON CA.UserDetails where
-   toJSON o = object 
+   toJSON o = object
       [ "Key" .= CA.userKey o
       , "Email" .= (BC.unpack . CA.userEmail $ o)
       ]
@@ -81,7 +81,7 @@ instance FromJSON CA.UserDetails where
    parseJSON (Object o) = do
       key <- o .: "Key"
       email <- o .: "Email"
-      return CA.UserDetails 
+      return CA.UserDetails
          { CA.userKey = key
          , CA.userEmail = BC.pack email
          }
@@ -146,7 +146,7 @@ getPingsForIssue (tenant, Just userKey) = do
    case potentialIssueId of
       Just issueId -> do
          issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
-         SC.writeLBS . encode . fmap toReminderResponse $ issuePings
+         writeJson (fmap toReminderResponse issuePings)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
 clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
@@ -212,7 +212,7 @@ getPingHandler (tenant, Just userKey) = do
          potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
          case potentialPing of
             Nothing -> respondNotFound
-            Just ping -> SC.writeLBS . encode . toReminderResponse $ ping
+            Just ping -> writeJson (toReminderResponse ping)
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
 deletePingHandler :: CT.ConnectTenant -> AppHandler ()
@@ -243,7 +243,7 @@ addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
 addPing _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addPing pingRequest (tenant, Just userKey) =
   if userKey /= requestUK
-    then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey) 
+    then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey)
     else do
       addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant (prqUser pingRequest))
       case addedPing of
