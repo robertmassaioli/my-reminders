@@ -61,6 +61,55 @@ data JiraModules = JiraModules
 emptyJiraModules :: JiraModules
 emptyJiraModules = JiraModules [] []
 
+data Condition = Condition
+   { conditionSource    :: ConditionSource
+   , conditionInverted  :: Bool
+   -- , conditionParams    :: [(String, String)] -- TODO impliment properly but not required yet
+   } 
+
+data ConditionSource 
+   = ConditionByJIRA        JIRACondition
+   = ConditionByConfluence  ConfluenceCondition
+   = ConditionByRemote      RemoteCondition
+
+-- The JIRA Conditions have been taken from:
+-- https://developer.atlassian.com/static/connect/docs/modules/fragment/single-condition.html
+-- as of the following date: Tue 23 Sep 2014 08:45:49 EST
+-- Please update the date above whenever you update these conditions.
+data JIRACondition
+   = CanAttachFileToIssueCondition
+   | CanManageAttachmentsCondition
+   | FeatureFlagCondition
+   | HasIssuePermissionCondition
+   | HasProjectPermissionCondition
+   | HasSelectedProjectPermissionCondition
+   | HasSubTasksAvaliableCondition
+   | HasVotedForIssueCondition
+   | IsAdminModeCondition
+   | IsIssueAssignedToCurrentUserCondition
+   | IsIssueEditableCondition
+   | IsIssueReportedByCurrentUserCondition
+   | IsIssueUnresolvedCondition
+   | IsSubTaskCondition
+   | IsWatchingIssueCondition
+   | LinkingEnabledCondition
+   | SubTasksEnabledCondition
+   | TimeTrackingEnabledCondition
+   | UserHasIssueHistoryCondition
+   | UserIsAdminCondition
+   | UserIsLoggedInCondition
+   | UserIsProjectAdminCondition
+   | UserIsSysadminCondition
+   | UserIsTheLoggedInUserCondition
+   | VotingEnabledCondition
+   | WatchingEnabledCondition
+   deriving (Eq, Show)
+
+data ConfluenceCondition
+
+data RemoteCondition = RemoteCondition
+   { 
+
 data WebPanel = WebPanel
    { wpKey :: Text
    , wpName :: Name WebPanel
