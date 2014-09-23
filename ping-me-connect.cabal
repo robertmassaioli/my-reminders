@@ -62,6 +62,7 @@ Executable ping-me-connect
     , http-client               == 0.3.*
     , http-media                == 0.1.*
     , http-types                == 0.8.*
+    , hostname                  == 1.0
     , jwt                       >= 0.3     && < 0.5
     , lens                      == 4.*
     , mtl                       == 2.*
@@ -129,6 +130,7 @@ test-suite ping-me-props
     , http-client
     , http-media
     , http-types
+    , hostname
     , jwt
     , lens
     , mtl
