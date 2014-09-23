@@ -100,7 +100,7 @@ installedHandler = do
        if isJust mTenantId
        then SH.respondNoContent
        else if validHost
-            then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
+            then SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
             else SH.respondWithError SH.unauthorised ("This host was not part of the supported list of hosts that this connect addon can be installed on. Contact the developers of this Addon." ++ show (tenantAuthority =<< mTenantInfo))
       ) mTenantInfo
 
