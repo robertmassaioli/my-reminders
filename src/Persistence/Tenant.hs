@@ -31,9 +31,11 @@ import           Connect.Descriptor()
 
 import           Persistence.PostgreSQL
 
+type ClientKey = T.Text
+
 data LifecycleResponse = LifecycleResponseInstalled {
     key'           :: T.Text
-  , clientKey'     :: T.Text
+  , clientKey'     :: ClientKey
   , publicKey'     :: T.Text
   , sharedSecret'  :: Maybe T.Text
   , serverVersion  :: Maybe T.Text
@@ -64,6 +66,9 @@ data Tenant = Tenant {
   , productType  :: T.Text
 } deriving (Eq, Show, Generic)
 
+instance FromRow ClientKey where
+   fromRow = field
+
 instance FromRow Tenant where
     fromRow = Tenant <$> field <*> field <*> field <*> field <*> field <*> field
 
@@ -76,7 +81,7 @@ instance ToField URI where
 
 lookupTenant 
    :: Connection
-   -> T.Text
+   -> ClientKey
    -> IO (Maybe Tenant)
 lookupTenant conn clientKey = do
    -- TODO Can we extract these SQL statements into their own constants so that we can
@@ -91,22 +96,75 @@ lookupTenant conn clientKey = do
 
 removeTenantInformation 
    :: Connection
-   -> T.Text
+   -> ClientKey
    -> IO Int64
 removeTenantInformation conn clientKey =
     liftIO $ execute conn [sql| DELETE FROM tenant WHERE key = ?  |] (Only clientKey)
+
+-- There are two interesting cases, you get a client key that matches an existing client key or you
+-- get a baseUrl that already exists in the system.
+--
+-- If you get a client key that matches then you want to perform an update to an existing tenant
+-- otherwise you want to register a new tenant
+--
+-- When updating a tenant, if the baseUrl is different then just update it but you cannot update it
+-- to something that already exists in the system.
+-- When creating a new tenant then the baseUrl cannot be the same as another one that already exists
+-- in the system
 
 insertTenantInformation 
    :: Connection
    -> LifecycleResponse
    -> IO (Maybe Integer)
-insertTenantInformation conn LifecycleResponseInstalled{..} = do
-        liftIO $ execute conn [sql|
-                DELETE FROM tenant WHERE key = ?
-            |] (Only clientKey')
-        tenantId' <- liftIO $ insertReturning conn [sql|
-            INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
-                VALUES (?, ?, ?, ?, ?) RETURNING id
-            |] (clientKey', publicKey', sharedSecret', show baseUrl', productType')
-        return (listToMaybe (join tenantId'))
+insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
+   let newClientKey = clientKey' lri
+   let newBaseUri = baseUrl' lri
+   oldClientKey <- getClientKeyForBaseUrl conn newBaseUri
+   existingTenant <- lookupTenant conn newClientKey
+   let newAndOldKeysEqual = fmap (== newClientKey) oldClientKey
+   case (existingTenant, newAndOldKeysEqual) of
+      -- The base url is already being used by somebody else TODO should warn about this in production
+      (_          , Just False) -> return Nothing 
+      -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
+      (Nothing    , Just True)  -> error "This is a contradiction in state, we both could and could not find clientKeys." 
+      -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
+      (Nothing    , Nothing) -> listToMaybe <$> insertTenant conn lri 
+      -- We have seen this tenant before but we may have new information for it. Update it.
+      (Just tenant, _) -> do
+         updateTenantDetails conn newTenant
+         return . Just . tenantId $ tenant
+         where
+            newTenant = tenant
+               { publicKey = publicKey' lri 
+               , sharedSecret = fromMaybe (sharedSecret tenant) (sharedSecret' lri)
+               , baseUrl = baseUrl' lri 
+               , productType = fromMaybe (productType tenant) (productType' lri)
+               }
 
+updateTenantDetails :: Connection -> Tenant -> IO Int64
+updateTenantDetails conn tenant = do
+   liftIO $ execute conn [sql|
+      UPDATE tenant SET 
+         publicKey = ?,
+         sharedSecret = ?,
+         baseUrl = ?,
+         productType = ?
+      WHERE id = ?
+   |] (publicKey tenant, sharedSecret tenant, baseUrl tenant, productType tenant, tenantId tenant)
+
+insertTenant :: Connection -> LifecycleResponse -> IO [Integer]
+insertTenant conn lri@(LifecycleResponseInstalled {}) = do
+   (fmap join) . liftIO $ insertReturning conn [sql|
+      INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
+      VALUES (?, ?, ?, ?, ?) RETURNING id
+   |] (clientKey' lri, publicKey' lri, sharedSecret' lri, show $ baseUrl' lri, productType' lri)
+
+getClientKeyForBaseUrl :: Connection -> URI -> IO (Maybe ClientKey)
+getClientKeyForBaseUrl conn baseUrl = do
+   clientKeys <- liftIO $ query conn [sql|
+      SELECT key from tenant where baseUrl = ?
+   |] (Only . show $ baseUrl)
+   case clientKeys of
+      [] -> return Nothing
+      [x] -> return . Just $ x
+      _ -> error "There has been a problem in the database model and the baseURl is not unique. Database constraint failure."

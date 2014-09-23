@@ -94,14 +94,14 @@ installedHandler = do
    request <- SC.readRequestBody (1024 * 10)
    let validHosts = CD.connectHostWhitelist connectData
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
-   maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
+   maybe SH.respondBadRequest (\tenantInfo -> do
        let validHost = validHostName validHosts tenantInfo
        mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
        if isJust mTenantId
-       then SC.modifyResponse $ SC.setResponseCode SH.noContent
+       then SH.respondNoContent
        else if validHost
             then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
-            else SH.respondWithError SH.unauthorised "Invalid host"
+            else SH.respondWithError SH.unauthorised ("This host was not part of the supported list of hosts that this connect addon can be installed on. Contact the developers of this Addon." ++ show (tenantAuthority =<< mTenantInfo))
       ) mTenantInfo
 
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
@@ -110,9 +110,11 @@ validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
 validHostName validHosts tenantInfo = isJust maybeValidhost where
     compare authority elem = map DC.toLower (T.unpack elem) == map DC.toLower (uriRegName authority)
     maybeValidhost = do
-      let uri = baseUrl' tenantInfo
-      authority <- uriAuthority uri
+      authority <- tenantAuthority tenantInfo
       find (compare authority) validHosts
+
+tenantAuthority :: LifecycleResponse -> Maybe URIAuth
+tenantAuthority = uriAuthority . baseUrl'
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
