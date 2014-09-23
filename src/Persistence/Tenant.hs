@@ -128,7 +128,7 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
       -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
       (Nothing    , Just True)  -> error "This is a contradiction in state, we both could and could not find clientKeys." 
       -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
-      (Nothing    , Nothing) -> listToMaybe <$> insertTenant conn lri 
+      (Nothing    , Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri 
       -- We have seen this tenant before but we may have new information for it. Update it.
       (Just tenant, _) -> do
          updateTenantDetails conn newTenant
@@ -152,8 +152,8 @@ updateTenantDetails conn tenant = do
       WHERE id = ?
    |] (publicKey tenant, sharedSecret tenant, baseUrl tenant, productType tenant, tenantId tenant)
 
-insertTenant :: Connection -> LifecycleResponse -> IO [Integer]
-insertTenant conn lri@(LifecycleResponseInstalled {}) = do
+rawInsertTenantInformation :: Connection -> LifecycleResponse -> IO [Integer]
+rawInsertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
    (fmap join) . liftIO $ insertReturning conn [sql|
       INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
       VALUES (?, ?, ?, ?, ?) RETURNING id
