@@ -1,3 +1,19 @@
+AJS.$.fn.flashClass = function(c, userOptions) {
+   var defaults = {
+      starton: true,
+      timeout: 1500,
+      finishedCallback: null
+   };
+   var options = AJS.$.extend({}, defaults, userOptions);
+
+   var self = this;
+   self.toggleClass(c, options.starton);
+   return setTimeout(function() { 
+      self.toggleClass(c, !options.starton); 
+      options.finishedCallback && options.finishedCallback();
+   }, options.timeout);
+};
+
 AJS.$(function() {
    AJS.log("Create reminder loaded...");
    var queryParams = URI(window.location.href).query(true);
@@ -54,7 +70,7 @@ AJS.$(function() {
          });
 
          request.done(function() {
-            setCreationState(creationState.created);
+            setCreationState(creationState.created, user.emailAddress);
             refreshReminders();
          });
 
@@ -102,13 +118,13 @@ AJS.$(function() {
 
    var timeoutHandle;
 
-   var setCreationState = function(state) {
+   var setCreationState = function(state, emailAddress) {
       var pending = AJS.$("#reminder-creation-pending");
-      var successful = AJS.$("#reminder-creation-success");
       var failure = AJS.$("#reminder-creation-error");
 
       pending.toggleClass("hidden", state !== creationState.creating);
-      successful.toggleClass("hidden", state !== creationState.created);
+      if(emailAddress) AJS.$("#success-message .email").text(emailAddress);
+      AJS.$("#success-message").toggleClass("hidden", state !== creationState.created); 
       failure.toggleClass("hidden", state !== creationState.failed);
 
       if(timeoutHandle) {
@@ -119,7 +135,7 @@ AJS.$(function() {
       if(state === creationState.created || state == creationState.failed) {
          timeoutHandle = setTimeout(function() {
             setCreationState(creationState.notCreating);
-         }, 1500);
+         }, 3000);
       }
    };
 
@@ -272,10 +288,7 @@ AJS.$(function() {
          });
 
          deleteRequest.fail(function() {
-            $reminder.addClass("error");
-            setTimeout(function() {
-               $reminder.removeClass("error");
-            }, 1500);
+            $reminder.flashClass("error");
          });
       });
 

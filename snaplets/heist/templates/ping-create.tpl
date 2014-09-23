@@ -17,7 +17,7 @@
       <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
-         <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}}" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
+         <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
       </script>
    </bind>
 
@@ -31,7 +31,6 @@
       <button id="add-reminder-next-week" class="aui-button aui-button-subtle">In a week</button>
       <span class="status-container">
            <span id="reminder-creation-pending" class="aui-icon aui-icon-wait">Wait</span>
-           <span id="reminder-creation-success" class="aui-icon aui-icon-success">Success</span>
            <span id="reminder-creation-error"   class="aui-icon aui-icon-error">Error</span>
        </span>
    </div>
@@ -70,5 +69,11 @@
            <span class="aui-icon icon-error"></span>
            <strong class="title">Destructive operation!</strong>
        </p>
+   </div>
+   <div id="success-message" class="aui-message success hidden">
+      <p class="title">
+         <span class="aui-icon icon-success"></span>
+         <strong class="title">Reminder set for <span class="email"></span></strong>
+      </p>
    </div>
 </apply>
