@@ -80,6 +80,12 @@ staticJiraCondition c = SingleCondition { conditionSource = StaticJIRACondition 
 staticConfluenceCondition :: ConfluenceCondition -> Condition
 staticConfluenceCondition c = SingleCondition { conditionSource = StaticConfluenceCondition c, conditionInverted = False }
 
+remoteCondition :: URI -> Condition
+remoteCondition conditionLocation = SingleCondition { conditionSource = RemoteCondition conditionLocation, conditionInverted = False }
+
+invertCondition :: Condition -> Condition
+invertCondition c = c { conditionInverted = not . conditionInverted $ c }
+
 instance ToJSON Condition where
    toJSON sc@(SingleCondition {}) = object
       [ "condition" .= conditionSource sc
@@ -97,13 +103,15 @@ instance ToJSON ConditionType where
 data ConditionSource 
    = StaticJIRACondition        JIRACondition
    | StaticConfluenceCondition  ConfluenceCondition
-   | RemoteConnectCondition     RemoteCondition -- TODO merge the Remote Condition into this section
+   | RemoteCondition 
+      { remoteConditionUrl :: URI 
+      }
    deriving (Show, Eq)
 
 instance ToJSON ConditionSource where
    toJSON (StaticJIRACondition x) = toJSON x
    toJSON (StaticConfluenceCondition x) = toJSON x
-   toJSON (RemoteConnectCondition x) = toJSON x
+   toJSON (RemoteCondition x) = toJSON x
 
 -- The JIRA Conditions have been taken from:
 -- https://developer.atlassian.com/static/connect/docs/modules/fragment/single-condition.html
@@ -206,12 +214,6 @@ data ConfluenceCondition
 
 instance ToJSON ConfluenceCondition where
    toJSON = toJSON . dropAndSnakeCase "ConfluenceCondition" . show
-
-data RemoteCondition = RemoteCondition
-   deriving (Eq, Show, Generic)
-
--- TODO give this more details
-instance ToJSON RemoteCondition
 
 data WebPanel = WebPanel
    { wpKey        :: Text
