@@ -80,7 +80,7 @@ staticJiraCondition c = SingleCondition { conditionSource = StaticJIRACondition 
 staticConfluenceCondition :: ConfluenceCondition -> Condition
 staticConfluenceCondition c = SingleCondition { conditionSource = StaticConfluenceCondition c, conditionInverted = False }
 
-remoteCondition :: URI -> Condition
+remoteCondition :: String -> Condition
 remoteCondition conditionLocation = SingleCondition { conditionSource = RemoteCondition conditionLocation, conditionInverted = False }
 
 invertCondition :: Condition -> Condition
@@ -104,7 +104,7 @@ data ConditionSource
    = StaticJIRACondition        JIRACondition
    | StaticConfluenceCondition  ConfluenceCondition
    | RemoteCondition 
-      { remoteConditionUrl :: URI 
+      { remoteConditionPath :: String
       }
    deriving (Show, Eq)
 
