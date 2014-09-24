@@ -38,7 +38,7 @@ addonDescriptor descriptorConfig =
                , wpName = Name "My reminders"
                , wpUrl = "/panel/jira/ping/create?issue_key={issue.key}&issue_id={issue.id}"
                , wpLocation = "atl.jira.view.issue.right.context"
-               , wpConditions = [staticJiraCondition UserIsLoggedInCondition]
+               , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
                }
             ]
           , generalPages = 

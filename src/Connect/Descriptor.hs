@@ -110,42 +110,39 @@ instance ToJSON ConditionSource where
 -- as of the following date: Tue 23 Sep 2014 08:45:49 EST
 -- Please update the date above whenever you update these conditions.
 data JIRACondition
-   = CanAttachFileToIssueCondition
-   | CanManageAttachmentsCondition
-   | FeatureFlagCondition
-   | HasIssuePermissionCondition
-   | HasProjectPermissionCondition
-   | HasSelectedProjectPermissionCondition
-   | HasSubTasksAvaliableCondition
-   | HasVotedForIssueCondition
-   | IsAdminModeCondition
-   | IsIssueAssignedToCurrentUserCondition
-   | IsIssueEditableCondition
-   | IsIssueReportedByCurrentUserCondition
-   | IsIssueUnresolvedCondition
-   | IsSubTaskCondition
-   | IsWatchingIssueCondition
-   | LinkingEnabledCondition
-   | SubTasksEnabledCondition
-   | TimeTrackingEnabledCondition
-   | UserHasIssueHistoryCondition
-   | UserIsAdminCondition
-   | UserIsLoggedInCondition
-   | UserIsProjectAdminCondition
-   | UserIsSysadminCondition
-   | UserIsTheLoggedInUserCondition
-   | VotingEnabledCondition
-   | WatchingEnabledCondition
+   = CanAttachFileToIssueJiraCondition
+   | CanManageAttachmentsJiraCondition
+   | FeatureFlagJiraCondition
+   | HasIssuePermissionJiraCondition
+   | HasProjectPermissionJiraCondition
+   | HasSelectedProjectPermissionJiraCondition
+   | HasSubTasksAvaliableJiraCondition
+   | HasVotedForIssueJiraCondition
+   | IsAdminModeJiraCondition
+   | IsIssueAssignedToCurrentUserJiraCondition
+   | IsIssueEditableJiraCondition
+   | IsIssueReportedByCurrentUserJiraCondition
+   | IsIssueUnresolvedJiraCondition
+   | IsSubTaskJiraCondition
+   | IsWatchingIssueJiraCondition
+   | LinkingEnabledJiraCondition
+   | SubTasksEnabledJiraCondition
+   | TimeTrackingEnabledJiraCondition
+   | UserHasIssueHistoryJiraCondition
+   | UserIsAdminJiraCondition
+   | UserIsLoggedInJiraCondition
+   | UserIsProjectAdminJiraCondition
+   | UserIsSysadminJiraCondition
+   | UserIsTheLoggedInUserJiraCondition
+   | VotingEnabledJiraCondition
+   | WatchingEnabledJiraCondition
    deriving (Eq, Show, Generic)
 
 instance ToJSON JIRACondition where
-   toJSON = toJSON . dropConditionAndSnakeCase . show
+   toJSON = toJSON . dropAndSnakeCase "JiraCondition" . show
 
-instance ToJSON ConfluenceCondition where
-   toJSON = toJSON . dropConditionAndSnakeCase . show
-
-dropConditionAndSnakeCase :: String -> String
-dropConditionAndSnakeCase = camelToSnakeCase . dropCondition . lowerFirst
+dropAndSnakeCase :: String -> String -> String
+dropAndSnakeCase toDrop = camelToSnakeCase . dropCondition toDrop . lowerFirst
 
 lowerFirst :: String -> String
 lowerFirst (x : xs) = C.toLower x : xs
@@ -156,21 +153,62 @@ camelToSnakeCase input = case L.break C.isUpper input of
    (first, []) -> first
    (first, x : xs) -> first ++ ('_' : C.toLower x : camelToSnakeCase xs)
 
-dropCondition :: String -> String
-dropCondition = L.reverse . try (L.stripPrefix reverseText) . L.reverse
-   where
-      reverseText :: String
-      reverseText = L.reverse "Condition"
+dropCondition :: String -> String -> String
+dropCondition toDrop = L.reverse . try (L.stripPrefix . L.reverse $ toDrop) . L.reverse
 
 try :: (a -> Maybe a) -> a -> a
 try f v = fromMaybe v (f v)
 
-data ConfluenceCondition = ConfluenceCondition
+data ConfluenceCondition 
+   = ActiveThemeConfluenceCondition
+   | CanEditSpaceStylesConfluenceCondition
+   | CanSignupConfluenceCondition
+   | ContentHasAnyPermissionsSetConfluenceCondition
+   | CreateContentConfluenceCondition
+   | EmailAddressPublicConfluenceCondition
+   | FavouritePageConfluenceCondition
+   | FavouriteSpaceConfluenceCondition
+   | FeatureFlagConfluenceCondition
+   | FollowingTargetUserConfluenceCondition
+   | HasAttachmentConfluenceCondition
+   | HasBlogPostConfluenceCondition
+   | HasPageConfluenceCondition
+   | HasSpaceConfluenceCondition
+   | HasTemplateConfluenceCondition
+   | LatestVersionConfluenceCondition
+   | NotPersonalSpaceConfluenceCondition
+   | PrintableVersionConfluenceCondition
+   | ShowingPageAttachmentsConfluenceCondition
+   | SpaceFunctionPermissionConfluenceCondition
+   | SpaceSidebarConfluenceCondition
+   | TargetUserCanSetStatusConfluenceCondition
+   | TargetUserHasPersonalBlogConfluenceCondition
+   | TargetUserHasPersonalSpaceConfluenceCondition
+   | ThreadedCommentsConfluenceCondition
+   | TinyUrlSupportedConfluenceCondition
+   | UserCanCreatePersonalSpaceConfluenceCondition
+   | UserCanUpdateUserStatusConfluenceCondition
+   | UserCanUseConfluenceConfluenceCondition
+   | UserFavouritingTargetUserPersonalSpaceConfluenceCondition
+   | UserHasPersonalBlogConfluenceCondition
+   | UserHasPersonalSpaceConfluenceCondition
+   | UserIsAdminConfluenceCondition
+   | UserIsConfluenceAdministratorConfluenceCondition
+   | UserIsLoggedInConfluenceCondition
+   | UserIsSysadminConfluenceCondition
+   | UserLoggedInEditableConfluenceCondition
+   | UserWatchingPageConfluenceCondition
+   | UserWatchingSpaceConfluenceCondition
+   | UserWatchingSpaceForContentTypeConfluenceCondition
+   | ViewingContentConfluenceCondition
+   | ViewingOwnProfileConfluenceCondition
    deriving (Eq, Show, Generic)
+
+instance ToJSON ConfluenceCondition where
+   toJSON = toJSON . dropAndSnakeCase "ConfluenceCondition" . show
 
 data RemoteCondition = RemoteCondition
    deriving (Eq, Show, Generic)
-
 
 -- TODO give this more details
 instance ToJSON RemoteCondition
@@ -293,9 +331,7 @@ baseOptions = defaultOptions
    }
 
 stripFieldNamePrefix :: String -> String -> String
-stripFieldNamePrefix pre s = toLowerFirst $ fromMaybe s (L.stripPrefix pre s)
-   where toLowerFirst (c : cs) = C.toLower c : cs
-         toLowerFirst [] = []
+stripFieldNamePrefix pre = lowerFirst . try (L.stripPrefix pre)
 
 defaultLifecycle :: Lifecycle
 defaultLifecycle = Lifecycle
