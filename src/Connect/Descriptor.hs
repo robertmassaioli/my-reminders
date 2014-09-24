@@ -3,6 +3,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+
+-- TODO be more selective about what we export from here
 module Connect.Descriptor where
 
 import Control.Monad
@@ -61,16 +63,47 @@ data JiraModules = JiraModules
 emptyJiraModules :: JiraModules
 emptyJiraModules = JiraModules [] []
 
-data Condition = Condition
+data Condition = SingleCondition
    { conditionSource    :: ConditionSource
    , conditionInverted  :: Bool
    -- , conditionParams    :: [(String, String)] -- TODO impliment properly but not required yet
    } 
+   | CompositeCondition
+   { subConditions :: [Condition]
+   , conditionType :: ConditionType
+   }
+   deriving (Show)
+
+staticJiraCondition :: JIRACondition -> Condition
+staticJiraCondition c = SingleCondition { conditionSource = StaticJIRACondition c, conditionInverted = False }
+
+staticConfluenceCondition :: ConfluenceCondition -> Condition
+staticConfluenceCondition c = SingleCondition { conditionSource = StaticConfluenceCondition c, conditionInverted = False }
+
+instance ToJSON Condition where
+   toJSON sc@(SingleCondition {}) = object
+      [ "condition" .= conditionSource sc
+      , "invert" .= conditionInverted sc
+      ]
+   toJSON cc@(CompositeCondition {}) = object [ "conditions" .= subConditions cc, "type" .= conditionType cc]
+
+data ConditionType = AndCondition | OrCondition
+   deriving (Eq, Show)
+
+instance ToJSON ConditionType where
+   toJSON AndCondition = String "AND"
+   toJSON OrCondition  = String "OR"
 
 data ConditionSource 
-   = ConditionByJIRA        JIRACondition
-   = ConditionByConfluence  ConfluenceCondition
-   = ConditionByRemote      RemoteCondition
+   = StaticJIRACondition        JIRACondition
+   | StaticConfluenceCondition  ConfluenceCondition
+   | RemoteConnectCondition     RemoteCondition -- TODO merge the Remote Condition into this section
+   deriving (Show, Eq)
+
+instance ToJSON ConditionSource where
+   toJSON (StaticJIRACondition x) = toJSON x
+   toJSON (StaticConfluenceCondition x) = toJSON x
+   toJSON (RemoteConnectCondition x) = toJSON x
 
 -- The JIRA Conditions have been taken from:
 -- https://developer.atlassian.com/static/connect/docs/modules/fragment/single-condition.html
@@ -103,18 +136,51 @@ data JIRACondition
    | UserIsTheLoggedInUserCondition
    | VotingEnabledCondition
    | WatchingEnabledCondition
-   deriving (Eq, Show)
+   deriving (Eq, Show, Generic)
 
-data ConfluenceCondition
+instance ToJSON JIRACondition where
+   toJSON = toJSON . dropConditionAndSnakeCase . show
+
+instance ToJSON ConfluenceCondition where
+   toJSON = toJSON . dropConditionAndSnakeCase . show
+
+dropConditionAndSnakeCase :: String -> String
+dropConditionAndSnakeCase = camelToSnakeCase . dropCondition . lowerFirst
+
+lowerFirst :: String -> String
+lowerFirst (x : xs) = C.toLower x : xs
+lowerFirst [] = []
+
+camelToSnakeCase :: String -> String
+camelToSnakeCase input = case L.break C.isUpper input of
+   (first, []) -> first
+   (first, x : xs) -> first ++ ('_' : C.toLower x : camelToSnakeCase xs)
+
+dropCondition :: String -> String
+dropCondition = L.reverse . try (L.stripPrefix reverseText) . L.reverse
+   where
+      reverseText :: String
+      reverseText = L.reverse "Condition"
+
+try :: (a -> Maybe a) -> a -> a
+try f v = fromMaybe v (f v)
+
+data ConfluenceCondition = ConfluenceCondition
+   deriving (Eq, Show, Generic)
 
 data RemoteCondition = RemoteCondition
-   { 
+   deriving (Eq, Show, Generic)
+
+
+-- TODO give this more details
+instance ToJSON RemoteCondition
 
 data WebPanel = WebPanel
-   { wpKey :: Text
-   , wpName :: Name WebPanel
-   , wpUrl :: Text
-   , wpLocation :: Text
+   { wpKey        :: Text
+   , wpName       :: Name WebPanel
+   , wpUrl        :: Text
+   , wpLocation   :: Text
+   , wpConditions :: [Condition]
    } deriving (Show, Generic)
 
 data GeneralPage = GeneralPage
@@ -143,7 +209,7 @@ instance ToJSON PluginKey
 
 instance ToJSON (Name Plugin)
 instance ToJSON (Name PluginKey)
-
+ 
 instance ToJSON (Name WebPanel) where
    toJSON = nameToValue
 
