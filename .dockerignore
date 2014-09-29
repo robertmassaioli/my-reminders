@@ -1,0 +1,27 @@
+# Temporary Files
+*~
+.*.sw[a-p]
+
+# Git Files
+.git
+
+# Cabal Built
+dist
+.cabal-sandbox
+cabal.sandbox.config
+site_key.txt
+tags
+
+# Snap generated files
+snaplets/Connect
+snaplets/Remind\ Me\ Configuration
+
+# Atlassian Plugin SDK
+amps-standalone
+
+# Log Files
+log
+*.log
+
+# OSX Files
+.DS_store
