@@ -6,6 +6,7 @@ NAME="ping-me-connect"
 .PHONY: clean build
 
 dev: $(SOURCE)
+			cabal sandbox init
 			cabal install -f development
 setup:
 			cabal sandbox init
