@@ -34,7 +34,9 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # RUN apt-get update && apt-get install -y haskell-platform && cabal update && cabal install cabal-install
 RUN cabal update && cabal install cabal-install
 
-# Initiate the build environment and build the executable
+# Initiate the build environment and build the executable (assumes that the
+# atlassian-connect-haskell source can be found in the vendor/atlassian-connect directory AND that
+# it has not been released to hackage yet (which is really where it should live).
 RUN cabal sandbox init && cabal sandbox add-source vendor/atlassian-connect && cabal install
 
 # Setup the default command to run for the container.
