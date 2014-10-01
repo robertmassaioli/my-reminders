@@ -7,6 +7,7 @@ module Persistence.Tenant (
     lookupTenant
   , insertTenantInformation
   , removeTenantInformation
+  , getTenantCount
   , Tenant(..)
   , TenantKey
   , LifecycleResponse(..)
@@ -110,3 +111,9 @@ insertTenantInformation conn LifecycleResponseInstalled{..} = do
             |] (clientKey', publicKey', sharedSecret', show baseUrl', productType')
         return (listToMaybe (join tenantId'))
 
+getTenantCount :: Connection -> IO Int64
+getTenantCount conn = do
+   counts <- liftIO $ query_ conn [sql|
+      SELECT count(*) FROM tenant
+   |]
+   return . fromOnly . head $ counts

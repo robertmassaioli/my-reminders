@@ -8,12 +8,18 @@ import           Application
 import           AesonHelpers (baseOptions, stripFieldNamePrefix)
 import           Control.Applicative ((<$>))
 import           Control.Concurrent.ParallelIO.Local (parallel, withPool)
+import qualified Control.Exception as E
+import           Control.Monad.CatchIO (tryJust)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Aeson.Types
+import           Data.Maybe (isNothing)
 import qualified Data.Text as T
 import           Data.Time.Clock
+import           Database.PostgreSQL.Simple (SqlError(..))
 import           GHC.Generics
+import           Persistence.PostgreSQL (withConnection)
+import           Persistence.Tenant (getTenantCount)
 import qualified Snap.Core as SC
 import           SnapHelpers
 
@@ -24,7 +30,7 @@ healthcheckRequest = handleMethods
 
 getHealthcheckRequest :: AppHandler ()
 getHealthcheckRequest = do
-   runResult <- liftIO $ runHealthchecks curatedHealthchecks
+   runResult <- runHealthchecks curatedHealthchecks
    if anyHealthcheckFailed runResult
    then do
       writeJson runResult
@@ -35,18 +41,46 @@ getHealthcheckRequest = do
 
 curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks = 
-   [ failCheck
+   [ databaseHealthCheck
+   --, failCheck
    ]
 
-runHealthchecks :: [Healthcheck] -> IO HealthcheckRunResult
-runHealthchecks healthchecks = HealthcheckRunResult <$> withPool 2 (flip parallel healthchecks)
+runHealthchecks :: [Healthcheck] -> AppHandler HealthcheckRunResult
+runHealthchecks healthchecks = HealthcheckRunResult <$> sequence healthchecks
 
 anyHealthcheckFailed :: HealthcheckRunResult -> Bool
 anyHealthcheckFailed (HealthcheckRunResult statuses) = any (not . hsIsHealthy) statuses
 
+databaseHealthCheck :: Healthcheck
+databaseHealthCheck = do
+   currentTime <- liftIO getCurrentTime
+   result <- tryJust exceptionFilter (withConnection getTenantCount)
+   return $ status (either Just (const Nothing) result) currentTime
+   where
+      status :: E.Exception e => Maybe e -> UTCTime -> HealthStatus
+      status potentialException currentTime = HealthStatus
+         { hsName = T.pack "Database Connection Check"
+         , hsDescription = T.pack "Ensures that this service can connect to the PostgreSQL Relational Database that contains all of the Reminders."
+         , hsIsHealthy = isNothing $ potentialException
+         , hsFailureReason = do
+             exception <- potentialException
+             return . T.pack $ "Could not connect to the remote database. Addon will not work correctly. Message: " ++ show exception
+         , hsApplication = remindMeApplication
+         , hsTime = currentTime
+         , hsSeverity = CRITICAL
+         , hsDocumentation = Just . T.pack $ "If you see this error you might want to check out the database and see "
+            ++ "what is going on there. And then ensure that the application has been passed the correct database credentials."
+         }
+
+      exceptionFilter :: E.SomeException -> Maybe E.SomeException
+      exceptionFilter e = Just e
+
+remindMeApplication :: HealthcheckApplication
+remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
+
 failCheck :: Healthcheck
 failCheck = do
-   ct <- getCurrentTime
+   ct <- liftIO getCurrentTime
    return $ HealthStatus
       { hsName = T.pack "Failing healthcheck"
       , hsDescription = T.pack "I always fail...that's how this healthcheck rolls."
@@ -58,7 +92,7 @@ failCheck = do
       , hsDocumentation = Nothing
       }
 
-type Healthcheck = IO HealthStatus
+type Healthcheck = AppHandler HealthStatus
 
 data HealthcheckRunResult = HealthcheckRunResult
    { hrrStatus :: [HealthStatus]
