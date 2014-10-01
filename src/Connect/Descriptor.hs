@@ -7,13 +7,11 @@
 -- TODO be more selective about what we export from here
 module Connect.Descriptor where
 
+import AesonHelpers
 import Control.Monad
 import Data.Aeson
 import Data.Aeson.Types
-import qualified Data.Char as C
 import Data.Text
-import Data.Maybe
-import qualified Data.List as L
 import GHC.Generics
 import Network.URI
 
@@ -148,24 +146,6 @@ data JIRACondition
 
 instance ToJSON JIRACondition where
    toJSON = toJSON . dropAndSnakeCase "JiraCondition" . show
-
-dropAndSnakeCase :: String -> String -> String
-dropAndSnakeCase toDrop = camelToSnakeCase . dropCondition toDrop . lowerFirst
-
-lowerFirst :: String -> String
-lowerFirst (x : xs) = C.toLower x : xs
-lowerFirst [] = []
-
-camelToSnakeCase :: String -> String
-camelToSnakeCase input = case L.break C.isUpper input of
-   (first, []) -> first
-   (first, x : xs) -> first ++ ('_' : C.toLower x : camelToSnakeCase xs)
-
-dropCondition :: String -> String -> String
-dropCondition toDrop = L.reverse . try (L.stripPrefix . L.reverse $ toDrop) . L.reverse
-
-try :: (a -> Maybe a) -> a -> a
-try f v = fromMaybe v (f v)
 
 data ConfluenceCondition 
    = ActiveThemeConfluenceCondition
@@ -326,14 +306,6 @@ instance ToJSON WebPanel where
 instance FromJSON URI where
    parseJSON (String uriString) = maybe mzero return (parseURI $ unpack uriString)
    parseJSON _ = mzero
-
-baseOptions :: Options
-baseOptions = defaultOptions
-   { omitNothingFields = True
-   }
-
-stripFieldNamePrefix :: String -> String -> String
-stripFieldNamePrefix pre = lowerFirst . try (L.stripPrefix pre)
 
 defaultLifecycle :: Lifecycle
 defaultLifecycle = Lifecycle
