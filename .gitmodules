@@ -1,6 +1,3 @@
 [submodule "vendor/atlassian-connect"]
 	path = vendor/atlassian-connect
 	url = https://bitbucket.org/ssaasen/atlassian-connect-haskell.git
-[submodule "vendor/hailgun"]
-	path = vendor/hailgun
-	url = git@bitbucket.org:ajknoll/hailgun.git
