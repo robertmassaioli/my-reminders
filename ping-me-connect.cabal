@@ -62,7 +62,8 @@ Executable ping-me-connect
     , http-client               == 0.3.*
     , http-media                == 0.1.*
     , http-types                == 0.8.*
-    , jwt                       == 0.4.*
+    , hostname                  == 1.0
+    , jwt                       >= 0.3     && < 0.5
     , lens                      == 4.*
     , mtl                       == 2.*
     , network                   == 2.4.*
@@ -79,7 +80,7 @@ Executable ping-me-connect
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
     , hailgun                   > 0.1.0.0 && < 0.2
-    , pandoc                    == 1.13.*
+    , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
 
   if flag(development)
@@ -125,6 +126,7 @@ test-suite ping-me-props
     , http-client
     , http-media
     , http-types
+    , hostname
     , jwt
     , lens
     , mtl

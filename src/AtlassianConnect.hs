@@ -32,12 +32,25 @@ addonDescriptor descriptorConfig =
         , disabled = Nothing
         }
     , modules = Just $ Modules JiraModules
-          { webPanels = [ WebPanel
-              { wpKey = "ping-create-panel"
-              , wpName = Name "My reminders"
-              , wpUrl = "/panel/ping/create?issue_key={issue.key}&issue_id={issue.id}"
-              , wpLocation = "atl.jira.view.issue.right.context"
-              }
+          { webPanels = 
+            [ WebPanel
+               { wpKey = "ping-create-panel"
+               , wpName = Name "My reminders"
+               , wpUrl = "/panel/jira/ping/create?issue_key={issue.key}&issue_id={issue.id}"
+               , wpLocation = "atl.jira.view.issue.right.context"
+               , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+               }
+            ]
+          , generalPages = 
+            [ GeneralPage
+               { generalPageName = Name "My Reminders"
+               , generalPageKey = "view-my-reminders"
+               , generalPageUrl = "/panel/jira/reminders/view"
+               -- See: https://developer.atlassian.com/display/JIRADEV/User+Accessible+Locations#UserAccessibleLocations-AddingNewItemstoExistingWebSections
+               , generalPageLocation = Just "system.user.options/personal"
+               , generalPageIcon = Nothing
+               , generalPageWeight = Nothing
+               }
             ]
           }
     , scopes = Just [Read]

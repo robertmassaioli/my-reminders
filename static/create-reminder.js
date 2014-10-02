@@ -1,3 +1,19 @@
+AJS.$.fn.flashClass = function(c, userOptions) {
+   var defaults = {
+      starton: true,
+      timeout: 1500,
+      finishedCallback: null
+   };
+   var options = AJS.$.extend({}, defaults, userOptions);
+
+   var self = this;
+   self.toggleClass(c, options.starton);
+   return setTimeout(function() { 
+      self.toggleClass(c, !options.starton); 
+      options.finishedCallback && options.finishedCallback();
+   }, options.timeout);
+};
+
 AJS.$(function() {
    AJS.log("Create reminder loaded...");
    var queryParams = URI(window.location.href).query(true);
@@ -16,40 +32,11 @@ AJS.$(function() {
       year: "Year"
    };
 
-   var requestUserDetails = function(userkey) {
-      return AJS.$.Deferred(function() {
-         var self = this;
-         AP.request({ 
-            url: "/rest/api/latest/user", 
-            type: "GET",
-            cache: true,   // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
-            data: { 
-               key: userkey
-            },
-            success: self.resolve,
-            fail: self.reject
-         });
-      });
-   };
-
-   var requestIssueDetalis = function(issueKey) {
-      return AJS.$.Deferred(function() {
-         var self = this;
-         AP.request({
-            url: "/rest/api/latest/issue/" + issueKey,
-            type: "GET",
-            cache: true,  // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
-            success: self.resolve,
-            fail: self.reject
-         });
-      });
-   };
-   
    var createReminder = function(timeDelay, timeUnit, message) {
       setCreationState(creationState.creating);
 
-      var userRequest = requestUserDetails(userKey);
-      var issueRequest = requestIssueDetalis(issueKey);
+      var userRequest = HostRequest.userDetails(userKey);
+      var issueRequest = HostRequest.issueDetails(issueKey);
 
       return AJS.$.when(userRequest, issueRequest).then(function(userResponse, issueResponse) {
          var user = JSON.parse(userResponse[0]);
@@ -78,11 +65,12 @@ AJS.$(function() {
             type: "PUT",
             cache: false,
             contentType: "application/json",
+            dataType: "text", 
             data: JSON.stringify(requestData)
          });
 
          request.done(function() {
-            setCreationState(creationState.created);
+            setCreationState(creationState.created, user.emailAddress);
             refreshReminders();
          });
 
@@ -101,6 +89,7 @@ AJS.$(function() {
          url: "/rest/ping",
          type: "DELETE",
          cache: false,
+         dataType: "text",
          data: {
             reminderId: reminderId
          }
@@ -129,13 +118,13 @@ AJS.$(function() {
 
    var timeoutHandle;
 
-   var setCreationState = function(state) {
+   var setCreationState = function(state, emailAddress) {
       var pending = AJS.$("#reminder-creation-pending");
-      var successful = AJS.$("#reminder-creation-success");
       var failure = AJS.$("#reminder-creation-error");
 
       pending.toggleClass("hidden", state !== creationState.creating);
-      successful.toggleClass("hidden", state !== creationState.created);
+      if(emailAddress) AJS.$("#success-message .email").text(emailAddress);
+      AJS.$("#success-message").toggleClass("hidden", state !== creationState.created); 
       failure.toggleClass("hidden", state !== creationState.failed);
 
       if(timeoutHandle) {
@@ -146,7 +135,7 @@ AJS.$(function() {
       if(state === creationState.created || state == creationState.failed) {
          timeoutHandle = setTimeout(function() {
             setCreationState(creationState.notCreating);
-         }, 1500);
+         }, 3000);
       }
    };
 
@@ -183,12 +172,13 @@ AJS.$(function() {
          url: "/rest/pings", 
          type: "GET", 
          cache: false,
+         dataType: "text",
          data: {
             issueId: issueId
          }
       });
 
-      currentUserRequest = requestUserDetails(userKey);
+      currentUserRequest = HostRequest.userDetails(userKey);
 
       AJS.$.when(currentRemindersRequest, currentUserRequest).done(function(pingsResponse, userResponse) {
          currentRemindersRequest = null;
@@ -298,10 +288,7 @@ AJS.$(function() {
          });
 
          deleteRequest.fail(function() {
-            $reminder.addClass("error");
-            setTimeout(function() {
-               $reminder.removeClass("error");
-            }, 1500);
+            $reminder.flashClass("error");
          });
       });
 
