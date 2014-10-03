@@ -37,6 +37,10 @@ RUN cabal update && cabal install cabal-install
 # Initiate the build environment and build the executable (assumes that the
 # atlassian-connect-haskell source can be found in the vendor/atlassian-connect directory AND that
 # it has not been released to hackage yet (which is really where it should live).
+#
+# IMPORTANT: This must produce a statically-compiled binary (with respect to
+# Cabal dependencies) that does not depend on a local cabal installation. The
+# production Docker image will not run a cabal install.
 RUN cabal sandbox init && cabal sandbox add-source vendor/atlassian-connect && cabal install
 
 # Setup the default command to run for the container.
