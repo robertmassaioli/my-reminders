@@ -18,8 +18,10 @@ import qualified Data.Text as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple (SqlError(..))
 import           GHC.Generics
+import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Tenant (getTenantCount)
+import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
 import           SnapHelpers
 
@@ -37,12 +39,14 @@ getHealthcheckRequest = do
       respondWith serviceUnavaliable
    else
       respondNoContent
-   -- Run the healthchecks in IO collate the results and return them
 
+-- Important: This is our curated list of healthchecks. Anything in this list will run as a
+-- healthcheck for this service.
 curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks = 
    [ databaseHealthCheck
-   --, failCheck
+   , mailgunHealthcheck
+   , failCheck
    ]
 
 runHealthchecks :: [Healthcheck] -> AppHandler HealthcheckRunResult
@@ -72,8 +76,32 @@ databaseHealthCheck = do
             ++ "what is going on there. And then ensure that the application has been passed the correct database credentials."
          }
 
-      exceptionFilter :: E.SomeException -> Maybe E.SomeException
-      exceptionFilter e = Just e
+exceptionFilter :: E.SomeException -> Maybe E.SomeException
+exceptionFilter e = Just e
+
+mailgunHealthcheck :: Healthcheck
+mailgunHealthcheck = do
+   currentTime <- liftIO getCurrentTime
+   hailgunContext <- fmap RC.rmHailgunContext RC.getRMConf
+   result <- tryJust exceptionFilter (liftIO $ getDomains hailgunContext smallPage)
+   return $ status (either (Just . show) (either (Just . herMessage) (const Nothing)) result) currentTime
+   where
+      status :: Maybe String -> UTCTime -> HealthStatus
+      status potentialException currentTime = HealthStatus
+         { hsName = T.pack "Mailgun Connection Check"
+         , hsDescription = T.pack "Ensures that this service can connect to the the Mailgun service so that we can send reminder emails successfully."
+         , hsIsHealthy = isNothing $ potentialException
+         , hsFailureReason = do
+             exception <- potentialException
+             return . T.pack $ "Could not connect to the Mailgun service. Addon will not work correctly. Message: " ++ show exception
+         , hsApplication = remindMeApplication
+         , hsTime = currentTime
+         , hsSeverity = CRITICAL
+         , hsDocumentation = Just . T.pack $ "If you see this error you might want to check out the Mailgun status page to see if they are having problems: http://status.mailgun.com/. "
+            ++ "Otherwise you should check that the mailgun credentials are correct and, if they are, then contact Mailgun support for help."
+         }
+
+      smallPage = Page 0 3
 
 remindMeApplication :: HealthcheckApplication
 remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
