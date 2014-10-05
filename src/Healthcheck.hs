@@ -46,7 +46,7 @@ curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks = 
    [ databaseHealthCheck
    , mailgunHealthcheck
-   , failCheck
+   --, failCheck
    ]
 
 runHealthchecks :: [Healthcheck] -> AppHandler HealthcheckRunResult
@@ -106,6 +106,8 @@ mailgunHealthcheck = do
 remindMeApplication :: HealthcheckApplication
 remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
 
+{-
+-- This Healthcheck remains for testing purposes
 failCheck :: Healthcheck
 failCheck = do
    ct <- liftIO getCurrentTime
@@ -119,6 +121,7 @@ failCheck = do
       , hsSeverity = UNDEFINED
       , hsDocumentation = Nothing
       }
+-}
 
 type Healthcheck = AppHandler HealthStatus
 
