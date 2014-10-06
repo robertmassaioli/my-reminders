@@ -7,7 +7,6 @@ module Healthcheck
 import           Application
 import           AesonHelpers (baseOptions, stripFieldNamePrefix)
 import           Control.Applicative ((<$>))
-import           Control.Concurrent.ParallelIO.Local (parallel, withPool)
 import qualified Control.Exception as E
 import           Control.Monad.CatchIO (tryJust)
 import           Control.Monad.IO.Class (liftIO)
@@ -16,7 +15,6 @@ import           Data.Aeson.Types
 import           Data.Maybe (isNothing)
 import qualified Data.Text as T
 import           Data.Time.Clock
-import           Database.PostgreSQL.Simple (SqlError(..))
 import           GHC.Generics
 import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
