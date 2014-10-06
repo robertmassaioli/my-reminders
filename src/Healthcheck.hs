@@ -65,7 +65,7 @@ databaseHealthCheck = do
       status potentialException currentTime = HealthStatus
          { hsName = T.pack "Database Connection Check"
          , hsDescription = T.pack "Ensures that this service can connect to the PostgreSQL Relational Database that contains all of the Reminders."
-         , hsIsHealthy = isNothing $ potentialException
+         , hsIsHealthy = isNothing potentialException
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Could not connect to the remote database. Addon will not work correctly. Message: " ++ show exception
@@ -75,9 +75,6 @@ databaseHealthCheck = do
          , hsDocumentation = Just . T.pack $ "If you see this error you might want to check out the database and see "
             ++ "what is going on there. And then ensure that the application has been passed the correct database credentials."
          }
-
-exceptionFilter :: E.SomeException -> Maybe E.SomeException
-exceptionFilter e = Just e
 
 mailgunHealthcheck :: Healthcheck
 mailgunHealthcheck = do
@@ -90,7 +87,7 @@ mailgunHealthcheck = do
       status potentialException currentTime = HealthStatus
          { hsName = T.pack "Mailgun Connection Check"
          , hsDescription = T.pack "Ensures that this service can connect to the the Mailgun service so that we can send reminder emails successfully."
-         , hsIsHealthy = isNothing $ potentialException
+         , hsIsHealthy = isNothing potentialException
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Could not connect to the Mailgun service. Addon will not work correctly. Message: " ++ show exception
@@ -123,6 +120,12 @@ failCheck = do
       }
 -}
 
+
+-- TODO: For now we just catch everything but in the future we might choose to be more
+-- selective...maybe.
+exceptionFilter :: E.SomeException -> Maybe E.SomeException
+exceptionFilter = Just
+
 type Healthcheck = AppHandler HealthStatus
 
 data HealthcheckRunResult = HealthcheckRunResult
@@ -130,7 +133,7 @@ data HealthcheckRunResult = HealthcheckRunResult
    }
 
 instance ToJSON HealthcheckRunResult where
-   toJSON hrr@(HealthcheckRunResult {}) = object [ (T.pack "status") .= hrrStatus hrr ]
+   toJSON hrr@(HealthcheckRunResult {}) = object [ T.pack "status" .= hrrStatus hrr ]
 
 data HealthStatus = HealthStatus
    { hsName             :: T.Text
