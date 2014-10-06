@@ -199,24 +199,3 @@ data HealthStatusSeverity
    deriving(Eq, Ord, Show, Generic)
 
 instance ToJSON HealthStatusSeverity
-
-{-
- - Example healthcheck response
-
-{
-    "status": [
-        {
-            "name": "Add-on Group Health Check",
-            "description": "This was provided by plugin 'com.atlassian.plugins.atlassian-connect-plugin:addonsGroupHealthCheck' via class 'com.atlassian.plugin.connect.healthcheck.AtlassianAddonsGroupHealthCheck'",
-            "isHealthy": true,
-            "failureReason": "",
-            "application": "Plugin",
-            "time": 1412117623809,
-            "severity": "UNDEFINED",
-            "documentation": ""
-        },
-        ...
-    ]
-}
-
--}
