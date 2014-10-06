@@ -107,6 +107,8 @@ mailgunHealthcheck = do
 
       smallPage = Page 0 3
 
+-- The purpose of this Healthcheck is to ensure that the third party that is supposed to be
+-- triggering expiry is actually doing it's job.
 expiryHealthcheck :: Healthcheck 
 expiryHealthcheck = do
    currentTime <- liftIO getCurrentTime
