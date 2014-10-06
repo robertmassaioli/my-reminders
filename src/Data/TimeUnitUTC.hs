@@ -7,7 +7,7 @@ import Data.Time.Units
 import Data.Time.Clock
 
 timeUnitToDiffTime :: TimeUnit a => a -> NominalDiffTime
-timeUnitToDiffTime t = fromInteger $ (toMicroseconds t) `div` microsecondsPerSecond
+timeUnitToDiffTime t = fromInteger $ toMicroseconds t `div` microsecondsPerSecond
 
 diffTimeToTimeUnit :: NominalDiffTime -> Second
 diffTimeToTimeUnit t = fromMicroseconds . floor $ t * fromInteger microsecondsPerSecond

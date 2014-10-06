@@ -121,7 +121,7 @@ expiryHealthcheck = do
       status potentialException currentTime windowSize = HealthStatus
          { hsName = T.pack "Expiry Window Exceeded Healthcheck"
          , hsDescription = T.pack $ "Ensures that reminders are sent in a timely manner and not outside a window of size: " ++ show windowSize
-         , hsIsHealthy = isNothing $ potentialException
+         , hsIsHealthy = isNothing potentialException
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Reminders are not being sent in a timely manner. Addon is not working correctly. Message: " ++ show exception
