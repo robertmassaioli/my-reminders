@@ -16,11 +16,14 @@ import           Data.Aeson.Types
 import           Data.Maybe (isNothing)
 import qualified Data.Text as T
 import           Data.Time.Clock
+import qualified Data.Time.Units as DTU
+import           Data.TimeUnitUTC
 import           Database.PostgreSQL.Simple (SqlError(..))
 import           GHC.Generics
 import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Tenant (getTenantCount)
+import           Persistence.Ping (getExpiredReminders)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
 import           SnapHelpers
@@ -46,6 +49,7 @@ curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks = 
    [ databaseHealthCheck
    , mailgunHealthcheck
+   , expiryHealthcheck
    --, failCheck
    ]
 
@@ -102,6 +106,36 @@ mailgunHealthcheck = do
          }
 
       smallPage = Page 0 3
+
+expiryHealthcheck :: Healthcheck 
+expiryHealthcheck = do
+   currentTime <- liftIO getCurrentTime
+   expiryWindowMaxMinutes <- fmap RC.rmMaxExpiryWindowMinutes RC.getRMConf
+   let expireTime = addUTCTime (negate $ timeUnitToDiffTime expiryWindowMaxMinutes) currentTime
+   result <- tryJust exceptionFilter (withConnection $ getExpiredReminders expireTime)
+   return $ case result of
+      Left e -> status (Just . show $ e) currentTime expiryWindowMaxMinutes
+      Right reminders -> 
+         if null reminders
+            then status Nothing currentTime expiryWindowMaxMinutes
+            else status (Just $ "The number of reminders outside the window is: " ++ (show . length $ reminders)) currentTime expiryWindowMaxMinutes
+   where 
+      status :: (DTU.TimeUnit a, Show a) => Maybe String -> UTCTime -> a -> HealthStatus
+      status potentialException currentTime windowSize = HealthStatus
+         { hsName = T.pack "Expiry Window Exceeded Healthcheck"
+         , hsDescription = T.pack $ "Ensures that reminders are sent in a timely manner and not outside a window of size: " ++ show windowSize
+         , hsIsHealthy = isNothing $ potentialException
+         , hsFailureReason = do
+             exception <- potentialException
+             return . T.pack $ "Reminders are not being sent in a timely manner. Addon is not working correctly. Message: " ++ show exception
+         , hsApplication = remindMeApplication
+         , hsTime = currentTime
+         , hsSeverity = CRITICAL
+         , hsDocumentation = Just . T.pack $ "If you see this error start by making sure that the database healthcheck succeeds. If it does then "
+            ++ "check that the service that triggers the expiry handler has been firing correctly. Likely to be Easy Cron (http://www.easycron.com)."
+            ++ "After that contact the developers for further aid."
+         }
+         
 
 remindMeApplication :: HealthcheckApplication
 remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
