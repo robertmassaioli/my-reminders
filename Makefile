@@ -7,6 +7,7 @@ NAME="ping-me-connect"
 
 dev: $(SOURCE)
 			cabal install -f development
+
 setup:
 			cabal sandbox init
 			cabal sandbox add-source vendor/atlassian-connect
