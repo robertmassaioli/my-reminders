@@ -90,20 +90,21 @@ atlassianConnectHandler = do
 
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
-   connectData <- CD.getConnect
    request <- SC.readRequestBody (1024 * 10)
-   let validHosts = CD.connectHostWhitelist connectData
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
-   maybe SH.respondBadRequest (\tenantInfo -> do
-       let validHost = validHostName validHosts tenantInfo
-       mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
-       if isJust mTenantId
-       then SH.respondNoContent
-       else if validHost
-            then SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
-            else SH.respondWithError SH.unauthorised ("This host was not part of the supported list of hosts that this connect addon can be installed on. Contact the developers of this Addon." ++ show (tenantAuthority =<< mTenantInfo))
-      ) mTenantInfo
+   maybe SH.respondBadRequest installedHandlerWithTenant mTenantInfo
 
+installedHandlerWithTenant :: LifecycleResponse -> SS.Handler b App ()
+installedHandlerWithTenant tenantInfo = do
+   validHosts <- fmap CD.connectHostWhitelist CD.getConnect
+   if validHostName validHosts tenantInfo
+      then insertTenantInfo tenantInfo >>= maybe tenantInsertionFailedResponse (const SH.respondNoContent)
+      else domainNotSupportedResponse
+   where
+      tenantInsertionFailedResponse = SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
+      domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
+
+insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
