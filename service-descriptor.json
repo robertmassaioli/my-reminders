@@ -1,0 +1,34 @@
+{
+   "description": "Remind me for Cloud allows you to set reminders on issues.",
+   "id": "remind-me-for-cloud",
+   "name": "Remind me for Cloud",
+   "externalAccess": true,
+   "links": {
+      "binary": {
+         "name": "atlassian/remindme",
+         "type": "image"
+      },
+      "healthcheck": {
+         "uri": "/rest/healthcheck"
+      },
+      "source": {
+         "url": "https://bitbucket.org/eerok/ping-me-connect"
+      }
+   },
+   "owners": [
+      "rmassaioli@atlassian.com",
+      "aknoll@atlassian.com",
+      "ekaukonen@atlassian.com"
+   ],
+   "notifications": {
+      "pagerduty": {
+         "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/${CLOUDWATCH_KEY}",
+         "apikey": "${PAGERDUTY_API_KEY}"
+      },
+      "email": "rmassaioli@atlassian.com" 
+   },
+   "scalaing": {
+      "min": 1
+   },
+   "downstreamServices": []
+}
