@@ -7,6 +7,7 @@ module Persistence.Tenant (
     lookupTenant
   , insertTenantInformation
   , removeTenantInformation
+  , getTenantCount
   , Tenant(..)
   , TenantKey
   , LifecycleResponse(..)
@@ -168,3 +169,10 @@ getClientKeyForBaseUrl conn baseUrl = do
       [] -> return Nothing
       [x] -> return . Just $ x
       _ -> error "There has been a problem in the database model and the baseURl is not unique. Database constraint failure."
+
+getTenantCount :: Connection -> IO Int64
+getTenantCount conn = do
+   counts <- liftIO $ query_ conn [sql|
+      SELECT count(*) FROM tenant
+   |]
+   return . fromOnly . head $ counts

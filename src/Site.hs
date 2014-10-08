@@ -35,6 +35,7 @@ import qualified Persistence.Tenant as PT
 import qualified RemindMeConfiguration as RC
 import           PingHandlers
 import           ExpireHandlers
+import           Healthcheck
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
@@ -105,6 +106,7 @@ applicationRoutes =
   , ("/rest/pings"        , handleMultiPings)
   , ("/rest/user/reminders", handleUserReminders)
   , ("/rest/expire"       , handleExpireRequest)
+  , ("/rest/healthcheck"  , healthcheckRequest)
   , ("/static"            , serveDirectory "static")
   ]
 
