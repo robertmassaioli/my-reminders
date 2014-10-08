@@ -15,7 +15,6 @@ import           Connect.Descriptor           (Name (..))
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import qualified Control.Monad                as CM
-import           Control.Monad.IO.Class       (liftIO)
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BLC
 import qualified Data.CaseInsensitive         as CI
@@ -23,7 +22,6 @@ import           Data.Char                    as DC
 import           Data.List
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
-import           Network.HostName
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
@@ -108,14 +106,15 @@ insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
-validHostName validHosts tenantInfo = isJust maybeValidhost where
-    compare authority elem = map DC.toLower (T.unpack elem) == map DC.toLower (uriRegName authority)
-    maybeValidhost = do
-      authority <- tenantAuthority tenantInfo
-      find (compare authority) validHosts
+validHostName validHosts tenantInfo = isJust maybeValidhost 
+   where
+      authorityMatchHost auth host = map DC.toLower (T.unpack host) == map DC.toLower (uriRegName auth)
+      maybeValidhost = do
+         auth <- tenantAuthority tenantInfo
+         find (authorityMatchHost auth) validHosts
 
 tenantAuthority :: LifecycleResponse -> Maybe URIAuth
-tenantAuthority = uriAuthority . baseUrl'
+tenantAuthority = uriAuthority . lrBaseUrl
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()

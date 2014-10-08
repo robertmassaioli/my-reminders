@@ -35,16 +35,16 @@ import           Persistence.PostgreSQL
 type ClientKey = T.Text
 
 data LifecycleResponse = LifecycleResponseInstalled {
-    key'           :: T.Text
-  , clientKey'     :: ClientKey
-  , publicKey'     :: T.Text
-  , sharedSecret'  :: Maybe T.Text
-  , serverVersion  :: Maybe T.Text
-  , pluginsVersion :: Maybe T.Text
-  , baseUrl'       :: URI
-  , productType'   :: Maybe T.Text
-  , description    :: Maybe T.Text
-  , eventType      :: Maybe T.Text
+    lrKey           :: T.Text
+  , lrClientKey     :: ClientKey
+  , lrPublicKey     :: T.Text
+  , lrSharedSecret  :: Maybe T.Text
+  , lrServerVersion  :: Maybe T.Text
+  , lrPluginsVersion :: Maybe T.Text
+  , lrBaseUrl       :: URI
+  , lrProductType   :: Maybe T.Text
+  , lrDescription    :: Maybe T.Text
+  , lrEventType      :: Maybe T.Text
 } deriving (Eq, Show, Generic)
 
 
@@ -118,28 +118,28 @@ insertTenantInformation
    -> LifecycleResponse
    -> IO (Maybe Integer)
 insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
-   let newClientKey = clientKey' lri
-   let newBaseUri = baseUrl' lri
+   let newClientKey = lrClientKey lri
+   let newBaseUri = lrBaseUrl lri
    oldClientKey <- getClientKeyForBaseUrl conn newBaseUri
    existingTenant <- lookupTenant conn newClientKey
    let newAndOldKeysEqual = fmap (== newClientKey) oldClientKey
    case (existingTenant, newAndOldKeysEqual) of
       -- The base url is already being used by somebody else TODO should warn about this in production
-      (_          , Just False) -> return Nothing 
+      (_, Just False) -> return Nothing 
       -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
-      (Nothing    , Just True)  -> error "This is a contradiction in state, we both could and could not find clientKeys." 
+      (Nothing, Just True)  -> error "This is a contradiction in state, we both could and could not find clientKeys." 
       -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
-      (Nothing    , Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri 
+      (Nothing, Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri 
       -- We have seen this tenant before but we may have new information for it. Update it.
       (Just tenant, _) -> do
          updateTenantDetails conn newTenant
          return . Just . tenantId $ tenant
          where
             newTenant = tenant
-               { publicKey = publicKey' lri 
-               , sharedSecret = fromMaybe (sharedSecret tenant) (sharedSecret' lri)
-               , baseUrl = baseUrl' lri 
-               , productType = fromMaybe (productType tenant) (productType' lri)
+               { publicKey = lrPublicKey lri 
+               , sharedSecret = fromMaybe (sharedSecret tenant) (lrSharedSecret lri)
+               , baseUrl = lrBaseUrl lri 
+               , productType = fromMaybe (productType tenant) (lrProductType lri)
                }
 
 updateTenantDetails :: Connection -> Tenant -> IO Int64
@@ -158,7 +158,7 @@ rawInsertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
    (fmap join) . liftIO $ insertReturning conn [sql|
       INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
       VALUES (?, ?, ?, ?, ?) RETURNING id
-   |] (clientKey' lri, publicKey' lri, sharedSecret' lri, show $ baseUrl' lri, productType' lri)
+   |] (lrClientKey lri, lrPublicKey lri, lrSharedSecret lri, show $ lrBaseUrl lri, lrProductType lri)
 
 getClientKeyForBaseUrl :: Connection -> URI -> IO (Maybe ClientKey)
 getClientKeyForBaseUrl conn baseUrl = do
