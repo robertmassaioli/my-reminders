@@ -8,7 +8,7 @@ import           Application
 import           AesonHelpers (baseOptions, stripFieldNamePrefix)
 import           Control.Applicative ((<$>))
 import qualified Control.Exception as E
-import           Control.Monad.CatchIO (tryJust)
+import           Control.Monad.CatchIO (MonadCatchIO(..), tryJust)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Aeson.Types
@@ -57,10 +57,13 @@ runHealthchecks healthchecks = HealthcheckRunResult <$> sequence healthchecks
 anyHealthcheckFailed :: HealthcheckRunResult -> Bool
 anyHealthcheckFailed (HealthcheckRunResult statuses) = any (not . hsIsHealthy) statuses
 
+simpleCatch :: (MonadCatchIO m, Functor m) => m a -> m (Either E.SomeException a)
+simpleCatch = tryJust exceptionFilter
+
 databaseHealthCheck :: Healthcheck
 databaseHealthCheck = do
    currentTime <- liftIO getCurrentTime
-   result <- tryJust exceptionFilter (withConnection getTenantCount)
+   result <- simpleCatch (withConnection getTenantCount)
    return $ status (either Just (const Nothing) result) currentTime
    where
       status :: E.Exception e => Maybe e -> UTCTime -> HealthStatus
@@ -82,7 +85,7 @@ mailgunHealthcheck :: Healthcheck
 mailgunHealthcheck = do
    currentTime <- liftIO getCurrentTime
    hailgunContext <- fmap RC.rmHailgunContext RC.getRMConf
-   result <- tryJust exceptionFilter (liftIO $ getDomains hailgunContext smallPage)
+   result <- simpleCatch (liftIO $ getDomains hailgunContext smallPage)
    return $ status (either (Just . show) (either (Just . herMessage) (const Nothing)) result) currentTime
    where
       status :: Maybe String -> UTCTime -> HealthStatus
@@ -103,13 +106,13 @@ mailgunHealthcheck = do
       smallPage = Page 0 3
 
 -- The purpose of this Healthcheck is to ensure that the third party that is supposed to be
--- triggering expiry is actually doing it's job.
+-- triggering expiry is actually doing its job.
 expiryHealthcheck :: Healthcheck 
 expiryHealthcheck = do
    currentTime <- liftIO getCurrentTime
    expiryWindowMaxMinutes <- fmap RC.rmMaxExpiryWindowMinutes RC.getRMConf
    let expireTime = addUTCTime (negate $ timeUnitToDiffTime expiryWindowMaxMinutes) currentTime
-   result <- tryJust exceptionFilter (withConnection $ getExpiredReminders expireTime)
+   result <- simpleCatch (withConnection $ getExpiredReminders expireTime)
    return $ case result of
       Left e -> status (Just . show $ e) currentTime expiryWindowMaxMinutes
       Right reminders -> 
