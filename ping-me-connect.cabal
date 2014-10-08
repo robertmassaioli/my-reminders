@@ -83,6 +83,7 @@ Executable ping-me-connect
     , hailgun                   >= 0.1.1.0 && < 0.2
     , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
+    , time-units                == 1.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts

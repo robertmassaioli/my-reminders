@@ -8,17 +8,20 @@ import           Application
 import           AesonHelpers (baseOptions, stripFieldNamePrefix)
 import           Control.Applicative ((<$>))
 import qualified Control.Exception as E
-import           Control.Monad.CatchIO (tryJust)
+import           Control.Monad.CatchIO (MonadCatchIO(..), tryJust)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Aeson.Types
 import           Data.Maybe (isNothing)
 import qualified Data.Text as T
 import           Data.Time.Clock
+import qualified Data.Time.Units as DTU
+import           Data.TimeUnitUTC
 import           GHC.Generics
 import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Tenant (getTenantCount)
+import           Persistence.Ping (getExpiredReminders)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
 import           SnapHelpers
@@ -44,6 +47,7 @@ curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks = 
    [ databaseHealthCheck
    , mailgunHealthcheck
+   , expiryHealthcheck
    --, failCheck
    ]
 
@@ -53,10 +57,13 @@ runHealthchecks healthchecks = HealthcheckRunResult <$> sequence healthchecks
 anyHealthcheckFailed :: HealthcheckRunResult -> Bool
 anyHealthcheckFailed (HealthcheckRunResult statuses) = any (not . hsIsHealthy) statuses
 
+simpleCatch :: (MonadCatchIO m, Functor m) => m a -> m (Either E.SomeException a)
+simpleCatch = tryJust exceptionFilter
+
 databaseHealthCheck :: Healthcheck
 databaseHealthCheck = do
    currentTime <- liftIO getCurrentTime
-   result <- tryJust exceptionFilter (withConnection getTenantCount)
+   result <- simpleCatch (withConnection getTenantCount)
    return $ status (either Just (const Nothing) result) currentTime
    where
       status :: E.Exception e => Maybe e -> UTCTime -> HealthStatus
@@ -78,7 +85,7 @@ mailgunHealthcheck :: Healthcheck
 mailgunHealthcheck = do
    currentTime <- liftIO getCurrentTime
    hailgunContext <- fmap RC.rmHailgunContext RC.getRMConf
-   result <- tryJust exceptionFilter (liftIO $ getDomains hailgunContext smallPage)
+   result <- simpleCatch (liftIO $ getDomains hailgunContext smallPage)
    return $ status (either (Just . show) (either (Just . herMessage) (const Nothing)) result) currentTime
    where
       status :: Maybe String -> UTCTime -> HealthStatus
@@ -97,6 +104,38 @@ mailgunHealthcheck = do
          }
 
       smallPage = Page 0 3
+
+-- The purpose of this Healthcheck is to ensure that the third party that is supposed to be
+-- triggering expiry is actually doing its job.
+expiryHealthcheck :: Healthcheck 
+expiryHealthcheck = do
+   currentTime <- liftIO getCurrentTime
+   expiryWindowMaxMinutes <- fmap RC.rmMaxExpiryWindowMinutes RC.getRMConf
+   let expireTime = addUTCTime (negate $ timeUnitToDiffTime expiryWindowMaxMinutes) currentTime
+   result <- simpleCatch (withConnection $ getExpiredReminders expireTime)
+   return $ case result of
+      Left e -> status (Just . show $ e) currentTime expiryWindowMaxMinutes
+      Right reminders -> 
+         if null reminders
+            then status Nothing currentTime expiryWindowMaxMinutes
+            else status (Just $ "The number of reminders outside the window is: " ++ (show . length $ reminders)) currentTime expiryWindowMaxMinutes
+   where 
+      status :: (DTU.TimeUnit a, Show a) => Maybe String -> UTCTime -> a -> HealthStatus
+      status potentialException currentTime windowSize = HealthStatus
+         { hsName = T.pack "Expiry Window Exceeded Healthcheck"
+         , hsDescription = T.pack $ "Ensures that reminders are sent in a timely manner and not outside a window of size: " ++ show windowSize
+         , hsIsHealthy = isNothing potentialException
+         , hsFailureReason = do
+             exception <- potentialException
+             return . T.pack $ "Reminders are not being sent in a timely manner. Addon is not working correctly. Message: " ++ show exception
+         , hsApplication = remindMeApplication
+         , hsTime = currentTime
+         , hsSeverity = CRITICAL
+         , hsDocumentation = Just . T.pack $ "If you see this error start by making sure that the database healthcheck succeeds. If it does then "
+            ++ "check that the service that triggers the expiry handler has been firing correctly. Likely to be Easy Cron (http://www.easycron.com)."
+            ++ "After that contact the developers for further aid."
+         }
+         
 
 remindMeApplication :: HealthcheckApplication
 remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
@@ -163,24 +202,3 @@ data HealthStatusSeverity
    deriving(Eq, Ord, Show, Generic)
 
 instance ToJSON HealthStatusSeverity
-
-{-
- - Example healthcheck response
-
-{
-    "status": [
-        {
-            "name": "Add-on Group Health Check",
-            "description": "This was provided by plugin 'com.atlassian.plugins.atlassian-connect-plugin:addonsGroupHealthCheck' via class 'com.atlassian.plugin.connect.healthcheck.AtlassianAddonsGroupHealthCheck'",
-            "isHealthy": true,
-            "failureReason": "",
-            "application": "Plugin",
-            "time": 1412117623809,
-            "severity": "UNDEFINED",
-            "documentation": ""
-        },
-        ...
-    ]
-}
-
--}

@@ -7,24 +7,26 @@ module Model.UserDetails
    , ProductErrorResponse(..)
    ) where
  
-import Application
+import           Application
 import qualified Connect.AtlassianTypes as AT
-import Data.Aeson
+import           Data.Aeson
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.Map as M (Map, fromList)
+import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Time.Clock.POSIX as P
-import Data.Maybe
+import           Data.Time.Units (Minute)
+import           Data.TimeUnitUTC (timeUnitToDiffTime)
 import qualified Control.Monad.IO.Class as MI
 import qualified Connect.Descriptor as CD
 import qualified Connect.Data as CDT
 import qualified Persistence.Tenant as PT
-import GHC.Generics
-import Network.URI
-import Network.HTTP.Client
-import Network.HTTP.Types
-import Network.Api.Support
-import qualified Data.Map as M (Map, fromList)
+import           GHC.Generics
+import           Network.URI
+import           Network.HTTP.Client
+import           Network.HTTP.Types
+import           Network.Api.Support
 
 import qualified Web.JWT as JWT
 import Web.Connect.QueryStringHash
@@ -70,7 +72,7 @@ generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourU
     
     claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI pluginKey
                               , JWT.iat = JWT.intDate currentTime
-                              , JWT.exp = JWT.intDate (currentTime + expiryPeriodSeconds)
+                              , JWT.exp = JWT.intDate (currentTime + timeUnitToDiffTime expiryPeriod)
                               , JWT.sub = Nothing
                               , JWT.aud = Nothing
                               , JWT.nbf = Nothing
@@ -78,11 +80,8 @@ generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourU
                               , JWT.unregisteredClaims = M.fromList [("qsh", String $ fromJust queryStringHash)] -- TODO fromJust is horrible. Remove it's use.
                               }
 
-    expiryPeriodSeconds :: Num a => a
-    expiryPeriodSeconds = minutesToSeconds 3
-
-minutesToSeconds :: (Num a) => a -> a
-minutesToSeconds = (*) 60
+    expiryPeriod :: Minute
+    expiryPeriod = 3
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
 responder 200 body = case eitherDecode body of

@@ -9,13 +9,15 @@ module RemindMeConfiguration
 import           ConfigurationHelpers
 import qualified Control.Monad.IO.Class as MI
 import qualified Data.Configurator.Types as DCT
+import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
 import qualified Snap.Snaplet as SS
 
 data RMConf = RMConf
-   { rmExpireKey :: String
-   , rmHailgunContext :: HailgunContext
-   , rmFromAddress :: UnverifiedEmailAddress
+   { rmExpireKey              :: String
+   , rmHailgunContext         :: HailgunContext
+   , rmFromAddress            :: UnverifiedEmailAddress
+   , rmMaxExpiryWindowMinutes :: DTU.Minute
    }
 
 class HasRMConf m where
@@ -27,10 +29,11 @@ initRMConf = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration a
 
 loadRMConf :: DCT.Config -> IO RMConf
 loadRMConf config = do
-   expiryKey <- require config "expiry_key" "Missing an expiry key for triggering the reminders."
+   expiryKey <- require config "expiry-key" "Missing an expiry key for triggering the reminders."
    mailgunDomain <- require config "mailgun-domain" "Missing Mailgun domain required to send emails."
    mailgunApiKey <- require config "mailgun-api-key" "Missing Mailgun api key required to send emails."
    fromAddress <- require config "reminder-from-address" "Missing a from address for the reminder. Required for the inboxes of our customers."
+   maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "The Expiry Window Max Minutes is required; it tracks how many minutes after expiry we should wait till we fail a healthcheck."
    return RMConf 
       { rmExpireKey = expiryKey
       , rmHailgunContext = HailgunContext
@@ -38,4 +41,5 @@ loadRMConf config = do
          , hailgunApiKey = mailgunApiKey
          }
       , rmFromAddress = fromAddress
+      , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
       }
