@@ -32,21 +32,10 @@ handleExpireRequest = handleMethods
 -- current timestamp (within the day) and turn it of for testing. 
 -- TODO Each timestamp should only be processed once. Need to ensure that this is thread safe.
 expireForTimestamp :: AppHandler ()
-expireForTimestamp = do
-   potentialExpireKey <- SC.getQueryParam "key"
-   potentialRawTimestamp <- SC.getQueryParam "timestamp"
-   let potentialTimestamp = (read . BC.unpack) <$> potentialRawTimestamp :: Maybe Integer
-   case (potentialExpireKey, potentialTimestamp) of
-      (Nothing, _) -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
-      (_      , Nothing) -> respondWithError badRequest "You need to provide a timestamp for expiry to work."
-      (Just expireKey, Just timestamp) -> do
-         rmConf <- RC.getRMConf
-         if RC.rmExpireKey rmConf /= BC.unpack expireKey
-            then respondWithError forbidden "You lack the required permissions."
-            else SS.with db (withConnection $ expireUsingTimestamp (integerPosixToUTCTime timestamp) rmConf)
-
-integerPosixToUTCTime :: Integer -> UTCTime
-integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+expireForTimestamp = getKeyAndConfirm RC.rmExpireKey $ do
+   currentTime <- getTimestampOrCurrentTime
+   rmConf <- RC.getRMConf
+   SS.with db (withConnection $ expireUsingTimestamp currentTime rmConf)
 
 expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
 expireUsingTimestamp timestamp rmConf conn = do
