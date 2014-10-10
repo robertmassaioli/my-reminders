@@ -17,7 +17,8 @@ import qualified Control.Arrow                as ARO
 import qualified Control.Monad                as CM
 import           Control.Monad.IO.Class       (liftIO)
 import qualified Data.Aeson                   as A
-import qualified Data.ByteString.Char8        as BLC
+import qualified Data.ByteString.Char8        as BC
+import qualified Data.ByteString.Lazy.Char8   as BLC
 import qualified Data.CaseInsensitive         as CI
 import           Data.Char                    as DC
 import           Data.List
@@ -28,6 +29,7 @@ import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
 import           Persistence.Tenant
+import           Persistence.DormantTenant    as DT
 import qualified Snap.Core                    as SC
 import qualified Snap.Snaplet                 as SS
 import qualified SnapHelpers                  as SH
@@ -56,7 +58,7 @@ homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT se
     sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
     (Just jsonMT) = parseMediaType ApplicationJson
     (Just textHtmlMT) = parseMediaType TextHtml
-    parseMediaType = NM.parse . BLC.pack . show
+    parseMediaType = NM.parse . BC.pack . show
 
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
@@ -64,17 +66,17 @@ ourAccept mediaType action = do
   CM.unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
   action
   where
-    bsAccept :: CI.CI BLC.ByteString
-    bsAccept = CI.mk . BLC.pack $ "Accept"
+    bsAccept :: CI.CI BC.ByteString
+    bsAccept = CI.mk . BC.pack $ "Accept"
 
-connectRoutes :: [(BLC.ByteString, SS.Handler App App ())]
-connectRoutes = fmap (ARO.first BLC.pack) simpleConnectRoutes
+connectRoutes :: [(BC.ByteString, SS.Handler App App ())]
+connectRoutes = fmap (ARO.first BC.pack) simpleConnectRoutes
 
 simpleConnectRoutes :: [(String, SS.Handler App App ())]
 simpleConnectRoutes =
   [ ("/atlassian-connect.json" , atlassianConnectHandler)
   , ("/installed"          , installedHandler)
-  --, ("/uninstalled"        , uninstalledHandler
+  , ("/uninstalled"        , uninstalledHandler)
   ]
 
 atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
@@ -114,16 +116,41 @@ validHostName validHosts tenantInfo = isJust maybeValidhost where
       authority <- uriAuthority uri
       find (compare authority) validHosts
 
+{-
+{
+  "key": "com.atlassian.remindme",
+  "clientKey": "jira:034b10ce-1410-4f35-bcb9-0adb831f8ba3",
+  "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtpXd+b8om94pKYbytrNA8Upv+nw8RomxF7XdAdoxoOHbUPBv5YSN2L3MJkDd4pl3tfbOvonCqWX8IYQR4qfvvB3m/syH8F+PKRZRYFZ7tX5mu/23oOu8jCW2RhLvp05sxF2k59AkVfmwhUXa2aILR1gRY1+AAN9CITxsoaFVVxQIDAQAB",
+  "serverVersion": "6328",
+  "pluginsVersion": "1.1.4",
+  "baseUrl": "http://localhost:2990/jira",
+  "productType": "jira",
+  "description": "Atlassian JIRA at http://Roberts-Mac-Pro.local:2990/jira",
+  "eventType": "uninstalled"
+}
+-}
+
+uninstalledHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
+uninstalledHandler = do
+   request <- SC.readRequestBody (1024 * 10)
+   let mTenantInfo = A.decode request :: Maybe LifecycleResponse
+   maybe SH.respondBadRequest (\tenantInfo -> do
+      potentialTenant <- withConnection $ \conn -> lookupTenant conn (clientKey' tenantInfo)
+      case potentialTenant of
+         Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
+         Just tenant -> withConnection (DT.hibernateTenant tenant) >> SH.respondNoContent
+      ) mTenantInfo
+
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
 writeJson a = do
-   SC.modifyResponse . SC.setContentType . BLC.pack . show $ ApplicationJson
+   SC.modifyResponse . SC.setContentType . BC.pack . show $ ApplicationJson
    SC.writeLBS $ A.encode a
 
 -- TODO extract into helper module
 resolveBaseUrl :: SC.Request -> URI
 resolveBaseUrl req =
-   let serverName = BLC.unpack $ SC.rqServerName req
+   let serverName = BC.unpack $ SC.rqServerName req
        serverPort = SC.rqServerPort req
        proto = if SC.rqIsSecure req then HTTPS else HTTP
    in toAbsoluteUrl proto serverName serverPort

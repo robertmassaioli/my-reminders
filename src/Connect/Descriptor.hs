@@ -309,10 +309,10 @@ instance FromJSON URI where
 
 defaultLifecycle :: Lifecycle
 defaultLifecycle = Lifecycle
-   { installed = parseURI "/installed"
-   , uninstalled = parseURI "/uninstalled"
-   , enabled = parseURI "/enabled"
-   , disabled = parseURI "/disabled"
+   { installed = parseRelativeReference "/installed"
+   , uninstalled = parseRelativeReference "/uninstalled"
+   , enabled = parseRelativeReference "/enabled"
+   , disabled = parseRelativeReference "/disabled"
    }
 
 pluginDescriptor :: PluginKey -> URI -> Authentication -> Plugin

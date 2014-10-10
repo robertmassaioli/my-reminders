@@ -32,6 +32,7 @@ import           Connect.Descriptor()
 
 import           Persistence.PostgreSQL
 
+-- TODO move this into its own module as it is the same for both installed and uninstalled
 data LifecycleResponse = LifecycleResponseInstalled {
     key'           :: T.Text
   , clientKey'     :: T.Text

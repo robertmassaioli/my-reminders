@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS ping;
 
 CREATE TABLE ping 
    ( id SERIAL PRIMARY KEY
-   , tenantId   INTEGER not null
+   , tenantId   INTEGER not null references tenant(id) ON DELETE CASCADE
    , issueId    INTEGER not null
    , issueKey   VARCHAR(255) not null
    , issueSummary TEXT not null
@@ -27,4 +27,20 @@ CREATE TABLE ping
    , userEmail  VARCHAR(512) not null
    , message    TEXT
    , date       TIMESTAMP WITH TIME ZONE
+   );
+
+DROP TABLE IF EXISTS dormant_tenant; 
+
+CREATE TABLE dormant_tenant
+   ( id        SERIAL PRIMARY KEY
+   , tenantId  INTEGER not null references tenant(id) ON DELETE CASCADE
+   , sleepDate TIMESTAMP WITH TIME ZONE
+   );
+
+DROP TABLE IF EXISTS purged_tenant;
+
+CREATE TABLE purged_tenant
+   ( id        SERIAL PRIMARY KEY
+   , baseUrl   VARCHAR(512) not null
+   , purgeDate TIMESTAMP WITH TIME ZONE
    );
