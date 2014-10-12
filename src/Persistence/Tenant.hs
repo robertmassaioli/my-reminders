@@ -135,11 +135,12 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
          updateTenantDetails conn newTenant
          return . Just . tenantId $ tenant
          where
+            -- After much discussion it seems that the only thing that we want to update is the base
+            -- url if it changes. Everything else should never change unless we delete the tenant
+            -- first and then recreate it.
             newTenant = tenant
-               { publicKey = lrPublicKey lri 
+               { baseUrl = lrBaseUrl lri 
                , sharedSecret = fromMaybe (sharedSecret tenant) (lrSharedSecret lri)
-               , baseUrl = lrBaseUrl lri 
-               , productType = fromMaybe (productType tenant) (lrProductType lri)
                }
 
 updateTenantDetails :: Connection -> Tenant -> IO Int64
