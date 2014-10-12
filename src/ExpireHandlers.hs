@@ -23,7 +23,7 @@ import           SnapHelpers
 
 handleExpireRequest :: AppHandler ()
 handleExpireRequest = handleMethods
-   [ (SC.PUT, expireForTimestamp)
+   [ (SC.POST, expireForTimestamp)
    ]
 
 -- We expect that we will be given a timestamp by a trusted source; if that is no longer true then

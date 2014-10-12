@@ -81,7 +81,7 @@ integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 
 getKeyAndConfirm :: (RC.RMConf -> String) -> AppHandler () -> AppHandler ()
 getKeyAndConfirm getKey success = do
-   potentialExpireKey <- SC.getQueryParam (BSC.pack "key")
+   potentialExpireKey <- SC.getParam (BSC.pack "key")
    case potentialExpireKey of
       Nothing -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
       Just expireKey -> do
