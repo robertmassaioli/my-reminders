@@ -117,26 +117,12 @@ validHostName validHosts tenantInfo = isJust maybeValidhost
 tenantAuthority :: LifecycleResponse -> Maybe URIAuth
 tenantAuthority = uriAuthority . lrBaseUrl
 
-{-
-{
-  "key": "com.atlassian.remindme",
-  "clientKey": "jira:034b10ce-1410-4f35-bcb9-0adb831f8ba3",
-  "publicKey": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCtpXd+b8om94pKYbytrNA8Upv+nw8RomxF7XdAdoxoOHbUPBv5YSN2L3MJkDd4pl3tfbOvonCqWX8IYQR4qfvvB3m/syH8F+PKRZRYFZ7tX5mu/23oOu8jCW2RhLvp05sxF2k59AkVfmwhUXa2aILR1gRY1+AAN9CITxsoaFVVxQIDAQAB",
-  "serverVersion": "6328",
-  "pluginsVersion": "1.1.4",
-  "baseUrl": "http://localhost:2990/jira",
-  "productType": "jira",
-  "description": "Atlassian JIRA at http://Roberts-Mac-Pro.local:2990/jira",
-  "eventType": "uninstalled"
-}
--}
-
 uninstalledHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 uninstalledHandler = do
    request <- SC.readRequestBody (1024 * 10)
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
    maybe SH.respondBadRequest (\tenantInfo -> do
-      potentialTenant <- withConnection $ \conn -> lookupTenant conn (clientKey' tenantInfo)
+      potentialTenant <- withConnection $ \conn -> lookupTenant conn (lrClientKey tenantInfo)
       case potentialTenant of
          Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
          Just tenant -> withConnection (hibernateTenant tenant) >> SH.respondNoContent
