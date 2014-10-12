@@ -11,10 +11,15 @@ module Persistence.Tenant (
   , Tenant(..)
   , TenantKey
   , LifecycleResponse(..)
+  , hibernateTenant
+  , wakeTenant
+  , markPurgedTenants
+  , purgeTenants
 ) where
 
 import qualified Data.Text                            as T
 import qualified Data.ByteString.Char8                as B
+import           Data.Time.Clock (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromField
 import           Database.PostgreSQL.Simple.ToField
@@ -118,3 +123,33 @@ getTenantCount conn = do
       SELECT count(*) FROM tenant
    |]
    return . fromOnly . head $ counts
+
+hibernateTenant :: Tenant -> Connection -> IO ()
+hibernateTenant tenant conn = do
+   currentTime <- getCurrentTime
+   liftIO $ execute conn [sql|
+      UPDATE tenant SET sleep_date = ? WHERE id = ?
+   |] (currentTime, tenantId tenant)
+   return ()
+
+wakeTenant :: Tenant -> Connection -> IO ()
+wakeTenant tenant conn = do
+   liftIO $ execute conn [sql|
+      UPDATE tenant SET sleep_date = NULL WHERE id = ?
+   |] (Only . tenantId $ tenant)
+   return ()
+
+markPurgedTenants :: UTCTime -> Connection -> IO ()
+markPurgedTenants beforeTime conn = do
+   liftIO $ execute conn [sql|
+      INSERT INTO purged_tenant (baseUrl, purgeDate)
+      SELECT baseUrl, now() FROM tenant
+      WHERE sleep_date IS NOT NULL
+      AND sleep_date < ?
+   |] (Only beforeTime)
+   return ()
+
+purgeTenants :: UTCTime -> Connection -> IO Int64
+purgeTenants beforeTime conn = liftIO $ execute conn [sql|
+      DELETE FROM tenant WHERE sleep_date IS NOT NULL AND sleep_date < ?
+   |] (Only beforeTime)

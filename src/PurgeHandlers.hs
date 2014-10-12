@@ -5,7 +5,7 @@ module PurgeHandlers
 import           Application
 import           Data.Time.Clock (addUTCTime)
 import           Data.TimeUnitUTC
-import           Persistence.DormantTenant
+import           Persistence.Tenant
 import           Persistence.PostgreSQL
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC

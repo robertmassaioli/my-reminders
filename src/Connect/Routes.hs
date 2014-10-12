@@ -29,7 +29,6 @@ import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
 import           Persistence.Tenant
-import           Persistence.DormantTenant    as DT
 import qualified Snap.Core                    as SC
 import qualified Snap.Snaplet                 as SS
 import qualified SnapHelpers                  as SH
@@ -138,7 +137,7 @@ uninstalledHandler = do
       potentialTenant <- withConnection $ \conn -> lookupTenant conn (clientKey' tenantInfo)
       case potentialTenant of
          Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
-         Just tenant -> withConnection (DT.hibernateTenant tenant) >> SH.respondNoContent
+         Just tenant -> withConnection (hibernateTenant tenant) >> SH.respondNoContent
       ) mTenantInfo
 
 -- TODO extract this into a helper module
