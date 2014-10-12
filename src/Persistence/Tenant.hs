@@ -139,8 +139,9 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
       (Nothing, Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri 
       -- We have seen this tenant before but we may have new information for it. Update it.
       (Just tenant, _) -> do
-         updateTenantDetails conn newTenant
-         return . Just . tenantId $ tenant
+         updateTenantDetails newTenant conn
+         wakeTenant newTenant conn
+         return . Just . tenantId $ newTenant
          where
             -- After much discussion it seems that the only thing that we want to update is the base
             -- url if it changes. Everything else should never change unless we delete the tenant
@@ -150,8 +151,8 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
                , sharedSecret = fromMaybe (sharedSecret tenant) (lrSharedSecret lri)
                }
 
-updateTenantDetails :: Connection -> Tenant -> IO Int64
-updateTenantDetails conn tenant = do
+updateTenantDetails :: Tenant -> Connection ->  IO Int64
+updateTenantDetails tenant conn = do
    liftIO $ execute conn [sql|
       UPDATE tenant SET 
          publicKey = ?,
