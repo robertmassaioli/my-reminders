@@ -17,6 +17,10 @@ module Persistence.Tenant (
   , purgeTenants
 ) where
 
+import           AesonHelpers
+import           Control.Applicative
+import           Control.Monad.IO.Class
+import           Control.Monad
 import qualified Data.Text                            as T
 import qualified Data.ByteString.Char8                as B
 import           Data.Time.Clock (UTCTime, getCurrentTime)
@@ -25,9 +29,6 @@ import           Database.PostgreSQL.Simple.FromField
 import           Database.PostgreSQL.Simple.ToField
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ
-import           Control.Applicative
-import           Control.Monad.IO.Class
-import           Control.Monad
 import           Data.Aeson.Types
 import           Data.Maybe
 import           Network.URI hiding                   (query)
@@ -55,10 +56,10 @@ data LifecycleResponse = LifecycleResponseInstalled {
 
 
 instance FromJSON LifecycleResponse where
-    parseJSON = genericParseJSON defaultOptions {
-                    omitNothingFields = True
-                  , fieldLabelModifier = takeWhile (\c -> c /= '_' && c /= '\'')
-                }
+    parseJSON = genericParseJSON defaultOptions 
+      { omitNothingFields = True
+      , fieldLabelModifier = stripFieldNamePrefix "lr"
+      }
 
 instance FromJSON Tenant
 
