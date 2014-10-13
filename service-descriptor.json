@@ -9,7 +9,7 @@
          "type": "image"
       },
       "healthcheck": {
-         "uri": "/rest/healthcheck"
+         "uri": "/rest/heartbeat"
       },
       "source": {
          "url": "https://bitbucket.org/eerok/ping-me-connect"
