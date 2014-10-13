@@ -18,6 +18,8 @@ data RMConf = RMConf
    , rmHailgunContext         :: HailgunContext
    , rmFromAddress            :: UnverifiedEmailAddress
    , rmMaxExpiryWindowMinutes :: DTU.Minute
+   , rmPurgeKey               :: String
+   , rmPurgeDuration          :: DTU.Day
    }
 
 class HasRMConf m where
@@ -34,6 +36,8 @@ loadRMConf config = do
    mailgunApiKey <- require config "mailgun-api-key" "Missing Mailgun api key required to send emails."
    fromAddress <- require config "reminder-from-address" "Missing a from address for the reminder. Required for the inboxes of our customers."
    maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "The Expiry Window Max Minutes is required; it tracks how many minutes after expiry we should wait till we fail a healthcheck."
+   purgeKey <- require config "purge-key" "Missing a purge key for triggering customer data cleanups."
+   purgeDuration <- require config "purge-duration-days" "Missing the length of time that uninstalled customer data should remain before we delete it."
    return RMConf 
       { rmExpireKey = expiryKey
       , rmHailgunContext = HailgunContext
@@ -42,4 +46,6 @@ loadRMConf config = do
          }
       , rmFromAddress = fromAddress
       , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
+      , rmPurgeKey = purgeKey
+      , rmPurgeDuration = fromInteger purgeDuration
       }

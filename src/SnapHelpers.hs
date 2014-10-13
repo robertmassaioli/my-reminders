@@ -6,9 +6,13 @@ import Data.Aeson
 import GHC.Generics
 
 import qualified Control.Applicative as CA
+import           Control.Monad.IO.Class (liftIO)
 import qualified Snap.Core as SC
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BSC
+import           Data.Time.Clock (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX
+import qualified RemindMeConfiguration as RC
 
 import Application
 
@@ -42,7 +46,7 @@ handleMethods = foldl (CA.<|>) CA.empty . fmap (uncurry SC.method)
 
 writeJson :: (SC.MonadSnap m, ToJSON a) => a -> m ()
 writeJson a = do
-  SC.modifyResponse . SC.setContentType . BSC.pack $"application/json"
+  SC.modifyResponse . SC.setContentType . BSC.pack $ "application/json"
   SC.writeLBS $ encode a
 
 logErrorS :: String -> AppHandler ()
@@ -65,3 +69,23 @@ respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
    SC.writeBS . BSC.pack $ response
    respondWith errorCode
+
+getTimestampOrCurrentTime :: AppHandler UTCTime
+getTimestampOrCurrentTime = do
+   potentialRawTimestamp <- SC.getQueryParam (BSC.pack "timestamp")
+   let potentialTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> potentialRawTimestamp :: Maybe UTCTime
+   maybe (liftIO getCurrentTime) return potentialTimestamp
+
+integerPosixToUTCTime :: Integer -> UTCTime
+integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+
+getKeyAndConfirm :: (RC.RMConf -> String) -> AppHandler () -> AppHandler ()
+getKeyAndConfirm getKey success = do
+   potentialExpireKey <- SC.getParam (BSC.pack "key")
+   case potentialExpireKey of
+      Nothing -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
+      Just expireKey -> do
+         rmConf <- RC.getRMConf
+         if getKey rmConf /= BSC.unpack expireKey
+            then respondWithError forbidden "You lack the required permissions."
+            else success
