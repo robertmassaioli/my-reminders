@@ -45,6 +45,7 @@ Executable ping-me-connect
                  , WithToken
                  , EmailContent
                  , Healthcheck
+                 , Heartbeat
 
   default-language: Haskell2010
   Build-depends:
