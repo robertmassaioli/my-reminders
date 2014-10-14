@@ -28,9 +28,11 @@ import qualified Heist.Interpreted as I
 import qualified Text.XmlHtml as X
 
 
-import Connect.Routes
+import           Connect.Routes
 import qualified Connect.Connect as CC
 import qualified Connect.Data as CD
+import qualified Connect.Zone as CZ
+import qualified DatabaseSnaplet as DS
 import qualified Persistence.Tenant as PT
 import qualified RemindMeConfiguration as RC
 import           PingHandlers
@@ -123,9 +125,10 @@ heistConfig = mempty
 -- | The application initializer.
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
+  zone <- liftIO CZ.fromEnv
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
-  appDb      <- SS.nestSnaplet "db" db pgsInit
+  appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
   appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConf 
   SS.addRoutes routes

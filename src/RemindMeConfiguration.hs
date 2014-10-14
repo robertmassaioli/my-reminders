@@ -9,6 +9,7 @@ module RemindMeConfiguration
 import           ConfigurationHelpers
 import           Control.Monad (when)
 import qualified Control.Monad.IO.Class as MI
+import           Connect.Zone
 import qualified Data.Configurator.Types as DCT
 import           Data.List (find)
 import           Data.Maybe (fromMaybe)
@@ -33,15 +34,6 @@ class HasRMConf m where
 initRMConf :: SS.SnapletInit b RMConf
 initRMConf = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
   MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConf
-
-data Zone = Dev | Dog | Prod
-   deriving(Eq, Show, Ord)
-
-zoneFromString :: String -> Maybe Zone
-zoneFromString "DEV"    = Just Dev
-zoneFromString "DOG"    = Just Dog
-zoneFromString "PROD"   = Just Prod
-zoneFromString _        = Nothing
 
 data EnvConf = EnvConf
    { ecExpireKey     :: Maybe String
