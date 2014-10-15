@@ -3,10 +3,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 set -e
-echo "## Will fail immediately on error..."
 
 # Usage: build-production
-# 1: Tag Name
 IMAGE_TAG=`git describe`
 IMAGE_BUILD_TAG="${IMAGE_TAG}-build"
 
@@ -18,3 +16,5 @@ echo "## Built code in image: $IMAGE_BUILD_TAG"
 echo "## Building production image: $IMAGE_TAG"
 bash to-production.bash "$IMAGE_BUILD_TAG" "$IMAGE_TAG"
 echo "## Built production image: $IMAGE_TAG"
+
+exit 0
