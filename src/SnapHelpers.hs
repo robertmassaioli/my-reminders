@@ -42,7 +42,7 @@ handleMethods = foldl (CA.<|>) CA.empty . fmap (uncurry SC.method)
 
 writeJson :: (SC.MonadSnap m, ToJSON a) => a -> m ()
 writeJson a = do
-  SC.modifyResponse . SC.setContentType . BSC.pack $"application/json"
+  SC.modifyResponse . SC.setContentType . BSC.pack $ "application/json"
   SC.writeLBS $ encode a
 
 logErrorS :: String -> AppHandler ()

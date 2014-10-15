@@ -15,7 +15,6 @@ import           Connect.Descriptor           (Name (..))
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import qualified Control.Monad                as CM
-import           Control.Monad.IO.Class       (liftIO)
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BLC
 import qualified Data.CaseInsensitive         as CI
@@ -23,7 +22,6 @@ import           Data.Char                    as DC
 import           Data.List
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
-import           Network.HostName
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
@@ -90,29 +88,33 @@ atlassianConnectHandler = do
 
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
-   connectData <- CD.getConnect
    request <- SC.readRequestBody (1024 * 10)
-   let validHosts = CD.connectHostWhitelist connectData
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
-   maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
-       let validHost = validHostName validHosts tenantInfo
-       mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
-       if isJust mTenantId
-       then SC.modifyResponse $ SC.setResponseCode SH.noContent
-       else if validHost
-            then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
-            else SH.respondWithError SH.unauthorised "Invalid host"
-      ) mTenantInfo
+   maybe SH.respondBadRequest installedHandlerWithTenant mTenantInfo
 
+installedHandlerWithTenant :: LifecycleResponse -> SS.Handler b App ()
+installedHandlerWithTenant tenantInfo = do
+   validHosts <- fmap CD.connectHostWhitelist CD.getConnect
+   if validHostName validHosts tenantInfo
+      then insertTenantInfo tenantInfo >>= maybe tenantInsertionFailedResponse (const SH.respondNoContent)
+      else domainNotSupportedResponse
+   where
+      tenantInsertionFailedResponse = SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
+      domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
+
+insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
-validHostName validHosts tenantInfo = isJust maybeValidhost where
-    compare authority elem = map DC.toLower (T.unpack elem) == map DC.toLower (uriRegName authority)
-    maybeValidhost = do
-      let uri = baseUrl' tenantInfo
-      authority <- uriAuthority uri
-      find (compare authority) validHosts
+validHostName validHosts tenantInfo = isJust maybeValidhost 
+   where
+      authorityMatchHost auth host = map DC.toLower (T.unpack host) == map DC.toLower (uriRegName auth)
+      maybeValidhost = do
+         auth <- tenantAuthority tenantInfo
+         find (authorityMatchHost auth) validHosts
+
+tenantAuthority :: LifecycleResponse -> Maybe URIAuth
+tenantAuthority = uriAuthority . lrBaseUrl
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
