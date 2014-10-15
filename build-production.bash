@@ -8,8 +8,13 @@ echo "## Will fail immediately on error..."
 # Usage: build-production
 # 1: Tag Name
 IMAGE_TAG=`git describe`
+IMAGE_BUILD_TAG="${IMAGE_TAG}-build"
 
 # TODO build the source docker image
-docker build --rm=true --tag="$IMAGE_TAG" "${DIR}"
+echo "## Building code in image: $IMAGE_BUILD_TAG"
+docker build --rm=true --tag="$IMAGE_BUILD_TAG" "${DIR}"
+echo "## Built code in image: $IMAGE_BUILD_TAG"
 # TODO send the source docker image to production
-bash to-production.bash "$IMAGE_TAG"
+echo "## Building production image: $IMAGE_TAG"
+bash to-production.bash "$IMAGE_BUILD_TAG" "$IMAGE_TAG"
+echo "## Built production image: $IMAGE_TAG"

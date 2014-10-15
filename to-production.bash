@@ -6,7 +6,8 @@
 # Usage:
 # 1: The name of the image to deploy
 
-IMAGE_NAME="$1"
+IMAGE_BUILD_NAME="$1"
+IMAGE_NAME="$2"
 
 if [ "x$1" == "x" ]
 then
@@ -28,9 +29,10 @@ cp -R resources "$COPY_DIR"
 echo "## Getting the required dependencies out of the build..."
 if [ "x$CONTAINER_ID" == "x" ]
 then
-   docker run "$IMAGE_NAME" echo "Finish Immediately..."
+   echo "## Using image $IMAGE_NAME for dependencies...starting and stopping immediately."
+   docker run "$IMAGE_NAME" echo "### Started and stopped immediately..."
    CONTAINER_ID=`docker ps -lq`
-   echo "## Could not find container id. Using last container: $CONTAINER_ID"
+   echo "## Using last run container: $CONTAINER_ID"
 fi
 
 echo "## Searching for container: $CONTAINER_ID"
@@ -48,7 +50,7 @@ time docker cp "$CONTAINER_ID:/home/haskell/build/.cabal-sandbox/bin/ping-me-con
 
 echo "## Building the production Docker image."
 cd production
-time docker build .
+time docker build --rm="true" --tag="$IMAGE_NAME" .
 
 echo "## Finished successfully"
 set +e
