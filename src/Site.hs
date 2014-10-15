@@ -36,6 +36,7 @@ import qualified RemindMeConfiguration as RC
 import           PingHandlers
 import           ExpireHandlers
 import           Healthcheck
+import           Heartbeat
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
@@ -107,6 +108,7 @@ applicationRoutes =
   , ("/rest/user/reminders", handleUserReminders)
   , ("/rest/expire"       , handleExpireRequest)
   , ("/rest/healthcheck"  , healthcheckRequest)
+  , ("/rest/heartbeat"    , heartbeatRequest)
   , ("/static"            , serveDirectory "static")
   ]
 
