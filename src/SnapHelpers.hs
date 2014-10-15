@@ -72,7 +72,7 @@ respondPlainWithError errorCode response = do
 
 getTimestampOrCurrentTime :: AppHandler UTCTime
 getTimestampOrCurrentTime = do
-   potentialRawTimestamp <- SC.getQueryParam (BSC.pack "timestamp")
+   potentialRawTimestamp <- SC.getParam (BSC.pack "timestamp")
    let potentialTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> potentialRawTimestamp :: Maybe UTCTime
    maybe (liftIO getCurrentTime) return potentialTimestamp
 
