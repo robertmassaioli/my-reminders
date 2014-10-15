@@ -1,8 +1,6 @@
 # The production docker file for the Remind Me Connect Haskell project.
-# This docker file is designed to help us build the production executables.
-# This production image was designed to be minimal and only require the smallest
-# subset of dependencies required to run our code which still being a fairly easy image
-# to maintain.
+# It is designed to be minimal by requiring only the dependencies of the production executable.
+# It is also designed to be easy to maintain by being as short as possible.
 
 FROM ubuntu:14.04
 MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
