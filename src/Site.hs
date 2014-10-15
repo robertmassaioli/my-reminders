@@ -19,7 +19,6 @@ import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
 import qualified Snap.Snaplet.Heist as SSH
-import           Snap.Snaplet.PostgresqlSimple
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
@@ -32,6 +31,7 @@ import           Connect.Routes
 import qualified Connect.Connect as CC
 import qualified Connect.Data as CD
 import qualified Connect.Zone as CZ
+import qualified Data.EnvironmentHelpers as DE
 import qualified DatabaseSnaplet as DS
 import qualified Persistence.Tenant as PT
 import qualified RemindMeConfiguration as RC
@@ -125,11 +125,14 @@ heistConfig = mempty
 -- | The application initializer.
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
+  liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
+  liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
   appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConf 
   SS.addRoutes routes
+  liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appRMConf

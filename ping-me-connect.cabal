@@ -28,6 +28,8 @@ Executable ping-me-connect
                  , Connect.Descriptor
                  , Connect.PageToken
                  , Connect.Routes
+                 , Connect.Zone
+                 , Data.EnvironmentHelpers
                  , Data.Padding
                  , Data.Padding.PKCS
                  , Data.Padding.Util
@@ -45,6 +47,7 @@ Executable ping-me-connect
                  , WithToken
                  , EmailContent
                  , Healthcheck
+                 , DatabaseSnaplet
 
   default-language: Haskell2010
   Build-depends:
@@ -84,6 +87,7 @@ Executable ping-me-connect
     , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
     , time-units                == 1.*
+    , boxes                     == 0.1.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts

@@ -11,6 +11,7 @@ import           Control.Monad (when)
 import qualified Control.Monad.IO.Class as MI
 import           Connect.Zone
 import qualified Data.Configurator.Types as DCT
+import qualified Data.EnvironmentHelpers as DE
 import           Data.List (find)
 import           Data.Maybe (fromMaybe)
 import qualified Data.Time.Units as DTU
@@ -18,6 +19,7 @@ import           Mail.Hailgun
 import qualified Snap.Snaplet as SS
 import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
+import           Text.PrettyPrint.Boxes
 
 data RMConf = RMConf
    { rmExpireKey              :: String
@@ -68,8 +70,7 @@ guardConfig (EnvConf _        _        _        _        env) =
 loadRMConf :: DCT.Config -> IO RMConf
 loadRMConf config = do
    environmentConf <- loadConfFromEnvironment
-   putStrLn "Loaded environment variable configuartion:"
-   print environmentConf
+   printEnvironmentConf environmentConf
    guardConfig environmentConf
 
    expiryKey <- require config "expiry-key" "Missing an expiry key for triggering the reminders."
@@ -95,3 +96,24 @@ loadRMConf config = do
 
 envOrDefault :: EnvConf -> (EnvConf -> Maybe a) -> a -> a
 envOrDefault env f def = fromMaybe def $ f env
+
+boxEnvironmentConf :: EnvConf -> Box
+boxEnvironmentConf c = 
+   text "## Environmental Configuration" //
+   (vcat left
+      [ text " - Expire Key:"
+      , text " - Purge Key:"
+      , text " - Mailgun Domain:"
+      , text " - Mailgun Api Key:"
+      ]
+   <+> vcat left
+      [ text . DE.showMaybe . ecExpireKey $ c
+      , text . DE.showMaybe . ecPurgeKey $ c
+      , text . DE.showMaybe . ecMailgunDomain $ c
+      , text . DE.showMaybe . ecMailgunApiKey $ c
+      ]
+   )
+
+
+printEnvironmentConf :: EnvConf -> IO ()
+printEnvironmentConf = printBox . boxEnvironmentConf

@@ -1,6 +1,7 @@
 module Data.EnvironmentHelpers
    ( getEnv
    , getEnvWithDefault
+   , showMaybe
    ) where
 
 import           Data.List (find)
@@ -14,3 +15,7 @@ getEnv key = do
 
 getEnvWithDefault :: String -> String -> IO String
 getEnvWithDefault def = fmap (fromMaybe def) . getEnv
+
+showMaybe :: Show a => Maybe a -> String
+showMaybe Nothing  = "[Not Avaliable]"
+showMaybe (Just x) = show x
