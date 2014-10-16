@@ -17,5 +17,5 @@ getEnvWithDefault :: String -> String -> IO String
 getEnvWithDefault def = fmap (fromMaybe def) . getEnv
 
 showMaybe :: Show a => Maybe a -> String
-showMaybe Nothing  = "[Not Avaliable]"
+showMaybe Nothing  = "[Not Available]"
 showMaybe (Just x) = show x
