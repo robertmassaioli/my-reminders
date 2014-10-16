@@ -25,10 +25,8 @@ addonDescriptor descriptorConfig =
     { pluginName      = Just $ dcPluginName descriptorConfig
     , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
-    , lifecycle = Just Lifecycle
-        { installed = parseRelativeReference "/installed"
-        , uninstalled = Nothing
-        , enabled = Nothing
+    , lifecycle = Just $ defaultLifecycle 
+        { enabled = Nothing
         , disabled = Nothing
         }
     , modules = Just $ Modules JiraModules
@@ -38,6 +36,7 @@ addonDescriptor descriptorConfig =
                , wpName = Name "My reminders"
                , wpUrl = "/panel/jira/ping/create?issue_key={issue.key}&issue_id={issue.id}"
                , wpLocation = "atl.jira.view.issue.right.context"
+               , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
                }
             ]
           , generalPages = 

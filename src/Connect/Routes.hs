@@ -15,15 +15,14 @@ import           Connect.Descriptor           (Name (..))
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import qualified Control.Monad                as CM
-import           Control.Monad.IO.Class       (liftIO)
 import qualified Data.Aeson                   as A
-import qualified Data.ByteString.Char8        as BLC
+import qualified Data.ByteString.Char8        as BC
+import qualified Data.ByteString.Lazy.Char8   as BLC
 import qualified Data.CaseInsensitive         as CI
 import           Data.Char                    as DC
 import           Data.List
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
-import           Network.HostName
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
@@ -56,7 +55,7 @@ homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT se
     sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
     (Just jsonMT) = parseMediaType ApplicationJson
     (Just textHtmlMT) = parseMediaType TextHtml
-    parseMediaType = NM.parse . BLC.pack . show
+    parseMediaType = NM.parse . BC.pack . show
 
 ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
 ourAccept mediaType action = do
@@ -64,17 +63,17 @@ ourAccept mediaType action = do
   CM.unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
   action
   where
-    bsAccept :: CI.CI BLC.ByteString
-    bsAccept = CI.mk . BLC.pack $ "Accept"
+    bsAccept :: CI.CI BC.ByteString
+    bsAccept = CI.mk . BC.pack $ "Accept"
 
-connectRoutes :: [(BLC.ByteString, SS.Handler App App ())]
-connectRoutes = fmap (ARO.first BLC.pack) simpleConnectRoutes
+connectRoutes :: [(BC.ByteString, SS.Handler App App ())]
+connectRoutes = fmap (ARO.first BC.pack) simpleConnectRoutes
 
 simpleConnectRoutes :: [(String, SS.Handler App App ())]
 simpleConnectRoutes =
   [ ("/atlassian-connect.json" , atlassianConnectHandler)
   , ("/installed"          , installedHandler)
-  --, ("/uninstalled"        , uninstalledHandler
+  , ("/uninstalled"        , uninstalledHandler)
   ]
 
 atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
@@ -90,40 +89,55 @@ atlassianConnectHandler = do
 
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
-   connectData <- CD.getConnect
    request <- SC.readRequestBody (1024 * 10)
-   let validHosts = CD.connectHostWhitelist connectData
    let mTenantInfo = A.decode request :: Maybe LifecycleResponse
-   maybe (SC.modifyResponse $ SC.setResponseCode SH.badRequest) (\tenantInfo -> do
-       let validHost = validHostName validHosts tenantInfo
-       mTenantId <- if validHost then insertTenantInfo tenantInfo else return Nothing
-       if isJust mTenantId
-       then SC.modifyResponse $ SC.setResponseCode SH.noContent
-       else if validHost
-            then SH.respondWithError SH.internalServer "Failed to insert the new tenant."
-            else SH.respondWithError SH.unauthorised "Invalid host"
-      ) mTenantInfo
+   maybe SH.respondBadRequest installedHandlerWithTenant mTenantInfo
 
+installedHandlerWithTenant :: LifecycleResponse -> SS.Handler b App ()
+installedHandlerWithTenant tenantInfo = do
+   validHosts <- fmap CD.connectHostWhitelist CD.getConnect
+   if validHostName validHosts tenantInfo
+      then insertTenantInfo tenantInfo >>= maybe tenantInsertionFailedResponse (const SH.respondNoContent)
+      else domainNotSupportedResponse
+   where
+      tenantInsertionFailedResponse = SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
+      domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
+
+insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
-validHostName validHosts tenantInfo = isJust maybeValidhost where
-    compare authority elem = map DC.toLower (T.unpack elem) == map DC.toLower (uriRegName authority)
-    maybeValidhost = do
-      let uri = baseUrl' tenantInfo
-      authority <- uriAuthority uri
-      find (compare authority) validHosts
+validHostName validHosts tenantInfo = isJust maybeValidhost 
+   where
+      authorityMatchHost auth host = map DC.toLower (T.unpack host) == map DC.toLower (uriRegName auth)
+      maybeValidhost = do
+         auth <- tenantAuthority tenantInfo
+         find (authorityMatchHost auth) validHosts
+
+tenantAuthority :: LifecycleResponse -> Maybe URIAuth
+tenantAuthority = uriAuthority . lrBaseUrl
+
+uninstalledHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
+uninstalledHandler = do
+   request <- SC.readRequestBody (1024 * 10)
+   let mTenantInfo = A.decode request :: Maybe LifecycleResponse
+   maybe SH.respondBadRequest (\tenantInfo -> do
+      potentialTenant <- withConnection $ \conn -> lookupTenant conn (lrClientKey tenantInfo)
+      case potentialTenant of
+         Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
+         Just tenant -> withConnection (hibernateTenant tenant) >> SH.respondNoContent
+      ) mTenantInfo
 
 -- TODO extract this into a helper module
 writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
 writeJson a = do
-   SC.modifyResponse . SC.setContentType . BLC.pack . show $ ApplicationJson
+   SC.modifyResponse . SC.setContentType . BC.pack . show $ ApplicationJson
    SC.writeLBS $ A.encode a
 
 -- TODO extract into helper module
 resolveBaseUrl :: SC.Request -> URI
 resolveBaseUrl req =
-   let serverName = BLC.unpack $ SC.rqServerName req
+   let serverName = BC.unpack $ SC.rqServerName req
        serverPort = SC.rqServerPort req
        proto = if SC.rqIsSecure req then HTTPS else HTTP
    in toAbsoluteUrl proto serverName serverPort
