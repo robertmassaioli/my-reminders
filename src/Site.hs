@@ -129,6 +129,6 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db pgsInit
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
-  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConf 
+  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConfOrExit
   SS.addRoutes routes
   return $ App appHeist appSession appDb appConnect appRMConf
