@@ -30,7 +30,7 @@ echo "## Getting the required dependencies out of the build..."
 if [ "x$CONTAINER_ID" == "x" ]
 then
    echo "## Using image $IMAGE_NAME for dependencies...starting and stopping immediately."
-   docker run "$IMAGE_NAME" echo "### Started and stopped immediately..."
+   docker run "$IMAGE_BUILD_NAME" echo "### Started and stopped immediately..."
    CONTAINER_ID=`docker ps -lq`
    echo "## Using last run container: $CONTAINER_ID"
 fi
