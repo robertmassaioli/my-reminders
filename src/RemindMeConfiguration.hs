@@ -11,8 +11,10 @@ import           ConfigurationHelpers
 import           Control.Monad (when)
 import           Connect.Descriptor
 import qualified Control.Monad.IO.Class as MI
+import           Connect.Zone
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator.Types as DCT
+import qualified Data.EnvironmentHelpers as DE
 import           Data.List (find)
 import           Data.Maybe (fromMaybe)
 import           Data.Text.Encoding (encodeUtf8)
@@ -21,6 +23,7 @@ import           Mail.Hailgun
 import qualified Snap.Snaplet as SS
 import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
+import           Text.PrettyPrint.Boxes
 
 data RMConf = RMConf
    { rmExpireKey              :: Key BSC.ByteString RMConf
@@ -37,15 +40,6 @@ class HasRMConf m where
 initRMConfOrExit :: SS.SnapletInit b RMConf
 initRMConfOrExit = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
   MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConfOrExit
-
-data Zone = Dev | Dog | Prod
-   deriving(Eq, Show, Ord)
-
-zoneFromString :: String -> Maybe Zone
-zoneFromString "DEV"    = Just Dev
-zoneFromString "DOG"    = Just Dog
-zoneFromString "PROD"   = Just Prod
-zoneFromString _        = Nothing
 
 data EnvConf = EnvConf
    { ecExpireKey     :: Maybe String
@@ -84,8 +78,7 @@ instance DCT.Configured (Key BSC.ByteString a) where
 loadRMConfOrExit :: DCT.Config -> IO RMConf
 loadRMConfOrExit config = do
    environmentConf <- loadConfFromEnvironment
-   putStrLn "Loaded environment variable configuration:"
-   print environmentConf
+   printEnvironmentConf environmentConf
    guardConfig environmentConf
 
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
@@ -114,3 +107,24 @@ packInKey = Key . BSC.pack
 
 envOrDefault :: EnvConf -> (EnvConf -> Maybe a) -> a -> a
 envOrDefault env f def = fromMaybe def $ f env
+
+boxEnvironmentConf :: EnvConf -> Box
+boxEnvironmentConf c = 
+   text "## Environmental Configuration" //
+   (vcat left
+      [ text " - Expire Key:"
+      , text " - Purge Key:"
+      , text " - Mailgun Domain:"
+      , text " - Mailgun Api Key:"
+      ]
+   <+> vcat left
+      [ text . DE.showMaybe . ecExpireKey $ c
+      , text . DE.showMaybe . ecPurgeKey $ c
+      , text . DE.showMaybe . ecMailgunDomain $ c
+      , text . DE.showMaybe . ecMailgunApiKey $ c
+      ]
+   )
+
+
+printEnvironmentConf :: EnvConf -> IO ()
+printEnvironmentConf = printBox . boxEnvironmentConf
