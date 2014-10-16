@@ -13,6 +13,16 @@ amount of time.
 
 ## Developing the Atlassian Connect Addon
 
+### Database setup
+
+You'll need a postgreSQL server available, matching the acces configurations in
+`snaplets/postgresql-simple/devel.cfg`.
+
+There is a convenience script at `schema/bootstrap.sh` to set up the database for you, assuming that
+the current user has permission to create databases.
+
+### Running the plugin
+
 When developing this application you will need to have both the Addon and Atlassian Product running.
 To setup the Remind Me addon:
 
@@ -23,8 +33,6 @@ To setup the Remind Me addon:
  1. Reload in the browser, updated files will be compiled automatically.
 
 You can test that the plugin is running by hitting: http://localhost:8000/atlassian-connect.json
-You may still need to create and initialise the PostgreSQL database; the schema for which can be found
-in the 'schema' directory.
 
 However this has only setup half of the picture, to run the Addon in a product locally do the
 following:
