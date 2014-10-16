@@ -3,6 +3,10 @@
    "id": "remind-me-for-cloud",
    "name": "Remind me for Cloud",
    "externalAccess": true,
+   "resources": [{
+      "type": "postgres-db",
+      "name": "remind-me"
+   }],
    "links": {
       "binary": {
          "name": "atlassian/remindme",
