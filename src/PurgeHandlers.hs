@@ -24,8 +24,7 @@ purgeUninstalledTenants = getKeyAndConfirm RC.rmPurgeKey $ do
    let purgeTime = addUTCTime (negate . timeUnitToDiffTime . RC.rmPurgeDuration $ rmConf) currentTime
    -- Get all of the tenants that can be purge
    withConnection $ \conn -> do
-      -- TODO: Log the hostnames of all the tenants that we are about to purge...maybe even save that
-      -- data
+      -- Save the hostnames of all the tenants that we are about to purge
       markPurgedTenants purgeTime conn
       -- Delete all of the tenants that have been uninstalled for that long. (Their respective
       -- reminders should be destroyed at the same time).
