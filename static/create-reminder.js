@@ -15,6 +15,8 @@ AJS.$.fn.flashClass = function(c, userOptions) {
 };
 
 AJS.$(function() {
+   require(['aui/form-validation']);
+
    AJS.log("Create reminder loaded...");
    var queryParams = URI(window.location.href).query(true);
    var issueId = parseInt(queryParams["issue_id"]);

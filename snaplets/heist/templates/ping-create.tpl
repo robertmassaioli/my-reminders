@@ -37,8 +37,8 @@
    <form action="#" method="post" id="create-reminder-form" class="aui hidden">
        <fieldset>
            <div class="field-group custom-container">
-               <label for="d-fname">When<span class="aui-icon icon-required"> required</span></label>
-               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1">
+               <label for="custom-ping-magnitude">When<span class="aui-icon icon-required"> required</span></label>
+               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1" data-aui-validation-field data-aui-validation-pattern="[0-9]+">
                <select id="custom-ping-timeunit" class="select short-field" title="time unit">
                    <option value="Day" selected="selected">Day</option>
                    <option value="Week">Week</option>

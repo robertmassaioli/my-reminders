@@ -33,7 +33,7 @@
       <header-extra />
 
       <!-- TODO this will never be served because we do not have code like this... -->
-      <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
+      <!--link rel="stylesheet" type="text/css" href="/stylesheets/main.css" /-->
    </head>
    <body>
       <apply-content />
