@@ -74,6 +74,16 @@ you require > 2GB of image size to create the build docker container and only ~2
 to create the production container. This allows us to have much more efficient production
 deployments.
 
+### Local testing with Docker
+
+The addon will reject installation requests from hosts that aren't whitelisted. If your JIRA
+installation has a base URL with a hostname other than "localhost", the hostname of the docker image,
+or one of the Atlassian OnDemand public domains, you will need to modify the whitelist (found in
+`src/Connect/Connect.hs`).
+
+You will also need to modify `snaplets/postgresql-simple/devel.cfg` to point to your database from
+the Docker container, as the database will not be running in the addon's Docker image.
+
 ## Dependencies
 
 Remind Me is built against the Haskell Platform, currently version `2013.2.0.0`.
