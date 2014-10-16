@@ -32,6 +32,8 @@ data Plugin = Plugin
 
 data Name a = Name Text deriving (Show, Eq, Generic)
 
+data Key t a = Key t deriving (Show, Eq, Generic)
+
 data PluginKey = PluginKey Text deriving (Show, Eq, Generic)
 
 newtype Timeout = Timeout Integer deriving (Show, Eq, Enum, Num, Ord, Real, Integral)

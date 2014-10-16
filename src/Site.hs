@@ -39,6 +39,7 @@ import           PingHandlers
 import           ExpireHandlers
 import           PurgeHandlers
 import           Healthcheck
+import           Heartbeat
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
@@ -111,6 +112,7 @@ applicationRoutes =
   , ("/rest/expire"       , handleExpireRequest)
   , ("/rest/purge"        , handlePurgeRequest)
   , ("/rest/healthcheck"  , healthcheckRequest)
+  , ("/rest/heartbeat"    , heartbeatRequest)
   , ("/static"            , serveDirectory "static")
   ]
 
@@ -132,7 +134,7 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
-  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConf 
+  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConfOrExit
   SS.addRoutes routes
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appRMConf

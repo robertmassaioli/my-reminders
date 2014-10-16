@@ -20,12 +20,11 @@ purgeUninstalledTenants :: AppHandler ()
 purgeUninstalledTenants = getKeyAndConfirm RC.rmPurgeKey $ do
    currentTime <- getTimestampOrCurrentTime
    rmConf <- RC.getRMConf
-   -- Calculate the date at which we will purge everything that has been uninstalled before it
-   let purgeTime = addUTCTime (negate . timeUnitToDiffTime . RC.rmPurgeDuration $ rmConf) currentTime
+   -- Calculate the date for which any tenant uninstalled prior should be purged
+   let purgeTime = addUTCTime (negate . timeUnitToDiffTime . RC.rmPurgeRetention $ rmConf) currentTime
    -- Get all of the tenants that can be purge
    withConnection $ \conn -> do
-      -- TODO: Log the hostnames of all the tenants that we are about to purge...maybe even save that
-      -- data
+      -- Save the hostnames of all the tenants that we are about to purge
       markPurgedTenants purgeTime conn
       -- Delete all of the tenants that have been uninstalled for that long. (Their respective
       -- reminders should be destroyed at the same time).
