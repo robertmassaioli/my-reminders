@@ -3,7 +3,7 @@
 module RemindMeConfiguration 
    ( RMConf(..)
    , HasRMConf(..)
-   , initRMConf
+   , initRMConfOrExit
    ) where
 
 import           ConfigurationHelpers
@@ -30,9 +30,9 @@ data RMConf = RMConf
 class HasRMConf m where
    getRMConf :: m RMConf
 
-initRMConf :: SS.SnapletInit b RMConf
-initRMConf = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
-  MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConf
+initRMConfOrExit :: SS.SnapletInit b RMConf
+initRMConfOrExit = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
+  MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConfOrExit
 
 data Zone = Dev | Dog | Prod
    deriving(Eq, Show, Ord)
@@ -73,10 +73,10 @@ guardConfig (EnvConf _        _        _        _        env) =
       putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ show env
       exitWith (ExitFailure 10)
 
-loadRMConf :: DCT.Config -> IO RMConf
-loadRMConf config = do
+loadRMConfOrExit :: DCT.Config -> IO RMConf
+loadRMConfOrExit config = do
    environmentConf <- loadConfFromEnvironment
-   putStrLn "Loaded environment variable configuartion:"
+   putStrLn "Loaded environment variable configuration:"
    print environmentConf
    guardConfig environmentConf
 
