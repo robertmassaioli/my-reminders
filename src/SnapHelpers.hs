@@ -5,10 +5,15 @@ module SnapHelpers where
 import Data.Aeson
 import GHC.Generics
 
+import           Connect.Descriptor (Key(..))
 import qualified Control.Applicative as CA
+import           Control.Monad.IO.Class (liftIO)
 import qualified Snap.Core as SC
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BSC
+import           Data.Time.Clock (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX
+import qualified RemindMeConfiguration as RC
 
 import Application
 
@@ -49,19 +54,37 @@ logErrorS :: String -> AppHandler ()
 logErrorS = SC.logError . BSC.pack
 
 data ErrorResponse = ErrorResponse
-   { errorMessage :: String
-   } deriving (Show, Generic)
+  { errorMessage :: String
+  } deriving (Show, Generic)
 
 instance ToJSON ErrorResponse
 
 respondWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondWithError errorCode response = do
-   SC.writeLBS . encode $ errorResponse
-   respondWith errorCode
-   where
-      errorResponse = ErrorResponse response
+  SC.writeLBS . encode $ errorResponse
+  respondWith errorCode
+  where
+    errorResponse = ErrorResponse response
 
 respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
-   SC.writeBS . BSC.pack $ response
-   respondWith errorCode
+  SC.writeBS . BSC.pack $ response
+  respondWith errorCode
+
+getTimestampOrCurrentTime :: AppHandler UTCTime
+getTimestampOrCurrentTime =
+  SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
+    let maybeTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> maybeRawTimestamp :: Maybe UTCTime
+    in maybe (liftIO getCurrentTime) return maybeTimestamp)
+
+integerPosixToUTCTime :: Integer -> UTCTime
+integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+
+getKeyAndConfirm :: (RC.RMConf -> Key BSC.ByteString RC.RMConf) -> AppHandler () -> AppHandler ()
+getKeyAndConfirm getKey success =
+  SC.getParam (BSC.pack "key") >>=
+    maybe
+       (respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif")
+       (\expireKey -> RC.getRMConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
+           then respondWithError forbidden "You lack the required permissions."
+           else success))

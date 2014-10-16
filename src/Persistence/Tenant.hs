@@ -11,6 +11,10 @@ module Persistence.Tenant (
   , Tenant(..)
   , TenantKey
   , LifecycleResponse(..)
+  , hibernateTenant
+  , wakeTenant
+  , markPurgedTenants
+  , purgeTenants
 ) where
 
 import           AesonHelpers
@@ -19,6 +23,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad
 import qualified Data.Text                            as T
 import qualified Data.ByteString.Char8                as B
+import           Data.Time.Clock (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromField
 import           Database.PostgreSQL.Simple.ToField
@@ -35,6 +40,7 @@ import           Persistence.PostgreSQL
 
 type ClientKey = T.Text
 
+-- TODO move this into its own module as it is the same for both installed and uninstalled
 data LifecycleResponse = LifecycleResponseInstalled {
     lrKey           :: T.Text
   , lrClientKey     :: ClientKey
@@ -133,8 +139,9 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
       (Nothing, Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri 
       -- We have seen this tenant before but we may have new information for it. Update it.
       (Just tenant, _) -> do
-         updateTenantDetails conn newTenant
-         return . Just . tenantId $ tenant
+         updateTenantDetails newTenant conn
+         wakeTenant newTenant conn
+         return . Just . tenantId $ newTenant
          where
             -- After much discussion it seems that the only thing that we want to update is the base
             -- url if it changes. Everything else should never change unless we delete the tenant
@@ -144,8 +151,8 @@ insertTenantInformation conn lri@(LifecycleResponseInstalled {}) = do
                , sharedSecret = fromMaybe (sharedSecret tenant) (lrSharedSecret lri)
                }
 
-updateTenantDetails :: Connection -> Tenant -> IO Int64
-updateTenantDetails conn tenant = do
+updateTenantDetails :: Tenant -> Connection ->  IO Int64
+updateTenantDetails tenant conn = do
    liftIO $ execute conn [sql|
       UPDATE tenant SET 
          publicKey = ?,
@@ -178,3 +185,33 @@ getTenantCount conn = do
       SELECT count(*) FROM tenant
    |]
    return . fromOnly . head $ counts
+
+hibernateTenant :: Tenant -> Connection -> IO ()
+hibernateTenant tenant conn = do
+   currentTime <- getCurrentTime
+   liftIO $ execute conn [sql|
+      UPDATE tenant SET sleep_date = ? WHERE id = ?
+   |] (currentTime, tenantId tenant)
+   return ()
+
+wakeTenant :: Tenant -> Connection -> IO ()
+wakeTenant tenant conn = do
+   liftIO $ execute conn [sql|
+      UPDATE tenant SET sleep_date = NULL WHERE id = ?
+   |] (Only . tenantId $ tenant)
+   return ()
+
+markPurgedTenants :: UTCTime -> Connection -> IO ()
+markPurgedTenants beforeTime conn = do
+   liftIO $ execute conn [sql|
+      INSERT INTO purged_tenant (baseUrl, purgeDate)
+      SELECT baseUrl, now() FROM tenant
+      WHERE sleep_date IS NOT NULL
+      AND sleep_date < ?
+   |] (Only beforeTime)
+   return ()
+
+purgeTenants :: UTCTime -> Connection -> IO Int64
+purgeTenants beforeTime conn = liftIO $ execute conn [sql|
+      DELETE FROM tenant WHERE sleep_date IS NOT NULL AND sleep_date < ?
+   |] (Only beforeTime)
