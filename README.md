@@ -13,6 +13,16 @@ amount of time.
 
 ## Developing the Atlassian Connect Addon
 
+### Database setup
+
+You'll need a postgreSQL server available, matching the acces configurations in
+`snaplets/postgresql-simple/devel.cfg`.
+
+There is a convenience script at `schema/bootstrap.sh` to set up the database for you, assuming that
+the current user has permission to create databases.
+
+### Running the plugin
+
 When developing this application you will need to have both the Addon and Atlassian Product running.
 To setup the Remind Me addon:
 
@@ -23,8 +33,6 @@ To setup the Remind Me addon:
  1. Reload in the browser, updated files will be compiled automatically.
 
 You can test that the plugin is running by hitting: http://localhost:8000/atlassian-connect.json
-You may still need to create and initialise the PostgreSQL database; the schema for which can be found
-in the 'schema' directory.
 
 However this has only setup half of the picture, to run the Addon in a product locally do the
 following:
@@ -65,6 +73,16 @@ possible to deploy independantly of everything else. The reason that we have thi
 you require > 2GB of image size to create the build docker container and only ~270MB of image size
 to create the production container. This allows us to have much more efficient production
 deployments.
+
+### Local testing with Docker
+
+The addon will reject installation requests from hosts that aren't whitelisted. If your JIRA
+installation has a base URL with a hostname other than "localhost", the hostname of the docker image,
+or one of the Atlassian OnDemand public domains, you will need to modify the whitelist (found in
+`src/Connect/Connect.hs`).
+
+You will also need to modify `snaplets/postgresql-simple/devel.cfg` to point to your database from
+the Docker container, as the database will not be running in the addon's Docker image.
 
 ## Dependencies
 
