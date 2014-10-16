@@ -5,6 +5,7 @@ module SnapHelpers where
 import Data.Aeson
 import GHC.Generics
 
+import           Connect.Descriptor (Key(..))
 import qualified Control.Applicative as CA
 import           Control.Monad.IO.Class (liftIO)
 import qualified Snap.Core as SC
@@ -79,13 +80,13 @@ getTimestampOrCurrentTime = do
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 
-getKeyAndConfirm :: (RC.RMConf -> String) -> AppHandler () -> AppHandler ()
+getKeyAndConfirm :: (RC.RMConf -> Key BSC.ByteString RC.RMConf) -> AppHandler () -> AppHandler ()
 getKeyAndConfirm getKey success = do
    potentialExpireKey <- SC.getParam (BSC.pack "key")
    case potentialExpireKey of
       Nothing -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
       Just expireKey -> do
          rmConf <- RC.getRMConf
-         if getKey rmConf /= BSC.unpack expireKey
+         if getKey rmConf /= (Key expireKey)
             then respondWithError forbidden "You lack the required permissions."
             else success

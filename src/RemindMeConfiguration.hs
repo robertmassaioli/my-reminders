@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module RemindMeConfiguration 
    ( RMConf(..)
@@ -7,23 +8,30 @@ module RemindMeConfiguration
    ) where
 
 import           ConfigurationHelpers
+import           Connect.Descriptor
 import qualified Control.Monad.IO.Class as MI
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator.Types as DCT
+import           Data.Text.Encoding (encodeUtf8)
 import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
 import qualified Snap.Snaplet as SS
 
 data RMConf = RMConf
-   { rmExpireKey              :: String
+   { rmExpireKey              :: Key BSC.ByteString RMConf
    , rmHailgunContext         :: HailgunContext
    , rmFromAddress            :: UnverifiedEmailAddress
    , rmMaxExpiryWindowMinutes :: DTU.Minute
-   , rmPurgeKey               :: String
+   , rmPurgeKey               :: Key BSC.ByteString RMConf
    , rmPurgeDuration          :: DTU.Day
    }
 
 class HasRMConf m where
    getRMConf :: m RMConf
+
+instance DCT.Configured (Key BSC.ByteString a) where
+  convert (DCT.String s) = Just (Key (encodeUtf8 s))
+  convert _ = Nothing
 
 initRMConf :: SS.SnapletInit b RMConf
 initRMConf = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
