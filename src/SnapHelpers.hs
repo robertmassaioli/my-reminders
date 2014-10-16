@@ -5,6 +5,7 @@ module SnapHelpers where
 import Data.Aeson
 import GHC.Generics
 
+import           Connect.Descriptor (Key(..))
 import qualified Control.Applicative as CA
 import           Control.Monad.IO.Class (liftIO)
 import qualified Snap.Core as SC
@@ -53,39 +54,37 @@ logErrorS :: String -> AppHandler ()
 logErrorS = SC.logError . BSC.pack
 
 data ErrorResponse = ErrorResponse
-   { errorMessage :: String
-   } deriving (Show, Generic)
+  { errorMessage :: String
+  } deriving (Show, Generic)
 
 instance ToJSON ErrorResponse
 
 respondWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondWithError errorCode response = do
-   SC.writeLBS . encode $ errorResponse
-   respondWith errorCode
-   where
-      errorResponse = ErrorResponse response
+  SC.writeLBS . encode $ errorResponse
+  respondWith errorCode
+  where
+    errorResponse = ErrorResponse response
 
 respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
-   SC.writeBS . BSC.pack $ response
-   respondWith errorCode
+  SC.writeBS . BSC.pack $ response
+  respondWith errorCode
 
 getTimestampOrCurrentTime :: AppHandler UTCTime
-getTimestampOrCurrentTime = do
-   potentialRawTimestamp <- SC.getParam (BSC.pack "timestamp")
-   let potentialTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> potentialRawTimestamp :: Maybe UTCTime
-   maybe (liftIO getCurrentTime) return potentialTimestamp
+getTimestampOrCurrentTime =
+  SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
+    let maybeTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> maybeRawTimestamp :: Maybe UTCTime
+    in maybe (liftIO getCurrentTime) return maybeTimestamp)
 
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 
-getKeyAndConfirm :: (RC.RMConf -> String) -> AppHandler () -> AppHandler ()
-getKeyAndConfirm getKey success = do
-   potentialExpireKey <- SC.getParam (BSC.pack "key")
-   case potentialExpireKey of
-      Nothing -> respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif"
-      Just expireKey -> do
-         rmConf <- RC.getRMConf
-         if getKey rmConf /= BSC.unpack expireKey
-            then respondWithError forbidden "You lack the required permissions."
-            else success
+getKeyAndConfirm :: (RC.RMConf -> Key BSC.ByteString RC.RMConf) -> AppHandler () -> AppHandler ()
+getKeyAndConfirm getKey success =
+  SC.getParam (BSC.pack "key") >>=
+    maybe
+       (respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif")
+       (\expireKey -> RC.getRMConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
+           then respondWithError forbidden "You lack the required permissions."
+           else success))

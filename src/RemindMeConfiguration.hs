@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module RemindMeConfiguration 
    ( RMConf(..)
@@ -8,10 +9,13 @@ module RemindMeConfiguration
 
 import           ConfigurationHelpers
 import           Control.Monad (when)
+import           Connect.Descriptor
 import qualified Control.Monad.IO.Class as MI
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator.Types as DCT
 import           Data.List (find)
 import           Data.Maybe (fromMaybe)
+import           Data.Text.Encoding (encodeUtf8)
 import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
 import qualified Snap.Snaplet as SS
@@ -19,12 +23,12 @@ import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
 
 data RMConf = RMConf
-   { rmExpireKey              :: String
+   { rmExpireKey              :: Key BSC.ByteString RMConf
    , rmHailgunContext         :: HailgunContext
    , rmFromAddress            :: UnverifiedEmailAddress
    , rmMaxExpiryWindowMinutes :: DTU.Minute
-   , rmPurgeKey               :: String
-   , rmPurgeDuration          :: DTU.Day
+   , rmPurgeKey               :: Key BSC.ByteString RMConf
+   , rmPurgeRetention         :: DTU.Day
    }
 
 class HasRMConf m where
@@ -73,6 +77,10 @@ guardConfig (EnvConf _        _        _        _        env) =
       putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ show env
       exitWith (ExitFailure 10)
 
+instance DCT.Configured (Key BSC.ByteString a) where
+  convert (DCT.String s) = Just (Key (encodeUtf8 s))
+  convert _ = Nothing
+
 loadRMConfOrExit :: DCT.Config -> IO RMConf
 loadRMConfOrExit config = do
    environmentConf <- loadConfFromEnvironment
@@ -80,26 +88,29 @@ loadRMConfOrExit config = do
    print environmentConf
    guardConfig environmentConf
 
-   expiryKey <- require config "expiry-key" "Missing an expiry key for triggering the reminders."
-   mailgunDomain <- require config "mailgun-domain" "Missing Mailgun domain required to send emails."
-   mailgunApiKey <- require config "mailgun-api-key" "Missing Mailgun api key required to send emails."
-   fromAddress <- require config "reminder-from-address" "Missing a from address for the reminder. Required for the inboxes of our customers."
-   maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "The Expiry Window Max Minutes is required; it tracks how many minutes after expiry we should wait till we fail a healthcheck."
-   purgeKey <- require config "purge-key" "Missing a purge key for triggering customer data cleanups."
-   purgeDuration <- require config "purge-duration-days" "Missing the length of time that uninstalled customer data should remain before we delete it."
+   expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
+   mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
+   mailgunApiKey <- require config "mailgun-api-key" "Missing 'mailgun-api-key': required to send emails."
+   fromAddress <- require config "reminder-from-address" "Missing 'reminder-from-address': required for the inboxes of our customers to know who the reminder came from."
+   maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "Missing 'expiry-window-max-minutes': it tracks how many minutes after expiry we should wait till we fail a healthcheck."
+   purgeKey <- require config "purge-key" "Missing 'purge-key': for triggering customer data cleanups."
+   purgeRetentionDays <- require config "purge-retention-days" "Missing 'purge-retention-days': the length of time that uninstalled customer data should remain before we delete it."
 
    let fromConf = envOrDefault environmentConf
    return RMConf 
-      { rmExpireKey = fromConf ecExpireKey expiryKey
+      { rmExpireKey = fromConf (fmap packInKey . ecExpireKey) expiryKey
       , rmHailgunContext = HailgunContext
          { hailgunDomain = fromConf ecMailgunDomain mailgunDomain
          , hailgunApiKey = fromConf ecMailgunApiKey mailgunApiKey
          }
       , rmFromAddress = fromAddress
       , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
-      , rmPurgeKey = fromConf ecPurgeKey purgeKey
-      , rmPurgeDuration = fromInteger purgeDuration
+      , rmPurgeKey = fromConf (fmap packInKey . ecPurgeKey) purgeKey
+      , rmPurgeRetention = fromInteger purgeRetentionDays
       }
+
+packInKey :: String -> Key BSC.ByteString a
+packInKey = Key . BSC.pack
 
 envOrDefault :: EnvConf -> (EnvConf -> Maybe a) -> a -> a
 envOrDefault env f def = fromMaybe def $ f env
