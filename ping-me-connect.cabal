@@ -123,6 +123,7 @@ test-suite ping-me-props
     , aeson
     , atlassian-connect
     , base64-bytestring
+    , boxes
     , bytestring
     , case-insensitive
     , cipher-aes
@@ -150,5 +151,6 @@ test-suite ping-me-props
     , snaplet-postgresql-simple
     , text
     , time
+    , time-units
     , transformers
     , xmlhtml
