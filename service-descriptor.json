@@ -1,0 +1,38 @@
+{
+   "description": "Remind me allows you to set reminders on issues.",
+   "id": "remind-me",
+   "name": "Remind me",
+   "externalAccess": true,
+   "resources": [{
+      "type": "postgres-db",
+      "name": "remind-me"
+   }],
+   "links": {
+      "binary": {
+         "name": "atlassian/remindme",
+         "type": "image"
+      },
+      "healthcheck": {
+         "uri": "/rest/heartbeat"
+      },
+      "source": {
+         "url": "https://bitbucket.org/eerok/ping-me-connect"
+      }
+   },
+   "owners": [
+      "rmassaioli@atlassian.com",
+      "aknoll@atlassian.com",
+      "ekaukonen@atlassian.com"
+   ],
+   "notifications": {
+      "pagerduty": {
+         "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/124e0f010f214a9b9f30b768e7b18e69",
+         "apikey": "5d11612f25b840faaf77422edeff9c76"
+      },
+      "email": "rmassaioli@atlassian.com" 
+   },
+   "scalaing": {
+      "min": 1
+   },
+   "downstreamServices": []
+}
