@@ -30,14 +30,14 @@ genSubDelims = elements ['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=']
 
 getLifecycleResponse:: String -> LifecycleResponse
 getLifecycleResponse hostname =
-    LifecycleResponseInstalled { key' = pack "my-happy-plugin",
-                                 clientKey' = pack "client key",
-                                 publicKey' = pack "A very public key",
-                                 sharedSecret' = Nothing,
-                                 serverVersion = Nothing,
-                                 pluginsVersion = Nothing,
-                                 baseUrl' = fromJust $ parseURI ("http://" ++ hostname ++ "/plugin"),
-                                 productType' = Nothing,
-                                 description = Nothing,
-                                 eventType = Nothing
+    LifecycleResponseInstalled { lrKey = pack "my-happy-plugin",
+                                 lrClientKey = pack "client key",
+                                 lrPublicKey = pack "A very public key",
+                                 lrSharedSecret = Nothing,
+                                 lrServerVersion = Nothing,
+                                 lrPluginsVersion = Nothing,
+                                 lrBaseUrl = fromJust $ parseURI ("http://" ++ hostname ++ "/plugin"),
+                                 lrProductType = Nothing,
+                                 lrDescription = Nothing,
+                                 lrEventType = Nothing
                                }

@@ -17,5 +17,4 @@ withConnection :: HasPostgres m => (Connection -> IO a) -> m a
 withConnection f = do
   postgres <- getPostgresState
   P.withResource (pgPool postgres) $ \conn ->
-    liftIO $ withTransaction conn $
-      f conn
+    liftIO $ withTransaction conn (f conn)

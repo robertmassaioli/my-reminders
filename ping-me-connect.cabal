@@ -28,6 +28,8 @@ Executable ping-me-connect
                  , Connect.Descriptor
                  , Connect.PageToken
                  , Connect.Routes
+                 , Connect.Zone
+                 , Data.EnvironmentHelpers
                  , Data.Padding
                  , Data.Padding.PKCS
                  , Data.Padding.Util
@@ -44,6 +46,9 @@ Executable ping-me-connect
                  , TenantJWT
                  , WithToken
                  , EmailContent
+                 , Healthcheck
+                 , DatabaseSnaplet
+                 , Heartbeat
 
   default-language: Haskell2010
   Build-depends:
@@ -79,9 +84,11 @@ Executable ping-me-connect
     , time                      >= 1.1     && < 1.5
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
-    , hailgun                   > 0.1.0.0 && < 0.2
+    , hailgun                   >= 0.1.1.0 && < 0.2
     , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
+    , time-units                == 1.*
+    , boxes                     == 0.1.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
@@ -116,6 +123,7 @@ test-suite ping-me-props
     , aeson
     , atlassian-connect
     , base64-bytestring
+    , boxes
     , bytestring
     , case-insensitive
     , cipher-aes
@@ -143,5 +151,6 @@ test-suite ping-me-props
     , snaplet-postgresql-simple
     , text
     , time
+    , time-units
     , transformers
     , xmlhtml

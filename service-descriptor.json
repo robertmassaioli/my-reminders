@@ -1,7 +1,7 @@
 {
-   "description": "Remind me for Cloud allows you to set reminders on issues.",
-   "id": "remind-me-for-cloud",
-   "name": "Remind me for Cloud",
+   "description": "Remind me allows you to set reminders on issues.",
+   "id": "remind-me",
+   "name": "Remind me",
    "externalAccess": true,
    "resources": [{
       "type": "postgres-db",
@@ -26,8 +26,8 @@
    ],
    "notifications": {
       "pagerduty": {
-         "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/${CLOUDWATCH_KEY}",
-         "apikey": "${PAGERDUTY_API_KEY}"
+         "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/124e0f010f214a9b9f30b768e7b18e69",
+         "apikey": "5d11612f25b840faaf77422edeff9c76"
       },
       "email": "rmassaioli@atlassian.com" 
    },
