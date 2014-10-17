@@ -15,7 +15,7 @@ amount of time.
 
 ### Database setup
 
-You'll need a postgreSQL server available, matching the acces configurations in
+You'll need a postgreSQL server available, matching the access configurations in
 `snaplets/postgresql-simple/devel.cfg`.
 
 There is a convenience script at `schema/bootstrap.sh` to set up the database for you, assuming that
@@ -24,7 +24,7 @@ the current user has permission to create databases.
 ### Running the plugin
 
 When developing this application you will need to have both the Addon and Atlassian Product running.
-To setup the Remind Me addon:
+To set up the Remind Me addon:
 
  1. Execute `make`.
  1. Run the application: .cabal-sandbox/bin/ping-me-connect 
@@ -69,7 +69,7 @@ machine. Once you have the docker build you can make the production docker image
 
 Which will copy the build image from the build container and pass it through to the production
 container. It will also pull through all of the required resources. This production image should be
-possible to deploy independantly of everything else. The reason that we have this separation is that
+possible to deploy independently of everything else. The reason that we have this separation is that
 you require > 2GB of image size to create the build docker container and only ~270MB of image size
 to create the production container. This allows us to have much more efficient production
 deployments.
