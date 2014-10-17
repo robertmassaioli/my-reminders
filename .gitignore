@@ -16,6 +16,9 @@ snaplets/Remind\ Me\ Configuration/
 # Atlassian Plugin SDK
 /amps-standalone
 
+# Docker build generated
+/production
+
 # Log Files
 /log
 *.log
