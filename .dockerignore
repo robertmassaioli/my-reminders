@@ -2,25 +2,25 @@
 *~
 .*.sw[a-p]
 
+# Git Files
+.git
+
 # Cabal Built
-/dist
-/.cabal-sandbox
+dist
+.cabal-sandbox
 cabal.sandbox.config
 site_key.txt
 tags
 
 # Snap generated files
-snaplets/Connect/
-snaplets/Remind\ Me\ Configuration/
+snaplets/Connect
+snaplets/Remind\ Me\ Configuration
 
 # Atlassian Plugin SDK
-/amps-standalone
-
-# Docker build generated
-/production
+amps-standalone
 
 # Log Files
-/log
+log
 *.log
 
 # OSX Files
