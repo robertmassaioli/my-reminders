@@ -8,13 +8,8 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static/host-request.js</bind></js>
-      <js><bind tag="href">/static/create-reminder.js</bind></js>
+      <js><bind tag="href">/static/built/app/create-reminder.js</bind></js>
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
-
-      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/URI.js/1.11.2/URI.min.js</bind></js>
-      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js</bind></js>
-      <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
@@ -61,7 +56,7 @@
        </div>
    </form>
    <div class="reminders-container">
-      <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-info">Info</span></div>
+      <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-small aui-iconfont-info">Info</span></div>
       <div id="upcoming-reminders" class="reminders"></div>
    </div>
    <div id="error-message" class="aui-message error hidden">

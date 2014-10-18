@@ -25,3 +25,6 @@ snaplets/Remind\ Me\ Configuration/
 
 # OSX Files
 .DS_store
+
+# Generated js files
+/static/built

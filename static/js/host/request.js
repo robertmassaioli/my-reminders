@@ -1,4 +1,4 @@
-var HostRequest = (function() {
+define("host-request", function() {
    "use strict";
 
    var requestUserDetails = function(userkey) {
@@ -36,4 +36,4 @@ var HostRequest = (function() {
       userDetails: requestUserDetails,
       issueDetails: requestIssueDetails
    };
-}());
+});
