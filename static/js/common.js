@@ -10,7 +10,9 @@ require.config({
    'paths': {
       'app': '../app',
       'connect': '../connect',
-      'host': '../host'
+      'host': '../host',
+      'moment': '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min',
+      'mustache': '//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min'
    },
    'shim': {
       'aui': {
