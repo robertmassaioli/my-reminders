@@ -8,7 +8,20 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static-built/js/app/create-reminder.js</bind></js>
+      <!--js><bind tag="href">/static-built/js/app/create-reminder.js</bind></js-->
+      <script>
+            //Load common code that includes config, then load the app
+            //logic for this page. Do the require calls here instead of
+            //a separate file so after a build there are only 2 HTTP
+            //requests instead of three.
+            require(['/static/js/common.js'], function (common) {
+                //js/common sets the baseUrl to be js/ so
+                //can just ask for 'app/main1' here instead
+                //of 'js/app/main1'
+                require(['app/create-reminder']);
+            });
+        </script>
+
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">

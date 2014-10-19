@@ -1,12 +1,12 @@
-// require(['aui/form-validation']);
+require(['aui/form-validation']);
 
 define(function(require) {
    // Define and then require trick to get around this problem:
    // http://stackoverflow.com/q/12574255/83446
-   var AJS = require("aui"),
-       URI = require("URI"),
+   var URI = require("URI"),
+       HostRequest = require("host/request"),
        Mustache = require("mustache"),
-       moment = require("moment");
+       moment = require("moment-timezone");
 
    AJS.$.fn.flashClass = function(c, userOptions) {
       var defaults = {
@@ -197,7 +197,6 @@ define(function(require) {
             var reminders = JSON.parse(pingsResponse[0]);
             var user = JSON.parse(userResponse[0]);
 
-
             console.log(reminders);
             // Clear the reminders container
             var remindersContainer = AJS.$("#upcoming-reminders");
@@ -208,8 +207,13 @@ define(function(require) {
             AJS.$("#reminder-help").toggleClass("hidden", !haveReminders);
             if(haveReminders) {
                // Parse the dates in each of the reminders
+               AJS.$.each([1,2,3], function(i, num) {
+                  console.log(i + ": " + num);
+               });
+
                AJS.$.each(reminders, function(index, reminder) {
-                  var tzDate = moment(reminder["Date"]).tz(user.timeZone);
+                  var date = moment(reminder["Date"]);
+                  var tzDate = date.tz(user.timeZone);
                   reminder.momentDate = tzDate;
                   reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
                   // Regex to follow the ADG: https://developer.atlassian.com/design/latest/foundations/dates/

@@ -23,8 +23,8 @@
 
       <apply template="headers/tenant" />
 
-      <!--apply template="headers/aui" /-->
-      <!--apply template="headers/aui-experimental" /-->
+      <apply template="headers/aui" />
+      <apply template="headers/aui-experimental" />
 
       <!--apply template="headers/jquery-url-parser" /-->
 

@@ -5,8 +5,8 @@
 //Configure loading modules from the lib directory,
 //except for 'app' ones, which are in a sibling
 //directory.
-requirejs.config({
-   'baseUrl': 'js/lib',
+require.config({
+   'baseUrl': '/static/js/lib',
    'paths': {
       'app': '../app',
       'connect': '../connect',

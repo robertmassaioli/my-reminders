@@ -1,4 +1,4 @@
-define("host-request", function() {
+define(function() {
    "use strict";
 
    var requestUserDetails = function(userkey) {
