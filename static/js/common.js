@@ -11,6 +11,7 @@ require.config({
       'app': '../app',
       'connect': '../connect',
       'host': '../host',
+      'punycode': '//cdnjs.cloudflare.com/ajax/libs/punycode/1.2.3/punycode.min',
       'moment': '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min',
       'mustache': '//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min'
    },

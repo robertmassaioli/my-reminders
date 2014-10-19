@@ -8,7 +8,6 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <!--js><bind tag="href">/static-built/js/app/create-reminder.js</bind></js-->
       <script>
             //Load common code that includes config, then load the app
             //logic for this page. Do the require calls here instead of
@@ -46,7 +45,7 @@
        <fieldset>
            <div class="field-group custom-container">
                <label for="custom-ping-magnitude">When<span class="aui-icon icon-required"> required</span></label>
-               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1" data-aui-validation-field data-aui-validation-pattern="[0-9]+">
+               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1" data-aui-validation-field data-aui-validation-pattern="[0-9]+" data-aui-validation-pattern-msg="Must be a whole number ({0}).">
                <select id="custom-ping-timeunit" class="select short-field" title="time unit">
                    <option value="Day" selected="selected">Day</option>
                    <option value="Week">Week</option>

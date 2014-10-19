@@ -207,10 +207,6 @@ define(function(require) {
             AJS.$("#reminder-help").toggleClass("hidden", !haveReminders);
             if(haveReminders) {
                // Parse the dates in each of the reminders
-               AJS.$.each([1,2,3], function(i, num) {
-                  console.log(i + ": " + num);
-               });
-
                AJS.$.each(reminders, function(index, reminder) {
                   var date = moment(reminder["Date"]);
                   var tzDate = date.tz(user.timeZone);
