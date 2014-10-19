@@ -1,6 +1,13 @@
-//require(['aui/form-validation']);
+// require(['aui/form-validation']);
 
-require(["aui", "URI", "mustache", "moment-timezone"], function(AJS, URI, Mustache, moment) {
+define(function(require) {
+   // Define and then require trick to get around this problem:
+   // http://stackoverflow.com/q/12574255/83446
+   var AJS = require("aui"),
+       URI = require("URI"),
+       Mustache = require("mustache"),
+       moment = require("moment");
+
    AJS.$.fn.flashClass = function(c, userOptions) {
       var defaults = {
          starton: true,

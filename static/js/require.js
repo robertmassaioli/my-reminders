@@ -304,46 +304,46 @@ var requirejs, require, define;
                 nameParts = name.split('/');
 
                 outerLoop: for (i = nameParts.length; i > 0; i -= 1) {
-                    nameSegment = nameParts.slice(0, i).join('/');
+                               nameSegment = nameParts.slice(0, i).join('/');
 
-                    if (baseParts) {
-                        //Find the longest baseName segment match in the config.
-                        //So, do joins on the biggest to smallest lengths of baseParts.
-                        for (j = baseParts.length; j > 0; j -= 1) {
-                            mapValue = getOwn(map, baseParts.slice(0, j).join('/'));
+                               if (baseParts) {
+                                   //Find the longest baseName segment match in the config.
+                                   //So, do joins on the biggest to smallest lengths of baseParts.
+                                   for (j = baseParts.length; j > 0; j -= 1) {
+                                       mapValue = getOwn(map, baseParts.slice(0, j).join('/'));
 
-                            //baseName segment has config, find if it has one for
-                            //this name.
-                            if (mapValue) {
-                                mapValue = getOwn(mapValue, nameSegment);
-                                if (mapValue) {
-                                    //Match, update name to the new value.
-                                    foundMap = mapValue;
-                                    foundI = i;
-                                    break outerLoop;
-                                }
-                            }
-                        }
-                    }
+                                       //baseName segment has config, find if it has one for
+                                       //this name.
+                                       if (mapValue) {
+                                           mapValue = getOwn(mapValue, nameSegment);
+                                           if (mapValue) {
+                                               //Match, update name to the new value.
+                                               foundMap = mapValue;
+                                               foundI = i;
+                                               break outerLoop;
+                                           }
+                                       }
+                                   }
+                               }
 
-                    //Check for a star map match, but just hold on to it,
-                    //if there is a shorter segment match later in a matching
-                    //config, then favor over this star map.
-                    if (!foundStarMap && starMap && getOwn(starMap, nameSegment)) {
-                        foundStarMap = getOwn(starMap, nameSegment);
-                        starI = i;
-                    }
-                }
+                               //Check for a star map match, but just hold on to it,
+                               //if there is a shorter segment match later in a matching
+                               //config, then favor over this star map.
+                               if (!foundStarMap && starMap && getOwn(starMap, nameSegment)) {
+                                   foundStarMap = getOwn(starMap, nameSegment);
+                                   starI = i;
+                               }
+                           }
 
-                if (!foundMap && foundStarMap) {
-                    foundMap = foundStarMap;
-                    foundI = starI;
-                }
+                           if (!foundMap && foundStarMap) {
+                               foundMap = foundStarMap;
+                               foundI = starI;
+                           }
 
-                if (foundMap) {
-                    nameParts.splice(0, foundI, foundMap);
-                    name = nameParts.join('/');
-                }
+                           if (foundMap) {
+                               nameParts.splice(0, foundI, foundMap);
+                               name = nameParts.join('/');
+                           }
             }
 
             // If the name points to a package's name, use
@@ -357,7 +357,7 @@ var requirejs, require, define;
             if (isBrowser) {
                 each(scripts(), function (scriptNode) {
                     if (scriptNode.getAttribute('data-requiremodule') === name &&
-                            scriptNode.getAttribute('data-requirecontext') === context.contextName) {
+                        scriptNode.getAttribute('data-requirecontext') === context.contextName) {
                         scriptNode.parentNode.removeChild(scriptNode);
                         return true;
                     }
@@ -2009,6 +2009,8 @@ var requirejs, require, define;
             callback = deps;
             deps = null;
         }
+
+        console.log("Defined: " + (name ? name : '<no-name>') + " [" + (deps ? deps.join(',') : '') + "]");
 
         //If no name, and callback is a function, then figure out if it a
         //CommonJS thing with dependencies.

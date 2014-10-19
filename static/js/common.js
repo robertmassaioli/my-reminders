@@ -6,7 +6,7 @@
 //except for 'app' ones, which are in a sibling
 //directory.
 requirejs.config({
-   'baseUrl': '/static/built',
+   'baseUrl': 'js/lib',
    'paths': {
       'app': '../app',
       'connect': '../connect',

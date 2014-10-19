@@ -8,7 +8,7 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static/built/app/create-reminder.js</bind></js>
+      <js><bind tag="href">/static-built/js/app/create-reminder.js</bind></js>
       <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
