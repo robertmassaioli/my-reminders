@@ -38,6 +38,7 @@ import qualified RemindMeConfiguration as RC
 import           PingHandlers
 import           ExpireHandlers
 import           PurgeHandlers
+import           WebhookHandlers
 import           Healthcheck
 import           Heartbeat
 import qualified TenantJWT as TJ
@@ -103,17 +104,19 @@ routes = connectRoutes ++ applicationRoutes
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                  , homeHandler sendHomePage)
-  , ("/panel/jira/ping/create" , createPingPanel )
-  , ("/panel/jira/reminders/view", viewRemindersPanel)
-  , ("/rest/ping"         , handlePings)
-  , ("/rest/pings"        , handleMultiPings)
-  , ("/rest/user/reminders", handleUserReminders)
-  , ("/rest/expire"       , handleExpireRequest)
-  , ("/rest/purge"        , handlePurgeRequest)
-  , ("/rest/healthcheck"  , healthcheckRequest)
-  , ("/rest/heartbeat"    , heartbeatRequest)
-  , ("/static"            , serveDirectory "static")
+  [ ("/"                               , homeHandler sendHomePage)
+  , ("/panel/jira/ping/create"         , createPingPanel )
+  , ("/panel/jira/reminders/view"      , viewRemindersPanel)
+  , ("/rest/ping"                      , handlePings)
+  , ("/rest/pings"                     , handleMultiPings)
+  , ("/rest/user/reminders"            , handleUserReminders)
+  , ("/rest/expire"                    , handleExpireRequest)
+  , ("/rest/purge"                     , handlePurgeRequest)
+  , ("/rest/webhook/issue/update"      , handleIssueUpdateWebhook)
+  , ("/rest/webhook/issue/delete"      , handleIssueDeleteWebhook)
+  , ("/rest/healthcheck"               , healthcheckRequest)
+  , ("/rest/heartbeat"                 , heartbeatRequest)
+  , ("/static"                         , serveDirectory "static")
   ]
 
 heistConfig :: H.HeistConfig (SS.Handler App App)

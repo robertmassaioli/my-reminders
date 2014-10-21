@@ -29,7 +29,7 @@ addonDescriptor descriptorConfig =
         { enabled = Nothing
         , disabled = Nothing
         }
-    , modules = Just $ Modules JiraModules
+    , modules = Just $ Modules emptyJiraModules
           { webPanels = 
             [ WebPanel
                { wpKey = "ping-create-panel"
@@ -49,6 +49,10 @@ addonDescriptor descriptorConfig =
                , generalPageIcon = Nothing
                , generalPageWeight = Nothing
                }
+            ]
+          , webhooks = 
+            [ Webhook { webhookEvent = JiraIssueUpdated, webhookUrl = "/rest/webhook/issue/update" }
+            , Webhook { webhookEvent = JiraIssueDeleted, webhookUrl = "/rest/webhook/issue/delete" }
             ]
           }
     , scopes = Just [Read]
