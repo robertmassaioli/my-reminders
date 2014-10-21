@@ -1,7 +1,7 @@
 ({
    'appDir': 'static/js',
    'baseUrl': '.',
-   'dir': 'static-built',
+   'dir': 'static-js',
    'paths': {
       'moment': 'lib/moment',
       'mustache': 'lib/mustache'

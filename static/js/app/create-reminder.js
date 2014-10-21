@@ -190,7 +190,6 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             var reminders = JSON.parse(pingsResponse[0]);
             var user = JSON.parse(userResponse[0]);
 
-            console.log(reminders);
             // Clear the reminders container
             var remindersContainer = AJS.$("#upcoming-reminders");
             remindersContainer.empty();

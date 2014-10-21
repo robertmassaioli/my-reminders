@@ -2010,7 +2010,7 @@ var requirejs, require, define;
             deps = null;
         }
 
-        console.log("Defined: " + (name ? name : '<no-name>') + " [" + (deps ? deps.join(',') : '') + "]");
+        // console.log("Defined: " + (name ? name : '<no-name>') + " [" + (deps ? deps.join(',') : '') + "]");
 
         //If no name, and callback is a function, then figure out if it a
         //CommonJS thing with dependencies.

@@ -27,4 +27,4 @@ snaplets/Remind\ Me\ Configuration/
 .DS_store
 
 # Generated js files
-/static/built
+/static-js

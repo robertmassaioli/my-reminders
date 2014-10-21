@@ -8,10 +8,10 @@
 
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static-built/app/view-my-reminders.js</bind></js>
+      <js><bind tag="href">/static/js/app/view-my-reminders.js</bind></js>
       <script>require(['app/view-my-reminders']);</script>
 
-      <stylesheet><bind tag="href">/static/view-my-reminders.css</bind></stylesheet>
+      <stylesheet><bind tag="href">/static/css/view-my-reminders.css</bind></stylesheet>
 
       <script id="reminder-row" type="x-tmpl-mustache">
          <tr class="reminder" data-reminder-id="{{PingId}}">
