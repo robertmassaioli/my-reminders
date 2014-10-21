@@ -114,7 +114,7 @@ applicationRoutes =
   , ("/rest/healthcheck"  , healthcheckRequest)
   , ("/rest/heartbeat"    , heartbeatRequest)
   , ("/static"            , serveDirectory "static")
-  , ("/static-built"            , serveDirectory "static-built")
+  , ("/static-built"      , serveDirectory "static-built")
   ]
 
 heistConfig :: H.HeistConfig (SS.Handler App App)

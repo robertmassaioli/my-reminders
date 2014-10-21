@@ -1,8 +1,4 @@
-define(function(require) {
-   var Mustache = require('mustache'),
-       HostRequest = require('host/request'),
-       moment = require('moment-timezone');
-
+define(['lib/mustache', 'lib/moment-timezone', 'host/request', 'connect/pagetoken'], function(Mustache, moment, HostRequest) {
    AJS.$(function() {
       AJS.log("Javascript loaded, lets lock and load!");
       var templates = {};

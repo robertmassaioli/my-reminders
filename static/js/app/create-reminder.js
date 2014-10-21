@@ -1,12 +1,5 @@
-require(['aui/form-validation']);
-
-define(function(require) {
-   // Define and then require trick to get around this problem:
-   // http://stackoverflow.com/q/12574255/83446
-   var URI = require("URI"),
-       HostRequest = require("host/request"),
-       Mustache = require("mustache"),
-       moment = require("moment-timezone");
+define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/pagetoken'], function(URI, HostRequest, Mustache, moment) {
+   require(['aui/form-validation']);
 
    AJS.$.fn.flashClass = function(c, userOptions) {
       var defaults = {
