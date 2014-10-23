@@ -10,7 +10,7 @@
    "links": {
       "binary": {
          "name": "atlassian/remindme",
-         "type": "image"
+         "type": "docker"
       },
       "healthcheck": {
          "uri": "/rest/heartbeat"
@@ -27,7 +27,7 @@
    "notifications": {
       "pagerduty": {
          "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/124e0f010f214a9b9f30b768e7b18e69",
-         "apikey": "5d11612f25b840faaf77422edeff9c76"
+         "apiKey": "5d11612f25b840faaf77422edeff9c76"
       },
       "email": "rmassaioli@atlassian.com" 
    },
