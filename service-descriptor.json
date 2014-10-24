@@ -13,7 +13,7 @@
          "type": "docker"
       },
       "healthcheck": {
-         "uri": "/rest/heartbeat"
+         "uri": "rest/heartbeat"
       },
       "source": {
          "url": "https://bitbucket.org/eerok/ping-me-connect"
