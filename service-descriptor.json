@@ -9,7 +9,7 @@
    }],
    "links": {
       "binary": {
-         "name": "atlassian/remind-me",
+         "name": "docker.atlassian.io/atlassian/remind-me",
          "type": "docker"
       },
       "healthcheck": {
