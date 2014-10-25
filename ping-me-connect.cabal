@@ -49,6 +49,7 @@ Executable ping-me-connect
                  , Healthcheck
                  , DatabaseSnaplet
                  , Heartbeat
+                 , NetworkHelpers
 
   default-language: Haskell2010
   Build-depends:
@@ -84,7 +85,7 @@ Executable ping-me-connect
     , time                      >= 1.1     && < 1.5
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
-    , hailgun                   >= 0.1.1.0 && < 0.2
+    , hailgun                   >= 0.2.1.0 && < 0.3
     , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
     , time-units                == 1.*

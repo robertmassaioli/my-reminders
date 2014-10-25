@@ -20,6 +20,7 @@ import           Data.Maybe (fromMaybe)
 import           Data.Text.Encoding (encodeUtf8)
 import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
+import           Network.HTTP.Client (Proxy(..))
 import qualified Snap.Snaplet as SS
 import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
@@ -32,6 +33,8 @@ data RMConf = RMConf
    , rmMaxExpiryWindowMinutes :: DTU.Minute
    , rmPurgeKey               :: Key BSC.ByteString RMConf
    , rmPurgeRetention         :: DTU.Day
+   , rmHttpProxy              :: Maybe Proxy
+   , rmHttpSecureProxy        :: Maybe Proxy
    }
 
 class HasRMConf m where
@@ -42,11 +45,13 @@ initRMConfOrExit = SS.makeSnaplet "Remind Me Configuration" "Remind me configura
   MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConfOrExit
 
 data EnvConf = EnvConf
-   { ecExpireKey     :: Maybe String
-   , ecPurgeKey      :: Maybe String
-   , ecMailgunDomain :: Maybe String
-   , ecMailgunApiKey :: Maybe String
-   , ecZone          :: Zone
+   { ecExpireKey        :: Maybe String
+   , ecPurgeKey         :: Maybe String
+   , ecMailgunDomain    :: Maybe String
+   , ecMailgunApiKey    :: Maybe String
+   , ecHttpProxy        :: Maybe String
+   , ecHttpSecureProxy  :: Maybe String
+   , ecZone             :: Zone
    } deriving (Eq, Show)
 
 loadConfFromEnvironment :: IO EnvConf
@@ -54,19 +59,21 @@ loadConfFromEnvironment = do
    environment <- SE.getEnvironment
    let get = search environment
    return EnvConf
-      { ecExpireKey     = get "EXPIRE_KEY"
-      , ecPurgeKey      = get "PURGE_KEY"
-      , ecMailgunDomain = get "MAILGUN_DOMAIN"
-      , ecMailgunApiKey = get "MAILGUN_API_KEY"
-      , ecZone          = fromMaybe Dev $ zoneFromString =<< get "ZONE"
+      { ecExpireKey        = get "EXPIRE_KEY"
+      , ecPurgeKey         = get "PURGE_KEY"
+      , ecMailgunDomain    = get "MAILGUN_DOMAIN"
+      , ecMailgunApiKey    = get "MAILGUN_API_KEY"
+      , ecHttpProxy        = get "http_proxy"
+      , ecHttpSecureProxy  = get "https_proxy"
+      , ecZone             = fromMaybe Dev $ zoneFromString =<< get "ZONE"
       }
 
 search :: [(String, String)] -> String -> Maybe String
 search pairs key = fmap snd $ find ((==) key . fst) pairs
 
 guardConfig :: EnvConf -> IO ()
-guardConfig (EnvConf (Just _) (Just _) (Just _) (Just _) _) = return ()
-guardConfig (EnvConf _        _        _        _        env) = 
+guardConfig (EnvConf (Just _) (Just _) (Just _) (Just _) _ _ _) = return ()
+guardConfig (EnvConf _        _        _        _        _ _ env) = 
    when (env `elem` [Dog, Prod]) $ do
       putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ show env
       exitWith (ExitFailure 10)
@@ -89,17 +96,22 @@ loadRMConfOrExit config = do
    purgeKey <- require config "purge-key" "Missing 'purge-key': for triggering customer data cleanups."
    purgeRetentionDays <- require config "purge-retention-days" "Missing 'purge-retention-days': the length of time that uninstalled customer data should remain before we delete it."
 
+   let httpProxy = parseProxy standardHttpPort (ecHttpProxy environmentConf)
+   let httpSecureProxy = parseProxy standardHttpSecurePort (ecHttpSecureProxy environmentConf)
    let fromConf = envOrDefault environmentConf
    return RMConf 
       { rmExpireKey = fromConf (fmap packInKey . ecExpireKey) expiryKey
       , rmHailgunContext = HailgunContext
          { hailgunDomain = fromConf ecMailgunDomain mailgunDomain
          , hailgunApiKey = fromConf ecMailgunApiKey mailgunApiKey
+         , hailgunProxy  = httpSecureProxy
          }
       , rmFromAddress = fromAddress
       , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
       , rmPurgeKey = fromConf (fmap packInKey . ecPurgeKey) purgeKey
       , rmPurgeRetention = fromInteger purgeRetentionDays
+      , rmHttpProxy = httpProxy
+      , rmHttpSecureProxy = httpSecureProxy
       }
 
 packInKey :: String -> Key BSC.ByteString a
@@ -116,15 +128,32 @@ boxEnvironmentConf c =
       , text " - Purge Key:"
       , text " - Mailgun Domain:"
       , text " - Mailgun Api Key:"
+      , text " - HTTP Proxy:"
+      , text " - HTTP Secure Proxy:"
       ]
    <+> vcat left
       [ text . DE.showMaybe . ecExpireKey $ c
       , text . DE.showMaybe . ecPurgeKey $ c
       , text . DE.showMaybe . ecMailgunDomain $ c
       , text . DE.showMaybe . ecMailgunApiKey $ c
+      , text . DE.showMaybe . ecHttpProxy $ c
+      , text . DE.showMaybe . ecHttpSecureProxy $ c
       ]
    )
 
-
 printEnvironmentConf :: EnvConf -> IO ()
 printEnvironmentConf = printBox . boxEnvironmentConf
+
+type HttpPort = Int
+
+standardHttpPort :: HttpPort
+standardHttpPort = 80
+
+standardHttpSecurePort :: HttpPort
+standardHttpSecurePort = 443
+
+parseProxy :: HttpPort -> Maybe String -> Maybe Proxy
+parseProxy defaultPort potentialRawProxy = do
+   rawProxy <- potentialRawProxy
+   let (host, port) = span (/= ':') rawProxy
+   return $ Proxy (BSC.pack host) (if null port then defaultPort else read port)
