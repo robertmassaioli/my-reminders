@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
+   <head profile="http://www.w3.org/2005/10/profile">
+      <link rel="icon" type="image/ico" href="/static/images/favicon.v3.ico" />
+
       <meta charset="utf-8" />
       <meta version="${version}" />
       <meta name="avatarSize" content="${avatarSize}" />
@@ -31,9 +33,6 @@
       <apply template="headers/moment" />
 
       <header-extra />
-
-      <!-- TODO this will never be served because we do not have code like this... -->
-      <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
    </head>
    <body>
       <apply-content />
