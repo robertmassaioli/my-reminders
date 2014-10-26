@@ -86,17 +86,24 @@ hasSplice = do
          tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS
          case tokenSplice of
             Just _ -> HI.runChildren
-            Nothing -> return . comment . T.pack $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
+            Nothing -> return . comment $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
       Nothing -> return . comment $ "Could not find 'name' attribute."
-   where
-      comment x = [X.Comment x]
 
-{-
+comment :: String -> [X.Node]
+comment x = [X.Comment (T.pack x)]
+
+text :: String -> [X.Node]
+text x = [X.TextNode (T.pack x)]
+
 includeFile :: SSH.SnapletISplice App
 includeFile = do
-   fileName 
--}
-
+   potentialFile <- fmap (X.getAttribute "file") H.getParamNode
+   case potentialFile of
+      Nothing -> return . comment $ "No content could be loaded"
+      Just filePath -> do
+         fileContents <- liftIO (readFile . T.unpack $ filePath)
+         return . text $ fileContents
+         
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ CPT.generateTokenCurrentTime ct
@@ -127,6 +134,7 @@ heistConfig :: H.HeistConfig (SS.Handler App App)
 heistConfig = mempty
    { H.hcInterpretedSplices = do
       "hasSplice" H.## hasSplice
+      "includeFile" H.## includeFile
       H.defaultInterpretedSplices
    }
 
