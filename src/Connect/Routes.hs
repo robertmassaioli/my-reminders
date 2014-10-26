@@ -14,14 +14,14 @@ import qualified Connect.Data                 as CD
 import           Connect.Descriptor           (Name (..))
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
-import qualified Control.Monad                as CM
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BC
-import qualified Data.ByteString.Lazy.Char8   as BLC
 import qualified Data.CaseInsensitive         as CI
 import           Data.Char                    as DC
 import           Data.List
-import           Data.Maybe                   (isJust)
+import           Data.List.Split              (splitOn)
+import qualified Data.Map.Lazy                as ML
+import           Data.Maybe                   (isJust, catMaybes, fromMaybe)
 import qualified Data.Text                    as T
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
@@ -41,30 +41,58 @@ type Port = Int
 
 data MediaType = ApplicationJson | TextHtml deriving (Eq)
 
+newtype OrdMediaType = OMT NM.MediaType deriving (Eq, Show)
+
+instance Ord OrdMediaType where
+   compare a b = compare (show a) (show b)   
+
 instance Show (MediaType) where
   show ApplicationJson = "application/json"
   show TextHtml = "text/html"
 
 serverPortSuffix :: Protocol -> Port -> String
-serverPortSuffix HTTP  port = if port /= 0 && port /= 80 then ":" ++ show port else ""
-serverPortSuffix HTTPS port = if port /= 0 && port /= 443 then ":" ++ show port else ""
+serverPortSuffix protocol port = if port `elem` portsForProtocol protocol then "" else ":" ++ show port
+
+portsForProtocol :: Protocol -> [Port]
+portsForProtocol HTTP  = [0, 80]
+portsForProtocol HTTPS = [0, 443]
 
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
-homeHandler sendHomePage = ourAccept jsonMT sendJson <|> ourAccept textHtmlMT sendHomePage
+homeHandler sendHomePage = SC.method SC.GET handleGet <|> SH.respondWithError SH.badRequest "You can only GET the homepage."
   where
-    sendJson = SC.method SC.GET atlassianConnectHandler <|> SH.respondWithError SH.badRequest "You can only GET the atlassian connect descriptor."
-    (Just jsonMT) = parseMediaType ApplicationJson
-    (Just textHtmlMT) = parseMediaType TextHtml
-    parseMediaType = NM.parse . BC.pack . show
+    handleGet = do
+      organisedHeaders <- organiseAcceptHeader
+      case find isAcceptedMediaType organisedHeaders of
+        Just mediaType -> fromMaybe lookupFailed (ML.lookup (OMT mediaType) responseMap) 
+        Nothing -> unknownHeader
 
-ourAccept :: NM.MediaType -> SS.Handler b v () -> SS.Handler b v ()
-ourAccept mediaType action = do
-  request <- SC.getRequest
-  CM.unless (SC.getHeader bsAccept request == (Just . NM.toByteString $ mediaType)) SC.pass
-  action
-  where
-    bsAccept :: CI.CI BC.ByteString
-    bsAccept = CI.mk . BC.pack $ "Accept"
+    responseMap = ML.fromList
+      [ (OMT jsonMT, atlassianConnectHandler)
+      , (OMT textHtmlMT, sendHomePage)
+      ]
+
+    lookupFailed = SH.respondWithError SH.internalServer "We thought that we could handle this Accept header but it turns out that we couldn't. Server error."
+    unknownHeader = SH.respondWithError SH.notFound "No response to a request with the provided Accept header."
+
+    isAcceptedMediaType = flip elem acceptedMediaTypes
+    acceptedMediaTypes = [jsonMT, textHtmlMT]
+    (Just jsonMT) = parseMediaType (show ApplicationJson)
+    (Just textHtmlMT) = parseMediaType (show TextHtml)
+
+parseMediaType :: String -> Maybe NM.MediaType
+parseMediaType = NM.parse . BC.pack
+
+-- An example accept header: 
+-- Just "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+organiseAcceptHeader :: SS.Handler b v [NM.MediaType]
+organiseAcceptHeader = do
+   request <- SC.getRequest
+   case SC.getHeader bsAccept request of
+      Nothing -> return []
+      Just rawHeader -> return . catMaybes . fmap parseMediaType . splitOn "," . BC.unpack $ rawHeader
+
+bsAccept :: CI.CI BC.ByteString
+bsAccept = CI.mk . BC.pack $ "Accept"
 
 connectRoutes :: [(BC.ByteString, SS.Handler App App ())]
 connectRoutes = fmap (ARO.first BC.pack) simpleConnectRoutes

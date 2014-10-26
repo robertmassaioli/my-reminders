@@ -91,6 +91,12 @@ hasSplice = do
    where
       comment x = [X.Comment x]
 
+{-
+includeFile :: SSH.SnapletISplice App
+includeFile = do
+   fileName 
+-}
+
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ CPT.generateTokenCurrentTime ct

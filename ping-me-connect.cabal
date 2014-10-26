@@ -89,6 +89,7 @@ Executable ping-me-connect
     , parallel-io               == 0.3.*
     , time-units                == 1.*
     , boxes                     == 0.1.*
+    , split                     == 0.2.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
@@ -154,3 +155,5 @@ test-suite ping-me-props
     , time-units
     , transformers
     , xmlhtml
+    , boxes
+    , split
