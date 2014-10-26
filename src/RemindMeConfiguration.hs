@@ -155,5 +155,6 @@ standardHttpSecurePort = 443
 parseProxy :: HttpPort -> Maybe String -> Maybe Proxy
 parseProxy defaultPort potentialRawProxy = do
    rawProxy <- potentialRawProxy
-   let (host, _ : port) = span (/= ':') rawProxy
+   let (host, portAndColon) = span (/= ':') rawProxy
+   let port = if null portAndColon then [] else tail portAndColon
    return $ Proxy (BSC.pack host) (if null port then defaultPort else read port)
