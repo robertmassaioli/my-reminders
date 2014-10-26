@@ -6,10 +6,10 @@ Imagine the following scenario:
 > customers. It is critical that she does not forget about this issue before release. Watching the
 > issue will not help: if nobody updates the issue then she will never be notified. The same goes
 > for notification schemes. She could modify the Workflow so that all issues must go through her for
-> final approval but that seems quite heavy handed and not agile at all. Instead she decides,
-> finally, to just copy and paste the issue into her calendar (a time consuming process). She then
-> gets annoyed as she realises that she will have to do this for every single issue in JIRA that
-> she wants to be reminded about. "There must be a better way?" she asks herself.
+> final approval, but that seems quite heavy handed and not agile at all. Instead she decides
+> to just copy and paste the issue into her calendar (a time consuming process). "It is annoying",
+> she thinks, "that I will have to do this for every single JIRA issue that I want to be reminded
+> about. There must be a better way?"
 
 And there is. Introducing Remind me for Cloud, a plugin designed to remind you of issues when you
 ask to be reminded about them. Using this plugin you'll never forget an issue again. No issue can

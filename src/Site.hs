@@ -13,8 +13,10 @@ module Site
 ------------------------------------------------------------------------------
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BC
 import           Data.Monoid (mempty)
 import qualified Data.Text as T
+import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
@@ -45,18 +47,18 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
-sendHomePage = SSH.heistLocal environment $ SSH.render "home"
-  where environment = I.bindSplices (homeSplice getAppVersion 2 3)
+sendHomePage :: SC.MonadSnap m => m ()
+sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
-homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (I.Splice n)
-homeSplice version2 avatarSize pollerInterval = do
-  "version" H.## I.textSplice version2
-  "avatarSize" H.## I.textSplice $ T.pack $ show avatarSize
-  "pollerInterval" H.## I.textSplice $ T.pack $ show pollerInterval
-
-getAppVersion :: T.Text
-getAppVersion = "0.1"
+showDocPage :: SSH.HasHeist b => SS.Handler b v ()
+showDocPage = do
+   fileName <- SC.getParam "fileparam"
+   case fileName of
+      Nothing -> fail "Need to reference a valid documentation file."
+      Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
+   where
+      environment fileName = I.bindSplices $ do
+         "fileName" H.## I.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -112,23 +114,32 @@ withTokenAndTenant processor = TJ.withTenant $ \ct -> do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ applicationRoutes
+routes = connectRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                  , homeHandler sendHomePage)
-  , ("/panel/jira/ping/create" , createPingPanel )
-  , ("/panel/jira/reminders/view", viewRemindersPanel)
-  , ("/rest/ping"         , handlePings)
-  , ("/rest/pings"        , handleMultiPings)
-  , ("/rest/user/reminders", handleUserReminders)
-  , ("/rest/expire"       , handleExpireRequest)
-  , ("/rest/purge"        , handlePurgeRequest)
-  , ("/rest/healthcheck"  , healthcheckRequest)
-  , ("/rest/heartbeat"    , heartbeatRequest)
-  , ("/static"            , serveDirectory "static")
-  , ("/static/images"     , serveDirectory "static/images")
+  [ ("/"                            , homeHandler sendHomePage)
+  , ("/docs/:fileparam"             , showDocPage)
+  , ("/panel/jira/ping/create"      , createPingPanel )
+  , ("/panel/jira/reminders/view"   , viewRemindersPanel)
+  , ("/rest/ping"                   , handlePings)
+  , ("/rest/pings"                  , handleMultiPings)
+  , ("/rest/user/reminders"         , handleUserReminders)
+  , ("/rest/expire"                 , handleExpireRequest)
+  , ("/rest/purge"                  , handlePurgeRequest)
+  , ("/rest/healthcheck"            , healthcheckRequest)
+  , ("/rest/heartbeat"              , heartbeatRequest)
+  , ("/static"                      , serveDirectory "static")
+  , ("/static/images"               , serveDirectory "static/images")
   ]
+
+-- We should always redirect to external services or common operations, that way when we want to
+-- change where that points to, we only have to quickly update those links here
+redirects :: [(ByteString, SS.Handler App App ())]
+redirects = 
+   [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/ping-me-connect/issues")
+   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
+   ]
 
 heistConfig :: H.HeistConfig (SS.Handler App App)
 heistConfig = mempty
