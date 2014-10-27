@@ -11,6 +11,7 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+import           Control.Lens ((&), (.~))
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BC
@@ -20,12 +21,12 @@ import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
+import qualified Heist.Internal.Types as HIT
 import qualified Snap.Snaplet.Heist as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
 import           Application
-import qualified Heist.Interpreted as I
 import qualified Text.XmlHtml as X
 
 
@@ -57,8 +58,8 @@ showDocPage = do
       Nothing -> fail "Need to reference a valid documentation file."
       Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
    where
-      environment fileName = I.bindSplices $ do
-         "fileName" H.## I.textSplice fileName
+      environment fileName = HI.bindSplices $ do
+         "fileName" H.## HI.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -73,12 +74,12 @@ viewRemindersPanel = createConnectPanel "view-jira-reminders"
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- CD.getConnect
-  SSH.heistLocal (I.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
+  SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-      "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
-      "userKey" H.## I.textSplice $ maybe T.empty T.pack userKey
+      "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
+      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      "userKey" H.## HI.textSplice $ maybe T.empty T.pack userKey
 
 hasSplice :: SSH.SnapletISplice App
 hasSplice = do
@@ -141,13 +142,15 @@ redirects =
    , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
    ]
 
-heistConfig :: H.HeistConfig (SS.Handler App App)
-heistConfig = mempty
-   { H.hcInterpretedSplices = do
-      "hasSplice" H.## hasSplice
-      "includeFile" H.## includeFile
-      H.defaultInterpretedSplices
-   }
+spliceConfig :: H.SpliceConfig (SS.Handler App App)
+spliceConfig = mempty 
+   & HIT.scInterpretedSplices .~ customSplices
+
+customSplices :: HIT.Splices (HI.Splice (SS.Handler App App))
+customSplices = do
+   "hasSplice" H.## hasSplice
+   "includeFile" H.## includeFile
+   H.defaultInterpretedSplices
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -156,7 +159,8 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
-  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
+  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+  SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
