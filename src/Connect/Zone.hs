@@ -1,21 +1,25 @@
-module Connect.Zone 
+module Connect.Zone
    ( Zone(..)
    , zoneFromString
    , fromEnv
    , fromEnvDefaultDev
    ) where
 
-import           Control.Monad (join)
-import           Data.Maybe (fromMaybe)
+import           Control.Monad           (join)
 import qualified Data.EnvironmentHelpers as DE
+import           Data.Maybe              (fromMaybe)
 
 data Zone = Dev | Dog | Prod
    deriving(Eq, Show, Ord)
 
 zoneFromString :: String -> Maybe Zone
-zoneFromString "DEV"    = Just Dev
-zoneFromString "DOG"    = Just Dog
-zoneFromString "PROD"   = Just Prod
+zoneFromString "domain.dev.atlassian.io" = Just Dev
+zoneFromString "application.dev.atlassian.io" = Just Dev
+zoneFromString "platform.dev.atlassian.io" = Just Dev
+zoneFromString "useast.staging.atlassian.io" = Just Dog
+zoneFromString "uswest.staging.atlassian.io"  = Just Dog
+zoneFromString "useast.atlassian.io" = Just Prod
+zoneFromString "uswest.atlassian.io"  = Just Prod
 zoneFromString _        = Nothing
 
 fromEnv :: IO (Maybe Zone)
