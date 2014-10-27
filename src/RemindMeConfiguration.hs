@@ -8,7 +8,7 @@ module RemindMeConfiguration
    ) where
 
 import           ConfigurationHelpers
-import           Control.Monad (when)
+import           Control.Monad (when, join)
 import           Connect.Descriptor
 import qualified Control.Monad.IO.Class as MI
 import           Connect.Zone
@@ -21,6 +21,7 @@ import           Data.Text.Encoding (encodeUtf8)
 import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
 import           Network.HTTP.Client (Proxy(..))
+import qualified Network.URI as NU
 import qualified Snap.Snaplet as SS
 import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
@@ -155,6 +156,7 @@ standardHttpSecurePort = 443
 parseProxy :: HttpPort -> Maybe String -> Maybe Proxy
 parseProxy defaultPort potentialRawProxy = do
    rawProxy <- potentialRawProxy
-   let (host, portAndColon) = span (/= ':') rawProxy
+   authority <- join $ fmap NU.uriAuthority $ NU.parseURI rawProxy
+   let (host, portAndColon) = (NU.uriRegName authority, NU.uriPort authority)
    let port = if null portAndColon then [] else tail portAndColon
    return $ Proxy (BSC.pack host) (if null port then defaultPort else read port)
