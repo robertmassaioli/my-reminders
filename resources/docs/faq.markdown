@@ -7,12 +7,13 @@ questions:
 
 #### Can I set a reminder for another person?
 
-The short answer is: no, by design. The service is called Remind me for Cloud and the intention is
-that you can only set reminders for yourself. We wanted to prevent people from spamming their
-co-workers with reminders. In the spirit of fostering good communication we currently do not intend
-to allow the creation of reminders for other people.
+The short answer is: no, by design. The intention is that you can only set reminders for yourself. Being able 
+to set reminders for other people opens up the potential for abusing the reminders system. 
+We wanted to prevent people from spamming their co-workers with reminders. In the spirit of 
+fostering good communication we currently do not intend to allow the creation of reminders for 
+other people.
 
-If you want to make sure that somebody else does not forget about an issue we would prefer that you
+If you want to make sure that somebody else does not forget about an issue then you can
 set a reminder for yourself that says something like "Remind bob not to forget this issue".
 
 #### How far in the future can I set reminders for in this service?

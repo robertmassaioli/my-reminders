@@ -1,15 +1,19 @@
 ## What is Remind me for Cloud?
 
+Remind Me for Cloud: never forget your JIRA issues again!
+
+ - Configure multiple reminders on your issues for days, weeks, months or even years into the future.
+ - Get your reminders sent straight through to your email!
+
 Imagine the following scenario:
 
 > Alana has an important issue in JIRA that needs to be resolved before they ship their product to
 > customers. It is critical that she does not forget about this issue before release. Watching the
 > issue will not help: if nobody updates the issue then she will never be notified. The same goes
 > for notification schemes. She could modify the Workflow so that all issues must go through her for
-> final approval, but that seems quite heavy handed and not agile at all. Instead she decides
-> to just copy and paste the issue into her calendar (a time consuming process). "It is annoying",
-> she thinks, "that I will have to do this for every single JIRA issue that I want to be reminded
-> about. There must be a better way?"
+> final approval, but that seems quite heavy handed and not agile at all. Eventually she realises
+> that there is no way to set reminders about issues in JIRA. "This is really annoying",
+> she thinks, "there must be a better way?"
 
 And there is. Introducing Remind me for Cloud, a plugin designed to remind you of issues when you
 ask to be reminded about them. Using this plugin you'll never forget an issue again. No issue can
