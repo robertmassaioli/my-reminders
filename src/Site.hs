@@ -138,11 +138,11 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
+  SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
   appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConfOrExit
-  SS.addRoutes routes
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appRMConf
