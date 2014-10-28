@@ -19,12 +19,14 @@
          - template language.
          -->
 
+      <apply template="headers/requirejs" />
+
       <apply template="headers/tenant" />
 
       <apply template="headers/aui" />
       <apply template="headers/aui-experimental" />
 
-      <apply template="headers/jquery-url-parser" />
+      <!--apply template="headers/jquery-url-parser" /-->
 
       <apply template="headers/visibility" />
 
@@ -33,13 +35,9 @@
       <header-extra />
 
       <!-- TODO this will never be served because we do not have code like this... -->
-      <link rel="stylesheet" type="text/css" href="/stylesheets/main.css" />
+      <!--link rel="stylesheet" type="text/css" href="/stylesheets/main.css" /-->
    </head>
    <body>
       <apply-content />
-      <hasSplice name="connectPageToken">
-      <script type="text/javascript">(window.AJS && window.AJS.$) || document.write("<script type='text/javascript' src='//code.jquery.com/jquery-1.10.2.min.js'>\x3C/script>")</script>
-      <script type="text/javascript" src="/static/pagetoken.js"></script>
-      </hasSplice>
    </body>
 </html>

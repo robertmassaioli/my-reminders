@@ -114,7 +114,8 @@ applicationRoutes =
   , ("/rest/purge"        , handlePurgeRequest)
   , ("/rest/healthcheck"  , healthcheckRequest)
   , ("/rest/heartbeat"    , heartbeatRequest)
-  , ("/static"            , serveDirectory "static")
+  , ("/static/css"        , serveDirectory "static/css")
+  , ("/static/js"         , serveDirectory "static-js")
   ]
 
 heistConfig :: H.HeistConfig (SS.Handler App App)
