@@ -3,11 +3,11 @@
    <head profile="http://www.w3.org/2005/10/profile">
       <link rel="icon" type="image/ico" href="/static/images/favicon.v3.ico" />
 
+      <apply template="headers/requirejs" />
       <apply template="headers/aui" />
       <apply template="headers/aui-experimental" />
-      <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
-
-      <script type="text/javascript" src="/static/js/doc-page-loaded.js"></script>
+      <js src="/static/js/app/doc-page.js" />
+      <script>require(['app/doc-page']);</script>
    </head>
    <body>
       <header id="header" role="banner">

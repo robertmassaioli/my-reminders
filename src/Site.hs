@@ -106,6 +106,36 @@ includeFile = do
       Just filePath -> do
          fileContents <- liftIO (readFile . T.unpack $ filePath)
          return . text $ fileContents
+
+jsInclude :: SSH.SnapletISplice App
+jsInclude = do
+   potentialSrc <- fmap (X.getAttribute "src") H.getParamNode
+   case potentialSrc of
+      Nothing -> return . comment $ "<js> tag had no 'src' attribute"
+      Just src -> return [X.Element 
+         { X.elementTag = T.pack "script"
+         , X.elementAttrs =
+            [ (T.pack "src", src)
+            , (T.pack "type", T.pack "text/javascript")
+            ]
+         , X.elementChildren = []
+         }]
+
+-- <link rel="stylesheet" type="text/css" href="mystyle.css">
+cssInclude :: SSH.SnapletISplice App
+cssInclude = do
+   potentialHref <- fmap (X.getAttribute "href") H.getParamNode
+   case potentialHref of
+      Nothing -> return . comment $ "<css> tag had no 'href' attribute"
+      Just href -> return [X.Element 
+         { X.elementTag = T.pack "link"
+         , X.elementAttrs =
+            [ (T.pack "href", href)
+            , (T.pack "type", T.pack "text/css")
+            , (T.pack "rel", T.pack "stylesheet")
+            ]
+         , X.elementChildren = []
+         }]
          
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
@@ -151,6 +181,8 @@ customSplices :: HIT.Splices (HI.Splice (SS.Handler App App))
 customSplices = do
    "hasSplice" H.## hasSplice
    "includeFile" H.## includeFile
+   "js" H.## jsInclude
+   "css" H.## cssInclude
    H.defaultInterpretedSplices
 
 ------------------------------------------------------------------------------
