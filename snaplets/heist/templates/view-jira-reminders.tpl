@@ -17,7 +17,7 @@
          <tr class="reminder" data-reminder-id="{{PingId}}">
             <td><input type="checkbox" class="select" /></td>
             <td>{{fullDate}}</td>
-            <td><a href="{{{issueLink}}}">[{{IssueKey}}] {{IssueSummary}}</a></td>
+            <td><a href="{{{issueLink}}}" target="_parent">[{{IssueKey}}] {{IssueSummary}}</a></td>
             <td>{{UserEmail}}</td>
             <td>{{Message}}</td>
          </tr>
