@@ -1,17 +1,9 @@
-<bind tag="js">
-   <script type="text/javascript" src="${href}"></script>
-</bind>
-
-<bind tag="stylesheet">
-   <link rel="stylesheet" type="text/css" href="${href}">
-</bind>
-
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static/js/app/create-reminder.js</bind></js>
+      <js src="/static/js/app/create-reminder.js" />
       <script>require(['app/create-reminder']);</script>
 
-      <stylesheet><bind tag="href">/static/css/create-reminder.css</bind></stylesheet>
+      <css href="/static/css/create-reminder.css" />
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>

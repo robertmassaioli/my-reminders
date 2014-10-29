@@ -1,17 +1,9 @@
-<bind tag="js">
-   <script type="text/javascript" src="${href}"></script>
-</bind>
-
-<bind tag="stylesheet">
-   <link rel="stylesheet" type="text/css" href="${href}">
-</bind>
-
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static/js/app/view-my-reminders.js</bind></js>
+      <js src="/static/js/app/view-my-reminders.js" />
       <script>require(['app/view-my-reminders']);</script>
 
-      <stylesheet><bind tag="href">/static/css/view-my-reminders.css</bind></stylesheet>
+      <css href="/static/css/view-my-reminders.css" />
 
       <script id="reminder-row" type="x-tmpl-mustache">
          <tr class="reminder" data-reminder-id="{{PingId}}">

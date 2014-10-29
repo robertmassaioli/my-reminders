@@ -4,7 +4,8 @@
    'dir': 'static-js',
    'paths': {
       'moment': 'lib/moment',
-      'mustache': 'lib/mustache'
+      'mustache': 'lib/mustache',
+      'marked': 'lib/marked'
    },
    'modules': [
       {
@@ -12,6 +13,9 @@
       },
       {
          'name': 'app/view-my-reminders'
+      },
+      {
+         'name': 'app/doc-page'
       }
    ]
 })
