@@ -14,8 +14,10 @@ module Site
 import           Control.Lens ((&), (.~))
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BC
 import           Data.Monoid (mempty)
 import qualified Data.Text as T
+import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
@@ -46,18 +48,18 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
-sendHomePage = SSH.heistLocal environment $ SSH.render "home"
-  where environment = HI.bindSplices (homeSplice getAppVersion 2 3)
+sendHomePage :: SC.MonadSnap m => m ()
+sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
-homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (HI.Splice n)
-homeSplice version2 avatarSize pollerInterval = do
-  "version" H.## HI.textSplice version2
-  "avatarSize" H.## HI.textSplice $ T.pack $ show avatarSize
-  "pollerInterval" H.## HI.textSplice $ T.pack $ show pollerInterval
-
-getAppVersion :: T.Text
-getAppVersion = "0.1"
+showDocPage :: SSH.HasHeist b => SS.Handler b v ()
+showDocPage = do
+   fileName <- SC.getParam "fileparam"
+   case fileName of
+      Nothing -> fail "Need to reference a valid documentation file."
+      Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
+   where
+      environment fileName = HI.bindSplices $ do
+         "fileName" H.## HI.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -87,11 +89,24 @@ hasSplice = do
          tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS
          case tokenSplice of
             Just _ -> HI.runChildren
-            Nothing -> return . comment . T.pack $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
+            Nothing -> return . comment $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
       Nothing -> return . comment $ "Could not find 'name' attribute."
-   where
-      comment x = [X.Comment x]
 
+comment :: String -> [X.Node]
+comment x = [X.Comment (T.pack x)]
+
+text :: String -> [X.Node]
+text x = [X.TextNode (T.pack x)]
+
+includeFile :: SSH.SnapletISplice App
+includeFile = do
+   potentialFile <- fmap (X.getAttribute "file") H.getParamNode
+   case potentialFile of
+      Nothing -> return . comment $ "No content could be loaded"
+      Just filePath -> do
+         fileContents <- liftIO (readFile . T.unpack $ filePath)
+         return . text $ fileContents
+         
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ CPT.generateTokenCurrentTime ct
@@ -100,37 +115,43 @@ withTokenAndTenant processor = TJ.withTenant $ \ct -> do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ applicationRoutes
+routes = connectRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                  , homeHandler sendHomePage)
-  , ("/panel/jira/ping/create" , createPingPanel )
-  , ("/panel/jira/reminders/view", viewRemindersPanel)
-  , ("/rest/ping"         , handlePings)
-  , ("/rest/pings"        , handleMultiPings)
-  , ("/rest/user/reminders", handleUserReminders)
-  , ("/rest/expire"       , handleExpireRequest)
-  , ("/rest/purge"        , handlePurgeRequest)
-  , ("/rest/healthcheck"  , healthcheckRequest)
-  , ("/rest/heartbeat"    , heartbeatRequest)
-  , ("/static/css"        , serveDirectory "static/css")
-  , ("/static/js"         , serveDirectory "static-js")
+  [ ("/"                            , homeHandler sendHomePage)
+  , ("/docs/:fileparam"             , showDocPage)
+  , ("/panel/jira/ping/create"      , createPingPanel )
+  , ("/panel/jira/reminders/view"   , viewRemindersPanel)
+  , ("/rest/ping"                   , handlePings)
+  , ("/rest/pings"                  , handleMultiPings)
+  , ("/rest/user/reminders"         , handleUserReminders)
+  , ("/rest/expire"                 , handleExpireRequest)
+  , ("/rest/purge"                  , handlePurgeRequest)
+  , ("/rest/healthcheck"            , healthcheckRequest)
+  , ("/rest/heartbeat"              , heartbeatRequest)
+  , ("/static/css"                  , serveDirectory "static/css")
+  , ("/static/images"               , serveDirectory "static/images")
+  , ("/static/js"                   , serveDirectory "static-js")
   ]
 
-heistConfig :: H.HeistConfig (SS.Handler App App)
-heistConfig = H.emptyHeistConfig & HIT.hcSpliceConfig .~ spliceConfig
+-- We should always redirect to external services or common operations, that way when we want to
+-- change where that points to, we only have to quickly update those links here
+redirects :: [(ByteString, SS.Handler App App ())]
+redirects = 
+   [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/ping-me-connect/issues")
+   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
+   ]
 
 spliceConfig :: H.SpliceConfig (SS.Handler App App)
 spliceConfig = mempty 
    & HIT.scInterpretedSplices .~ customSplices
-   & HIT.scLoadTimeSplices .~ H.defaultLoadTimeSplices
 
 customSplices :: HIT.Splices (HI.Splice (SS.Handler App App))
 customSplices = do
    "hasSplice" H.## hasSplice
+   "includeFile" H.## includeFile
    H.defaultInterpretedSplices
-
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -140,7 +161,8 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
   SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
-  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
+  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+  SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet

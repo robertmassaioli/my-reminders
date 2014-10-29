@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
+   <head profile="http://www.w3.org/2005/10/profile">
+      <link rel="icon" type="image/ico" href="/static/images/favicon.v3.ico" />
+
       <meta charset="utf-8" />
       <meta version="${version}" />
       <meta name="avatarSize" content="${avatarSize}" />
@@ -11,13 +13,6 @@
       <meta name="acpt" content="${connectPageToken}">
       </hasSplice>
       <meta content="IE=EDGE" http-equiv="X-UA-Compatible" /> 
-
-      <!-- TODO add static versions of all of the resources here so that
-         - the plugin will still work in development without an internet
-         - connection. This requires understanding the snap template language.
-         - Also, it would be great if there was a Vim plugin for the Heist
-         - template language.
-         -->
 
       <apply template="headers/requirejs" />
 
@@ -33,9 +28,6 @@
       <apply template="headers/moment" />
 
       <header-extra />
-
-      <!-- TODO this will never be served because we do not have code like this... -->
-      <!--link rel="stylesheet" type="text/css" href="/stylesheets/main.css" /-->
    </head>
    <body>
       <apply-content />
