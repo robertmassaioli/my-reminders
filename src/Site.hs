@@ -130,8 +130,9 @@ applicationRoutes =
   , ("/rest/purge"                  , handlePurgeRequest)
   , ("/rest/healthcheck"            , healthcheckRequest)
   , ("/rest/heartbeat"              , heartbeatRequest)
-  , ("/static"                      , serveDirectory "static")
+  , ("/static/css"                  , serveDirectory "static/css")
   , ("/static/images"               , serveDirectory "static/images")
+  , ("/static/js"                   , serveDirectory "static-js")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
