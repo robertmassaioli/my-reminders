@@ -41,6 +41,7 @@ Executable ping-me-connect
                  , RemindMeConfiguration
                  , PingHandlers
                  , ExpireHandlers
+                 , CustomSplices
                  , Site
                  , SnapHelpers
                  , TenantJWT
