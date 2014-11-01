@@ -45,14 +45,23 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-sendHomePage :: SC.MonadSnap m => m ()
-sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
+sendHomePage :: SS.Handler b v ()
+sendHomePage = do
+   request <- SC.getRequest
+   liftIO . putStrLn $ "sendHomePage: " ++ show request
+   pattern <- SS.getRoutePattern
+   liftIO $ print pattern
+   SC.redirect' "/docs/home" SH.temporaryRedirect
 
 showDocPage :: SSH.HasHeist b => SS.Handler b v ()
 showDocPage = do
+   request <- SC.getRequest
+   liftIO . putStrLn $ "showDocPage: " ++ show request
+   pattern <- SS.getRoutePattern
+   liftIO $ print pattern
    fileName <- SC.getParam "fileparam"
    case fileName of
-      Nothing -> fail "Need to reference a valid documentation file."
+      Nothing -> SH.respondNotFound
       Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
    where
       environment fileName = HI.bindSplices $ do
@@ -91,8 +100,9 @@ routes = connectRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                            , homeHandler sendHomePage)
+  [ ("$"                             , homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
+ -- [ ("/docs/:fileparam"             , showDocPage)
   , ("/panel/jira/ping/create"      , createPingPanel )
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
   , ("/rest/ping"                   , handlePings)
@@ -122,9 +132,9 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
-  SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
   SSH.addConfig appHeist spliceConfig
+  SS.addRoutes routes
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet

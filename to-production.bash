@@ -24,6 +24,7 @@ echo "## Will fail immediately on error..."
 COPY_DIR="production/to-copy"
 rm -fr "$COPY_DIR"
 mkdir -p "$COPY_DIR"
+cp -R snaplets "$COPY_DIR"
 cp -R resources "$COPY_DIR"
 cp -R static "$COPY_DIR"
 r.js -o build.js
