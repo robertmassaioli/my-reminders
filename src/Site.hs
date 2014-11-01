@@ -45,14 +45,14 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-sendHomePage :: SC.MonadSnap m => m ()
+sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
 showDocPage :: SSH.HasHeist b => SS.Handler b v ()
 showDocPage = do
    fileName <- SC.getParam "fileparam"
    case fileName of
-      Nothing -> fail "Need to reference a valid documentation file."
+      Nothing -> SH.respondNotFound
       Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
    where
       environment fileName = HI.bindSplices $ do
