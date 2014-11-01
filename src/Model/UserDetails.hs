@@ -23,10 +23,12 @@ import qualified Connect.Descriptor as CD
 import qualified Connect.Data as CDT
 import qualified Persistence.Tenant as PT
 import           GHC.Generics
+import           NetworkHelpers
 import           Network.URI
 import           Network.HTTP.Client
 import           Network.HTTP.Types
 import           Network.Api.Support
+import           RemindMeConfiguration
 
 import qualified Web.JWT as JWT
 import Web.Connect.QueryStringHash
@@ -55,13 +57,19 @@ getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResp
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
   connectData <- CDT.getConnect
+  rmConf <- getRMConf
   let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (PT.sharedSecret tenant) GET (PT.baseUrl tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
-    (addHeader ("Accept","application/json") <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature))
+    (  addHeader ("Accept","application/json") 
+    <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)
+    <> setPotentialProxy (getProxyFromConf baseUrlString rmConf)
+    )
     (basicResponder responder)
   where
     url :: T.Text
-    url = T.pack $ (show . PT.baseUrl $ tenant) ++ "/rest/api/2/user?username=" ++ userKey
+    url = T.pack $ baseUrlString ++ "/rest/api/2/user?username=" ++ userKey
+
+    baseUrlString = show . PT.baseUrl $ tenant
 
 generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
 generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims

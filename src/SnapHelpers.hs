@@ -1,3 +1,4 @@
+
 {-# LANGUAGE DeriveGeneric #-}
 
 module SnapHelpers where
@@ -20,9 +21,10 @@ import Application
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
 
-noContent, badRequest, unauthorised, forbidden, notFound, internalServer, ok, serviceUnavaliable :: Int
+noContent, temporaryRedirect, badRequest, unauthorised, forbidden, notFound, internalServer, ok, serviceUnavaliable :: Int
 ok                 = 200
 noContent          = 204
+temporaryRedirect  = 302
 badRequest         = 400
 unauthorised       = 401
 forbidden          = 403

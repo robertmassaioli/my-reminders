@@ -1,20 +1,9 @@
-<bind tag="js">
-   <script type="text/javascript" src="${href}"></script>
-</bind>
-
-<bind tag="stylesheet">
-   <link rel="stylesheet" type="text/css" href="${href}">
-</bind>
-
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js><bind tag="href">/static/host-request.js</bind></js>
-      <js><bind tag="href">/static/create-reminder.js</bind></js>
-      <stylesheet><bind tag="href">/static/create-reminder.css</bind></stylesheet>
+      <js src="/static/js/app/create-reminder.js" />
+      <script>require(['app/create-reminder']);</script>
 
-      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/URI.js/1.11.2/URI.min.js</bind></js>
-      <js><bind tag="href">//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js</bind></js>
-      <js><bind tag="href">/static/moment-timezone-with-data-2010-2020.js</bind></js>
+      <css href="/static/css/create-reminder.css" />
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{PingId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
@@ -37,8 +26,8 @@
    <form action="#" method="post" id="create-reminder-form" class="aui hidden">
        <fieldset>
            <div class="field-group custom-container">
-               <label for="d-fname">When<span class="aui-icon icon-required"> required</span></label>
-               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1">
+               <label for="custom-ping-magnitude">When<span class="aui-icon icon-required"> required</span></label>
+               <input id="custom-ping-magnitude" class="text short-field" type="text" title="magnitude" value="1" data-aui-validation-field data-aui-validation-pattern="[0-9]+" data-aui-validation-pattern-msg="Must be a whole number ({0}).">
                <select id="custom-ping-timeunit" class="select short-field" title="time unit">
                    <option value="Day" selected="selected">Day</option>
                    <option value="Week">Week</option>
@@ -61,7 +50,7 @@
        </div>
    </form>
    <div class="reminders-container">
-      <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-info">Info</span></div>
+      <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-small aui-iconfont-info">Info</span></div>
       <div id="upcoming-reminders" class="reminders"></div>
    </div>
    <div id="error-message" class="aui-message error hidden">

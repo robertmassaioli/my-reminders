@@ -13,8 +13,9 @@ module Site
 ------------------------------------------------------------------------------
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
-import           Data.Monoid (mempty)
+import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
+import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
@@ -23,8 +24,6 @@ import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
 import           Application
-import qualified Heist.Interpreted as I
-import qualified Text.XmlHtml as X
 
 
 import           Connect.Routes
@@ -35,6 +34,7 @@ import qualified Data.EnvironmentHelpers as DE
 import qualified DatabaseSnaplet as DS
 import qualified Persistence.Tenant as PT
 import qualified RemindMeConfiguration as RC
+import           CustomSplices
 import           PingHandlers
 import           ExpireHandlers
 import           PurgeHandlers
@@ -46,18 +46,18 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-sendHomePage :: SSH.HasHeist b => SS.Handler b v ()
-sendHomePage = SSH.heistLocal environment $ SSH.render "home"
-  where environment = I.bindSplices (homeSplice getAppVersion 2 3)
+sendHomePage :: SS.Handler b v ()
+sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
-homeSplice :: Monad n => T.Text -> Int -> Int -> H.Splices (I.Splice n)
-homeSplice version2 avatarSize pollerInterval = do
-  "version" H.## I.textSplice version2
-  "avatarSize" H.## I.textSplice $ T.pack $ show avatarSize
-  "pollerInterval" H.## I.textSplice $ T.pack $ show pollerInterval
-
-getAppVersion :: T.Text
-getAppVersion = "0.1"
+showDocPage :: SSH.HasHeist b => SS.Handler b v ()
+showDocPage = do
+   fileName <- SC.getParam "fileparam"
+   case fileName of
+      Nothing -> SH.respondNotFound
+      Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
+   where
+      environment fileName = HI.bindSplices $ do
+         "fileName" H.## HI.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -72,26 +72,14 @@ viewRemindersPanel = createConnectPanel "view-jira-reminders"
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- CD.getConnect
-  SSH.heistLocal (I.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
+  SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## I.textSplice $ T.pack . show . PT.baseUrl $ tenant
-      "connectPageToken" H.## I.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
-      "userKey" H.## I.textSplice $ maybe T.empty T.pack userKey
+      "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
+      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      "userKey" H.## HI.textSplice $ maybe T.empty T.pack userKey
 
-hasSplice :: SSH.SnapletISplice App
-hasSplice = do
-   potentialTokenName <- fmap (X.getAttribute "name") H.getParamNode
-   case potentialTokenName of
-      Just tokenName -> do
-         tokenSplice <- fmap (HI.lookupSplice tokenName) H.getHS
-         case tokenSplice of
-            Just _ -> HI.runChildren
-            Nothing -> return . comment . T.pack $ "Could not find the variable '" ++ show tokenName ++ "' in the heist context."
-      Nothing -> return . comment $ "Could not find 'name' attribute."
-   where
-      comment x = [X.Comment x]
-
+         
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ CPT.generateTokenCurrentTime ct
@@ -100,31 +88,35 @@ withTokenAndTenant processor = TJ.withTenant $ \ct -> do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ applicationRoutes
+routes = connectRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                               , homeHandler sendHomePage)
-  , ("/panel/jira/ping/create"         , createPingPanel )
-  , ("/panel/jira/reminders/view"      , viewRemindersPanel)
-  , ("/rest/ping"                      , handlePings)
-  , ("/rest/pings"                     , handleMultiPings)
-  , ("/rest/user/reminders"            , handleUserReminders)
-  , ("/rest/expire"                    , handleExpireRequest)
-  , ("/rest/purge"                     , handlePurgeRequest)
-  , ("/rest/webhook/issue/update"      , handleIssueUpdateWebhook)
-  , ("/rest/webhook/issue/delete"      , handleIssueDeleteWebhook)
-  , ("/rest/healthcheck"               , healthcheckRequest)
-  , ("/rest/heartbeat"                 , heartbeatRequest)
-  , ("/static"                         , serveDirectory "static")
+  [ ("/"                            , homeHandler sendHomePage)
+  , ("/docs/:fileparam"             , showDocPage)
+  , ("/panel/jira/ping/create"      , createPingPanel )
+  , ("/panel/jira/reminders/view"   , viewRemindersPanel)
+  , ("/rest/ping"                   , handlePings)
+  , ("/rest/pings"                  , handleMultiPings)
+  , ("/rest/user/reminders"         , handleUserReminders)
+  , ("/rest/expire"                 , handleExpireRequest)
+  , ("/rest/purge"                  , handlePurgeRequest)
+  , ("/rest/webhook/issue/update"   , handleIssueUpdateWebhook)
+  , ("/rest/webhook/issue/delete"   , handleIssueDeleteWebhook)
+  , ("/rest/healthcheck"            , healthcheckRequest)
+  , ("/rest/heartbeat"              , heartbeatRequest)
+  , ("/static/css"                  , serveDirectory "static/css")
+  , ("/static/images"               , serveDirectory "static/images")
+  , ("/static/js"                   , serveDirectory "static-js")
   ]
 
-heistConfig :: H.HeistConfig (SS.Handler App App)
-heistConfig = mempty
-   { H.hcInterpretedSplices = do
-      "hasSplice" H.## hasSplice
-      H.defaultInterpretedSplices
-   }
+-- We should always redirect to external services or common operations, that way when we want to
+-- change where that points to, we only have to quickly update those links here
+redirects :: [(ByteString, SS.Handler App App ())]
+redirects = 
+   [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/ping-me-connect/issues")
+   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
+   ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -133,11 +125,12 @@ app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
-  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit' "templates" heistConfig
+  SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
+  appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
+  SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
   appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConfOrExit
-  SS.addRoutes routes
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appRMConf

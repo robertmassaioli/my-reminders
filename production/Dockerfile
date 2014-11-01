@@ -5,8 +5,8 @@
 FROM ubuntu:14.04
 MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
 
-# Expose the default port, port 8000
-EXPOSE 8000
+# Expose the default port, port 8080
+EXPOSE 8080
 
 # Install the missing packages
 USER root
@@ -22,4 +22,4 @@ WORKDIR /service
 ENV LANG en_US.UTF-8 # 
 
 # Setup the default command to run for the container.
-CMD ["/service/ping-me-connect", "--access-log=-", "--error-log=stderr", "--port=8000"]
+CMD ["/service/ping-me-connect", "--access-log=-", "--error-log=stderr", "--port=8080"]

@@ -41,6 +41,7 @@ Executable ping-me-connect
                  , RemindMeConfiguration
                  , PingHandlers
                  , ExpireHandlers
+                 , CustomSplices
                  , Site
                  , SnapHelpers
                  , TenantJWT
@@ -49,6 +50,7 @@ Executable ping-me-connect
                  , Healthcheck
                  , DatabaseSnaplet
                  , Heartbeat
+                 , NetworkHelpers
 
   default-language: Haskell2010
   Build-depends:
@@ -63,7 +65,7 @@ Executable ping-me-connect
     , cipher-aes                == 0.2.*
     , configurator              == 0.2.*
     , containers                == 0.5.*
-    , heist                     >= 0.12    && < 0.14
+    , heist                     == 0.14.*
     , http-client               == 0.3.*
     , http-media                == 0.1.*
     , http-types                == 0.8.*
@@ -75,8 +77,8 @@ Executable ping-me-connect
     , network-api-support       == 0.1.*
     , postgresql-simple         == 0.4.*
     , resource-pool-catchio     == 0.2.1.*
-    , snap                      == 0.13.*
-    , snap-core                 >= 0.9     && < 0.10
+    , snap                      >= 0.13.3  && < 0.14
+    , snap-core                 >= 0.9     && < 0.11
     , snap-loader-static
     , snap-server
     , snaplet-postgresql-simple == 0.5.*
@@ -84,11 +86,12 @@ Executable ping-me-connect
     , time                      >= 1.1     && < 1.5
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
-    , hailgun                   >= 0.1.1.0 && < 0.2
+    , hailgun                   >= 0.2.1.0 && < 0.3
     , pandoc                    >= 1.13    && < 1.14
     , parallel-io               == 0.3.*
     , time-units                == 1.*
     , boxes                     == 0.1.*
+    , split                     == 0.2.*
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
@@ -154,3 +157,5 @@ test-suite ping-me-props
     , time-units
     , transformers
     , xmlhtml
+    , boxes
+    , split
