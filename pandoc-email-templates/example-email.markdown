@@ -2,7 +2,7 @@
 
 Hi <userkey>,
 
-You set a reminder for: '[issueSummary][1]'
+You set a reminder for: '[issueSummary][1]'. (Originally: DEMO-10 - Old Summary)
 
 With the following message:
 
