@@ -56,7 +56,7 @@ logErrorS :: String -> AppHandler ()
 logErrorS = SC.logError . BSC.pack
 
 data ErrorResponse = ErrorResponse
-  { errorMessage :: [String]
+  { errorMessages :: [String]
   } deriving (Show, Generic)
 
 instance ToJSON ErrorResponse

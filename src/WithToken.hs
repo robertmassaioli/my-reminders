@@ -19,7 +19,6 @@ import qualified Connect.Tenant as CT
 acHeaderName :: DC.CI BSC.ByteString
 acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
--- TODO if the X-acpt header is not present then look for the Authorization header.
 tenantFromToken :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
@@ -44,19 +43,6 @@ tenantFromToken tenantApply = do
                      Just tenant -> tenantApply tenant
                else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
-
-{-
-getDecodedToken :: SS.Handler b v (Either String PT.PageToken)
-getDecodedToken = do
-   request <- SC.getRequest
-   case SC.getHeaders acHeaderName request of
-      Just [acTokenHeader] -> do
-         connectData <- CD.getConnect
-         return . PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
-      Nothing -> do
-         case SC.getHeaders authorizationHeaderName request of
-            Just [jwtHeader]
-            -}
 
 lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
 lookupTenantWithPageToken pageToken =

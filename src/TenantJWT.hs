@@ -4,7 +4,6 @@ import           Control.Applicative
 import           Control.Monad (join, guard)
 import qualified Data.ByteString.Char8          as B
 import qualified Data.CaseInsensitive           as DC
-import qualified Data.List                      as DL
 import           Data.Maybe                     (isJust)
 import qualified Data.Text                      as T
 import qualified Snap.Core                      as SC
@@ -16,9 +15,8 @@ import qualified Persistence.Tenant             as PT
 import qualified SnapHelpers                    as SH
 import qualified Connect.Tenant                 as CT
 
--- TODO instead of just returning the Tenant also return the extra information that comes in the JWT
--- token such as the user.
--- TODO instead of just looking for the jwt param also look in the Authorisation header.
+type UnverifiedJWT = J.JWT J.UnverifiedJWT
+
 withTenant :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
@@ -30,10 +28,6 @@ withTenant tennantApply = do
       case possibleTenant of
         Left result -> SH.respondPlainWithError SH.badRequest result
         Right tenant -> tennantApply tenant
-  where
-    missingTokenMessage = "A jwt token is required for this request."
-
-type UnverifiedJWT = J.JWT J.UnverifiedJWT
 
 decodeByteString :: B.ByteString -> Maybe UnverifiedJWT
 decodeByteString = J.decode . SH.byteStringToText
@@ -58,7 +52,7 @@ getJWTTokenFromAuthHeader = do
       Just (firstHeader : _) -> if B.isPrefixOf jwtPrefix firstHeader
          then return $ maybe (Left "The JWT Auth header could not be parsed.") Right (decodeByteString . dropJwtPrefix $ firstHeader)
          else return . Left $ "The Authorization header did not contain a JWT token: " ++ show firstHeader
-      Nothing -> return . Left $ "There was no Authorization header in the request."
+      _ -> return . Left $ "There was no Authorization header in the request."
    where
       jwtPrefix = B.pack "JWT "
       dropJwtPrefix = B.drop (B.length jwtPrefix)
@@ -100,7 +94,7 @@ getTenant unverifiedJwt = do
     ret :: Monad m => y -> m (Either x y)
     ret = return . Right
 
-verifyTenant :: PT.Tenant -> J.JWT J.UnverifiedJWT -> Maybe PT.Tenant
+verifyTenant :: PT.Tenant -> UnverifiedJWT -> Maybe PT.Tenant
 verifyTenant tenant unverifiedJwt = do
   guard (isJust $ J.verify tenantSecret unverifiedJwt)
   pure tenant
