@@ -19,15 +19,18 @@ import qualified Connect.Tenant as CT
 acHeaderName :: DC.CI BSC.ByteString
 acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
+-- TODO if the X-acpt header is not present then look for the Authorization header.
 tenantFromToken :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
+  liftIO . print $ request
   let potentialTokens = SC.getHeaders acHeaderName request
   case potentialTokens of
     Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
     Just [acTokenHeader] -> do
       connectData <- CD.getConnect
       let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
+      liftIO . print $ potentiallyDecodedToken
       case potentiallyDecodedToken of
          Left errorMessage -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ errorMessage
          Right pageToken -> do
@@ -40,9 +43,22 @@ tenantFromToken tenantApply = do
                   potentialTenant <- lookupTenantWithPageToken pageToken
                   case potentialTenant of
                      Nothing -> SH.respondWithError SH.notFound "Your page token was valid but the tenant could not be found. Maybe it no longer exists."
-                     Just tenant -> tenantApply tenant
+                     Just tenant -> (liftIO . print $ "Applying the tenant") >>  tenantApply tenant
                else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
+
+{-
+getDecodedToken :: SS.Handler b v (Either String PT.PageToken)
+getDecodedToken = do
+   request <- SC.getRequest
+   case SC.getHeaders acHeaderName request of
+      Just [acTokenHeader] -> do
+         connectData <- CD.getConnect
+         return . PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
+      Nothing -> do
+         case SC.getHeaders authorizationHeaderName request of
+            Just [jwtHeader]
+            -}
 
 lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
 lookupTenantWithPageToken pageToken =
