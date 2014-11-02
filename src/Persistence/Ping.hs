@@ -10,6 +10,8 @@ module Persistence.Ping
    , getReminderByUser
    , getExpiredReminders
    , getLivePingsByUser
+   , updateKeysForReminders
+   , updateSummariesForReminders
    , updateEmailForUser
    , getLivePingsForIssueByUser
    , deletePingForUser
@@ -109,6 +111,20 @@ getLivePingsForIssueByUser connection tenant userKey issueId = do
          SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
       |]
       (PT.tenantId tenant, issueId, B.pack userKey, now)
+
+updateKeysForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueKey -> Connection -> IO Int64
+updateKeysForReminders tenant issueId newIssueKey conn = liftIO $ execute conn
+   [sql|
+      UPDATE ping SET issueKey = ? WHERE tenantId = ? AND issueId = ?
+   |]
+   (newIssueKey, PT.tenantId tenant, issueId)
+
+updateSummariesForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueSummary -> Connection -> IO Int64
+updateSummariesForReminders tenant issueId newIssueSummary conn = liftIO $ execute conn
+   [sql|
+      UPDATE ping SET issueSummary = ? WHERE tenantId = ? AND issueId = ?
+   |]
+   (newIssueSummary, PT.tenantId tenant, issueId)
 
 updateEmailForUser :: PT.Tenant -> CA.UserDetails -> [PingId] -> Connection -> IO Int64
 updateEmailForUser tenant userDetails pingIds conn = liftIO $ execute conn

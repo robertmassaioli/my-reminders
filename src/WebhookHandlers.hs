@@ -6,49 +6,61 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
-import           Control.Applicative      ((<$>))
 import           Control.Monad.IO.Class   (liftIO)
 import qualified Connect.AtlassianTypes   as AT
 import qualified Connect.Tenant           as CT
 import           Data.Aeson
 import           Data.Aeson.Types         (defaultOptions, fieldLabelModifier, Options)
-import           Data.Maybe (fromMaybe)
-import           Data.Text                as T
+import           Data.List                as DL
+import           Database.PostgreSQL.Simple
 import           GHC.Generics
+import qualified Persistence.Ping         as P
+import qualified Persistence.PostgreSQL   as DB
+import qualified Persistence.Tenant       as PT
 import qualified Snap.Core                as SC
 import qualified SnapHelpers              as SH
 import qualified TenantJWT                as WT
 
 handleIssueUpdateWebhook :: AppHandler ()
-handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, (liftIO . print $ "passing onwards") >>  WT.withTenant handleUpdate)]
+handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant handleUpdate)]
 
 handleUpdate :: CT.ConnectTenant -> AppHandler ()
 handleUpdate (tenant, _) = do
-   liftIO . print $ "Handling the webhook update request"
-   -- Parse the Webhook JSON message
    request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
    let parsedRequest = eitherDecode request :: (Either String WebhookData)
-   liftIO . print $ parsedRequest
    case parsedRequest of
-      Left parseError -> SH.respondNoContent 
-      Right webhookData -> liftIO . print $ webhookData
-         -- Update all of the issues using this data. Try and only run a single query
+      Left _ -> SH.respondNoContent 
+      Right webhookData -> do
+         DB.withConnection $ \conn -> handleWebhookUpdate conn tenant . webhookDataToIssueUpdate $ webhookData
+         SH.respondNoContent
 
-data IssueData = IssueData
-   { idKey :: Maybe String
-   , idSummary :: Maybe String
+handleWebhookUpdate :: Connection -> PT.Tenant -> IssueUpdate -> IO ()
+handleWebhookUpdate conn tenant issueUpdate = do
+   maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey conn) (iuNewKey issueUpdate)
+   maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary conn) (iuNewSummary issueUpdate)
+   return ()
+
+webhookDataToIssueUpdate :: WebhookData -> IssueUpdate
+webhookDataToIssueUpdate webhookData = IssueUpdate
+   { iuId = read . wiId . wdIssue $ webhookData
+   , iuNewKey = findCliToString "Key" -- Key is uppercased to start
+   , iuNewSummary = findCliToString "summary" -- Summary is lower cased to start
    }
+   where
+      cli :: [ChangeLogItem]
+      cli = wcItems . wdChangelog $ webhookData
 
-data UpdatedIssueData = UpdatedIssueData
-   { uidIssueId :: AT.IssueId
-   , uidNewData :: IssueData
-   }
+      findCliToString :: String -> Maybe String
+      findCliToString = fmap cliToString . findCli
 
-{-
-monadFind :: Monad m => (a -> f Bool) -> m a -> m (Maybe a)
-monadFind isValue collection = 
-   fmap (\x -> (x, isValue x)) collection
--}
+      findCli :: String -> Maybe ChangeLogItem
+      findCli fieldName = DL.find (((==) fieldName) . cliField) cli
+
+data IssueUpdate = IssueUpdate
+   { iuId         :: AT.IssueId
+   , iuNewKey     :: Maybe String
+   , iuNewSummary :: Maybe String
+   } deriving (Show)
 
 parseOptions :: String -> Options
 parseOptions prefix = defaultOptions { fieldLabelModifier = stripFieldNamePrefix prefix }
@@ -62,7 +74,7 @@ instance FromJSON WebhookData where
    parseJSON = genericParseJSON (parseOptions "wd")
 
 data WebhookIssue = WebhookIssue
-   { wiId :: AT.IssueId
+   { wiId :: String -- This is because it gets passed as a string
    } deriving (Eq, Show, Generic)
 
 instance FromJSON WebhookIssue where
@@ -84,48 +96,6 @@ data ChangeLogItem = ChangeLogItem
 instance FromJSON ChangeLogItem where
    parseJSON = genericParseJSON (parseOptions "cli")
 
-{-
-parseUpdatedKey :: Value -> Parser UpdatedIssueData
-parseUpdatedKey json = withObject "webhook-json" parseChangelog json
-   where
-      parseWebhookData :: Object -> Parser UpdatedIssueData
-      parseWebhookData j = do
-         changelog <- j .: "changelog"
-         withObject "changelog" parseChangelog changelog
-      
-      parseChangelog :: Object -> Parser IssueData
-      parseChangelog changelogJson = do
-         items <- changelogJson .: "items"
-         withArray "items" parseItems items
-
-      parseItems :: Array -> Parser IssueData
-      parseItems items = do
-         fmap (objectFieldIs "Key") items
-         let potentialNewKey = findObject "field" "Key" items
-         let potentialNewSummary = findObject "field" "Summary" items
--}
-
--- type Array = Vector Value
--- type Object = HashMap Text Value
--- I have an array of objects and I want to find the first object in the array that has a field X
-
---getValueAsString :: 
-
-{-
-findObject :: T.Text -> T.Text -> Array -> Maybe Object
-findObject key val items = find helper (objectsInArray items)
-   where
-      helper :: Object -> Bool
-      helper o = fromMaybe False $ ((==) val <$> lookup key o)
-
-objectsInArray :: Array -> [Object]
-objectsInArray = V.foldr helper []
-   where
-      helper :: Value -> [Object] -> [Object]
-      helper x@(Object _) xs = x : xs
-      helper _ xs = xs
--}
-   
 handleIssueDeleteWebhook :: AppHandler ()
 handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant handleDelete)]
 

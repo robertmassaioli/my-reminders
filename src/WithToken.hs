@@ -23,14 +23,12 @@ acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java Pa
 tenantFromToken :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
-  liftIO . print $ request
   let potentialTokens = SC.getHeaders acHeaderName request
   case potentialTokens of
     Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
     Just [acTokenHeader] -> do
       connectData <- CD.getConnect
       let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
-      liftIO . print $ potentiallyDecodedToken
       case potentiallyDecodedToken of
          Left errorMessage -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ errorMessage
          Right pageToken -> do
@@ -43,7 +41,7 @@ tenantFromToken tenantApply = do
                   potentialTenant <- lookupTenantWithPageToken pageToken
                   case potentialTenant of
                      Nothing -> SH.respondWithError SH.notFound "Your page token was valid but the tenant could not be found. Maybe it no longer exists."
-                     Just tenant -> (liftIO . print $ "Applying the tenant") >>  tenantApply tenant
+                     Just tenant -> tenantApply tenant
                else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
 
