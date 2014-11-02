@@ -38,6 +38,8 @@ type UnverifiedJWT = J.JWT J.UnverifiedJWT
 decodeByteString :: B.ByteString -> Maybe UnverifiedJWT
 decodeByteString = J.decode . SH.byteStringToText
 
+-- Standard GET requests (and maybe even POSTs) from Atlassian Connect will put the jwt header in a
+-- param in either the query params or in form params. This method will extract it from either.
 getJWTTokenFromParam :: AppHandler (Either String UnverifiedJWT)
 getJWTTokenFromParam = do
    potentialParam <- fmap decodeByteString <$> SC.getParam (B.pack "jwt")
@@ -45,8 +47,10 @@ getJWTTokenFromParam = do
       Nothing -> return . Left $ "There was no JWT param in the request"
       Just unverifiedJwt -> return . Right $ unverifiedJwt
 
--- Authorization: JWT
--- eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE0MTQ4MzU5MTYsImlzcyI6ImppcmE6YjYzMzQ3N2UtNjA0Mi00NTk1LTlmZjMtODg5MmUxOGE4NThhIiwicXNoIjoiMDc4MGRkMmRjM2U3MzRiNjRlNWNjOGQ2NTc2MmRiNDI4YjUxNzEyNjkwOTc1OWZiYzI1ZTFjNTU3OWJmNWQwYyIsImlhdCI6MTQxNDgzNTczNn0.J1saqfQW8CpPwMYMVRyojkNMqzAT2U7m822zAbEpewA
+-- Sometimes Atlassian Connect will pass the JWT token in an Authorization header in your requests
+-- in this format:
+-- Authorization: JWT <token>
+-- This method will extract the JWT token from the Auth header if it is present.
 getJWTTokenFromAuthHeader :: AppHandler (Either String UnverifiedJWT)
 getJWTTokenFromAuthHeader = do
    authHeader <- fmap (SC.getHeaders authorizationHeaderName) SC.getRequest
