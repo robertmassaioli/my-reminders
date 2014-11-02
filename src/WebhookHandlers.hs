@@ -6,13 +6,13 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
-import           Control.Monad.IO.Class   (liftIO)
+import           Control.Monad            (when)
 import qualified Connect.AtlassianTypes   as AT
 import qualified Connect.Tenant           as CT
 import           Data.Aeson
 import           Data.Aeson.Types         (defaultOptions, fieldLabelModifier, Options)
 import           Data.List                as DL
-import           Data.Maybe               (fromMaybe)
+import           Data.Maybe               (fromMaybe, isJust)
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import qualified Persistence.Ping         as P
@@ -34,11 +34,20 @@ handleWebhook webhookHandler (tenant, _) = do
          webhookHandler tenant (webhookDataToIssueUpdate webhookData)
          SH.respondNoContent
 
-handleUpdate :: PT.Tenant -> IssueUpdate -> AppHandler ()
-handleUpdate tenant issueUpdate = DB.withConnection (handleWebhookUpdate tenant issueUpdate)
-
 webhookDataFromRequest :: AppHandler (Either String WebhookData)
 webhookDataFromRequest = fmap eitherDecode $ SC.readRequestBody (1024 * 10)
+
+handleUpdate :: PT.Tenant -> IssueUpdate -> AppHandler ()
+handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
+
+-- Issues will be updated many times and the connect webhooks cannot be easily restricted to certain
+-- projects if we want to remain flexible. Therefore, for every instance that we are added to we are
+-- going to recieve all of their issue update traffic. Therefore it is imperative that we stop
+-- handling the webhook as soon as possible. Specifically, the original intention of this method was
+-- to not open up a database connection unless we know, in advance, that it will be required.
+-- Opening a database connection for every update request would otherwise be needlessly slow.
+reminderUpdateRequired :: IssueUpdate -> Bool
+reminderUpdateRequired iu = any isJust . fmap ($ iu) $ [iuNewKey, iuNewSummary]
 
 handleWebhookUpdate :: PT.Tenant -> IssueUpdate -> Connection -> IO ()
 handleWebhookUpdate tenant issueUpdate conn = do
@@ -105,5 +114,7 @@ instance FromJSON ChangeLogItem where
 handleIssueDeleteWebhook :: AppHandler ()
 handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleDelete))]
 
+-- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
+-- against that tenant in the database.
 handleDelete :: PT.Tenant -> IssueUpdate -> AppHandler ()
 handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return ()
