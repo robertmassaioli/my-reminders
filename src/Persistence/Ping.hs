@@ -16,6 +16,7 @@ module Persistence.Ping
    , getLivePingsForIssueByUser
    , deletePingForUser
    , deletePing
+   , deleteRemindersForIssue
    , deleteManyPings
    , deleteManyPingsForUser
    ) where
@@ -157,6 +158,12 @@ deletePingForUser tenant userKey pingId conn = execute conn
    [sql|
       DELETE from ping WHERE id = ? AND tenantId = ? AND userKey = ?
    |] (pingId, PT.tenantId tenant, B.pack userKey)
+
+deleteRemindersForIssue :: PT.Tenant -> CA.IssueId -> Connection -> IO Int64
+deleteRemindersForIssue tenant issueId conn = execute conn
+   [sql|
+      DELETE from ping WHERE tenantId = ? AND issueId = ? 
+   |] (PT.tenantId tenant, issueId)
 
 deleteManyPingsForUser :: PT.Tenant -> [PingId] -> CA.UserKey -> Connection -> IO Int64
 deleteManyPingsForUser tenant pingIds userKey conn = execute conn

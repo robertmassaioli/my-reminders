@@ -12,6 +12,7 @@ import qualified Connect.Tenant           as CT
 import           Data.Aeson
 import           Data.Aeson.Types         (defaultOptions, fieldLabelModifier, Options)
 import           Data.List                as DL
+import           Data.Maybe               (fromMaybe)
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import qualified Persistence.Ping         as P
@@ -22,20 +23,25 @@ import qualified SnapHelpers              as SH
 import qualified TenantJWT                as WT
 
 handleIssueUpdateWebhook :: AppHandler ()
-handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant handleUpdate)]
+handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
 
-handleUpdate :: CT.ConnectTenant -> AppHandler ()
-handleUpdate (tenant, _) = do
-   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-   let parsedRequest = eitherDecode request :: (Either String WebhookData)
+handleWebhook :: (PT.Tenant -> IssueUpdate -> AppHandler ()) -> CT.ConnectTenant -> AppHandler ()
+handleWebhook webhookHandler (tenant, _) = do
+   parsedRequest <- webhookDataFromRequest
    case parsedRequest of
       Left _ -> SH.respondNoContent 
       Right webhookData -> do
-         DB.withConnection $ \conn -> handleWebhookUpdate conn tenant . webhookDataToIssueUpdate $ webhookData
+         webhookHandler tenant (webhookDataToIssueUpdate webhookData)
          SH.respondNoContent
 
-handleWebhookUpdate :: Connection -> PT.Tenant -> IssueUpdate -> IO ()
-handleWebhookUpdate conn tenant issueUpdate = do
+handleUpdate :: PT.Tenant -> IssueUpdate -> AppHandler ()
+handleUpdate tenant issueUpdate = DB.withConnection (handleWebhookUpdate tenant issueUpdate)
+
+webhookDataFromRequest :: AppHandler (Either String WebhookData)
+webhookDataFromRequest = fmap eitherDecode $ SC.readRequestBody (1024 * 10)
+
+handleWebhookUpdate :: PT.Tenant -> IssueUpdate -> Connection -> IO ()
+handleWebhookUpdate tenant issueUpdate conn = do
    maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey conn) (iuNewKey issueUpdate)
    maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary conn) (iuNewSummary issueUpdate)
    return ()
@@ -48,7 +54,7 @@ webhookDataToIssueUpdate webhookData = IssueUpdate
    }
    where
       cli :: [ChangeLogItem]
-      cli = wcItems . wdChangelog $ webhookData
+      cli = fromMaybe [] . fmap wcItems . wdChangelog $ webhookData
 
       findCliToString :: String -> Maybe String
       findCliToString = fmap cliToString . findCli
@@ -67,7 +73,7 @@ parseOptions prefix = defaultOptions { fieldLabelModifier = stripFieldNamePrefix
    
 data WebhookData = WebhookData
    { wdIssue :: WebhookIssue
-   , wdChangelog :: WebhookChangelog
+   , wdChangelog :: Maybe WebhookChangelog
    } deriving (Eq, Show, Generic)
 
 instance FromJSON WebhookData where
@@ -97,7 +103,7 @@ instance FromJSON ChangeLogItem where
    parseJSON = genericParseJSON (parseOptions "cli")
 
 handleIssueDeleteWebhook :: AppHandler ()
-handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant handleDelete)]
+handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleDelete))]
 
-handleDelete :: CT.ConnectTenant -> AppHandler ()
-handleDelete (tenant, _) =  undefined
+handleDelete :: PT.Tenant -> IssueUpdate -> AppHandler ()
+handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return ()
