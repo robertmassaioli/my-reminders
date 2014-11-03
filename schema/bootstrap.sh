@@ -10,19 +10,12 @@ fi
 
 HOST="$1"
 
-USER="pingme"
-DATABASE="pingme"
+USER="remindme"
+DATABASE="remindme"
 SCRIPTPATH=`dirname $0`
-
-
-# Create the user using:
-#       createuser --createdb pingme
 
 # Does the database exist?
 DB_EXISTS=$(psql -lqt | cut -d \| -f 1 | grep -w ${DATABASE} | wc -l | tr -d ' ')
-
 if [[ "$DB_EXISTS" -ne "1" ]]; then
     createdb -O $USER $DATABASE
 fi
-
-psql -U $USER -h $HOST $DATABASE < ${SCRIPTPATH}/createdb.sql

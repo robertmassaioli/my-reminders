@@ -17,7 +17,6 @@ import qualified Data.Configurator       as DC
 import qualified Data.Configurator.Types as DCT
 import           Data.Text
 import qualified Network.HostName        as HN
-import qualified Paths_ping_me_connect   as PPMC
 import qualified Snap.Snaplet            as SS
 import qualified System.Exit             as SE
 
@@ -38,12 +37,9 @@ toConnect conf = Connect
   , connectHostWhitelist = ccHostWhiteList conf
   }
 
-initConnectSnaplet :: SS.SnapletInit b Connect
-initConnectSnaplet = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
+initConnectSnaplet :: IO String -> SS.SnapletInit b Connect
+initConnectSnaplet configDataDir = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
   MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
-
-dataDir :: IO String
-dataDir = CM.liftM (++ "/resources") PPMC.getDataDir
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey        :: BSC.ByteString

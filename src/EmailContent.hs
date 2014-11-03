@@ -7,7 +7,7 @@ module EmailContent
 import qualified Data.ByteString.Char8 as BC
 import qualified Data.Text as T
 import           Text.Pandoc
-import           Persistence.Ping
+import           Persistence.Reminder
 import           Mail.Hailgun
 import           Network.URI
 
@@ -28,7 +28,7 @@ genericReminderEmail reminder = Pandoc nullMeta $
    , Para [Str "Hi", Space, Str . erUserKey $ reminder, Str ","]
    , Para $ [Str "You", Space, Str "set", Space, Str "a", Space, Str "reminder", Space, Str "for:", Space, Str "'", Link [Str . erIssueSummary $ reminder] (show issueURI, ""), Str "'"] ++ originalDetails
    ] 
-   ++ (message . erPingMessage $ reminder)
+   ++ (message . erReminderMessage $ reminder)
    ++ [ Para [Str "Follow",Space,Str "the",Space,Str "link",Space,Str "to",Space,Str "see",Space,Str "more",Space,Str "about",Space,Str "the",Space,Str "issue."]
    , Para [Str "Cheers,",LineBreak,Str "Your",Space,Str "friendly",Space,Str "RemindMe",Space,Str "plugin."]
    ]

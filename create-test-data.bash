@@ -29,7 +29,7 @@ do
       # index would be used for the lookup. As per: http://stackoverflow.com/a/5203827/83446
       # 32767 * 0.03 = 983 (Three percent the range of random)
       HOURS_INTERVAL=`expr "$RANDOM" '-' '983'` 
-      echo "INSERT INTO ping (tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date) VALUES ($tenantId, $RANDOM, 'ISSUE-$RANDOM', '$SUMMARY', '$USER_KEY', '$USER_MAIL', '$USER_MESSAGE', current_timestamp + interval '$HOURS_INTERVAL hours');" >> "$CREATE_FILE" 
+      echo "INSERT INTO reminder (tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date) VALUES ($tenantId, $RANDOM, 'ISSUE-$RANDOM', '$SUMMARY', '$USER_KEY', '$USER_MAIL', '$USER_MESSAGE', current_timestamp + interval '$HOURS_INTERVAL hours');" >> "$CREATE_FILE" 
    done
 done
 

@@ -1,7 +1,7 @@
 # You will need to extend this if your cabal build depends on non
 # haskell files (here '.lhs' and '.hs' files).
 SOURCE = $(shell find src -name '*.lhs' -o -name '*.hs')
-NAME="ping-me-connect"
+NAME="remind-me-connect"
 
 .PHONY: clean build
 

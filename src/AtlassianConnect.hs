@@ -23,7 +23,7 @@ addonDescriptor :: DynamicDescriptorConfig -> Plugin
 addonDescriptor descriptorConfig =
   basePlugin
     { pluginName      = Just $ dcPluginName descriptorConfig
-    , pluginDescription  = Just "A universal PingMe plugin for OnDemand; never forget again."
+    , pluginDescription  = Just "A universal personal reminder plugin for Cloud; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just $ defaultLifecycle 
         { enabled = Nothing
@@ -32,9 +32,9 @@ addonDescriptor descriptorConfig =
     , modules = Just $ Modules emptyJiraModules
           { webPanels = 
             [ WebPanel
-               { wpKey = "ping-create-panel"
+               { wpKey = "create-reminder-panel"
                , wpName = Name "My reminders"
-               , wpUrl = "/panel/jira/ping/create?issue_key={issue.key}&issue_id={issue.id}"
+               , wpUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
                , wpLocation = "atl.jira.view.issue.right.context"
                , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
                }

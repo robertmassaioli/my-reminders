@@ -6,7 +6,7 @@
       <css href="/static/css/view-my-reminders.css" />
 
       <script id="reminder-row" type="x-tmpl-mustache">
-         <tr class="reminder" data-reminder-id="{{PingId}}">
+         <tr class="reminder" data-reminder-id="{{ReminderId}}">
             <td><input type="checkbox" class="select" /></td>
             <td>{{fullDate}}</td>
             <td><a href="{{{issueLink}}}" target="_parent">[{{IssueKey}}] {{IssueSummary}}</a></td>

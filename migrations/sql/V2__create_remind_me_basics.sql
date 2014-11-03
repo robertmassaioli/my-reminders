@@ -1,4 +1,4 @@
-CREATE TABLE ping 
+CREATE TABLE reminder
    ( id SERIAL PRIMARY KEY
    , tenantId              INTEGER not null references tenant(id) ON DELETE CASCADE
    , issueId               INTEGER not null
@@ -12,8 +12,8 @@ CREATE TABLE ping
    , date                  TIMESTAMP WITH TIME ZONE
    );
 
-CREATE INDEX ping_tenant_id_idx ON ping (tenantId);
-CREATE INDEX expiry_date_idx ON ping (date);
+CREATE INDEX reminder_tenant_id_idx ON reminder (tenantId);
+CREATE INDEX expiry_date_idx ON reminder (date);
 
 CREATE TABLE purged_tenant
    ( id        SERIAL PRIMARY KEY
