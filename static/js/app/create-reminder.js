@@ -235,15 +235,15 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
       var handleGenericError = function(jqXHR) {
          var jsonError = JSON.parse(jqXHR.responseText);
-         console.log("Error response: ", jsonError);
-         if(jsonError && jsonError.errorMessage) {
+         if(jsonError && jsonError.errorMessages) {
             // Clear the previous token
             if(genericErrorTimer) {
                clearTimeout(genericErrorTimer);
                genericErrorTimer = null;
             }
 
-            AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessage);
+            // Just show the first error message because most of the time we just return one.
+            AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessage[0]);
             AP.resize();
             genericErrorTimer = setTimeout(function() {
                AJS.$("#error-message").addClass("hidden");
