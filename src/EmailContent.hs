@@ -26,7 +26,7 @@ genericReminderEmail :: EmailReminder -> Pandoc
 genericReminderEmail reminder = Pandoc nullMeta $
    [ Header 2 ("issue-reminder--", [], []) [Str "Issue", Space, Str "Reminder", Space, Str "-", Space, Str . erIssueKey $ reminder]
    , Para [Str "Hi", Space, Str . erUserKey $ reminder, Str ","]
-   , Para [Str "You", Space, Str "set", Space, Str "a", Space, Str "reminder", Space, Str "for:", Space, Str "'", Link [Str . erIssueSummary $ reminder] (show issueURI, ""), Str "'"]
+   , Para $ [Str "You", Space, Str "set", Space, Str "a", Space, Str "reminder", Space, Str "for:", Space, Str "'", Link [Str . erIssueSummary $ reminder] (show issueURI, ""), Str "'"] ++ originalDetails
    ] 
    ++ (message . erPingMessage $ reminder)
    ++ [ Para [Str "Follow",Space,Str "the",Space,Str "link",Space,Str "to",Space,Str "see",Space,Str "more",Space,Str "about",Space,Str "the",Space,Str "issue."]
@@ -43,6 +43,11 @@ genericReminderEmail reminder = Pandoc nullMeta $
       tenantURI = erTenantBaseUrl reminder
       issuePath = uriPath tenantURI ++ "/browse/" ++ erIssueKey reminder
       issueURI = tenantURI { uriPath = issuePath }
+
+      originalDetails :: [Inline]
+      originalDetails = if erOriginalIssueKey reminder /= erIssueKey reminder || erOriginalIssueSummary reminder /= erIssueSummary reminder
+         then [Str ".",Space,Str "(Originally:",Space,Str . erOriginalIssueKey $ reminder ,Space,Str "-",Space,Str . erOriginalIssueSummary $ reminder, Str ")"]
+         else []
 
 emailWriterDefaults :: WriterOptions
 emailWriterDefaults = def 

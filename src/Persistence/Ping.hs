@@ -10,10 +10,13 @@ module Persistence.Ping
    , getReminderByUser
    , getExpiredReminders
    , getLivePingsByUser
+   , updateKeysForReminders
+   , updateSummariesForReminders
    , updateEmailForUser
    , getLivePingsForIssueByUser
    , deletePingForUser
    , deletePing
+   , deleteRemindersForIssue
    , deleteManyPings
    , deleteManyPingsForUser
    ) where
@@ -40,42 +43,46 @@ import qualified Connect.AtlassianTypes as CA
 type PingId = Integer
 
 data Ping = Ping
-   { pingPingId         :: PingId
-   , pingTenantId       :: Integer
-   , pingIssueId        :: CA.IssueId
-   , pingIssueKey       :: CA.IssueKey
-   , pingIssueSummary   :: CA.IssueSummary
-   , pingUserKey        :: CA.UserKey
-   , pingUserEmail      :: CA.UserEmail
-   , pingMessage        :: Maybe T.Text
-   , pingDate           :: UTCTime
+   { pingPingId                  :: PingId
+   , pingTenantId                :: Integer
+   , pingIssueId                 :: CA.IssueId
+   , pingOriginalIssueKey        :: CA.IssueKey
+   , pingIssueKey                :: CA.IssueKey
+   , pingOriginalIssueSummary    :: CA.IssueSummary
+   , pingIssueSummary            :: CA.IssueSummary
+   , pingUserKey                 :: CA.UserKey
+   , pingUserEmail               :: CA.UserEmail
+   , pingMessage                 :: Maybe T.Text
+   , pingDate                    :: UTCTime
    } deriving (Eq,Show,Generic)
 
 instance FromRow Ping where
-  fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Ping <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 data EmailReminder = EmailReminder
-   { erPingId           :: PingId
-   , erIssueId          :: CA.IssueId
-   , erIssueKey         :: CA.IssueKey
-   , erIssueSummary     :: CA.IssueSummary
-   , erUserKey          :: CA.UserKey
-   , erUserEmail        :: CA.UserEmail
-   , erPingMessage      :: Maybe T.Text
-   , erPingDate         :: UTCTime
-   , erTenantBaseUrl    :: URI
+   { erPingId                 :: PingId
+   , erIssueId                :: CA.IssueId
+   , erOriginalIssueKey       :: CA.IssueKey
+   , erIssueKey               :: CA.IssueKey
+   , erOriginalIssueSummary   :: CA.IssueSummary
+   , erIssueSummary           :: CA.IssueSummary
+   , erUserKey                :: CA.UserKey
+   , erUserEmail              :: CA.UserEmail
+   , erPingMessage            :: Maybe T.Text
+   , erPingDate               :: UTCTime
+   , erTenantBaseUrl          :: URI
    } deriving (Eq, Show, Generic)
 
 instance FromRow EmailReminder where
-   fromRow = EmailReminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+   fromRow = EmailReminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 addPing :: Connection -> UTCTime -> Integer -> CA.IssueDetails -> CA.UserDetails -> Maybe T.Text -> IO (Maybe Integer)
 addPing conn date tenantId issueDetails userDetails message = do
   pingID <- liftIO $ insertReturning conn
     [sql|
-      INSERT INTO ping (tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date)
-      VALUES (?,?,?,?,?,?,?,?) RETURNING id
-    |] (tenantId, iid, ikey, isum, ukey, uemail, message, date)
+      INSERT INTO ping (tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date)
+      VALUES (?,?,?,?,?,?,?,?,?,?) RETURNING id
+    |] (tenantId, iid, ikey, ikey, isum, isum, ukey, uemail, message, date)
   return . listToMaybe $ join pingID
   where
     iid = CA.issueId issueDetails
@@ -88,7 +95,7 @@ getReminderByUser :: PT.Tenant -> CA.UserKey -> PingId -> Connection -> IO (Mayb
 getReminderByUser tenant userKey pid conn = do
    result <- liftIO $ query conn
       [sql|
-         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM ping WHERE id = ? AND tenantId = ? AND userKey = ?
       |] (pid, PT.tenantId tenant, B.pack userKey)
    return . listToMaybe $ result
 
@@ -97,7 +104,7 @@ getLivePingsByUser tenant userKey connection = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
-         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ? ORDER BY date ASC
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND userKey = ? AND date > ? ORDER BY date ASC
       |]
       (PT.tenantId tenant, B.pack userKey, now)
 
@@ -106,9 +113,23 @@ getLivePingsForIssueByUser connection tenant userKey issueId = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
-         SELECT id, tenantId, issueId, issueKey, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM ping WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
       |]
       (PT.tenantId tenant, issueId, B.pack userKey, now)
+
+updateKeysForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueKey -> Connection -> IO Int64
+updateKeysForReminders tenant issueId newIssueKey conn = liftIO $ execute conn
+   [sql|
+      UPDATE ping SET issueKey = ? WHERE tenantId = ? AND issueId = ?
+   |]
+   (newIssueKey, PT.tenantId tenant, issueId)
+
+updateSummariesForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueSummary -> Connection -> IO Int64
+updateSummariesForReminders tenant issueId newIssueSummary conn = liftIO $ execute conn
+   [sql|
+      UPDATE ping SET issueSummary = ? WHERE tenantId = ? AND issueId = ?
+   |]
+   (newIssueSummary, PT.tenantId tenant, issueId)
 
 updateEmailForUser :: PT.Tenant -> CA.UserDetails -> [PingId] -> Connection -> IO Int64
 updateEmailForUser tenant userDetails pingIds conn = liftIO $ execute conn
@@ -120,7 +141,7 @@ updateEmailForUser tenant userDetails pingIds conn = liftIO $ execute conn
 getExpiredReminders :: UTCTime -> Connection -> IO [EmailReminder]
 getExpiredReminders expireTime conn = liftIO $ query conn
     [sql|
-      SELECT p.id, p.issueId, p.issueKey, p.issueSummary, p.userKey, p.userEmail, p.message, p.date, t.baseUrl FROM ping p, tenant t WHERE p.tenantId = t.id AND p.date < ?
+      SELECT p.id, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userEmail, p.message, p.date, t.baseUrl FROM ping p, tenant t WHERE p.tenantId = t.id AND p.date < ?
     |]
     (Only expireTime)
 
@@ -141,6 +162,12 @@ deletePingForUser tenant userKey pingId conn = execute conn
    [sql|
       DELETE from ping WHERE id = ? AND tenantId = ? AND userKey = ?
    |] (pingId, PT.tenantId tenant, B.pack userKey)
+
+deleteRemindersForIssue :: PT.Tenant -> CA.IssueId -> Connection -> IO Int64
+deleteRemindersForIssue tenant issueId conn = execute conn
+   [sql|
+      DELETE from ping WHERE tenantId = ? AND issueId = ? 
+   |] (PT.tenantId tenant, issueId)
 
 deleteManyPingsForUser :: PT.Tenant -> [PingId] -> CA.UserKey -> Connection -> IO Int64
 deleteManyPingsForUser tenant pingIds userKey conn = execute conn

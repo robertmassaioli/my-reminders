@@ -38,6 +38,7 @@ import           CustomSplices
 import           PingHandlers
 import           ExpireHandlers
 import           PurgeHandlers
+import           WebhookHandlers
 import           Healthcheck
 import           Heartbeat
 import qualified TenantJWT as TJ
@@ -100,6 +101,8 @@ applicationRoutes =
   , ("/rest/user/reminders"         , handleUserReminders)
   , ("/rest/expire"                 , handleExpireRequest)
   , ("/rest/purge"                  , handlePurgeRequest)
+  , ("/rest/webhook/issue/update"   , handleIssueUpdateWebhook)
+  , ("/rest/webhook/issue/delete"   , handleIssueDeleteWebhook)
   , ("/rest/healthcheck"            , healthcheckRequest)
   , ("/rest/heartbeat"              , heartbeatRequest)
   , ("/static/css"                  , serveDirectory "static/css")

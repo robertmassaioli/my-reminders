@@ -56,17 +56,20 @@ logErrorS :: String -> AppHandler ()
 logErrorS = SC.logError . BSC.pack
 
 data ErrorResponse = ErrorResponse
-  { errorMessage :: String
+  { errorMessages :: [String]
   } deriving (Show, Generic)
 
 instance ToJSON ErrorResponse
 
 respondWithError :: SC.MonadSnap m => Int -> String -> m ()
-respondWithError errorCode response = do
-  SC.writeLBS . encode $ errorResponse
+respondWithError errorCode response = respondWithErrors errorCode [response]
+
+respondWithErrors :: SC.MonadSnap m => Int -> [String] -> m ()
+respondWithErrors errorCode responses = do
+  writeJson errorResponse
   respondWith errorCode
   where
-    errorResponse = ErrorResponse response
+    errorResponse = ErrorResponse responses
 
 respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
