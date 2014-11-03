@@ -21,7 +21,7 @@ import qualified Snap.Snaplet               as SS
 
 import qualified Connect.AtlassianTypes     as CA
 import qualified Connect.Tenant             as CT
-import qualified Persistence.Reminder           as P
+import qualified Persistence.Reminder       as P
 import           Persistence.PostgreSQL
 import qualified Persistence.Tenant         as TN
 import           SnapHelpers

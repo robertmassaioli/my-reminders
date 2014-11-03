@@ -15,7 +15,7 @@ import           Data.List                as DL
 import           Data.Maybe               (fromMaybe, isJust)
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
-import qualified Persistence.Reminder         as P
+import qualified Persistence.Reminder     as P
 import qualified Persistence.PostgreSQL   as DB
 import qualified Persistence.Tenant       as PT
 import qualified Snap.Core                as SC
