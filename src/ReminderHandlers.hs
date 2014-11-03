@@ -2,9 +2,9 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings         #-}
 
-module PingHandlers
-  ( handlePings
-  , handleMultiPings
+module ReminderHandlers
+  ( handleReminder
+  , handleReminders
   , handleUserReminders
   ) where
 
@@ -21,7 +21,7 @@ import qualified Snap.Snaplet               as SS
 
 import qualified Connect.AtlassianTypes     as CA
 import qualified Connect.Tenant             as CT
-import qualified Persistence.Ping           as P
+import qualified Persistence.Reminder           as P
 import           Persistence.PostgreSQL
 import qualified Persistence.Tenant         as TN
 import           SnapHelpers
@@ -39,7 +39,7 @@ data TimeUnit
    | Year
    deriving (Show, Eq, Generic)
 
-data PingRequest = PingRequest
+data ReminderRequest = ReminderRequest
   { prqTimeDelay :: TimeDelay
   , prqTimeUnit  :: TimeUnit
   , prqIssue     :: CA.IssueDetails
@@ -48,7 +48,7 @@ data PingRequest = PingRequest
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
-   { prsPingId         :: Integer
+   { prsReminderId         :: Integer
    , prsIssueId        :: CA.IssueId
    , prsIssueKey       :: CA.IssueKey
    , prsIssueSummary   :: CA.IssueSummary
@@ -58,12 +58,12 @@ data ReminderResponse = ReminderResponse
    , prsDate           :: UTCTime
    } deriving (Eq, Show, Generic)
 
-data PingIdList = PingIdList
+data ReminderIdList = ReminderIdList
    { pids :: [Integer]
    } deriving (Eq, Show, Generic)
 
-instance ToJSON PingIdList
-instance FromJSON PingIdList
+instance ToJSON ReminderIdList
+instance FromJSON ReminderIdList
 
 instance ToJSON TimeUnit
 instance FromJSON TimeUnit
@@ -93,24 +93,24 @@ instance ToJSON CA.IssueDetails where
 instance FromJSON CA.IssueDetails where
    parseJSON = genericParseJSON issueDetailsOptions
 
-instance ToJSON PingRequest where
+instance ToJSON ReminderRequest where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
-instance FromJSON PingRequest where
+instance FromJSON ReminderRequest where
    parseJSON (Object o) = do
       delay    <- o .:  "TimeDelay"
       unit     <- o .:  "TimeUnit"
       issue    <- o .:  "Issue"
       user     <- o .:  "User"
       message  <- o .:? "Message"
-      return PingRequest
+      return ReminderRequest
          { prqTimeDelay = delay
          , prqTimeUnit = unit
          , prqIssue = issue
          , prqUser = user
          , prqMessage = message
          }
-   parseJSON _ = fail "Expect the PingRequest to be a JSON object but it was not."
+   parseJSON _ = fail "Expect the ReminderRequest to be a JSON object but it was not."
 
 instance ToJSON ReminderResponse where
    toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
@@ -118,39 +118,39 @@ instance ToJSON ReminderResponse where
 instance FromJSON ReminderResponse where
    parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
 
-handleMultiPings :: AppHandler ()
-handleMultiPings = handleMethods
-   [ (SC.GET, WT.tenantFromToken getPingsForIssue)
-   , (SC.DELETE, WT.tenantFromToken clearPingsForIssue)
+handleReminders :: AppHandler ()
+handleReminders = handleMethods
+   [ (SC.GET, WT.tenantFromToken getRemindersForIssue)
+   , (SC.DELETE, WT.tenantFromToken clearRemindersForIssue)
    ]
 
-toReminderResponse :: P.Ping -> ReminderResponse
-toReminderResponse ping = ReminderResponse
-   { prsPingId         = P.pingPingId ping
-   , prsIssueId        = P.pingIssueId ping
-   , prsIssueKey       = P.pingIssueKey ping
-   , prsIssueSummary   = P.pingIssueSummary ping
-   , prsUserKey        = P.pingUserKey ping
-   , prsUserEmail      = BC.unpack . P.pingUserEmail $ ping
-   , prsMessage        = P.pingMessage ping
-   , prsDate           = P.pingDate ping
+toReminderResponse :: P.Reminder -> ReminderResponse
+toReminderResponse reminder = ReminderResponse
+   { prsReminderId         = P.reminderReminderId reminder
+   , prsIssueId        = P.reminderIssueId reminder
+   , prsIssueKey       = P.reminderIssueKey reminder
+   , prsIssueSummary   = P.reminderIssueSummary reminder
+   , prsUserKey        = P.reminderUserKey reminder
+   , prsUserEmail      = BC.unpack . P.reminderUserEmail $ reminder
+   , prsMessage        = P.reminderMessage reminder
+   , prsDate           = P.reminderDate reminder
    }
 
 standardAuthError :: AppHandler ()
 standardAuthError = respondWithError unauthorised "You need to login before you query for reminders."
 
-getPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-getPingsForIssue (_, Nothing) = standardAuthError
-getPingsForIssue (tenant, Just userKey) = do
+getRemindersForIssue :: CT.ConnectTenant -> AppHandler ()
+getRemindersForIssue (_, Nothing) = standardAuthError
+getRemindersForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
    case potentialIssueId of
       Just issueId -> do
-         issuePings <- SS.with db $ withConnection (\connection -> P.getLivePingsForIssueByUser connection tenant userKey issueId)
-         writeJson (fmap toReminderResponse issuePings)
+         issueReminders <- SS.with db $ withConnection (\connection -> P.getLiveRemindersForIssueByUser connection tenant userKey issueId)
+         writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
-clearPingsForIssue :: CT.ConnectTenant -> AppHandler ()
-clearPingsForIssue _ = undefined
+clearRemindersForIssue :: CT.ConnectTenant -> AppHandler ()
+clearRemindersForIssue _ = undefined
 
 handleUserReminders :: AppHandler ()
 handleUserReminders = handleMethods
@@ -162,17 +162,17 @@ handleUserReminders = handleMethods
 getUserReminders :: CT.ConnectTenant -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
-   userReminders <- SS.with db $ withConnection (P.getLivePingsByUser tenant userKey)
+   userReminders <- SS.with db $ withConnection (P.getLiveRemindersByUser tenant userKey)
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
    
 bulkUpdateUserEmails :: CT.ConnectTenant -> AppHandler ()
 bulkUpdateUserEmails (_, Nothing) = standardAuthError
-bulkUpdateUserEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
+bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
   potentialUserDetails <- UD.getUserDetails userKey tenant
   case potentialUserDetails of
     Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
     Right userDetails -> do
-      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids pingIds))
+      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
       return ()
   where
     userDetailsConvert :: UD.UserWithDetails -> CA.UserDetails
@@ -183,88 +183,88 @@ bulkUpdateUserEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \ping
 
 bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
-bulkDeleteEmails (tenant, Just userKey) = parsePingIdListFromRequest $ \pingIds -> do
-   SS.with db $ withConnection (P.deleteManyPingsForUser tenant (pids pingIds) userKey)
+bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
+   SS.with db $ withConnection (P.deleteManyRemindersForUser tenant (pids reminderIds) userKey)
    return ()
 
-parsePingIdListFromRequest :: (PingIdList -> AppHandler ()) -> AppHandler ()
-parsePingIdListFromRequest f = do
+parseReminderIdListFromRequest :: (ReminderIdList -> AppHandler ()) -> AppHandler ()
+parseReminderIdListFromRequest f = do
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-  let maybePing = eitherDecode request :: Either String PingIdList
-  case maybePing of
+  let maybeReminder = eitherDecode request :: Either String ReminderIdList
+  case maybeReminder of
     Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
-    Right pingIds -> f pingIds
+    Right reminderIds -> f reminderIds
 
-handlePings :: AppHandler ()
-handlePings = handleMethods
-  [ (SC.GET,     WT.tenantFromToken getPingHandler)
-  , (SC.PUT,     WT.tenantFromToken addPingHandler)
-  , (SC.DELETE,  WT.tenantFromToken deletePingHandler)
+handleReminder :: AppHandler ()
+handleReminder = handleMethods
+  [ (SC.GET,     WT.tenantFromToken getReminderHandler)
+  , (SC.PUT,     WT.tenantFromToken addReminderHandler)
+  , (SC.DELETE,  WT.tenantFromToken deleteReminderHandler)
   ]
 
-getPingHandler :: CT.ConnectTenant -> AppHandler ()
-getPingHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
-getPingHandler (tenant, Just userKey) = do
-   rawPingId <- SC.getQueryParam "reminderId"
-   let potentialPingId = fmap (read . BC.unpack) rawPingId :: Maybe Integer
-   case potentialPingId of
-      Just pingId -> do
-         potentialPing <- SS.with db $ withConnection (P.getReminderByUser tenant userKey pingId)
-         case potentialPing of
+getReminderHandler :: CT.ConnectTenant -> AppHandler ()
+getReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
+getReminderHandler (tenant, Just userKey) = do
+   rawReminderId <- SC.getQueryParam "reminderId"
+   let potentialReminderId = fmap (read . BC.unpack) rawReminderId :: Maybe Integer
+   case potentialReminderId of
+      Just reminderId -> do
+         potentialReminder <- SS.with db $ withConnection (P.getReminderByUser tenant userKey reminderId)
+         case potentialReminder of
             Nothing -> respondNotFound
-            Just ping -> writeJson (toReminderResponse ping)
+            Just reminder -> writeJson (toReminderResponse reminder)
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
-deletePingHandler :: CT.ConnectTenant -> AppHandler ()
-deletePingHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
-deletePingHandler (tenant, Just userKey) = do
+deleteReminderHandler :: CT.ConnectTenant -> AppHandler ()
+deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
+deleteReminderHandler (tenant, Just userKey) = do
    potentialRawReminderId <- SC.getPostParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
-         deletedPings <- SS.with db $ withConnection (P.deletePingForUser tenant userKey reminderId)
-         case deletedPings of
+         deletedReminders <- SS.with db $ withConnection (P.deleteReminderForUser tenant userKey reminderId)
+         case deletedReminders of
             1 -> respondNoContent
             0 -> respondNotFound
             _ -> do
-               logErrorS $ "Deleted " ++ show deletedPings ++ " reminders with a single delete request. Primary key invalid on: " ++ show reminderId
+               logErrorS $ "Deleted " ++ show deletedReminders ++ " reminders with a single delete request. Primary key invalid on: " ++ show reminderId
                respondInternalServer
       Nothing -> respondWithError badRequest "A reminderId is required to see which reminder should be deleted."
 
-addPingHandler :: CT.ConnectTenant -> AppHandler ()
-addPingHandler ct = do
+addReminderHandler :: CT.ConnectTenant -> AppHandler ()
+addReminderHandler ct = do
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-  let maybePing = eitherDecode request :: Either String PingRequest
-  case maybePing of
+  let maybeReminder = eitherDecode request :: Either String ReminderRequest
+  case maybeReminder of
     Left err -> respondWithError badRequest err
-    Right pingRequest -> addPing pingRequest ct
+    Right reminderRequest -> addReminder reminderRequest ct
 
-addPing :: PingRequest -> CT.ConnectTenant -> AppHandler ()
-addPing _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addPing pingRequest (tenant, Just userKey) =
+addReminder :: ReminderRequest -> CT.ConnectTenant -> AppHandler ()
+addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
+addReminder reminderRequest (tenant, Just userKey) =
   if userKey /= requestUK
     then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey)
     else do
-      addedPing <- SS.with db $ withConnection (addPingFromRequest pingRequest tenant (prqUser pingRequest))
-      case addedPing of
+      addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
+      case addedReminder of
         Just _ -> respondNoContent
         Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ userKey)
   where
-    requestUK = CA.userKey . prqUser $ pingRequest
+    requestUK = CA.userKey . prqUser $ reminderRequest
 
-addPingFromRequest :: PingRequest -> TN.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
-addPingFromRequest pingRequest tenant userDetails conn = do
+addReminderFromRequest :: ReminderRequest -> TN.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
+addReminderFromRequest reminderRequest tenant userDetails conn = do
   currentTime <- getCurrentTime
   let date' = addUTCTime dateDiff currentTime
-  P.addPing conn date' tenantId' iDetails userDetails message'
+  P.addReminder conn date' tenantId' iDetails userDetails message'
   where
-    dateDiff = timeDiffForPingRequest pingRequest
+    dateDiff = timeDiffForReminderRequest reminderRequest
     tenantId' = TN.tenantId tenant
-    iDetails = prqIssue pingRequest
-    message' = prqMessage pingRequest
+    iDetails = prqIssue reminderRequest
+    message' = prqMessage reminderRequest
 
-timeDiffForPingRequest :: PingRequest -> NominalDiffTime
-timeDiffForPingRequest request = toDiffTime (prqTimeDelay request) (prqTimeUnit request)
+timeDiffForReminderRequest :: ReminderRequest -> NominalDiffTime
+timeDiffForReminderRequest request = toDiffTime (prqTimeDelay request) (prqTimeUnit request)
 
 toDiffTime :: TimeDelay -> TimeUnit -> NominalDiffTime
 toDiffTime mag unit = case unit of

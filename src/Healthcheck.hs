@@ -21,7 +21,7 @@ import           GHC.Generics
 import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Tenant (getTenantCount)
-import           Persistence.Ping (getExpiredReminders)
+import           Persistence.Reminder (getExpiredReminders)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
 import           SnapHelpers

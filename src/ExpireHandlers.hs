@@ -13,7 +13,7 @@ import           Data.Time.Clock.POSIX
 import           Database.PostgreSQL.Simple
 import           EmailContent
 import           Mail.Hailgun
-import           Persistence.Ping
+import           Persistence.Reminder
 import           Persistence.PostgreSQL (withConnection)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core as SC
@@ -62,7 +62,7 @@ sendReminders rmConf reminders =
 
 sendReminder :: RC.RMConf -> EmailReminder -> IO (EmailReminder, Bool)
 sendReminder rmConf reminder =
-   case pingToHailgunMessage rmConf reminder of
+   case reminderToHailgunMessage rmConf reminder of
       Left _ -> return (reminder, False)
       Right message -> (,) reminder <$> isRight <$> sendEmail (RC.rmHailgunContext rmConf) message
 
@@ -70,8 +70,8 @@ isRight :: Either a b -> Bool
 isRight (Right _) = True
 isRight _         = False
 
-pingToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
-pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
+reminderToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
+reminderToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
    where 
       subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
       message = reminderEmail reminder
@@ -80,5 +80,5 @@ pingToHailgunMessage rmConf reminder = hailgunMessage subject message from recip
 
 removeSentReminders :: [EmailReminder] -> Connection -> IO Bool
 removeSentReminders reminders conn = do
-   deletedCount <- deleteManyPings (fmap erPingId reminders) conn
+   deletedCount <- deleteManyReminders (fmap erReminderId reminders) conn
    return $ deletedCount == fromIntegral (length reminders)

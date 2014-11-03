@@ -35,7 +35,7 @@ import qualified DatabaseSnaplet as DS
 import qualified Persistence.Tenant as PT
 import qualified RemindMeConfiguration as RC
 import           CustomSplices
-import           PingHandlers
+import           ReminderHandlers
 import           ExpireHandlers
 import           PurgeHandlers
 import           WebhookHandlers
@@ -63,8 +63,8 @@ showDocPage = do
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createPingPanel :: AppHandler ()
-createPingPanel = createConnectPanel "ping-create"
+createReminderPanel :: AppHandler ()
+createReminderPanel = createConnectPanel "reminder-create"
 
 viewRemindersPanel :: AppHandler ()
 viewRemindersPanel = createConnectPanel "view-jira-reminders"
@@ -94,10 +94,10 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                            , homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
-  , ("/panel/jira/ping/create"      , createPingPanel )
+  , ("/panel/jira/reminder/create"  , createReminderPanel )
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
-  , ("/rest/ping"                   , handlePings)
-  , ("/rest/pings"                  , handleMultiPings)
+  , ("/rest/reminder"               , handleReminder)
+  , ("/rest/reminders"              , handleReminders)
   , ("/rest/user/reminders"         , handleUserReminders)
   , ("/rest/expire"                 , handleExpireRequest)
   , ("/rest/purge"                  , handlePurgeRequest)
@@ -114,14 +114,14 @@ applicationRoutes =
 -- change where that points to, we only have to quickly update those links here
 redirects :: [(ByteString, SS.Handler App App ())]
 redirects = 
-   [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/ping-me-connect/issues")
+   [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/reminder-me-connect/issues")
    , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
    ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SS.SnapletInit App App
-app = SS.makeSnaplet "app" "ping-me connect" Nothing $ do
+app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO CZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
