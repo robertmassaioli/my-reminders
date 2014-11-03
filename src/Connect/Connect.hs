@@ -17,7 +17,6 @@ import qualified Data.Configurator       as DC
 import qualified Data.Configurator.Types as DCT
 import           Data.Text
 import qualified Network.HostName        as HN
-import qualified Paths_remind_me_connect as PRMC
 import qualified Snap.Snaplet            as SS
 import qualified System.Exit             as SE
 

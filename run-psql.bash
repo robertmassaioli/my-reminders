@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-psql --host localhost -U pingme
+psql --host localhost -U remindme

@@ -64,7 +64,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             }
 
             var request = AJS.$.ajax({
-               url: "/rest/ping",
+               url: "/rest/reminder",
                type: "PUT",
                cache: false,
                contentType: "application/json",
@@ -89,7 +89,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
       var deleteReminder = function(reminderId) {
          var request = AJS.$.ajax({
-            url: "/rest/ping",
+            url: "/rest/reminder",
             type: "DELETE",
             cache: false,
             dataType: "text",
@@ -143,9 +143,9 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
       };
 
       var resetCreateForm = function() {
-         AJS.$("#custom-ping-magnitude").val("1");
-         AJS.$("#custom-ping-timeunit").val(timeUnits.day);
-         AJS.$("#custom-ping-message").val("");
+         AJS.$("#custom-reminder-magnitude").val("1");
+         AJS.$("#custom-reminder-timeunit").val(timeUnits.day);
+         AJS.$("#custom-reminder-message").val("");
 
          showCustomCreate(false);
       };
@@ -172,7 +172,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          }
 
          currentRemindersRequest = AJS.$.ajax({
-            url: "/rest/pings", 
+            url: "/rest/reminders", 
             type: "GET", 
             cache: false,
             dataType: "text",
@@ -183,11 +183,11 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
          currentUserRequest = HostRequest.userDetails(userKey);
 
-         AJS.$.when(currentRemindersRequest, currentUserRequest).done(function(pingsResponse, userResponse) {
+         AJS.$.when(currentRemindersRequest, currentUserRequest).done(function(remindersResponse, userResponse) {
             currentRemindersRequest = null;
             currentUserRequest = null;
 
-            var reminders = JSON.parse(pingsResponse[0]);
+            var reminders = JSON.parse(remindersResponse[0]);
             var user = JSON.parse(userResponse[0]);
 
             // Clear the reminders container
@@ -267,13 +267,13 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          });
 
          AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
-            var magnitude = parseInt(AJS.$("#custom-ping-magnitude").val());
-            var timeUnit = AJS.$("#custom-ping-timeunit").val();
+            var magnitude = parseInt(AJS.$("#custom-reminder-magnitude").val());
+            var timeUnit = AJS.$("#custom-reminder-timeunit").val();
             if(timeUnit === "Month") {
                timeUnit = timeUnits.week;
                magnitude *= 4;
             }
-            var message = AJS.$("#custom-ping-message").val();
+            var message = AJS.$("#custom-reminder-message").val();
 
             if(!isNaN(magnitude)) {
                createReminder(magnitude, timeUnit, message).done(resetCreateForm);

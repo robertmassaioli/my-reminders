@@ -7,9 +7,7 @@ module ExpireHandlers
 import           Application
 import           Control.Applicative ((<$>))
 import           Control.Concurrent.ParallelIO.Local
-import qualified Data.ByteString.Char8 as BC
 import           Data.Time.Clock (UTCTime)
-import           Data.Time.Clock.POSIX
 import           Database.PostgreSQL.Simple
 import           EmailContent
 import           Mail.Hailgun

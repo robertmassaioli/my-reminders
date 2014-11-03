@@ -44,4 +44,4 @@ RUN cabal update && cabal install cabal-install
 RUN cabal sandbox init && cabal sandbox add-source vendor/atlassian-connect && cabal install
 
 # Setup the default command to run for the container.
-CMD ["/home/haskell/build/.cabal-sandbox/bin/ping-me-connect", "--access-log=-", "--error-log=stderr"]
+CMD ["/home/haskell/build/.cabal-sandbox/bin/remind-me-connect", "--access-log=-", "--error-log=stderr"]

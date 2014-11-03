@@ -43,7 +43,7 @@ import qualified Connect.AtlassianTypes as CA
 type ReminderId = Integer
 
 data Reminder = Reminder
-   { reminderReminderId                  :: ReminderId
+   { reminderReminderId              :: ReminderId
    , reminderTenantId                :: Integer
    , reminderIssueId                 :: CA.IssueId
    , reminderOriginalIssueKey        :: CA.IssueKey
@@ -60,7 +60,7 @@ instance FromRow Reminder where
   fromRow = Reminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 data EmailReminder = EmailReminder
-   { erReminderId                 :: ReminderId
+   { erReminderId             :: ReminderId
    , erIssueId                :: CA.IssueId
    , erOriginalIssueKey       :: CA.IssueKey
    , erIssueKey               :: CA.IssueKey
@@ -68,8 +68,8 @@ data EmailReminder = EmailReminder
    , erIssueSummary           :: CA.IssueSummary
    , erUserKey                :: CA.UserKey
    , erUserEmail              :: CA.UserEmail
-   , erReminderMessage            :: Maybe T.Text
-   , erReminderDate               :: UTCTime
+   , erReminderMessage        :: Maybe T.Text
+   , erReminderDate           :: UTCTime
    , erTenantBaseUrl          :: URI
    } deriving (Eq, Show, Generic)
 
