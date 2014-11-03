@@ -48,7 +48,7 @@ data ReminderRequest = ReminderRequest
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
-   { prsReminderId         :: Integer
+   { prsReminderId     :: Integer
    , prsIssueId        :: CA.IssueId
    , prsIssueKey       :: CA.IssueKey
    , prsIssueSummary   :: CA.IssueSummary
@@ -126,7 +126,7 @@ handleReminders = handleMethods
 
 toReminderResponse :: P.Reminder -> ReminderResponse
 toReminderResponse reminder = ReminderResponse
-   { prsReminderId         = P.reminderReminderId reminder
+   { prsReminderId     = P.reminderReminderId reminder
    , prsIssueId        = P.reminderIssueId reminder
    , prsIssueKey       = P.reminderIssueKey reminder
    , prsIssueSummary   = P.reminderIssueSummary reminder
