@@ -41,8 +41,8 @@ data RMConf = RMConf
 class HasRMConf m where
    getRMConf :: m RMConf
 
-initRMConfOrExit :: SS.SnapletInit b RMConf
-initRMConfOrExit = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
+initRMConfOrExit :: IO String -> SS.SnapletInit b RMConf
+initRMConfOrExit configDataDir = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
   MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConfOrExit
 
 data EnvConf = EnvConf

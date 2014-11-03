@@ -11,6 +11,7 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+import qualified Control.Monad as CM
 import           Control.Monad.IO.Class (liftIO)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BC
@@ -45,6 +46,8 @@ import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
+
+import qualified Paths_remind_me_connect as PRMC
 
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
@@ -130,7 +133,10 @@ app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
-  appConnect <- SS.nestSnaplet "connect" connect CC.initConnectSnaplet
-  appRMConf  <- SS.nestSnaplet "rmconf" rmconf RC.initRMConfOrExit
+  appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir)
+  appRMConf  <- SS.nestSnaplet "rmconf" rmconf (RC.initRMConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appRMConf
+
+configDataDir :: IO String
+configDataDir = CM.liftM (++ "/resources") PRMC.getDataDir
