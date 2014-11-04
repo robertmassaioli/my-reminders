@@ -93,33 +93,3 @@ flywayOptionsToArguments fo =
    , "-password=" ++ flywayPassword fo
    , "-target=" ++ (show . flywayTarget $ fo)
    ]
-
-
-{-
- - driver                 : Fully qualified classname of the jdbc driver
- - url                    : Jdbc url to use to connect to the database
- - user                   : User to use to connect to the database
- - password               : Password to use to connect to the database
- - schemas                : Comma-separated list of the schemas managed by Flyway
- - table                  : Name of Flyway's metadata table
- - locations              : Classpath locations to scan recursively for migrations
- - resolvers              : Comma-separated list of custom MigrationResolvers
- - sqlMigrationPrefix     : File name prefix for Sql migrations
- - sqlMigrationSeparator  : File name separator for Sql migrations
- - sqlMigrationSuffix     : File name suffix for Sql migrations
- - encoding               : Encoding of Sql migrations
- - placeholders           : Placeholders to replace in Sql migrations
- - placeholderPrefix      : Prefix of every placeholder
- - placeholderSuffix      : Suffix of every placeholder
- - target                 : Target version up to which Flyway should migrate
- - outOfOrder             : Allows migrations to be run "out of order"
- - callbacks              : Comma-separated list of FlywayCallback classes
- - validateOnMigrate      : Validate when running migrate
- - cleanOnValidationError : Automatically clean on a validation error
- - initVersion            : Version to tag schema with when executing init
- - initDescription        : Description to tag schema with when executing init
- - initOnMigrate          : Init on migrate against uninitialized non-empty schema
- - configFile             : Config file to use (default: conf/flyway.properties)
- - configFileEncoding     : Encoding of the config file (default: UTF-8)
- - jarDir                 : Dir for Jdbc drivers & Java migrations (default: jars)
- -}
