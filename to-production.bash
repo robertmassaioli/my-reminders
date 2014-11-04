@@ -26,6 +26,7 @@ rm -fr "$COPY_DIR"
 mkdir -p "$COPY_DIR"
 cp -R snaplets "$COPY_DIR"
 cp -R resources "$COPY_DIR"
+cp -R migrations "$COPY_DIR"
 cp -R static "$COPY_DIR"
 r.js -o build.js
 cp -R static-js "$COPY_DIR"
