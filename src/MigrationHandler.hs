@@ -26,7 +26,7 @@ handleMigrationRun :: AppHandler ()
 handleMigrationRun = SH.getKeyAndConfirm RC.rmMigrationKey handleFlywayMigrate
 
 handleFlywayMigrate :: AppHandler ()
-handleFlywayMigrate = maybe SH.respondBadRequest (liftIO . flywayMigrate) =<< getFlywayOptions
+handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywayMigrate) =<< getFlywayOptions
 
 flywayMigrate :: FlywayOptions -> IO ()
 flywayMigrate options = do
@@ -35,11 +35,11 @@ flywayMigrate options = do
    where
       migrationArguments = "migrate" : flywayOptionsToArguments options
    
-getFlywayOptions :: AppHandler (Maybe FlywayOptions)
+getFlywayOptions :: AppHandler (Either String FlywayOptions)
 getFlywayOptions = do
    potentialTarget <- fmap (read . BSC.unpack) <$> SC.getParam (BSC.pack "target")
    case potentialTarget of
-      Nothing -> return Nothing
+      Nothing -> return . Left $ "You need to provide a 'target' schema version param to the migration endpoint."
       Just target -> do
          pHost     <- siGetEnv  $ pgRemindMePre "HOST"
          pPort     <- fmap read <$> (siGetEnv $ pgRemindMePre "PORT")
@@ -56,13 +56,13 @@ getFlywayOptions = do
                                        , P.connectPassword = ""
                                        }
                let connectionString = P.postgreSQLConnectionString connectionInfo
-               return . Just $ FlywayOptions
+               return . Right $ FlywayOptions
                   { flywayUrl = BSC.unpack connectionString
                   , flywayUser = role
                   , flywayPassword = password
                   , flywayTarget = target
                   }
-            _ -> return Nothing
+            _ -> return . Left $ "Could not load the database details from the environment variables."
    where
       siGetEnv :: String -> AppHandler (Maybe String)
       siGetEnv = liftIO . DE.getEnv
