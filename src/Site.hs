@@ -42,6 +42,7 @@ import           PurgeHandlers
 import           WebhookHandlers
 import           Healthcheck
 import           Heartbeat
+import           MigrationHandler
 import qualified TenantJWT as TJ
 import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
@@ -108,6 +109,7 @@ applicationRoutes =
   , ("/rest/webhook/issue/delete"   , handleIssueDeleteWebhook)
   , ("/rest/healthcheck"            , healthcheckRequest)
   , ("/rest/heartbeat"              , heartbeatRequest)
+  , ("/rest/migration"              , migrationRequest)
   , ("/static/css"                  , serveDirectory "static/css")
   , ("/static/images"               , serveDirectory "static/images")
   , ("/static/js"                   , serveDirectory "static-js")

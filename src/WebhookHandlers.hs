@@ -6,6 +6,7 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
+import           Control.Applicative      (pure, (<*>))
 import           Control.Monad            (when)
 import qualified Connect.AtlassianTypes   as AT
 import qualified Connect.Tenant           as CT
@@ -47,7 +48,7 @@ handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB
 -- to not open up a database connection unless we know, in advance, that it will be required.
 -- Opening a database connection for every update request would otherwise be needlessly slow.
 reminderUpdateRequired :: IssueUpdate -> Bool
-reminderUpdateRequired iu = any isJust . fmap ($ iu) $ [iuNewKey, iuNewSummary]
+reminderUpdateRequired iu = any isJust $ [iuNewKey, iuNewSummary] <*> pure iu
 
 handleWebhookUpdate :: PT.Tenant -> IssueUpdate -> Connection -> IO ()
 handleWebhookUpdate tenant issueUpdate conn = do
