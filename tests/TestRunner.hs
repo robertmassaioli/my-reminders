@@ -2,11 +2,11 @@ module Main where
 
 import Test.Framework
 
-import qualified PingHandlersTests
+import qualified ReminderHandlersTests as RHT
 import qualified Connect.RoutesTests as RoutesTests
 
 main :: IO ()
 main = defaultMain tests
 
 tests :: [Test]
-tests = PingHandlersTests.tests ++ RoutesTests.tests
+tests = RHT.tests ++ RoutesTests.tests
