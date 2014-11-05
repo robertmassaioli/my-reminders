@@ -1,4 +1,4 @@
-module PingHandlersTests where
+module ReminderHandlersTests where
 
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as C
@@ -12,7 +12,7 @@ import Snap.Core hiding (setHeader)
 import Snap.Test hiding (evalHandler, runHandler)
 import Snap.Snaplet.Test
 
-import PingHandlers (handlePings, handleMultiPings)
+import ReminderHandlers (handleReminder, handleReminders)
 import Site (app)
 import SnapHelpers
 import TestHelpers
@@ -30,7 +30,7 @@ tests = map (plusTestOptions $ emptyTestOptions {topt_maximum_generated_tests = 
 
 prop_postFails :: C.ByteString -> C.ByteString -> C.ByteString -> Property
 prop_postFails path contentType body = monadicIO $ do
-  errorOrResponse <- runHandler Nothing (postRaw path contentType body) handlePings app
+  errorOrResponse <- runHandler Nothing (postRaw path contentType body) handleReminder app
   return $ responseCodeIs notFound errorOrResponse
 
 prop_unauthorisedGetFails :: Params -> Property
@@ -50,6 +50,6 @@ prop_unauthorisedDeleteFails params = requestIsUnauthorised (do
 
 requestIsUnauthorised :: RequestBuilder (PropertyM IO) () -> Property
 requestIsUnauthorised req = monadicIO $ do
-  errorOrResponse <- runHandler Nothing req handlePings app
+  errorOrResponse <- runHandler Nothing req handleReminder app
   return $ responseCodeIs unauthorised errorOrResponse
 
