@@ -60,8 +60,7 @@ showDocPage = do
       Nothing -> SH.respondNotFound
       Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
    where
-      environment fileName = HI.bindSplices $ do
-         "fileName" H.## HI.textSplice fileName
+      environment fileName = HI.bindSplices $ "fileName" H.## HI.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
