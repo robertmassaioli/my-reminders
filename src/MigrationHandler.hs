@@ -5,15 +5,16 @@ module MigrationHandler
 import           Application
 import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad (join)
 import           Data.ByteString.Char8 as BSC
 import qualified Data.EnvironmentHelpers as DE
-import qualified Database.PostgreSQL.Simple as P
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core                as SC
 import qualified SnapHelpers as SH
 import           System.Environment (getExecutablePath)
 import           System.FilePath (dropFileName, (</>))
 import           System.Process (callProcess)
+import           Text.Read (readMaybe)
 
 migrationRequest :: AppHandler ()
 migrationRequest = SH.handleMethods
@@ -37,27 +38,20 @@ flywayMigrate options = do
    
 getFlywayOptions :: AppHandler (Either String FlywayOptions)
 getFlywayOptions = do
-   potentialTarget <- fmap (read . BSC.unpack) <$> SC.getParam (BSC.pack "target")
+   potentialTarget <- (join . fmap (readMaybe . BSC.unpack)) <$> SC.getParam (BSC.pack "target")
    case potentialTarget of
       Nothing -> return . Left $ "You need to provide a 'target' schema version param to the migration endpoint."
       Just target -> do
          pHost     <- siGetEnv  $ pgRemindMePre "HOST"
-         pPort     <- fmap read <$> (siGetEnv $ pgRemindMePre "PORT")
+         pPort     <- (join . fmap readMaybe) <$> (siGetEnv $ pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
          pSchema   <- siGetEnv  $ pgRemindMePre "SCHEMA"
          pRole     <- siGetEnv  $ pgRemindMePre "ROLE"
          pPassword <- siGetEnv  $ pgRemindMePre "PASSWORD"
          case (pHost, pPort, pSchema, pRole, pPassword) of
             (Just host, Just port, Just schema, Just role, Just password) -> do
-               let connectionInfo = P.ConnectInfo 
-                                       { P.connectHost = host
-                                       , P.connectPort = port
-                                       , P.connectDatabase = schema 
-                                       , P.connectUser = ""
-                                       , P.connectPassword = ""
-                                       }
-               let connectionString = P.postgreSQLConnectionString connectionInfo
+               let connectionString = "jdbc:postgresql://" ++ host ++ ":" ++ (show port) ++ "/" ++ schema
                return . Right $ FlywayOptions
-                  { flywayUrl = BSC.unpack connectionString
+                  { flywayUrl = connectionString
                   , flywayUser = role
                   , flywayPassword = password
                   , flywayTarget = target
