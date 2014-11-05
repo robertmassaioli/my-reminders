@@ -51,10 +51,14 @@ Executable remind-me-connect
                  , DatabaseSnaplet
                  , Heartbeat
                  , NetworkHelpers
+                 , MigrationHandler
 
   default-language: Haskell2010
   Build-depends:
       base                      >= 4.6     && < 5
+    , process                   == 1.2.*
+    , filepath                  == 1.3.*
+    , directory                 >= 1.1     && < 1.3
     , MissingH                  == 1.*
     , MonadCatchIO-transformers >= 0.2.1   && < 0.4
     , aeson                     >  0.7.0.3 && < 0.8

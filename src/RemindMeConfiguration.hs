@@ -8,6 +8,7 @@ module RemindMeConfiguration
    ) where
 
 import           ConfigurationHelpers
+import           Control.Applicative ((<*>), pure)
 import           Control.Monad (when, join)
 import           Connect.Descriptor
 import qualified Control.Monad.IO.Class as MI
@@ -16,7 +17,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator.Types as DCT
 import qualified Data.EnvironmentHelpers as DE
 import           Data.List (find)
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, isJust)
 import           Data.Text.Encoding (encodeUtf8)
 import qualified Data.Time.Units as DTU
 import           Mail.Hailgun
@@ -36,6 +37,7 @@ data RMConf = RMConf
    , rmPurgeRetention         :: DTU.Day
    , rmHttpProxy              :: Maybe Proxy
    , rmHttpSecureProxy        :: Maybe Proxy
+   , rmMigrationKey           :: Key BSC.ByteString RMConf
    }
 
 class HasRMConf m where
@@ -48,6 +50,7 @@ initRMConfOrExit configDataDir = SS.makeSnaplet "Remind Me Configuration" "Remin
 data EnvConf = EnvConf
    { ecExpireKey        :: Maybe String
    , ecPurgeKey         :: Maybe String
+   , ecMigrationKey     :: Maybe String
    , ecMailgunDomain    :: Maybe String
    , ecMailgunApiKey    :: Maybe String
    , ecHttpProxy        :: Maybe String
@@ -62,6 +65,7 @@ loadConfFromEnvironment = do
    return EnvConf
       { ecExpireKey        = get "EXPIRE_KEY"
       , ecPurgeKey         = get "PURGE_KEY"
+      , ecMigrationKey     = get "MIGRATION_KEY"
       , ecMailgunDomain    = get "MAILGUN_DOMAIN"
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
@@ -73,11 +77,12 @@ search :: [(String, String)] -> String -> Maybe String
 search pairs key = fmap snd $ find ((==) key . fst) pairs
 
 guardConfig :: EnvConf -> IO ()
-guardConfig (EnvConf (Just _) (Just _) (Just _) (Just _) _ _ _) = return ()
-guardConfig (EnvConf _        _        _        _        _ _ env) = 
-   when (env `elem` [Dog, Prod]) $ do
-      putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ show env
-      exitWith (ExitFailure 10)
+guardConfig ec = when (isDogOrProd && not allKeysPresent) $ do
+   putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ (show . ecZone $ ec)
+   exitWith (ExitFailure 10)
+   where
+      isDogOrProd = ecZone ec `elem` [Dog, Prod]
+      allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey, ecMailgunDomain, ecMailgunApiKey] <*> pure ec
 
 instance DCT.Configured (Key BSC.ByteString a) where
   convert (DCT.String s) = Just (Key (encodeUtf8 s))
@@ -89,6 +94,7 @@ loadRMConfOrExit config = do
    printEnvironmentConf environmentConf
    guardConfig environmentConf
 
+   migrationKey <- require config "migration-key" "Missing 'migration-key': for trigerring migrations." 
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
    mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
    mailgunApiKey <- require config "mailgun-api-key" "Missing 'mailgun-api-key': required to send emails."
@@ -113,6 +119,7 @@ loadRMConfOrExit config = do
       , rmPurgeRetention = fromInteger purgeRetentionDays
       , rmHttpProxy = httpProxy
       , rmHttpSecureProxy = httpSecureProxy
+      , rmMigrationKey = fromConf (fmap packInKey . ecMigrationKey) migrationKey
       }
 
 packInKey :: String -> Key BSC.ByteString a
