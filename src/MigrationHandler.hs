@@ -5,7 +5,6 @@ module MigrationHandler
 import           Application
 import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad (join)
 import           Data.ByteString.Char8 as BSC
 import qualified Data.EnvironmentHelpers as DE
 import qualified RemindMeConfiguration as RC
@@ -38,12 +37,12 @@ flywayMigrate options = do
    
 getFlywayOptions :: AppHandler (Either String FlywayOptions)
 getFlywayOptions = do
-   potentialTarget <- (join . fmap (readMaybe . BSC.unpack)) <$> SC.getParam (BSC.pack "target")
+   potentialTarget <- (readMaybe . BSC.unpack =<<) <$> SC.getParam (BSC.pack "target")
    case potentialTarget of
       Nothing -> return . Left $ "You need to provide a 'target' schema version param to the migration endpoint."
       Just target -> do
          pHost     <- siGetEnv  $ pgRemindMePre "HOST"
-         pPort     <- (join . fmap readMaybe) <$> (siGetEnv $ pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
+         pPort     <- (readMaybe =<<) <$> (siGetEnv $ pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
          pSchema   <- siGetEnv  $ pgRemindMePre "SCHEMA"
          pRole     <- siGetEnv  $ pgRemindMePre "ROLE"
          pPassword <- siGetEnv  $ pgRemindMePre "PASSWORD"
