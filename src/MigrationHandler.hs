@@ -42,13 +42,13 @@ getFlywayOptions = do
       Nothing -> return . Left $ "You need to provide a 'target' schema version param to the migration endpoint."
       Just target -> do
          pHost     <- siGetEnv  $ pgRemindMePre "HOST"
-         pPort     <- (readMaybe =<<) <$> (siGetEnv $ pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
+         pPort     <- (readMaybe =<<) <$> siGetEnv (pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
          pSchema   <- siGetEnv  $ pgRemindMePre "SCHEMA"
          pRole     <- siGetEnv  $ pgRemindMePre "ROLE"
          pPassword <- siGetEnv  $ pgRemindMePre "PASSWORD"
          case (pHost, pPort, pSchema, pRole, pPassword) of
             (Just host, Just port, Just schema, Just role, Just password) -> do
-               let connectionString = "jdbc:postgresql://" ++ host ++ ":" ++ (show port) ++ "/" ++ schema
+               let connectionString = "jdbc:postgresql://" ++ host ++ ":" ++ show port ++ "/" ++ schema
                return . Right $ FlywayOptions
                   { flywayUrl = connectionString
                   , flywayUser = role
