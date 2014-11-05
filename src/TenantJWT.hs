@@ -20,8 +20,7 @@ type UnverifiedJWT = J.JWT J.UnverifiedJWT
 withTenant :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
-  let jwtParamOrErrors = firstRightOrLefts parsed
-  case jwtParamOrErrors of
+  case firstRightOrLefts parsed of
     Left errors -> SH.respondWithErrors SH.badRequest errors
     Right unverifiedJwt -> do
       possibleTenant <- getTenant unverifiedJwt
@@ -61,12 +60,11 @@ authorizationHeaderName :: DC.CI B.ByteString
 authorizationHeaderName = DC.mk . B.pack $ "Authorization"
 
 firstRightOrLefts :: [Either b a] -> Either [b] a
-firstRightOrLefts = go []
-   where
-      go :: [b] -> [Either b a] -> Either [b] a
-      go accum [] = Left accum
-      go accum (Left x : xs) = go (x : accum) xs
-      go _ (Right x : _) = Right x
+firstRightOrLefts = flipEither . sequence . fmap flipEither
+
+flipEither :: Either a b -> Either b a
+flipEither (Left x)  = Right x
+flipEither (Right x) = Left x
 
 getTenant :: UnverifiedJWT -> AppHandler (Either String CT.ConnectTenant)
 getTenant unverifiedJwt = do
