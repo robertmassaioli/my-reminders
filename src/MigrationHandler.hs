@@ -3,15 +3,19 @@ module MigrationHandler
    ) where
 
 import           Application
-import           Control.Applicative ((<$>))
+import           Control.Applicative ((<$>), (<*>))
 import           Control.Monad.IO.Class (liftIO)
-import           Data.ByteString.Char8 as BSC
+import           Control.Monad (filterM)
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.EnvironmentHelpers as DE
+import           Data.Maybe (listToMaybe)
+import           Data.List (inits)
 import qualified RemindMeConfiguration as RC
 import qualified Snap.Core                as SC
 import qualified SnapHelpers as SH
+import qualified System.Directory as SD
 import           System.Environment (getExecutablePath)
-import           System.FilePath (dropFileName, (</>))
+import           System.FilePath (dropFileName, (</>), splitDirectories, joinPath)
 import           System.Process (callProcess)
 import           Text.Read (readMaybe)
 
@@ -30,8 +34,10 @@ handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywa
 
 flywayMigrate :: FlywayOptions -> IO ()
 flywayMigrate options = do
-   flywayPath <- flywayExecutablePath
-   callProcess flywayPath migrationArguments
+   potentialFlywayPath <- findFlywayExecutable
+   case potentialFlywayPath of
+      Just flywayPath -> callProcess flywayPath migrationArguments
+      Nothing -> fail "Could not find the flyway executable relative to the running executables path."
    where
       migrationArguments = "migrate" : flywayOptionsToArguments options
    
@@ -63,11 +69,17 @@ getFlywayOptions = do
       pgRemindMePre :: String -> String
       pgRemindMePre = (++) "PG_REMIND_ME_"
 
+findFlywayExecutable :: IO (Maybe FilePath)
+findFlywayExecutable = do
+   exeDir <- getExecutableDirectory
+   let potentialLocations = fmap addFlywayPath (getParentDirectories exeDir)
+   fmap listToMaybe $ filterM SD.doesFileExist potentialLocations
+
 getExecutableDirectory :: IO FilePath
 getExecutableDirectory = fmap dropFileName getExecutablePath
 
-flywayExecutablePath :: IO FilePath
-flywayExecutablePath = fmap addFlywayPath getExecutableDirectory
+getParentDirectories :: FilePath -> [FilePath]
+getParentDirectories = reverse . fmap joinPath . tail . inits . splitDirectories
 
 addFlywayPath :: FilePath -> FilePath
 addFlywayPath f = f </> "migrations" </> "flyway"
