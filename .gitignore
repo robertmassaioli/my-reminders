@@ -28,3 +28,7 @@ snaplets/Remind\ Me\ Configuration/
 
 # Generated js files
 /static-js
+
+# Idea Files
+/.idea
+*.iml
