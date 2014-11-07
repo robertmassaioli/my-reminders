@@ -9,6 +9,7 @@ import           ConfigurationHelpers
 import           Connect.Data
 import           Connect.Descriptor
 import qualified Connect.PageToken       as PT
+import qualified Connect.Zone            as CZ
 import qualified Control.Monad           as CM
 import qualified Control.Monad.IO.Class  as MI
 import qualified Crypto.Cipher.AES       as CCA
@@ -37,9 +38,9 @@ toConnect conf = Connect
   , connectHostWhitelist = ccHostWhiteList conf
   }
 
-initConnectSnaplet :: IO String -> SS.SnapletInit b Connect
-initConnectSnaplet configDataDir = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
-  MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig
+initConnectSnaplet :: IO String -> Maybe CZ.Zone -> SS.SnapletInit b Connect
+initConnectSnaplet configDataDir zone = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
+  MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig zone
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey        :: BSC.ByteString
@@ -53,8 +54,8 @@ validHosts :: IO[Text]
 validHosts = fmap hosts HN.getHostName
     where hosts localhost = fmap pack (localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"])
 
-loadConnectConfig :: DCT.Config -> IO ConnectConfig
-loadConnectConfig connectConf = do
+loadConnectConfig :: Maybe CZ.Zone -> DCT.Config -> IO ConnectConfig
+loadConnectConfig zone connectConf = do
   name <- require connectConf "plugin_name" "Missing plugin name in connect configuration file."
   key <- require connectConf "plugin_key" "Missing plugin key in connect configuration file."
   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
@@ -65,9 +66,20 @@ loadConnectConfig connectConf = do
     SE.exitWith (SE.ExitFailure 1)
   pageTokenTimeoutInSeconds <- DC.lookupDefault PT.defaultTimeoutSeconds connectConf "page_token_timeout_seconds"
   return ConnectConfig
-    { ccPluginName = name
-    , ccPluginKey = key
+    { ccPluginName = name `append` nameKeyAppend zone
+    , ccPluginKey = key `append` zoneKeyAppend zone
     , ccSecretKey = secret
     , ccPageTokenTimeout = pageTokenTimeoutInSeconds
     , ccHostWhiteList = hostWhiteList
     }
+
+nameKeyAppend :: Maybe CZ.Zone -> Text
+nameKeyAppend (Just CZ.Prod) = empty
+nameKeyAppend (Just zone) = pack $ " (" ++ show zone ++ ")"
+nameKeyAppend Nothing = pack " (Local)"
+
+zoneKeyAppend :: Maybe CZ.Zone -> Text
+zoneKeyAppend (Just CZ.Prod) = empty
+zoneKeyAppend (Just CZ.Dog) = pack ".dog"
+zoneKeyAppend (Just CZ.Dev) = pack ".dev"
+zoneKeyAppend Nothing = pack ".local"
