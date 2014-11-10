@@ -2,7 +2,7 @@
 
 When you are logged in you can set a reminder for yourself well into the future:
 
-<img width="800" src="/static/images/remind-me-features.png" />
+<img width="800" src="/static/images/my-reminders-features.png" />
 
 ## What is My Reminders?
 

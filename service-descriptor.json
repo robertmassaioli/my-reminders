@@ -5,7 +5,7 @@
    "externalAccess": true,
    "resources": [{
       "type": "postgres-db",
-      "name": "remind-me"
+      "name": "my-reminders"
    }],
    "links": {
       "binary": {

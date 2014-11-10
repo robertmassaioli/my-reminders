@@ -27,7 +27,7 @@ When developing this application you will need to have both the Addon and Atlass
 To set up the My Reminders addon:
 
  1. Execute `make`.
- 1. Run the application: .cabal-sandbox/bin/remind-me-connect 
+ 1. Run the application: .cabal-sandbox/bin/my-reminders
     (by default compiled in development mode, which will disable warnings)
  1. Make changes to the application files as you develop.
  1. Reload in the browser, updated files will be compiled automatically.
