@@ -9,7 +9,7 @@ import           Data.Monoid (Endo(..))
 import           Network.Api.Support
 import           Network.HTTP.Client (Proxy(..))
 import           Network.HTTP.Client.Internal (addProxy)
-import           RemindMeConfiguration
+import           AppConfig
 
 setProxy :: Proxy -> RequestTransformer
 setProxy (Proxy pHost pPort) = Endo $ addProxy pHost pPort
@@ -20,7 +20,7 @@ maybeEndo = maybe (Endo id)
 setPotentialProxy :: Maybe Proxy -> RequestTransformer
 setPotentialProxy = maybeEndo setProxy
 
-getProxyFromConf :: String -> RMConf -> Maybe Proxy
+getProxyFromConf :: String -> AppConf -> Maybe Proxy
 getProxyFromConf baseUrl conf = 
   if isPrefixOf "https" baseUrl
     then rmHttpSecureProxy conf

@@ -3,14 +3,14 @@ module MigrationHandler
    ) where
 
 import           Application
-import           Control.Applicative ((<$>), (<*>))
+import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad (filterM)
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.EnvironmentHelpers as DE
 import           Data.Maybe (listToMaybe)
 import           Data.List (inits)
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import qualified Snap.Core                as SC
 import qualified SnapHelpers as SH
 import qualified System.Directory as SD
@@ -27,7 +27,7 @@ migrationRequest = SH.handleMethods
 -- This should be an idempotent operation, this means that we should require that the user pass in
 -- the ID of the migration that they wish to run up to.
 handleMigrationRun :: AppHandler ()
-handleMigrationRun = SH.getKeyAndConfirm RC.rmMigrationKey handleFlywayMigrate
+handleMigrationRun = SH.getKeyAndConfirm CONF.rmMigrationKey handleFlywayMigrate
 
 handleFlywayMigrate :: AppHandler ()
 handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywayMigrate) =<< getFlywayOptions

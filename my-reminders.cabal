@@ -1,6 +1,6 @@
 Name:                my-reminders
 Version:             0.1
-Synopsis:            Remind me plugin for Atlassian JIRA
+Synopsis:            My reminders plugin for Atlassian Cloud
 Description:         Set issue reminders for the future!
 License:             AllRightsReserved
 Author:              Robert Massaioli, Eero Kaukonen, Sidney Shek, Avi Knoll
@@ -38,7 +38,7 @@ Executable my-reminders
                  , Persistence.PostgreSQL
                  , Persistence.Tenant
                  , ConfigurationHelpers
-                 , RemindMeConfiguration
+                 , AppConfig
                  , ReminderHandlers
                  , ExpireHandlers
                  , CustomSplices

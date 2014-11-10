@@ -1,6 +1,6 @@
-## About remind me for Cloud
+## About My Reminders
 
-Remind me for Cloud was primarily written by three Atlassian developers. Here are some fun facts
+My Reminders was primarily written by three Atlassian developers. Here are some fun facts
 about this service:
 
  - The service is written using Haskell via the [Snap Framework][1]. It is a robust service

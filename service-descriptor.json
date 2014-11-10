@@ -1,7 +1,7 @@
 {
-   "description": "Remind me allows you to set reminders on issues.",
-   "id": "remind-me",
-   "name": "Remind me",
+   "description": "My reminders allows you to set reminders on issues.",
+   "id": "my-reminders",
+   "name": "my-reminders",
    "externalAccess": true,
    "resources": [{
       "type": "postgres-db",
@@ -9,7 +9,7 @@
    }],
    "links": {
       "binary": {
-         "name": "docker.atlassian.io/atlassian/remind-me",
+         "name": "docker.atlassian.io/atlassian/my-reminders",
          "type": "docker"
       },
       "healthcheck": {

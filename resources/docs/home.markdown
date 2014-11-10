@@ -1,6 +1,12 @@
-## What is Remind me for Cloud?
+## What can I do with My Reminders?
 
-Remind Me for Cloud: never forget your JIRA issues again!
+When you are logged in you can set a reminder for yourself well into the future:
+
+<img width="800" src="/static/images/remind-me-features.png" />
+
+## What is My Reminders?
+
+My Reminders: never forget your JIRA issues again!
 
  - Configure multiple reminders on your issues for days, weeks, months or even years into the future.
  - Get your reminders sent straight through to your email!
@@ -15,15 +21,9 @@ Imagine the following scenario:
 > that there is no way to set reminders about issues in JIRA. "This is really annoying",
 > she thinks, "there must be a better way?"
 
-And there is. Introducing Remind me for Cloud, a plugin designed to remind you of issues when you
+And there is. Introducing My Reminders, a plugin designed to remind you of issues when you
 ask to be reminded about them. Using this plugin you'll never forget an issue again. No issue can
 slip your attention.
 
 Install the addon now into your Cloud instance, or (if you don't have the permission to do so) ask
 the admin of your Cloud instance to do it for you!
-
-## What can I do with Remind me for Cloud?
-
-When you are logged in you can set a reminder for yourself well into the future:
-
-<img width="800" src="/static/images/remind-me-features.png" />

@@ -22,7 +22,7 @@ import           Mail.Hailgun (getDomains, herMessage, Page(..))
 import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Tenant (getTenantCount)
 import           Persistence.Reminder (getExpiredReminders)
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import qualified Snap.Core as SC
 import           SnapHelpers
 
@@ -84,7 +84,7 @@ databaseHealthCheck = do
 mailgunHealthcheck :: Healthcheck
 mailgunHealthcheck = do
    currentTime <- liftIO getCurrentTime
-   hailgunContext <- fmap RC.rmHailgunContext RC.getRMConf
+   hailgunContext <- fmap CONF.rmHailgunContext CONF.getAppConf
    result <- simpleCatch (liftIO $ getDomains hailgunContext smallPage)
    return $ status (either (Just . show) (either (Just . herMessage) (const Nothing)) result) currentTime
    where
@@ -110,7 +110,7 @@ mailgunHealthcheck = do
 expiryHealthcheck :: Healthcheck 
 expiryHealthcheck = do
    currentTime <- liftIO getCurrentTime
-   expiryWindowMaxMinutes <- fmap RC.rmMaxExpiryWindowMinutes RC.getRMConf
+   expiryWindowMaxMinutes <- fmap CONF.rmMaxExpiryWindowMinutes CONF.getAppConf
    let expireTime = addUTCTime (negate $ timeUnitToDiffTime expiryWindowMaxMinutes) currentTime
    result <- simpleCatch (withConnection $ getExpiredReminders expireTime)
    return $ case result of

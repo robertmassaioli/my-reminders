@@ -1,4 +1,4 @@
-# The development docker file for the Remind Me Connect Haskell project.
+# The development docker file for the My Reminders Connect Haskell project.
 # This docker file is designed to help us build the production executables
 # but should not be used to actually generate the production docker images.
 # Instead we should make a new production image that takes the executables 

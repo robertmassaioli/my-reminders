@@ -14,7 +14,7 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BSC
 import           Data.Time.Clock (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 
 import Application
 
@@ -85,11 +85,11 @@ getTimestampOrCurrentTime =
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
 
-getKeyAndConfirm :: (RC.RMConf -> Key BSC.ByteString RC.RMConf) -> AppHandler () -> AppHandler ()
+getKeyAndConfirm :: (CONF.AppConf -> Key BSC.ByteString CONF.AppConf) -> AppHandler () -> AppHandler ()
 getKeyAndConfirm getKey success =
   SC.getParam (BSC.pack "key") >>=
     maybe
        (respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif")
-       (\expireKey -> RC.getRMConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
+       (\expireKey -> CONF.getAppConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
            then respondWithError forbidden "You lack the required permissions."
            else success))
