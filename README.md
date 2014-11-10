@@ -1,6 +1,6 @@
-# Remind Me for JIRA
+# My Reminders for Cloud
 
-The Remind Me plugin for JIRA (and eventually the other products too) is an Atlassian Connect addon
+The My Reminders plugin for JIRA (and eventually the other products too) is an Atlassian Connect addon
 that has been designed to complete the notification flow that is missing in Atlassian products. You
 can be notified of changes to things that you are interested in but you don't get notifications for
 items that do not change.
@@ -8,7 +8,7 @@ items that do not change.
 Every now and then you want to be notified about an important issue that MUST be completed before a
 particular date, for example, if another team promised you that a particular issue would be resolved
 by a certain date then you would really like to be reminded to check up on that issue by the given
-date. That is what the Remind Me plugin for JIRA solves, it will remind you of an issue in a given
+date. That is what the My Reminders plugin for JIRA solves, it will remind you of an issue in a given
 amount of time.
 
 ## Developing the Atlassian Connect Addon
@@ -24,7 +24,7 @@ the current user has permission to create databases.
 ### Running the plugin
 
 When developing this application you will need to have both the Addon and Atlassian Product running.
-To set up the Remind Me addon:
+To set up the My Reminders addon:
 
  1. Execute `make`.
  1. Run the application: .cabal-sandbox/bin/remind-me-connect 
@@ -86,7 +86,7 @@ the Docker container, as the database will not be running in the addon's Docker 
 
 ## Dependencies
 
-Remind Me is built against the Haskell Platform, currently version `2013.2.0.0`.
+My Reminders is built against the Haskell Platform, currently version `2013.2.0.0`.
 The latest version of Cabal is always recommended, we have tested with at least
 `cabal-install version 1.20.0.2`.
 

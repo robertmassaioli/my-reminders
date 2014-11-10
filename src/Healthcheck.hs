@@ -74,7 +74,7 @@ databaseHealthCheck = do
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Could not connect to the remote database. Addon will not work correctly. Message: " ++ show exception
-         , hsApplication = remindMeApplication
+         , hsApplication = application
          , hsTime = currentTime
          , hsSeverity = CRITICAL
          , hsDocumentation = Just . T.pack $ "If you see this error you might want to check out the database and see "
@@ -96,7 +96,7 @@ mailgunHealthcheck = do
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Could not connect to the Mailgun service. Addon will not work correctly. Message: " ++ show exception
-         , hsApplication = remindMeApplication
+         , hsApplication = application
          , hsTime = currentTime
          , hsSeverity = CRITICAL
          , hsDocumentation = Just . T.pack $ "If you see this error you might want to check out the Mailgun status page to see if they are having problems: http://status.mailgun.com/. "
@@ -128,7 +128,7 @@ expiryHealthcheck = do
          , hsFailureReason = do
              exception <- potentialException
              return . T.pack $ "Reminders are not being sent in a timely manner. Addon is not working correctly. Message: " ++ show exception
-         , hsApplication = remindMeApplication
+         , hsApplication = application
          , hsTime = currentTime
          , hsSeverity = CRITICAL
          , hsDocumentation = Just . T.pack $ "If you see this error start by making sure that the database healthcheck succeeds. If it does then "
@@ -137,8 +137,8 @@ expiryHealthcheck = do
          }
          
 
-remindMeApplication :: HealthcheckApplication
-remindMeApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
+application :: HealthcheckApplication
+application = ConnectApplication { haName = T.pack "my-reminders" }
 
 {-
 -- This Healthcheck remains for testing purposes
@@ -150,7 +150,7 @@ failCheck = do
       , hsDescription = T.pack "I always fail...that's how this healthcheck rolls."
       , hsIsHealthy = False
       , hsFailureReason = Just . T.pack $ "I always fail. Read the description"
-      , hsApplication = ConnectApplication { haName = T.pack "remind-me-connect" }
+      , hsApplication = application
       , hsTime = ct
       , hsSeverity = UNDEFINED
       , hsDocumentation = Nothing
