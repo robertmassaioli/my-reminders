@@ -119,7 +119,7 @@ applicationRoutes =
 redirects :: [(ByteString, SS.Handler App App ())]
 redirects = 
    [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/reminder-me-connect/issues")
-   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
+   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.myreminders")
    , ("/redirect/help", SC.redirect "/docs/about")
    ]
 
