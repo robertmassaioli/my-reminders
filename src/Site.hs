@@ -48,7 +48,7 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-import qualified Paths_remind_me_connect as PRMC
+import qualified Paths_my_reminders as PMR
 
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
@@ -141,4 +141,4 @@ app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
   return $ App appHeist appSession appDb appConnect appAppConf
 
 configDataDir :: IO String
-configDataDir = CM.liftM (++ "/resources") PRMC.getDataDir
+configDataDir = CM.liftM (++ "/resources") PMR.getDataDir
