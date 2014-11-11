@@ -13,7 +13,7 @@ import           EmailContent
 import           Mail.Hailgun
 import           Persistence.Reminder
 import           Persistence.PostgreSQL (withConnection)
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import qualified Snap.Core as SC
 import qualified Snap.Snaplet as SS
 import           SnapHelpers
@@ -30,12 +30,12 @@ handleExpireRequest = handleMethods
 -- current timestamp (within the day) and turn it of for testing. 
 -- TODO Each timestamp should only be processed once. Need to ensure that this is thread safe.
 expireForTimestamp :: AppHandler ()
-expireForTimestamp = getKeyAndConfirm RC.rmExpireKey $ do
+expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
    currentTime <- getTimestampOrCurrentTime
-   rmConf <- RC.getRMConf
+   rmConf <- CONF.getAppConf
    SS.with db (withConnection $ expireUsingTimestamp currentTime rmConf)
 
-expireUsingTimestamp :: UTCTime -> RC.RMConf -> Connection -> IO ()
+expireUsingTimestamp :: UTCTime -> CONF.AppConf -> Connection -> IO ()
 expireUsingTimestamp timestamp rmConf conn = do
    expiredReminders <- getExpiredReminders timestamp conn
    --putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
@@ -52,28 +52,28 @@ expireUsingTimestamp timestamp rmConf conn = do
 -- 2. We would be in Mailgun's upper tier at ~ 16 million reminders a month.
 -- I don't think this will happen instantly so this performs well enough for now and we can monitor
 -- it going into the future.
-sendReminders :: RC.RMConf -> [EmailReminder] -> IO [EmailReminder]
+sendReminders :: CONF.AppConf -> [EmailReminder] -> IO [EmailReminder]
 sendReminders rmConf reminders =
    fmap fst <$> filter snd <$> withPool 10 (flip parallel (fmap send reminders))
    where
       send = sendReminder rmConf
 
-sendReminder :: RC.RMConf -> EmailReminder -> IO (EmailReminder, Bool)
+sendReminder :: CONF.AppConf -> EmailReminder -> IO (EmailReminder, Bool)
 sendReminder rmConf reminder =
    case reminderToHailgunMessage rmConf reminder of
       Left _ -> return (reminder, False)
-      Right message -> (,) reminder <$> isRight <$> sendEmail (RC.rmHailgunContext rmConf) message
+      Right message -> (,) reminder <$> isRight <$> sendEmail (CONF.rmHailgunContext rmConf) message
 
 isRight :: Either a b -> Bool
 isRight (Right _) = True
 isRight _         = False
 
-reminderToHailgunMessage :: RC.RMConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
+reminderToHailgunMessage :: CONF.AppConf -> EmailReminder -> Either HailgunErrorMessage HailgunMessage
 reminderToHailgunMessage rmConf reminder = hailgunMessage subject message from recipients
    where 
       subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
       message = reminderEmail reminder
-      from = RC.rmFromAddress rmConf
+      from = CONF.rmFromAddress rmConf
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
 
 removeSentReminders :: [EmailReminder] -> Connection -> IO Bool

@@ -30,7 +30,7 @@ genericReminderEmail reminder = Pandoc nullMeta $
    ] 
    ++ (message . erReminderMessage $ reminder)
    ++ [ Para [Str "Follow",Space,Str "the",Space,Str "link",Space,Str "to",Space,Str "see",Space,Str "more",Space,Str "about",Space,Str "the",Space,Str "issue."]
-   , Para [Str "Cheers,",LineBreak,Str "Your",Space,Str "friendly",Space,Str "RemindMe",Space,Str "plugin."]
+   , Para [Str "Cheers,",LineBreak,Str "Your",Space,Str "friendly",Space,Str "My Reminders",Space,Str "plugin."]
    ]
    where
       message :: Maybe T.Text -> [Block]

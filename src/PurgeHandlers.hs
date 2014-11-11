@@ -7,7 +7,7 @@ import           Data.Time.Clock (addUTCTime)
 import           Data.TimeUnitUTC
 import           Persistence.Tenant
 import           Persistence.PostgreSQL
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import qualified Snap.Core as SC
 import           SnapHelpers
 
@@ -17,11 +17,11 @@ handlePurgeRequest = handleMethods
    ]
 
 purgeUninstalledTenants :: AppHandler ()
-purgeUninstalledTenants = getKeyAndConfirm RC.rmPurgeKey $ do
+purgeUninstalledTenants = getKeyAndConfirm CONF.rmPurgeKey $ do
    currentTime <- getTimestampOrCurrentTime
-   rmConf <- RC.getRMConf
+   rmConf <- CONF.getAppConf
    -- Calculate the date for which any tenant uninstalled prior should be purged
-   let purgeTime = addUTCTime (negate . timeUnitToDiffTime . RC.rmPurgeRetention $ rmConf) currentTime
+   let purgeTime = addUTCTime (negate . timeUnitToDiffTime . CONF.rmPurgeRetention $ rmConf) currentTime
    -- Get all of the tenants that can be purge
    withConnection $ \conn -> do
       -- Save the hostnames of all the tenants that we are about to purge

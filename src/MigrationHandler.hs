@@ -3,14 +3,14 @@ module MigrationHandler
    ) where
 
 import           Application
-import           Control.Applicative ((<$>), (<*>))
+import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad (filterM)
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.EnvironmentHelpers as DE
 import           Data.Maybe (listToMaybe)
 import           Data.List (inits)
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import qualified Snap.Core                as SC
 import qualified SnapHelpers as SH
 import qualified System.Directory as SD
@@ -27,7 +27,7 @@ migrationRequest = SH.handleMethods
 -- This should be an idempotent operation, this means that we should require that the user pass in
 -- the ID of the migration that they wish to run up to.
 handleMigrationRun :: AppHandler ()
-handleMigrationRun = SH.getKeyAndConfirm RC.rmMigrationKey handleFlywayMigrate
+handleMigrationRun = SH.getKeyAndConfirm CONF.rmMigrationKey handleFlywayMigrate
 
 handleFlywayMigrate :: AppHandler ()
 handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywayMigrate) =<< getFlywayOptions
@@ -47,11 +47,11 @@ getFlywayOptions = do
    case potentialTarget of
       Nothing -> return . Left $ "You need to provide a 'target' schema version param to the migration endpoint."
       Just target -> do
-         pHost     <- siGetEnv  $ pgRemindMePre "HOST"
-         pPort     <- (readMaybe =<<) <$> siGetEnv (pgRemindMePre "PORT") :: AppHandler (Maybe Integer)
-         pSchema   <- siGetEnv  $ pgRemindMePre "SCHEMA"
-         pRole     <- siGetEnv  $ pgRemindMePre "ROLE"
-         pPassword <- siGetEnv  $ pgRemindMePre "PASSWORD"
+         pHost     <- siGetEnv  $ pgMyRemindersPre "HOST"
+         pPort     <- (readMaybe =<<) <$> siGetEnv (pgMyRemindersPre "PORT") :: AppHandler (Maybe Integer)
+         pSchema   <- siGetEnv  $ pgMyRemindersPre "SCHEMA"
+         pRole     <- siGetEnv  $ pgMyRemindersPre "ROLE"
+         pPassword <- siGetEnv  $ pgMyRemindersPre "PASSWORD"
          case (pHost, pPort, pSchema, pRole, pPassword) of
             (Just host, Just port, Just schema, Just role, Just password) -> do
                let connectionString = "jdbc:postgresql://" ++ host ++ ":" ++ show port ++ "/" ++ schema
@@ -66,8 +66,8 @@ getFlywayOptions = do
       siGetEnv :: String -> AppHandler (Maybe String)
       siGetEnv = liftIO . DE.getEnv
    
-      pgRemindMePre :: String -> String
-      pgRemindMePre = (++) "PG_REMIND_ME_"
+      pgMyRemindersPre :: String -> String
+      pgMyRemindersPre = (++) "PG_MY_REMINDERS_"
 
 findFlywayExecutable :: IO (Maybe FilePath)
 findFlywayExecutable = do

@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module RemindMeConfiguration 
-   ( RMConf(..)
-   , HasRMConf(..)
-   , initRMConfOrExit
+module AppConfig
+   ( AppConf(..)
+   , HasAppConf(..)
+   , initAppConfOrExit
    ) where
 
 import           ConfigurationHelpers
@@ -28,24 +28,24 @@ import qualified System.Environment as SE
 import           System.Exit (ExitCode(..), exitWith)
 import           Text.PrettyPrint.Boxes
 
-data RMConf = RMConf
-   { rmExpireKey              :: Key BSC.ByteString RMConf
+data AppConf = AppConf
+   { rmExpireKey              :: Key BSC.ByteString AppConf
    , rmHailgunContext         :: HailgunContext
    , rmFromAddress            :: UnverifiedEmailAddress
    , rmMaxExpiryWindowMinutes :: DTU.Minute
-   , rmPurgeKey               :: Key BSC.ByteString RMConf
+   , rmPurgeKey               :: Key BSC.ByteString AppConf
    , rmPurgeRetention         :: DTU.Day
    , rmHttpProxy              :: Maybe Proxy
    , rmHttpSecureProxy        :: Maybe Proxy
-   , rmMigrationKey           :: Key BSC.ByteString RMConf
+   , rmMigrationKey           :: Key BSC.ByteString AppConf
    }
 
-class HasRMConf m where
-   getRMConf :: m RMConf
+class HasAppConf m where
+   getAppConf :: m AppConf
 
-initRMConfOrExit :: IO String -> SS.SnapletInit b RMConf
-initRMConfOrExit configDataDir = SS.makeSnaplet "Remind Me Configuration" "Remind me configuration and state." (Just configDataDir) $
-  MI.liftIO $ SS.loadAppConfig "remind-me.cfg" "resources" >>= loadRMConfOrExit
+initAppConfOrExit :: IO String -> SS.SnapletInit b AppConf
+initAppConfOrExit configDataDir = SS.makeSnaplet "Applicaiton Configuration" "Application configuration and state." (Just configDataDir) $
+  MI.liftIO $ SS.loadAppConfig "my-reminders.cfg" "resources" >>= loadAppConfOrExit
 
 data EnvConf = EnvConf
    { ecExpireKey        :: Maybe String
@@ -88,8 +88,8 @@ instance DCT.Configured (Key BSC.ByteString a) where
   convert (DCT.String s) = Just (Key (encodeUtf8 s))
   convert _ = Nothing
 
-loadRMConfOrExit :: DCT.Config -> IO RMConf
-loadRMConfOrExit config = do
+loadAppConfOrExit :: DCT.Config -> IO AppConf
+loadAppConfOrExit config = do
    environmentConf <- loadConfFromEnvironment
    printEnvironmentConf environmentConf
    guardConfig environmentConf
@@ -106,7 +106,7 @@ loadRMConfOrExit config = do
    let httpProxy = parseProxy standardHttpPort (ecHttpProxy environmentConf)
    let httpSecureProxy = parseProxy standardHttpSecurePort (ecHttpSecureProxy environmentConf)
    let fromConf = envOrDefault environmentConf
-   return RMConf 
+   return AppConf 
       { rmExpireKey = fromConf (fmap packInKey . ecExpireKey) expiryKey
       , rmHailgunContext = HailgunContext
          { hailgunDomain = fromConf ecMailgunDomain mailgunDomain

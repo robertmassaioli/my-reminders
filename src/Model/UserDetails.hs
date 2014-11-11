@@ -28,7 +28,7 @@ import           Network.URI
 import           Network.HTTP.Client
 import           Network.HTTP.Types
 import           Network.Api.Support
-import           RemindMeConfiguration
+import           AppConfig
 
 import qualified Web.JWT as JWT
 import Web.Connect.QueryStringHash
@@ -57,7 +57,7 @@ getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResp
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
   connectData <- CDT.getConnect
-  rmConf <- getRMConf
+  rmConf <- getAppConf
   let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (PT.sharedSecret tenant) GET (PT.baseUrl tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
     (  addHeader ("Accept","application/json") 

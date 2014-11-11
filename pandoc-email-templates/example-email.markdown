@@ -11,6 +11,6 @@ With the following message:
 Follow the link to see more about the issue.
 
 Cheers,  
-Your friendly RemindMe plugin.
+Your friendly My Reminders plugin.
 
  [1]: http://example.com

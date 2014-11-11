@@ -34,7 +34,7 @@ import qualified Connect.Zone as CZ
 import qualified Data.EnvironmentHelpers as DE
 import qualified DatabaseSnaplet as DS
 import qualified Persistence.Tenant as PT
-import qualified RemindMeConfiguration as RC
+import qualified AppConfig as CONF
 import           CustomSplices
 import           ReminderHandlers
 import           ExpireHandlers
@@ -48,7 +48,7 @@ import qualified Connect.Tenant as CT
 import qualified Connect.PageToken as CPT
 import qualified SnapHelpers as SH
 
-import qualified Paths_remind_me_connect as PRMC
+import qualified Paths_my_reminders as PMR
 
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
@@ -119,7 +119,8 @@ applicationRoutes =
 redirects :: [(ByteString, SS.Handler App App ())]
 redirects = 
    [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/reminder-me-connect/issues")
-   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.remindme")
+   , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.myreminders")
+   , ("/redirect/help", SC.redirect "/docs/about")
    ]
 
 ------------------------------------------------------------------------------
@@ -135,9 +136,9 @@ app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir zone)
-  appRMConf  <- SS.nestSnaplet "rmconf" rmconf (RC.initRMConfOrExit configDataDir)
+  appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
-  return $ App appHeist appSession appDb appConnect appRMConf
+  return $ App appHeist appSession appDb appConnect appAppConf
 
 configDataDir :: IO String
-configDataDir = CM.liftM (++ "/resources") PRMC.getDataDir
+configDataDir = CM.liftM (++ "/resources") PMR.getDataDir

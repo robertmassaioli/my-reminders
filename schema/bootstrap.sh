@@ -10,8 +10,8 @@ fi
 
 HOST="$1"
 
-USER="remindme"
-DATABASE="remindme"
+USER="myreminders"
+DATABASE="myreminders"
 SCRIPTPATH=`dirname $0`
 
 # Does the database exist?

@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-psql --host localhost -U remindme
+psql --host localhost -U myreminders

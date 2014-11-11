@@ -51,7 +51,7 @@ fi
 
 # It is important to note that only copying this file implicitly implies that we will statically
 # compile the binary.
-time docker cp "$CONTAINER_ID:/home/haskell/build/.cabal-sandbox/bin/remind-me-connect" "$COPY_DIR"
+time docker cp "$CONTAINER_ID:/home/haskell/build/.cabal-sandbox/bin/my-reminders" "$COPY_DIR"
 
 echo "## Building the production Docker image."
 cd production
