@@ -1,7 +1,7 @@
 {
    "description": "My reminders allows you to set reminders on issues.",
    "id": "my-reminders",
-   "name": "my-reminders",
+   "name": "My Reminders",
    "externalAccess": true,
    "resources": [{
       "type": "postgres-db",
