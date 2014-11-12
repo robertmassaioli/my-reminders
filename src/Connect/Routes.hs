@@ -31,14 +31,6 @@ import qualified Snap.Core                    as SC
 import qualified Snap.Snaplet                 as SS
 import qualified SnapHelpers                  as SH
 
-data Protocol = HTTP | HTTPS deriving (Eq)
-
-instance Show (Protocol) where
-  show HTTP = "http"
-  show HTTPS = "https"
-
-type Port = Int
-
 data MediaType = ApplicationJson | TextHtml deriving (Eq)
 
 newtype OrdMediaType = OMT NM.MediaType deriving (Eq, Show)
@@ -49,13 +41,6 @@ instance Ord OrdMediaType where
 instance Show (MediaType) where
   show ApplicationJson = "application/json"
   show TextHtml = "text/html"
-
-serverPortSuffix :: Protocol -> Port -> String
-serverPortSuffix protocol port = if port `elem` portsForProtocol protocol then "" else ":" ++ show port
-
-portsForProtocol :: Protocol -> [Port]
-portsForProtocol HTTP  = [0, 80]
-portsForProtocol HTTPS = [0, 443]
 
 homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
 homeHandler sendHomePage = SC.method SC.GET handleGet <|> SH.respondWithError SH.badRequest "You can only GET the homepage."
@@ -107,11 +92,10 @@ simpleConnectRoutes =
 atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
 atlassianConnectHandler = do
   connectData <- CD.getConnect
-  request <- SC.getRequest
   let dc = AC.DynamicDescriptorConfig
           { AC.dcPluginName = case CD.connectPluginName connectData of Name t -> Name t
           , AC.dcPluginKey = CD.connectPluginKey connectData
-          , AC.dcBaseUrl = resolveBaseUrl request
+          , AC.dcBaseUrl = CD.connectBaseUrl connectData
           }
   writeJson . AC.addonDescriptor $ dc
 
@@ -161,23 +145,3 @@ writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
 writeJson a = do
    SC.modifyResponse . SC.setContentType . BC.pack . show $ ApplicationJson
    SC.writeLBS $ A.encode a
-
--- TODO extract into helper module
-resolveBaseUrl :: SC.Request -> URI
-resolveBaseUrl req =
-   let serverName = BC.unpack $ SC.rqServerName req
-       serverPort = SC.rqServerPort req
-       proto = if SC.rqIsSecure req then HTTPS else HTTP
-   in toAbsoluteUrl proto serverName serverPort
-
--- |
--- >>> toAbsoluteUrl "http" "example.com" 9000
--- http://example.com:9000/
-toAbsoluteUrl :: Protocol -> String -> Int -> URI
-toAbsoluteUrl protocol serverName port =
-  nullURI
-    { uriScheme = show protocol ++ ":"
-    , uriAuthority = Just URIAuth { uriUserInfo = ""
-                                  , uriRegName = serverName
-                                  , uriPort = serverPortSuffix protocol port }
-    }
