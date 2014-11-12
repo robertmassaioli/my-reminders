@@ -12,6 +12,7 @@ import Control.Monad
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Text
+import Data.Time.Units
 import GHC.Generics
 import Network.URI
 
@@ -36,7 +37,7 @@ data Key t a = Key t deriving (Show, Eq, Generic)
 
 data PluginKey = PluginKey Text deriving (Show, Eq, Generic)
 
-newtype Timeout = Timeout Integer deriving (Show, Eq, Enum, Num, Ord, Real, Integral)
+newtype Timeout = Timeout Second deriving (Show, Eq, Enum, Num, Ord, Real, Integral)
 
 data Vendor = Vendor {vendorName :: Text, vendorUrl :: URI} deriving (Show, Eq, Generic)
 
