@@ -121,7 +121,7 @@ insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` i
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
 validHostName validHosts tenantInfo = isJust maybeValidhost 
    where
-      authorityMatchHost auth host = map DC.toLower (T.unpack host) == map DC.toLower (uriRegName auth)
+      authorityMatchHost auth host = T.toLower host `T.isSuffixOf` (T.toLower . T.pack . uriRegName $ auth)
       maybeValidhost = do
          auth <- tenantAuthority tenantInfo
          find (authorityMatchHost auth) validHosts
