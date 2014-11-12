@@ -17,7 +17,6 @@ import qualified Control.Arrow                as ARO
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BC
 import qualified Data.CaseInsensitive         as CI
-import           Data.Char                    as DC
 import           Data.List
 import           Data.List.Split              (splitOn)
 import qualified Data.Map.Lazy                as ML

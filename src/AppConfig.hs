@@ -31,7 +31,7 @@ import           Text.PrettyPrint.Boxes
 data AppConf = AppConf
    { rmExpireKey              :: Key BSC.ByteString AppConf
    , rmHailgunContext         :: HailgunContext
-   , rmFromAddress            :: UnverifiedEmailAddress
+   , rmFromUser               :: String
    , rmMaxExpiryWindowMinutes :: DTU.Minute
    , rmPurgeKey               :: Key BSC.ByteString AppConf
    , rmPurgeRetention         :: DTU.Day
@@ -98,7 +98,7 @@ loadAppConfOrExit config = do
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
    mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
    mailgunApiKey <- require config "mailgun-api-key" "Missing 'mailgun-api-key': required to send emails."
-   fromAddress <- require config "reminder-from-address" "Missing 'reminder-from-address': required for the inboxes of our customers to know who the reminder came from."
+   fromUser <- require config "reminder-from-user" "Missing 'reminder-from-user': required for the inboxes of our customers to know who the reminder came from."
    maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "Missing 'expiry-window-max-minutes': it tracks how many minutes after expiry we should wait till we fail a healthcheck."
    purgeKey <- require config "purge-key" "Missing 'purge-key': for triggering customer data cleanups."
    purgeRetentionDays <- require config "purge-retention-days" "Missing 'purge-retention-days': the length of time that uninstalled customer data should remain before we delete it."
@@ -113,7 +113,7 @@ loadAppConfOrExit config = do
          , hailgunApiKey = fromConf ecMailgunApiKey mailgunApiKey
          , hailgunProxy  = httpSecureProxy
          }
-      , rmFromAddress = fromAddress
+      , rmFromUser = fromUser
       , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
       , rmPurgeKey = fromConf (fmap packInKey . ecPurgeKey) purgeKey
       , rmPurgeRetention = fromInteger purgeRetentionDays
