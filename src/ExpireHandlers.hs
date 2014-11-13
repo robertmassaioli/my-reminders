@@ -7,6 +7,7 @@ module ExpireHandlers
 import           Application
 import           Control.Applicative ((<$>))
 import           Control.Concurrent.ParallelIO.Local
+import qualified Data.ByteString.Char8 as BSC
 import           Data.Time.Clock (UTCTime)
 import           Database.PostgreSQL.Simple
 import           EmailContent
@@ -73,8 +74,11 @@ reminderToHailgunMessage rmConf reminder = hailgunMessage subject message from r
    where 
       subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
       message = reminderEmail reminder
-      from = CONF.rmFromAddress rmConf
+      from = BSC.pack $ CONF.rmFromUser rmConf `toEmailFormat` (hailgunDomain . CONF.rmHailgunContext $ rmConf)
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
+
+toEmailFormat :: String -> String -> String
+toEmailFormat from domain = from ++ "@" ++ domain
 
 removeSentReminders :: [EmailReminder] -> Connection -> IO Bool
 removeSentReminders reminders conn = do
