@@ -92,7 +92,7 @@ decryptPageToken :: CCA.AES -> DB.ByteString -> Either String PageToken
 decryptPageToken aes input = do
   undecodedEncryptedToken <- B64.decode input
   let decryptedToken = CCA.decryptECB aes undecodedEncryptedToken
-  fmap DP.zeroUnpad (B64.decode decryptedToken) >>= eitherDecode . DBL.fromStrict
+  (B64.decode . DP.zeroUnpad $ decryptedToken) >>= eitherDecode . DBL.fromStrict
 
 -- TODO we should write unit tests to ensure that every combination of this encrypt and decrypt
 -- can be translated correctly.
