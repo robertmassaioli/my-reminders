@@ -243,7 +243,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             }
 
             // Just show the first error message because most of the time we just return one.
-            AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessage[0]);
+            AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessages[0]);
             AP.resize();
             genericErrorTimer = setTimeout(function() {
                AJS.$("#error-message").addClass("hidden");
