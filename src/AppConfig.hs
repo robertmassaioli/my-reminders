@@ -15,6 +15,7 @@ import qualified Control.Monad.IO.Class as MI
 import           Connect.Zone
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Configurator.Types as DCT
+import           Data.ConfiguratorTimeUnits ()
 import qualified Data.EnvironmentHelpers as DE
 import           Data.List (find)
 import           Data.Maybe (fromMaybe, isJust)
@@ -114,7 +115,7 @@ loadAppConfOrExit config = do
          , hailgunProxy  = httpSecureProxy
          }
       , rmFromUser = fromUser
-      , rmMaxExpiryWindowMinutes = fromInteger (maxExpiryWindowMinutes :: Integer)
+      , rmMaxExpiryWindowMinutes = maxExpiryWindowMinutes
       , rmPurgeKey = fromConf (fmap packInKey . ecPurgeKey) purgeKey
       , rmPurgeRetention = fromInteger purgeRetentionDays
       , rmHttpProxy = httpProxy

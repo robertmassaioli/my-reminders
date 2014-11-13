@@ -17,6 +17,7 @@ import qualified Data.ByteString.Lazy as DBL
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.Padding as DP
 import qualified Data.Text as DT
+import           Data.Time.Units
 import qualified Crypto.Cipher.AES as CCA
 
 import qualified Persistence.Tenant as PT
@@ -27,7 +28,7 @@ import qualified Connect.Tenant as CT
 -- 1. Being able to create a page token.
 -- 1. Being able to verify a page token.
 
-defaultTimeoutSeconds :: Integer
+defaultTimeoutSeconds :: Second
 defaultTimeoutSeconds = 5 * 60
 
 data PageToken = PageToken

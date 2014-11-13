@@ -29,6 +29,7 @@ Executable my-reminders
                  , Connect.PageToken
                  , Connect.Routes
                  , Connect.Zone
+                 , Data.ConfiguratorTimeUnits
                  , Data.EnvironmentHelpers
                  , Data.Padding
                  , Data.Padding.PKCS
