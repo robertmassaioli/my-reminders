@@ -38,7 +38,7 @@ handleWebhook webhookHandler (tenant, _) = do
 webhookDataFromRequest :: AppHandler (Either String WebhookData)
 webhookDataFromRequest = fmap eitherDecode $ SC.readRequestBody dataLimitBytes
    where
-      dataLimitBytes = 10 ^ 7 -- We want to not accept webhook responses larger than 10 MB
+      dataLimitBytes = 10 ^ (7 :: Integer) -- We want to not accept webhook responses larger than 10 MB
 
 handleUpdate :: PT.Tenant -> IssueUpdate -> AppHandler ()
 handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
