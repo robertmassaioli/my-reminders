@@ -52,13 +52,13 @@
       <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-small aui-iconfont-info">Info</span></div>
       <div id="upcoming-reminders" class="reminders"></div>
    </div>
-   <div id="error-message" class="aui-message error hidden">
+   <div id="error-message" class="aui-message aui-message-warning hidden">
        <p class="title">
            <span class="aui-icon icon-error"></span>
-           <strong class="title">Destructive operation!</strong>
+           <strong class="title">Loading error message...</strong>
        </p>
    </div>
-   <div id="success-message" class="aui-message success hidden">
+   <div id="success-message" class="aui-message aui-message-success hidden">
       <p class="title">
          <span class="aui-icon icon-success"></span>
          <strong class="title">Reminder set for <span class="email"></span></strong>

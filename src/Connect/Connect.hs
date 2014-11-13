@@ -18,7 +18,7 @@ import qualified Data.Configurator       as DC
 import qualified Data.Configurator.Types as DCT
 import           Data.ConfiguratorTimeUnits ()
 import qualified Data.EnvironmentHelpers as DE
-import           Data.Maybe              (fromMaybe)
+import           Data.Maybe              (fromMaybe, maybe)
 import           Data.Text
 import           Data.Time.Units
 import qualified Network.HostName        as HN
@@ -73,6 +73,7 @@ loadConnectConfig zone connectConf = do
     putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
     SE.exitWith (SE.ExitFailure 1)
   envBaseUrl <- DE.getEnv "CONNECT_BASE_URL"
+  envSecretKey <- DE.getEnv "CONNECT_SECRET_KEY"
   let baseUrlToParse = fromMaybe rawBaseUrl envBaseUrl
   case NU.parseURI baseUrlToParse of
     Nothing -> do
@@ -84,7 +85,7 @@ loadConnectConfig zone connectConf = do
         { ccPluginName = name `append` nameKeyAppend zone
         , ccPluginKey = key `append` zoneKeyAppend zone
         , ccBaseUrl = baseUrl
-        , ccSecretKey = secret
+        , ccSecretKey = maybe secret BSC.pack envSecretKey
         , ccPageTokenTimeout = pageTokenTimeoutInSeconds
         , ccHostWhiteList = hostWhiteList
         }
