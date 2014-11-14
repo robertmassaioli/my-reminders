@@ -1,0 +1,400 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+    <base href="{{baseUrl}}"/>
+    <title>Reminder {{issueKey}}: {{issueSummary}}</title>
+    <style type="text/css">
+        @media only screen and (max-device-width: 480px) {
+            .mobile-only {
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+                line-height: normal !important;
+                font-size: inherit !important;
+                mso-hide: all;
+            }
+
+            .desktop-only {
+                display: none !important;
+            }
+
+            /* iPhone 3GS fix for unwanted 20px right margin */
+            body {
+                min-width: 100% !important;
+                padding: 0;
+                margin: 0;
+            }
+
+            #center-content-table {
+                max-width: none;
+            !important;
+            }
+
+            #header-pattern-container {
+                padding: 10px 10px 10px 10px !important;
+                line-height: 20px !important;
+            }
+
+            #header-avatar-image-container {
+                padding-right: 8px !important;
+            }
+
+            #email-content-container {
+                padding: 0 !important;
+            }
+
+            .mobile-expand {
+                border-radius: 0 !important;
+                border-left: 0 !important;
+                border-right: 0 !important;
+                padding-left: 26px !important;
+            }
+
+            .mobile-resize-text {
+                font-size: 16px !important;
+                line-height: 22px !important;
+            }
+
+            #page-title-pattern-header {
+                font-size: 20px !important;
+                line-height: 28px !important;
+            }
+
+            #page-title-pattern-icon-image-container-cell {
+                padding-top: 7px !important;
+            }
+
+            #inline-user-pattern {
+                display: block !important;
+            }
+
+            #inline-user-pattern-avatar {
+                padding-top: 3px !important;
+            }
+
+            .contextual-area-pattern {
+                border-bottom: 1px solid #ccc !important;
+                padding: 15px 10px 0 10px !important;
+            }
+
+            .users-involved-pattern-column-table {
+                width: 100% !important;
+            }
+
+            .users-involved-pattern-avatar-table-cell {
+                padding: 3px 5px 5px 0 !important;
+            }
+
+            .users-involved-pattern-column-container {
+                padding-right: 0 !important;
+            }
+
+            .contextual-excerpt-pattern, #users-involved-pattern {
+                border: 0 !important;
+            }
+
+            /** Aui Typography upsized for mobile **/
+            #content-excerpt-pattern-container, #contextual-excerpt-pattern-text-container {
+                font-size: 16px !important;
+                line-height: 22px !important;
+            }
+
+            #content-excerpt-pattern-container h1, #contextual-excerpt-pattern-text-container h1 {
+                font-size: 24px !important;
+                line-height: 28px !important;
+            }
+
+            #content-excerpt-pattern-container h2, #contextual-excerpt-pattern-text-container h2 {
+                font-size: 20px !important;
+                line-height: 28px !important;
+            }
+
+            #content-excerpt-pattern-container h3, #contextual-excerpt-pattern-text-container h3 {
+                font-size: 18px !important;
+                line-height: 24px !important;
+            }
+
+            #content-excerpt-pattern-container h4, #contextual-excerpt-pattern-text-container h4 {
+                font-size: 16px !important;
+                line-height: 22px !important;
+            }
+
+            #content-excerpt-pattern-container h5, #contextual-excerpt-pattern-text-container h5 {
+                font-size: 14px !important;
+                line-height: 20px !important;
+            }
+
+            #content-excerpt-pattern-container h6, #contextual-excerpt-pattern-text-container h6 {
+                font-size: 14px !important;
+                line-height: 20px !important;
+            }
+
+            .user-mention {
+                line-height: 18px !important;
+            }
+
+            /** Aui Typography end **/
+            /* Show appropriate footer logo on mobile, display links vertically */
+            #footer-pattern {
+                padding: 15px 10px !important;
+            }
+
+            #footer-pattern-logo-desktop-container {
+                padding: 0 !important;
+            }
+
+            #footer-pattern-logo-desktop {
+                width: 0 !important;
+                height: 0 !important;
+            }
+
+            #footer-pattern-logo-mobile {
+                padding-top: 10px !important;
+                width: 30px !important;
+                height: 27px !important;
+                display: inline !important;
+            }
+
+            #footer-pattern-text {
+                display: block !important;
+            }
+
+            #footer-pattern-links-container {
+                line-height: 0 !important;
+            }
+
+            .footer-pattern-links.mobile-resize-text,
+            .footer-pattern-links.mobile-resize-text,
+            #footer-pattern-text.mobile-resize-text,
+            #footer-pattern-links-container.no-footer-links {
+                font-size: 14px !important;
+                line-height: 20px !important;
+            }
+
+            .footer-link {
+                display: block !important;
+            }
+
+            #footer-pattern-links-container table {
+                display: inline-block !important;
+                float: none !important;
+            }
+
+            #footer-pattern-links-container, #footer-pattern-text {
+                text-align: center !important;
+            }
+
+            #footer-pattern-links {
+                padding-bottom: 5px !important;
+            }
+
+            /** Team Calendar overrides, these should be removed when notifications are updated in Team Calendars. For now CSS
+            overrides are being used because the structure of the content can't change without rereleasing the plugin */
+            .mail-calendar-container .day-header + table tr td:first-child {
+                vertical-align: top !important;
+                padding-top: 5px !important;
+            }
+        }
+
+        @media (min-width: 900px) {
+            #center-content-table {
+                width: 900px;
+            }
+        }
+
+        @media all {
+            #outlook a {
+                padding: 0;
+            }
+
+            /* Force Outlook to provide a "view in browser" menu link. */
+            /* Prevent Webkit and Windows Mobile platforms from changing default font sizes.*/
+            body {
+                -webkit-text-size-adjust: 100%;
+                -ms-text-size-adjust: 100%;
+            }
+
+            .ExternalClass {
+                width: 100%;
+            }
+
+            /* Force Hotmail to display emails at full width */
+            #background-table {
+                margin: 0;
+                padding: 0;
+                width: 100% !important;
+            }
+
+            /* Needed to override highlighting on date and time links in iOS */
+            .grey a {
+                color: #707070;
+                text-decoration: none;
+            }
+
+            /* These styles are appended to the head element of a notification in order to prevent Apple Mail and similar
+                  clients from underlining the due dates with a blue hyperlink */
+            /* a lozenge outside an inline task should always be #333, lozenges inside an inline task should be
+            colored according to their upcoming due dates, a completed task date lozenge or deleted task date
+            lozenge should always be #707070 */
+            .date-time-lozenge a {
+                color: #333333;
+                text-decoration: none;
+            }
+
+            .inline-task-text-container .date-time-lozenge.date-upcoming a {
+                color: #DF6F00;
+                text-decoration: none;
+            }
+
+            .inline-task-text-container .date-time-lozenge.date-past a {
+                color: #D04437;
+                text-decoration: none;
+            }
+
+            .inline-task-text-container.content-deleted-color .date-time-lozenge a,
+            .inline-task-text-container.checked .date-time-lozenge a {
+                color: #707070;
+                text-decoration: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<table id="background-table" cellpadding="0" cellspacing="0" width="100%"
+       style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333; background-color: #f5f5f5">
+    <tbody>
+    <tr>
+        <td id="header-pattern-container" style="padding: 0px; border-collapse: collapse; padding: 10px 20px">
+            <table id="header-pattern" cellspacing="0" cellpadding="0" border="0"
+                   style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333">
+                <tbody>
+                <tr>
+                    <td id="header-text-container" valign="middle" style="padding: 0px;
+                           border-collapse: collapse; vertical-align: middle; font-family: Arial,
+                           sans-serif; font-size: 14px; line-height: 20px; mso-line-height-rule:
+                           exactly; mso-text-raise: 1px">
+                        <strong>Reminder</strong> for <a class="reminder-link" style="color: #3B73AF; text-decoration: none;" href="{{baseUrl}}/browse/{{issueKey}}">{{issueKey}}</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <!-- End Header pattern -->
+    <tr>
+        <td id="email-content-container" style="padding: 0px; border-collapse: collapse; padding: 0 20px">
+            <table id="email-content-table" cellspacing="0" cellpadding="0" border="0" width="100%"
+                   style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333; border-spacing: 0; border-collapse: separate">
+                <tbody>
+                <tr>
+                    <td class="email-content-rounded-top mobile-expand"
+                        style="padding: 0px; border-collapse: collapse; color: #fff; padding: 0 15px 0 20px; height: 15px; background-color: #fff; border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 0; border-top-right-radius: 5px; border-top-left-radius: 5px">
+                        &nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="email-content-main mobile-expand"
+                        style="padding: 0px; border-collapse: collapse; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-top: 0; border-bottom: 0; padding: 0 15px 15px 20px; background-color: #fff">
+                        <table id="page-title-pattern" cellspacing="0" cellpadding="0" border="0" width="100%"
+                               style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333">
+                            <tbody>
+                            <tr>
+                                <td id="page-title-pattern-icon-image-container" valign="top"
+                                    style="padding: 0px; border-collapse: collapse; width: 25px; vertical-align: top">
+                                    <table cellspacing="0" cellpadding="0" border="0"
+                                           style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333">
+                                        <tbody>
+                                        <tr>
+                                            <td
+                                                    id="page-title-pattern-icon-image-container-cell"
+                                                    style="padding: 0px; border-collapse: collapse;
+                                                   width: 20px; padding: 5px 0px 0px 0px;
+                                                   mso-text-raise: 5px; mso-line-height-rule:
+                                                   exactly"><a title="comment icon"
+                                                               style="vertical-align: middle; color: #3b73af; text-decoration: none">
+                                                <img style="vertical-align: top; display: block;"
+                                                     src="file:///Users/rmassaioli/Code/shipit/ping-me-project/ping-me-connect/ios7-stopwatch-outline.png"
+                                                     alt="comment icon" title="comment icon" height="20" width="20"
+                                                     border="0"/>
+                                            </a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td style="vertical-align: top; padding: 0px; border-collapse:
+                                       collapse; padding-right: 5px; font-size: 20px; line-height:
+                                       30px; mso-line-height-rule: exactly"
+                                    id="page-title-pattern-header-container"><span
+                                        id="page-title-pattern-header" style="font-family: Arial,
+                                          sans-serif; padding: 0; font-size: 20px; line-height:
+                                          30px; mso-text-raise: 2px; mso-line-height-rule: exactly;
+                                          vertical-align: middle"><a
+                                        href="{{baseUrl}}/browse/{{issueKey}}"
+                                        title="Re: {{issueSummary}}"
+                                        style="color: #3b73af; text-decoration: none">Re: {{issueSummary}}</a></span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="email-content-main mobile-expand"
+                        style="padding: 0px; border-collapse: collapse; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-top: 0; border-bottom: 0; padding: 0 15px 15px 16px; background-color: #fff">
+                        <table class="content-excerpt-pattern" cellspacing="0" cellpadding="0" border="0" width="100%"
+                               style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333; font-family: Arial, sans-serif; font-size: 14px; line-height: 20px; mso-line-height-rule: exactly; mso-text-raise: 1px">
+                            <tbody>
+                            <tr>
+                                <td class="content-excerpt-pattern-container mobile-resize-text
+                                       " style="padding: 0px; border-collapse: collapse; padding: 0
+                                       0 0 30px">
+                                    <p style="margin: 10px 0 0 0; margin-top: 0">{{reminderMessage}}</p>
+                                    <br/>
+                                    <p style="margin: 10px 0 0 0; margin-top: 0">Your original reminder was called: {{originalIssueKey}} - {{originalIssueSummary}}</p>
+                                    <br/>
+                                    <p style="margin: 10px 0 0 0; margin-top: 0">This was created using the My Reminders
+                                        add-on.</p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="email-content-rounded-bottom mobile-expand"
+                        style="padding: 0px; border-collapse: collapse; color: #fff; height: 5px; line-height: 5px; padding: 0 15px 0 16px; background-color: #fff; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; border-top: 0; border-left: 1px solid #ccc; border-bottom: 1px solid #ccc; border-right: 1px solid #ccc; mso-line-height-rule: exactly">
+                        &nbsp;</td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td id="footer-pattern" style="padding: 0px; border-collapse: collapse; padding: 12px 20px">
+            <table id="footer-pattern-container" cellspacing="0" cellpadding="0" border="0" width="100%"
+                   style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333">
+                <tbody>
+                <tr>
+                    <td id="footer-pattern-links-container" width="100%"
+                        style="padding: 0px; border-collapse: collapse; color: #999; font-size: 12px; line-height: 18px; font-family: Arial, sans-serif; mso-line-height-rule: exactly; mso-text-raise: 2px">
+                        <table style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; color: #333; font-size: 12px; line-height: 18px; font-family: Arial, sans-serif; mso-line-height-rule: exactly; mso-text-raise: 2px">
+                            <tbody>
+                            <tr>
+                                <td class="footer-pattern-links mobile-resize-text"
+                                    style="padding: 0px; border-collapse: collapse"><a
+                                        href="{{baseUrl}}/plugins/servlet/ac/{{pluginKey}}/view-my-reminders"
+                                        title="" style="color: #3b73af; text-decoration:
+                                          none">Manage your reminders</a></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
