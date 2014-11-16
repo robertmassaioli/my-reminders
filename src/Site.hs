@@ -1,6 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
 
 ------------------------------------------------------------------------------
 -- | This module is where all the routes and handlers are defined for your
@@ -10,45 +10,41 @@ module Site
   ( app
   ) where
 
-------------------------------------------------------------------------------
-import qualified Control.Monad as CM
-import           Control.Monad.IO.Class (liftIO)
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as BC
-import qualified Data.Text as T
-import qualified Snap.Core as SC
-import qualified Snap.Snaplet as SS
-import qualified Heist as H
-import qualified Heist.Interpreted as HI
-import qualified Snap.Snaplet.Heist as SSH
-import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Util.FileServe
-------------------------------------------------------------------------------
+import qualified AppConfig                                   as CONF
 import           Application
-
-
+import qualified Connect.Connect                             as CC
+import qualified Connect.Data                                as CD
+import qualified Connect.PageToken                           as CPT
 import           Connect.Routes
-import qualified Connect.Connect as CC
-import qualified Connect.Data as CD
-import qualified Connect.Zone as CZ
-import qualified Data.EnvironmentHelpers as DE
-import qualified DatabaseSnaplet as DS
-import qualified Persistence.Tenant as PT
-import qualified AppConfig as CONF
+import qualified Connect.Tenant                              as CT
+import qualified Connect.Zone                                as CZ
+import qualified Control.Monad                               as CM
+import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
-import           ReminderHandlers
+import           Data.ByteString                             (ByteString)
+import qualified Data.EnvironmentHelpers                     as DE
+import qualified Data.Text                                   as T
+import           Data.Text.Encoding                          (decodeUtf8)
+import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
-import           PurgeHandlers
-import           WebhookHandlers
 import           Healthcheck
 import           Heartbeat
+import qualified Heist                                       as H
+import qualified Heist.Interpreted                           as HI
 import           MigrationHandler
-import qualified TenantJWT as TJ
-import qualified Connect.Tenant as CT
-import qualified Connect.PageToken as CPT
-import qualified SnapHelpers as SH
+import qualified Persistence.Tenant                          as PT
+import           PurgeHandlers
+import           ReminderHandlers
+import qualified Snap.Core                                   as SC
+import qualified Snap.Snaplet                                as SS
+import qualified Snap.Snaplet.Heist                          as SSH
+import           Snap.Snaplet.Session.Backends.CookieSession
+import           Snap.Util.FileServe
+import qualified SnapHelpers                                 as SH
+import qualified TenantJWT                                   as TJ
+import           WebhookHandlers
 
-import qualified Paths_my_reminders as PMR
+import qualified Paths_my_reminders                          as PMR
 
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
@@ -58,7 +54,7 @@ showDocPage = do
    fileName <- SC.getParam "fileparam"
    case fileName of
       Nothing -> SH.respondNotFound
-      Just rawFileName -> SSH.heistLocal (environment . T.pack . BC.unpack $ rawFileName) $ SSH.render "docs"
+      Just rawFileName -> SSH.heistLocal (environment . decodeUtf8 $ rawFileName) $ SSH.render "docs"
    where
       environment fileName = HI.bindSplices $ "fileName" H.## HI.textSplice fileName
 
@@ -80,9 +76,10 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
     context connectData tenant token userKey = do
       "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
       "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
       "userKey" H.## HI.textSplice $ maybe T.empty T.pack userKey
 
-         
+
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ CPT.generateTokenCurrentTime ct
@@ -117,7 +114,7 @@ applicationRoutes =
 -- We should always redirect to external services or common operations, that way when we want to
 -- change where that points to, we only have to quickly update those links here
 redirects :: [(ByteString, SS.Handler App App ())]
-redirects = 
+redirects =
    [ ("/redirect/raise-issue", SC.redirect "https://bitbucket.org/eerok/reminder-me-connect/issues")
    , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.ondemand.myreminders")
    , ("/redirect/help", SC.redirect "/docs/about")
