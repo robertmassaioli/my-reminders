@@ -109,6 +109,7 @@ applicationRoutes =
   , ("/static/css"                  , serveDirectory "static/css")
   , ("/static/images"               , serveDirectory "static/images")
   , ("/static/js"                   , serveDirectory "static-js")
+  , ("/robots.txt"                  , serveFile "static/files/robots.txt")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
