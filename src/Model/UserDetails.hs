@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Model.UserDetails
@@ -6,40 +6,40 @@ module Model.UserDetails
    , UserWithDetails(..)
    , ProductErrorResponse(..)
    ) where
- 
+
+import           AppConfig
 import           Application
-import qualified Connect.AtlassianTypes as AT
+import qualified Connect.AtlassianTypes      as AT
+import qualified Connect.Data                as CDT
+import qualified Connect.Descriptor          as CD
+import qualified Control.Monad.IO.Class      as MI
 import           Data.Aeson
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString.Char8 as BC
-import qualified Data.Map as M (Map, fromList)
+import qualified Data.ByteString.Char8       as BC
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.Map                    as M (Map, fromList)
 import           Data.Maybe
-import qualified Data.Text as T
-import qualified Data.Time.Clock.POSIX as P
-import           Data.Time.Units (Minute)
-import           Data.TimeUnitUTC (timeUnitToDiffTime)
-import qualified Control.Monad.IO.Class as MI
-import qualified Connect.Descriptor as CD
-import qualified Connect.Data as CDT
-import qualified Persistence.Tenant as PT
+import qualified Data.Text                   as T
+import           Data.Text.Encoding          (decodeUtf8)
+import qualified Data.Time.Clock.POSIX       as P
+import           Data.Time.Units             (Minute)
+import           Data.TimeUnitUTC            (timeUnitToDiffTime)
 import           GHC.Generics
-import           NetworkHelpers
-import           Network.URI
+import           Network.Api.Support
 import           Network.HTTP.Client
 import           Network.HTTP.Types
-import           Network.Api.Support
-import           AppConfig
+import           Network.URI
+import           NetworkHelpers
+import qualified Persistence.Tenant          as PT
+import           Web.Connect.QueryStringHash
+import qualified Web.JWT                     as JWT
 
-import qualified Web.JWT as JWT
-import Web.Connect.QueryStringHash
-
-data UserWithDetails = UserWithDetails 
-   { name            :: String
-   , emailAddress    :: String
-   , avatarUrls      :: M.Map String String
-   , displayName     :: String
-   , active          :: Bool
-   , timeZone        :: String
+data UserWithDetails = UserWithDetails
+   { name         :: String
+   , emailAddress :: String
+   , avatarUrls   :: M.Map String String
+   , displayName  :: String
+   , active       :: Bool
+   , timeZone     :: String
    } deriving (Show, Generic)
 --TODO: parse url here
 
@@ -49,8 +49,8 @@ instance ToJSON UserWithDetails
 type HttpResponseCode = Int
 
 data ProductErrorResponse = ProductErrorResponse
-   { perCode      :: HttpResponseCode
-   , perMessage   :: T.Text
+   { perCode    :: HttpResponseCode
+   , perMessage :: T.Text
    } deriving (Show, Generic)
 
 getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
@@ -60,7 +60,7 @@ getUserDetails userKey tenant = do
   rmConf <- getAppConf
   let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (PT.sharedSecret tenant) GET (PT.baseUrl tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
-    (  addHeader ("Accept","application/json") 
+    (  addHeader ("Accept","application/json")
     <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)
     <> setPotentialProxy (getProxyFromConf baseUrlString rmConf)
     )
@@ -77,7 +77,7 @@ generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourU
     algo = JWT.HS256
     secret' = JWT.secret sharedSecret'
     queryStringHash = createQueryStringHash method' ourURL requestURL
-    
+
     claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI pluginKey
                               , JWT.iat = JWT.intDate currentTime
                               , JWT.exp = JWT.intDate (currentTime + timeUnitToDiffTime expiryPeriod)
@@ -95,4 +95,4 @@ responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
 responder 200 body = case eitherDecode body of
    Right user -> Right user
    Left err -> Left $ ProductErrorResponse 200 (T.pack $ "Can't parse json response: " ++ show err)
-responder responseCode body = Left $ ProductErrorResponse responseCode (T.pack $ BC.unpack . BL.toStrict $ body)
+responder responseCode body = Left $ ProductErrorResponse responseCode (decodeUtf8 . BL.toStrict $ body)
