@@ -4,7 +4,7 @@ module EmailContent
    ( reminderEmail
    ) where
 
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.UTF8 as BS8
 import qualified Data.Text as T
 import           Text.Pandoc
 import           Persistence.Reminder
@@ -13,10 +13,11 @@ import           Network.URI
 
 reminderEmail :: EmailReminder -> MessageContent
 reminderEmail reminder = TextAndHTML
-   { textContent = BC.pack $ writeMarkdown emailWriterDefaults reminderDoc
-   , htmlContent = BC.pack $ writeHtmlString emailWriterDefaults reminderDoc
+   { textContent = encode $ writeMarkdown emailWriterDefaults reminderDoc
+   , htmlContent = encode $ writeHtmlString emailWriterDefaults reminderDoc
    }
    where
+      encode = BS8.fromString
       reminderDoc = genericReminderEmail reminder
 
 -- Note: The following email was initially generated from: pandoc-email-templates/example-email.markdown

@@ -97,6 +97,7 @@ Executable my-reminders
     , time-units                == 1.*
     , boxes                     == 0.1.*
     , split                     == 0.2.*
+    , utf8-string               >= 0.3.8   && < 0.4
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
@@ -160,6 +161,7 @@ test-suite my-reminders-props
     , snap-loader-static
     , snap-server
     , snaplet-postgresql-simple
+    , tagsoup
     , text
     , time
     , time-units
@@ -167,3 +169,4 @@ test-suite my-reminders-props
     , xmlhtml
     , boxes
     , split
+    , utf8-string
