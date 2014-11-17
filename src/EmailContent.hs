@@ -31,6 +31,9 @@ reminderEmail emailContext reminder = do
       context "originalIssueKey" = MuVariable . erOriginalIssueKey $ reminder
       context "originalIssueSummary" = MuVariable . erOriginalIssueSummary $ reminder
       context "pluginKey" = MuVariable . fromPluginKey . connectPluginKey . ecConnectConf $ emailContext
+      context "showOriginal" = MuBool originalIsDifferent
       context _ = MuNothing
+
+      originalIsDifferent = erOriginalIssueKey reminder /= erIssueKey reminder || erOriginalIssueSummary reminder /= erIssueSummary reminder
 
       fromPluginKey (PluginKey textKey) = textKey
