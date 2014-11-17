@@ -4,53 +4,36 @@ module EmailContent
    ( reminderEmail
    ) where
 
-import qualified Data.ByteString.UTF8 as BS8
-import qualified Data.Text as T
-import           Text.Pandoc
-import           Persistence.Reminder
+import           Connect.Connect         (connectPluginKey)
+import           Connect.Descriptor      (PluginKey (..))
+import           Data.ByteString.Lazy    (toStrict)
+import           Data.Text.Lazy.Encoding (encodeUtf8)
+import           EmailContext
 import           Mail.Hailgun
-import           Network.URI
+import           Persistence.Reminder
+import           Text.Hastache
+import           Text.Hastache.Context
 
-reminderEmail :: EmailReminder -> MessageContent
-reminderEmail reminder = TextAndHTML
-   { textContent = encode $ writeMarkdown emailWriterDefaults reminderDoc
-   , htmlContent = encode $ writeHtmlString emailWriterDefaults reminderDoc
-   }
+reminderEmail :: EmailContext -> EmailReminder -> IO MessageContent
+reminderEmail emailContext reminder = do
+   plainEmail <- hastacheStr defaultConfig (ecPlainEmailTemplate emailContext) (mkStrContext context)
+   htmlEmail <- hastacheStr defaultConfig (ecHtmlEmailTemplate emailContext) (mkStrContext context)
+   return TextAndHTML
+      { textContent = toStrict . encodeUtf8 $ plainEmail
+      , htmlContent = toStrict . encodeUtf8 $ htmlEmail
+      }
    where
-      encode = BS8.fromString
-      reminderDoc = genericReminderEmail reminder
+      context :: String -> MuType m
+      context "baseUrl" = MuVariable . show . erTenantBaseUrl $ reminder
+      context "issueKey" = MuVariable . erIssueKey $ reminder
+      context "issueSummary" = MuVariable . erIssueSummary $ reminder
+      context "reminderMessage" = MuVariable . erReminderMessage $ reminder
+      context "originalIssueKey" = MuVariable . erOriginalIssueKey $ reminder
+      context "originalIssueSummary" = MuVariable . erOriginalIssueSummary $ reminder
+      context "pluginKey" = MuVariable . fromPluginKey . connectPluginKey . ecConnectConf $ emailContext
+      context "showOriginal" = MuBool originalIsDifferent
+      context _ = MuNothing
 
--- Note: The following email was initially generated from: pandoc-email-templates/example-email.markdown
--- And then it was modified to contain dynamic content.
--- You can generate this outline using: pandoc -t native pandoc-email-templates/example-email.markdown
-genericReminderEmail :: EmailReminder -> Pandoc
-genericReminderEmail reminder = Pandoc nullMeta $
-   [ Header 2 ("issue-reminder--", [], []) [Str "Issue", Space, Str "Reminder", Space, Str "-", Space, Str . erIssueKey $ reminder]
-   , Para [Str "Hi", Space, Str . erUserKey $ reminder, Str ","]
-   , Para $ [Str "You", Space, Str "set", Space, Str "a", Space, Str "reminder", Space, Str "for:", Space, Str "'", Link [Str . erIssueSummary $ reminder] (show issueURI, ""), Str "'"] ++ originalDetails
-   ] 
-   ++ (message . erReminderMessage $ reminder)
-   ++ [ Para [Str "Follow",Space,Str "the",Space,Str "link",Space,Str "to",Space,Str "see",Space,Str "more",Space,Str "about",Space,Str "the",Space,Str "issue."]
-   , Para [Str "Cheers,",LineBreak,Str "Your",Space,Str "friendly",Space,Str "My Reminders",Space,Str "plugin."]
-   ]
-   where
-      message :: Maybe T.Text -> [Block]
-      message Nothing = []
-      message (Just content) = 
-         [ Para [Str "With",Space,Str "the",Space,Str "following",Space,Str "message:"]
-         , BlockQuote [Para [Str . T.unpack $ content]]
-         ]
+      originalIsDifferent = erOriginalIssueKey reminder /= erIssueKey reminder || erOriginalIssueSummary reminder /= erIssueSummary reminder
 
-      tenantURI = erTenantBaseUrl reminder
-      issuePath = uriPath tenantURI ++ "/browse/" ++ erIssueKey reminder
-      issueURI = tenantURI { uriPath = issuePath }
-
-      originalDetails :: [Inline]
-      originalDetails = if erOriginalIssueKey reminder /= erIssueKey reminder || erOriginalIssueSummary reminder /= erIssueSummary reminder
-         then [Str ".",Space,Str "(Originally:",Space,Str . erOriginalIssueKey $ reminder ,Space,Str "-",Space,Str . erOriginalIssueSummary $ reminder, Str ")"]
-         else []
-
-emailWriterDefaults :: WriterOptions
-emailWriterDefaults = def 
-   --{ writerStandalone = True
-   --}
+      fromPluginKey (PluginKey textKey) = textKey
