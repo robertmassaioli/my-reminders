@@ -14,11 +14,11 @@ import qualified Data.Text    as T
 import           GHC.Generics
 import           Mail.Hailgun
 
-type UserKey   = T.Text    -- TODO does this need to be a Text type? What does String not support?
+type UserKey   = T.Text
 type UserEmail = UnverifiedEmailAddress
-type IssueKey  = String    -- TODO does this need to be a Text type? What does String not support?
+type IssueKey  = T.Text
 type IssueId   = Integer
-type IssueSummary = String
+type IssueSummary = T.Text
 
 data UserDetails = UserDetails
    { userKey   :: UserKey

@@ -25,7 +25,6 @@ import qualified Connect.AtlassianTypes             as CA
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class
-import qualified Data.ByteString.Char8              as B
 import           Data.Maybe
 import qualified Data.Text                          as T
 import qualified Data.Text.Encoding                 as T

@@ -93,7 +93,7 @@ Executable my-reminders
     , time                      >= 1.1     && < 1.5
     , transformers              == 0.3.*
     , xmlhtml                   == 0.2.*
-    , hailgun                   == 0.3.*
+    , hailgun                   == 0.4.*
     , hastache                  == 0.6.*
     , parallel-io               == 0.3.*
     , time-units                == 1.*
