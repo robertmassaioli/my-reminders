@@ -1,0 +1,17 @@
+Reminder for {{issueKey}}: {{issueSummary}}
+
+View the issue at: {{baseUrl}}/browse/{{issueKey}}
+
+{{#reminderMessage}}
+Your message:
+
+{{reminderMessage}}
+
+{{/reminderMessage}}
+{{#showOriginal}}
+Your original reminder was called: {{originalIssueKey}} - {{originalIssueSummary}}
+
+{{/showOriginal}}
+This was created using the My Reminders add-on.
+
+To manage your reminders visit: {{baseUrl}}/plugins/servlet/ac/{{pluginKey}}/view-my-reminders

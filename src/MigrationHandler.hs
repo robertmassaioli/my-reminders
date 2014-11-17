@@ -1,23 +1,19 @@
-module MigrationHandler 
+module MigrationHandler
    (migrationRequest
    ) where
 
+import qualified AppConfig               as CONF
 import           Application
-import           Control.Applicative ((<$>))
-import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad (filterM)
-import qualified Data.ByteString.Char8 as BSC
+import           Control.Applicative     ((<$>))
+import           Control.Monad.IO.Class  (liftIO)
+import qualified Data.ByteString.Char8   as BSC
 import qualified Data.EnvironmentHelpers as DE
-import           Data.Maybe (listToMaybe)
-import           Data.List (inits)
-import qualified AppConfig as CONF
-import qualified Snap.Core                as SC
-import qualified SnapHelpers as SH
-import qualified System.Directory as SD
-import           System.Environment (getExecutablePath)
-import           System.FilePath (dropFileName, (</>), splitDirectories, joinPath)
-import           System.Process (callProcess)
-import           Text.Read (readMaybe)
+import           Finder
+import qualified Snap.Core               as SC
+import qualified SnapHelpers             as SH
+import           System.FilePath         ((</>))
+import           System.Process          (callProcess)
+import           Text.Read               (readMaybe)
 
 migrationRequest :: AppHandler ()
 migrationRequest = SH.handleMethods
@@ -34,13 +30,16 @@ handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywa
 
 flywayMigrate :: FlywayOptions -> IO ()
 flywayMigrate options = do
-   potentialFlywayPath <- findFlywayExecutable
+   potentialFlywayPath <- findFile addFlywayPath
    case potentialFlywayPath of
       Just flywayPath -> callProcess flywayPath migrationArguments
       Nothing -> fail "Could not find the flyway executable relative to the running executables path."
    where
       migrationArguments = "migrate" : flywayOptionsToArguments options
-   
+
+addFlywayPath :: FilePath -> FilePath
+addFlywayPath f = f </> "migrations" </> "flyway"
+
 getFlywayOptions :: AppHandler (Either String FlywayOptions)
 getFlywayOptions = do
    potentialTarget <- (readMaybe . BSC.unpack =<<) <$> SC.getParam (BSC.pack "target")
@@ -65,34 +64,19 @@ getFlywayOptions = do
    where
       siGetEnv :: String -> AppHandler (Maybe String)
       siGetEnv = liftIO . DE.getEnv
-   
+
       pgMyRemindersPre :: String -> String
       pgMyRemindersPre = (++) "PG_MY_REMINDERS_"
 
-findFlywayExecutable :: IO (Maybe FilePath)
-findFlywayExecutable = do
-   exeDir <- getExecutableDirectory
-   let potentialLocations = fmap addFlywayPath (getParentDirectories exeDir)
-   fmap listToMaybe $ filterM SD.doesFileExist potentialLocations
-
-getExecutableDirectory :: IO FilePath
-getExecutableDirectory = fmap dropFileName getExecutablePath
-
-getParentDirectories :: FilePath -> [FilePath]
-getParentDirectories = reverse . fmap joinPath . tail . inits . splitDirectories
-
-addFlywayPath :: FilePath -> FilePath
-addFlywayPath f = f </> "migrations" </> "flyway"
-
 data FlywayOptions = FlywayOptions
-   { flywayUrl :: String
-   , flywayUser :: String
+   { flywayUrl      :: String
+   , flywayUser     :: String
    , flywayPassword :: String
-   , flywayTarget :: Integer
+   , flywayTarget   :: Integer
    } deriving (Eq)
 
 flywayOptionsToArguments :: FlywayOptions -> [String]
-flywayOptionsToArguments fo = 
+flywayOptionsToArguments fo =
    [ "-url=" ++ flywayUrl fo
    , "-user=" ++ flywayUser fo
    , "-password=" ++ flywayPassword fo
