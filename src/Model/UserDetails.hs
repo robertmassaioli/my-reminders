@@ -14,12 +14,13 @@ import qualified Connect.Data                as CDT
 import qualified Connect.Descriptor          as CD
 import qualified Control.Monad.IO.Class      as MI
 import           Data.Aeson
+import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8       as BC
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Map                    as M (Map, fromList)
 import           Data.Maybe
 import qualified Data.Text                   as T
-import           Data.Text.Encoding          (decodeUtf8)
+import           Data.Text.Encoding          (decodeUtf8, encodeUtf8)
 import qualified Data.Time.Clock.POSIX       as P
 import           Data.Time.Units             (Minute)
 import           Data.TimeUnitUTC            (timeUnitToDiffTime)
@@ -34,7 +35,7 @@ import           Web.Connect.QueryStringHash
 import qualified Web.JWT                     as JWT
 
 data UserWithDetails = UserWithDetails
-   { name         :: String
+   { name         :: AT.UserKey
    , emailAddress :: String
    , avatarUrls   :: M.Map String String
    , displayName  :: String
@@ -67,7 +68,13 @@ getUserDetails userKey tenant = do
     (basicResponder responder)
   where
     url :: T.Text
-    url = T.pack $ baseUrlString ++ "/rest/api/2/user?username=" ++ userKey
+    url = decodeUtf8 $ userQueryUri `B.append` encodeParam userKey
+
+    encodeParam :: T.Text -> B.ByteString
+    encodeParam = urlEncode True . encodeUtf8
+
+    userQueryUri :: B.ByteString
+    userQueryUri = BC.pack $ baseUrlString ++ "/rest/api/2/user?username="
 
     baseUrlString = show . PT.baseUrl $ tenant
 

@@ -18,7 +18,7 @@ import qualified Data.Configurator       as DC
 import qualified Data.Configurator.Types as DCT
 import           Data.ConfiguratorTimeUnits ()
 import qualified Data.EnvironmentHelpers as DE
-import           Data.Maybe              (fromMaybe, maybe)
+import           Data.Maybe              (fromMaybe)
 import           Data.Text
 import           Data.Time.Units
 import qualified Network.HostName        as HN

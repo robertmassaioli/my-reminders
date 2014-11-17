@@ -1,27 +1,29 @@
-{-# LANGUAGE DeriveGeneric             #-}
-module WebhookHandlers 
+{-# LANGUAGE DeriveGeneric #-}
+module WebhookHandlers
    ( handleIssueUpdateWebhook
    , handleIssueDeleteWebhook
    ) where
 
 import           AesonHelpers
 import           Application
-import           Control.Applicative      (pure, (<*>))
-import           Control.Monad            (when)
-import qualified Connect.AtlassianTypes   as AT
-import qualified Connect.Tenant           as CT
+import qualified Connect.AtlassianTypes     as AT
+import qualified Connect.Tenant             as CT
+import           Control.Applicative        (pure, (<*>), (<$>))
+import           Control.Monad              (when)
 import           Data.Aeson
-import           Data.Aeson.Types         (defaultOptions, fieldLabelModifier, Options)
-import           Data.List                as DL
-import           Data.Maybe               (fromMaybe, isJust)
+import           Data.Aeson.Types           (Options, defaultOptions,
+                                             fieldLabelModifier)
+import           Data.List                  as DL
+import           Data.Maybe                 (isJust)
+import qualified Data.Text                  as T
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
-import qualified Persistence.Reminder     as P
-import qualified Persistence.PostgreSQL   as DB
-import qualified Persistence.Tenant       as PT
-import qualified Snap.Core                as SC
-import qualified SnapHelpers              as SH
-import qualified TenantJWT                as WT
+import qualified Persistence.PostgreSQL     as DB
+import qualified Persistence.Reminder       as P
+import qualified Persistence.Tenant         as PT
+import qualified Snap.Core                  as SC
+import qualified SnapHelpers                as SH
+import qualified TenantJWT                  as WT
 
 handleIssueUpdateWebhook :: AppHandler ()
 handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
@@ -30,13 +32,13 @@ handleWebhook :: (PT.Tenant -> IssueUpdate -> AppHandler ()) -> CT.ConnectTenant
 handleWebhook webhookHandler (tenant, _) = do
    parsedRequest <- webhookDataFromRequest
    case parsedRequest of
-      Left _ -> SH.respondNoContent 
+      Left _ -> SH.respondNoContent
       Right webhookData -> do
          webhookHandler tenant (webhookDataToIssueUpdate webhookData)
          SH.respondNoContent
 
 webhookDataFromRequest :: AppHandler (Either String WebhookData)
-webhookDataFromRequest = fmap eitherDecode $ SC.readRequestBody dataLimitBytes
+webhookDataFromRequest = eitherDecode <$> SC.readRequestBody dataLimitBytes
    where
       dataLimitBytes = 10 ^ (7 :: Integer) -- We want to not accept webhook responses larger than 10 MB
 
@@ -61,30 +63,30 @@ handleWebhookUpdate tenant issueUpdate conn = do
 webhookDataToIssueUpdate :: WebhookData -> IssueUpdate
 webhookDataToIssueUpdate webhookData = IssueUpdate
    { iuId = read . wiId . wdIssue $ webhookData
-   , iuNewKey = findCliToString "Key" -- Key is uppercased to start
-   , iuNewSummary = findCliToString "summary" -- Summary is lower cased to start
+   , iuNewKey = findCliToString (T.pack "Key") -- Key is uppercased to start
+   , iuNewSummary = findCliToString (T.pack "summary") -- Summary is lower cased to start
    }
    where
       cli :: [ChangeLogItem]
-      cli = fromMaybe [] . fmap wcItems . wdChangelog $ webhookData
+      cli = maybe [] wcItems . wdChangelog $ webhookData
 
-      findCliToString :: String -> Maybe String
+      findCliToString :: T.Text -> Maybe T.Text
       findCliToString = fmap cliToString . findCli
 
-      findCli :: String -> Maybe ChangeLogItem
-      findCli fieldName = DL.find (((==) fieldName) . cliField) cli
+      findCli :: T.Text -> Maybe ChangeLogItem
+      findCli fieldName = DL.find ((==) fieldName . cliField) cli
 
 data IssueUpdate = IssueUpdate
    { iuId         :: AT.IssueId
-   , iuNewKey     :: Maybe String
-   , iuNewSummary :: Maybe String
+   , iuNewKey     :: Maybe T.Text
+   , iuNewSummary :: Maybe T.Text
    } deriving (Show)
 
 parseOptions :: String -> Options
 parseOptions prefix = defaultOptions { fieldLabelModifier = stripFieldNamePrefix prefix }
-   
+
 data WebhookData = WebhookData
-   { wdIssue :: WebhookIssue
+   { wdIssue     :: WebhookIssue
    , wdChangelog :: Maybe WebhookChangelog
    } deriving (Eq, Show, Generic)
 
@@ -106,9 +108,9 @@ instance FromJSON WebhookChangelog where
    parseJSON = genericParseJSON (parseOptions "wc")
 
 data ChangeLogItem = ChangeLogItem
-   { cliField :: String
-   , cliFromString :: String
-   , cliToString :: String
+   { cliField      :: T.Text
+   , cliFromString :: T.Text
+   , cliToString   :: T.Text
    } deriving (Eq, Show, Generic)
 
 instance FromJSON ChangeLogItem where

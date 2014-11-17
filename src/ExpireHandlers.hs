@@ -12,6 +12,7 @@ import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString                     as B
 import qualified Data.ByteString.Char8               as BSC
+import           Data.Either                         (isRight)
 import qualified Data.Text                           as T
 import qualified Data.Text.IO                        as T
 import           Data.Time.Clock                     (UTCTime)
@@ -104,17 +105,13 @@ sendReminder context reminder = do
       Left _ -> return (reminder, False)
       Right message -> (,) reminder <$> isRight <$> sendEmail (CONF.rmHailgunContext . ecAppConf $ context) message
 
-isRight :: Either a b -> Bool
-isRight (Right _) = True
-isRight _         = False
-
 reminderToHailgunMessage :: EmailContext -> EmailReminder -> IO (Either HailgunErrorMessage HailgunMessage)
 reminderToHailgunMessage context reminder = do
    message <- reminderEmail context reminder
    return $ hailgunMessage subject message from recipients (ecAttachments context)
    where
       appConf = ecAppConf context
-      subject = "Reminder: [" ++ erIssueKey reminder ++ "] " ++ erIssueSummary reminder
+      subject = T.concat ["Reminder: [", erIssueKey reminder, "] ", erIssueSummary reminder]
       from = BSC.pack $ CONF.rmFromUser appConf `toEmailFormat` (hailgunDomain . CONF.rmHailgunContext $ appConf)
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
 
