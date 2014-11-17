@@ -102,7 +102,8 @@ verifyTenant tenant unverifiedJwt = do
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt
 
-getUserKey :: J.JWT a -> Maybe String
-getUserKey jwt = fmap show (getSub jwt)
+-- TODO this T.pack is stupid. I think it should be J.TextOrURI. Fix Haskell JWT.
+getUserKey :: J.JWT a -> Maybe T.Text
+getUserKey jwt = fmap (T.pack . show) (getSub jwt)
    where
       getSub = J.sub . J.claims

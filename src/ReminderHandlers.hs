@@ -243,12 +243,12 @@ addReminder :: ReminderRequest -> CT.ConnectTenant -> AppHandler ()
 addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addReminder reminderRequest (tenant, Just userKey) =
   if userKey /= requestUK
-    then respondWithError badRequest ("Given the details for user " ++ requestUK ++ " however Atlassian Connect thinks you are " ++ userKey)
+    then respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
     else do
       addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
       case addedReminder of
         Just _ -> respondNoContent
-        Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ userKey)
+        Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
   where
     requestUK = CA.userKey . prqUser $ reminderRequest
 

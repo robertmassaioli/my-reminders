@@ -23,6 +23,7 @@ import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
 import qualified Data.EnvironmentHelpers                     as DE
+import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
 import           Data.Text.Encoding                          (decodeUtf8)
 import qualified DatabaseSnaplet                             as DS
@@ -41,7 +42,7 @@ import qualified Snap.Snaplet.Heist                          as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
-import qualified TenantJWT                                   as TJ
+import qualified TenantJWT                                     as TJ
 import           WebhookHandlers
 
 import qualified Paths_my_reminders                          as PMR
@@ -77,7 +78,7 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
       "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
       "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
       -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
-      "userKey" H.## HI.textSplice $ maybe T.empty T.pack userKey
+      "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey
 
 
 withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
