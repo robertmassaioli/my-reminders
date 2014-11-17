@@ -42,7 +42,7 @@ import qualified Snap.Snaplet.Heist                          as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
-import qualified TenantJWT                                     as TJ
+import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
 
 import qualified Paths_my_reminders                          as PMR

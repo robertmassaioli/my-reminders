@@ -111,7 +111,7 @@ reminderToHailgunMessage context reminder = do
    return $ hailgunMessage subject message from recipients (ecAttachments context)
    where
       appConf = ecAppConf context
-      subject = T.pack "Reminder: [" `T.append` erIssueKey reminder `T.append` T.pack "] " `T.append` erIssueSummary reminder
+      subject = T.concat ["Reminder: [", erIssueKey reminder, "] ", erIssueSummary reminder]
       from = BSC.pack $ CONF.rmFromUser appConf `toEmailFormat` (hailgunDomain . CONF.rmHailgunContext $ appConf)
       recipients = emptyMessageRecipients { recipientsTo = [ erUserEmail reminder ] }
 
