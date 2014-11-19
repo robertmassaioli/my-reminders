@@ -8,6 +8,7 @@
 
 IMAGE_BUILD_NAME="$1"
 IMAGE_NAME="$2"
+DOCKER_CMD=${DOCKER_CMD:-docker}
 
 if [ "x$1" == "x" ]
 then
@@ -35,13 +36,13 @@ echo "## Getting the required dependencies out of the build..."
 if [ "x$CONTAINER_ID" == "x" ]
 then
    echo "## Using image $IMAGE_NAME for dependencies...starting and stopping immediately."
-   docker run "$IMAGE_BUILD_NAME" echo "### Started and stopped immediately..."
-   CONTAINER_ID=`docker ps -lq`
+   ${DOCKER_CMD} run "$IMAGE_BUILD_NAME" echo "### Started and stopped immediately..."
+   CONTAINER_ID=`${DOCKER_CMD} ps -lq`
    echo "## Using last run container: $CONTAINER_ID"
 fi
 
 echo "## Searching for container: $CONTAINER_ID"
-if docker ps -aq | grep "$CONTAINER_ID" > /dev/null
+if ${DOCKER_CMD} ps -aq | grep "$CONTAINER_ID" > /dev/null
 then
    echo "## Using container: $CONTAINER_ID"
 else
@@ -51,11 +52,11 @@ fi
 
 # It is important to note that only copying this file implicitly implies that we will statically
 # compile the binary.
-time docker cp "$CONTAINER_ID:/home/haskell/build/.cabal-sandbox/bin/my-reminders" "$COPY_DIR"
+time ${DOCKER_CMD} cp "$CONTAINER_ID:/home/haskell/build/.cabal-sandbox/bin/my-reminders" "$COPY_DIR"
 
 echo "## Building the production Docker image."
 cd production
-time docker build --rm="true" --tag="$IMAGE_NAME" .
+time ${DOCKER_CMD} build --rm="true" --tag="$IMAGE_NAME" .
 
 echo "## Finished successfully"
 set +e
