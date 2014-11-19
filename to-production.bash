@@ -9,6 +9,7 @@
 IMAGE_BUILD_NAME="$1"
 IMAGE_NAME="$2"
 DOCKER_CMD=${DOCKER_CMD:-docker}
+RJS_CMD=${RJS_CMD:-r.js}
 
 if [ "x$1" == "x" ]
 then
