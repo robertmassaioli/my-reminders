@@ -30,7 +30,7 @@ cp -R snaplets "$COPY_DIR"
 cp -R resources "$COPY_DIR"
 cp -R migrations "$COPY_DIR"
 cp -R static "$COPY_DIR"
-r.js -o build.js
+${RJS_CMD} -o build.js
 cp -R static-js "$COPY_DIR"
 
 echo "## Getting the required dependencies out of the build..."
