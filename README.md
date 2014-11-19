@@ -116,3 +116,27 @@ This requires the `cabal-constraints` executable to be available:
 
     » cabal install cabal-constraints
     
+## Deploying this service to production
+
+Now that you have built the docker container you are going to want to deploy this service to
+production. Just place the docker container somewhere and give it the following environment
+variables:
+
+ - http\_proxy: Required if you need to route outgoing requests through a HTTP proxy.
+ - https\_proxy: Required if you need to route outgoing requests through a HTTPS proxy.
+ - PG\_MY\_REMINDERS\_HOST: The PostgreSQL host.
+ - PG\_MY\_REMINDERS\_PORT: The PostgreSQL port.
+ - PG\_MY\_REMINDERS\_SCHEMA: The PostgreSQL database name.
+ - PG\_MY\_REMINDERS\_ROLE: The PostgreSQL role that has access to that database.
+ - PG\_MY\_REMINDERS\_PASSWORD: The password of the role.
+ - CONNECT\_BASE\_URL: The base url that should appear in your Atlassian Connect Descriptor.
+ - CONNECT\_SECRET\_KEY: The secret key that Atlassian Connect will use for page tokens.
+ - MAILGUN\_DOMAIN: The domain of your mailgun account.
+ - MAILGUN\_API\_KEY: The api key of your mailgun account.
+ - EXPIRE\_KEY: The key to pass to the service to give access to the expire handler.
+ - PURGE\_KEY: The key to pass to the service to give access to the purge handler.
+ - MIGRATION\_KEY: The key to pass to the service to give access to the migration handler.
+
+If you have properly set these environment variables then the service will be up and running in more
+time. For greater control you may want to edit the configuration properties in the resources
+directory.
