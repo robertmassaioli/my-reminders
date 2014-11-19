@@ -1,6 +1,7 @@
 # Temporary Files
 *~
 .*.sw[a-p]
+*.tar
 
 # Cabal Built
 /dist
@@ -32,3 +33,6 @@ snaplets/Remind\ Me\ Configuration/
 # Idea Files
 /.idea
 *.iml
+
+# NMP Installs
+/node_modules
