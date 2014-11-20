@@ -117,7 +117,8 @@ applicationRoutes =
 -- change where that points to, we only have to quickly update those links here
 redirects :: [(ByteString, SS.Handler App App ())]
 redirects =
-   [ ("/redirect/raise-issue", SC.redirect "https://ecosystem.atlassian.net/projects/MR")
+   -- Have to redirect right to the correct rapid board thanks to: https://jdog.jira-dev.com/browse/SW-1142
+   [ ("/redirect/raise-issue", SC.redirect "https://ecosystem.atlassian.net/secure/RapidBoard.jspa?projectKey=MR&rapidView=189")
    , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.myreminders")
    , ("/redirect/help", SC.redirect "/docs/about")
    ]
