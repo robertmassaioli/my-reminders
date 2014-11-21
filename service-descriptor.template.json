@@ -1,3 +1,4 @@
+{{#.}}
 {
    "description": "My reminders allows you to set reminders on issues.",
    "id": "my-reminders",
@@ -10,7 +11,8 @@
    "links": {
       "binary": {
          "name": "docker.atlassian.io/atlassian/my-reminders",
-         "type": "docker"
+         "type": "docker",
+         "tag": "{{RELEASE_VERSION}}"
       },
       "healthcheck": {
          "uri": "rest/heartbeat"
@@ -36,3 +38,4 @@
    },
    "downstreamServices": []
 }
+{{/.}}

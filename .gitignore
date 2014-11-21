@@ -36,3 +36,6 @@ snaplets/Remind\ Me\ Configuration/
 
 # NMP Installs
 /node_modules
+
+# Generated descriptor
+/service-descriptor.json

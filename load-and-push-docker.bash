@@ -6,11 +6,17 @@ DOCKER_CMD=${DOCKER_CMD:-docker}
 DOCKER_SAVE_FILE="${DOCKER_SAVE_FILE:-my-reminders.docker.save.tar}"
 SERVICE_ID="${SERVICE_ID:-my-reminders}"
 DOCKER_REMOTE="${DOCKER_REMOTE:-docker.atlassian.io}"
-DOCKER_PUSH_LOCATION="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}"
+DOCKER_PUSH_LOCATION="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}:${RELEASE_VERSION}"
 
 if [ "x$DOCKER_LOGIN_USERNAME" = "x" -o "x$DOCKER_LOGIN_PASSWORD" = "x" -o "x$DOCKER_LOGIN_EMAIL" = "x" ]
 then
    echo "You need to provide your docker login details to push to docker.atlassian.io."
+   exit 1
+fi
+
+if [ "x$RELEASE_VERSION" == "x" ]
+then
+   echo "You need to provide a release version."
    exit 1
 fi
 
