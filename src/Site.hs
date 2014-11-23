@@ -42,6 +42,7 @@ import qualified Snap.Snaplet.Heist                          as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
+import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
 
@@ -107,6 +108,7 @@ applicationRoutes =
   , ("/rest/healthcheck"            , healthcheckRequest)
   , ("/rest/heartbeat"              , heartbeatRequest)
   , ("/rest/migration"              , migrationRequest)
+  , ("/rest/statistics"             , handleStatistics)
   , ("/static/css"                  , serveDirectory "static/css")
   , ("/static/images"               , serveDirectory "static/images")
   , ("/static/js"                   , serveDirectory "static-js")

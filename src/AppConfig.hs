@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module AppConfig
    ( AppConf(..)
@@ -8,25 +8,25 @@ module AppConfig
    ) where
 
 import           ConfigurationHelpers
-import           Control.Applicative ((<*>), pure)
-import           Control.Monad (when, join)
 import           Connect.Descriptor
-import qualified Control.Monad.IO.Class as MI
 import           Connect.Zone
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.Configurator.Types as DCT
+import           Control.Applicative        (pure, (<*>))
+import           Control.Monad              (join, when)
+import qualified Control.Monad.IO.Class     as MI
+import qualified Data.ByteString.Char8      as BSC
+import qualified Data.Configurator.Types    as DCT
 import           Data.ConfiguratorTimeUnits ()
-import qualified Data.EnvironmentHelpers as DE
-import           Data.List (find)
-import           Data.Maybe (fromMaybe, isJust)
-import           Data.Text.Encoding (encodeUtf8)
-import qualified Data.Time.Units as DTU
+import qualified Data.EnvironmentHelpers    as DE
+import           Data.List                  (find)
+import           Data.Maybe                 (fromMaybe, isJust)
+import           Data.Text.Encoding         (encodeUtf8)
+import qualified Data.Time.Units            as DTU
 import           Mail.Hailgun
-import           Network.HTTP.Client (Proxy(..))
-import qualified Network.URI as NU
-import qualified Snap.Snaplet as SS
-import qualified System.Environment as SE
-import           System.Exit (ExitCode(..), exitWith)
+import           Network.HTTP.Client        (Proxy (..))
+import qualified Network.URI                as NU
+import qualified Snap.Snaplet               as SS
+import qualified System.Environment         as SE
+import           System.Exit                (ExitCode (..), exitWith)
 import           Text.PrettyPrint.Boxes
 
 data AppConf = AppConf
@@ -39,6 +39,7 @@ data AppConf = AppConf
    , rmHttpProxy              :: Maybe Proxy
    , rmHttpSecureProxy        :: Maybe Proxy
    , rmMigrationKey           :: Key BSC.ByteString AppConf
+   , rmStatisticsKey          :: Key BSC.ByteString AppConf
    }
 
 class HasAppConf m where
@@ -49,14 +50,15 @@ initAppConfOrExit configDataDir = SS.makeSnaplet "Applicaiton Configuration" "Ap
   MI.liftIO $ SS.loadAppConfig "my-reminders.cfg" "resources" >>= loadAppConfOrExit
 
 data EnvConf = EnvConf
-   { ecExpireKey        :: Maybe String
-   , ecPurgeKey         :: Maybe String
-   , ecMigrationKey     :: Maybe String
-   , ecMailgunDomain    :: Maybe String
-   , ecMailgunApiKey    :: Maybe String
-   , ecHttpProxy        :: Maybe String
-   , ecHttpSecureProxy  :: Maybe String
-   , ecZone             :: Zone
+   { ecExpireKey       :: Maybe String
+   , ecPurgeKey        :: Maybe String
+   , ecMigrationKey    :: Maybe String
+   , ecStatisticsKey   :: Maybe String
+   , ecMailgunDomain   :: Maybe String
+   , ecMailgunApiKey   :: Maybe String
+   , ecHttpProxy       :: Maybe String
+   , ecHttpSecureProxy :: Maybe String
+   , ecZone            :: Zone
    } deriving (Eq, Show)
 
 loadConfFromEnvironment :: IO EnvConf
@@ -67,6 +69,7 @@ loadConfFromEnvironment = do
       { ecExpireKey        = get "EXPIRE_KEY"
       , ecPurgeKey         = get "PURGE_KEY"
       , ecMigrationKey     = get "MIGRATION_KEY"
+      , ecStatisticsKey    = get "STATISTICS_KEY"
       , ecMailgunDomain    = get "MAILGUN_DOMAIN"
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
@@ -95,7 +98,8 @@ loadAppConfOrExit config = do
    printEnvironmentConf environmentConf
    guardConfig environmentConf
 
-   migrationKey <- require config "migration-key" "Missing 'migration-key': for trigerring migrations." 
+   statisticsKey <- require config "statistics-key" "Missing 'statistics-key': for gettinig statistics data."
+   migrationKey <- require config "migration-key" "Missing 'migration-key': for trigerring migrations."
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
    mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
    mailgunApiKey <- require config "mailgun-api-key" "Missing 'mailgun-api-key': required to send emails."
@@ -107,7 +111,7 @@ loadAppConfOrExit config = do
    let httpProxy = parseProxy standardHttpPort (ecHttpProxy environmentConf)
    let httpSecureProxy = parseProxy standardHttpSecurePort (ecHttpSecureProxy environmentConf)
    let fromConf = envOrDefault environmentConf
-   return AppConf 
+   return AppConf
       { rmExpireKey = fromConf (fmap packInKey . ecExpireKey) expiryKey
       , rmHailgunContext = HailgunContext
          { hailgunDomain = fromConf ecMailgunDomain mailgunDomain
@@ -121,6 +125,7 @@ loadAppConfOrExit config = do
       , rmHttpProxy = httpProxy
       , rmHttpSecureProxy = httpSecureProxy
       , rmMigrationKey = fromConf (fmap packInKey . ecMigrationKey) migrationKey
+      , rmStatisticsKey = fromConf (fmap packInKey . ecStatisticsKey) statisticsKey
       }
 
 packInKey :: String -> Key BSC.ByteString a
@@ -130,11 +135,12 @@ envOrDefault :: EnvConf -> (EnvConf -> Maybe a) -> a -> a
 envOrDefault env f def = fromMaybe def $ f env
 
 boxEnvironmentConf :: EnvConf -> Box
-boxEnvironmentConf c = 
+boxEnvironmentConf c =
    text "## Environmental Configuration" //
    (vcat left
       [ text " - Expire Key:"
       , text " - Purge Key:"
+      , text " - Statistics Key:"
       , text " - Mailgun Domain:"
       , text " - Mailgun Api Key:"
       , text " - HTTP Proxy:"
@@ -143,6 +149,7 @@ boxEnvironmentConf c =
    <+> vcat left
       [ text . DE.showMaybe . ecExpireKey $ c
       , text . DE.showMaybe . ecPurgeKey $ c
+      , text . DE.showMaybe . ecStatisticsKey $ c
       , text . DE.showMaybe . ecMailgunDomain $ c
       , text . DE.showMaybe . ecMailgunApiKey $ c
       , text . DE.showMaybe . ecHttpProxy $ c

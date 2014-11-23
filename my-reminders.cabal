@@ -38,6 +38,7 @@ Executable my-reminders
                  , Persistence.Reminder
                  , Persistence.PostgreSQL
                  , Persistence.Tenant
+                 , Persistence.Statistics
                  , ConfigurationHelpers
                  , AppConfig
                  , ReminderHandlers
@@ -55,6 +56,7 @@ Executable my-reminders
                  , NetworkHelpers
                  , MigrationHandler
                  , Finder
+                 , StatisticsHandlers
 
   default-language: Haskell2010
   Build-depends:
