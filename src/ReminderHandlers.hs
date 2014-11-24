@@ -23,7 +23,6 @@ import qualified Connect.AtlassianTypes     as CA
 import qualified Connect.Tenant             as CT
 import qualified Persistence.Reminder       as P
 import           Persistence.PostgreSQL
-import qualified Persistence.Tenant         as TN
 import           SnapHelpers
 import qualified WithToken                  as WT
 import qualified Model.UserDetails as UD
@@ -252,14 +251,14 @@ addReminder reminderRequest (tenant, Just userKey) =
   where
     requestUK = CA.userKey . prqUser $ reminderRequest
 
-addReminderFromRequest :: ReminderRequest -> TN.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
+addReminderFromRequest :: ReminderRequest -> CT.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userDetails conn = do
   currentTime <- getCurrentTime
   let date' = addUTCTime dateDiff currentTime
   P.addReminder conn date' tenantId' iDetails userDetails message'
   where
     dateDiff = timeDiffForReminderRequest reminderRequest
-    tenantId' = TN.tenantId tenant
+    tenantId' = CT.tenantId tenant
     iDetails = prqIssue reminderRequest
     message' = prqMessage reminderRequest
 

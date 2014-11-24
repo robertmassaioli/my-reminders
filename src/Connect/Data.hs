@@ -4,7 +4,10 @@ module Connect.Data
   , HostName
   ) where
 
+-- Connect Modules
 import           Connect.Descriptor
+
+-- Standard Modules
 import qualified Crypto.Cipher.AES  as CCA
 import qualified Data.Text          as T
 import qualified Network.URI        as NU

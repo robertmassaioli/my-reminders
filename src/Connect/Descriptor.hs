@@ -1,36 +1,36 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 -- TODO the descriptor needs to be extracted into more modules and perhaps its own library
 
 -- TODO be more selective about what we export from here
 module Connect.Descriptor where
 
-import AesonHelpers
-import Control.Monad
-import Data.Aeson
-import Data.Aeson.Types
-import Data.Text
-import Data.Time.Units
-import GHC.Generics
-import Network.URI
+import           AesonHelpers
+import           Control.Monad
+import           Data.Aeson
+import           Data.Aeson.Types
+import           Data.Text
+import           Data.Time.Units
+import           GHC.Generics
+import           Network.URI
 
 data Plugin = Plugin
-   { pluginName :: Maybe (Name Plugin)
+   { pluginName        :: Maybe (Name Plugin)
    , pluginDescription :: Maybe Text
-   , pluginKey :: PluginKey
-   , pluginBaseUrl :: URI
-   , vendor :: Maybe Vendor
-   , authentication :: Authentication
-   , apiVersion :: Maybe Text
-   , modules :: Maybe Modules
-   , enableLicensing :: Maybe Bool
-   , lifecycle :: Maybe Lifecycle
-   , links :: Maybe [(Text, URI)]
-   , scopes :: Maybe [ProductScope]
+   , pluginKey         :: PluginKey
+   , pluginBaseUrl     :: URI
+   , vendor            :: Maybe Vendor
+   , authentication    :: Authentication
+   , apiVersion        :: Maybe Text
+   , modules           :: Maybe Modules
+   , enableLicensing   :: Maybe Bool
+   , lifecycle         :: Maybe Lifecycle
+   , links             :: Maybe [(Text, URI)]
+   , scopes            :: Maybe [ProductScope]
    } deriving (Show, Generic)
 
 data Name a = Name Text deriving (Show, Eq, Generic)
@@ -68,10 +68,10 @@ emptyJiraModules :: JiraModules
 emptyJiraModules = JiraModules [] [] []
 
 data Condition = SingleCondition
-   { conditionSource    :: ConditionSource
-   , conditionInverted  :: Bool
+   { conditionSource   :: ConditionSource
+   , conditionInverted :: Bool
    -- , conditionParams    :: [(String, String)] -- TODO impliment properly but not required yet
-   } 
+   }
    | CompositeCondition
    { subConditions :: [Condition]
    , conditionType :: ConditionType
@@ -104,10 +104,10 @@ instance ToJSON ConditionType where
    toJSON AndCondition = String "AND"
    toJSON OrCondition  = String "OR"
 
-data ConditionSource 
+data ConditionSource
    = StaticJIRACondition        JIRACondition
    | StaticConfluenceCondition  ConfluenceCondition
-   | RemoteCondition 
+   | RemoteCondition
       { remoteConditionPath :: String
       }
    deriving (Show, Eq)
@@ -153,7 +153,7 @@ data JIRACondition
 instance ToJSON JIRACondition where
    toJSON = toJSON . dropAndSnakeCase "JiraCondition" . show
 
-data ConfluenceCondition 
+data ConfluenceCondition
    = ActiveThemeConfluenceCondition
    | CanEditSpaceStylesConfluenceCondition
    | CanSignupConfluenceCondition
@@ -210,17 +210,17 @@ data WebPanel = WebPanel
    } deriving (Show, Generic)
 
 data GeneralPage = GeneralPage
-   { generalPageUrl :: Text
-   , generalPageName :: Name GeneralPage
-   , generalPageKey :: Text
+   { generalPageUrl      :: Text
+   , generalPageName     :: Name GeneralPage
+   , generalPageKey      :: Text
    , generalPageLocation :: Maybe Text
-   , generalPageIcon :: Maybe IconDetails
-   , generalPageWeight :: Maybe Integer
+   , generalPageIcon     :: Maybe IconDetails
+   , generalPageWeight   :: Maybe Integer
    } deriving (Show, Generic)
 
 data IconDetails = IconDetails
-   { iconUrl :: Text
-   , iconWidth :: Maybe Integer
+   { iconUrl    :: Text
+   , iconWidth  :: Maybe Integer
    , iconHeight :: Maybe Integer
    } deriving (Show, Generic)
 
@@ -234,7 +234,7 @@ instance ToJSON Webhook where
       { fieldLabelModifier = stripFieldNamePrefix "webhook"
       }
 
-data WebhookEvent 
+data WebhookEvent
    = ConnectAddonDisabled
    | ConnectAddonEnabled
    | JiraWebhookPostFunction
@@ -264,17 +264,17 @@ instance ToJSON WebhookEvent where
    toJSON ServerUpgraded = String "server_upgraded"
 
 data Lifecycle = Lifecycle
-   { installed :: Maybe URI
+   { installed   :: Maybe URI
    , uninstalled :: Maybe URI
-   , enabled :: Maybe URI
-   , disabled :: Maybe URI
+   , enabled     :: Maybe URI
+   , disabled    :: Maybe URI
    } deriving (Show, Generic) -- TODO
 
 instance ToJSON PluginKey
 
 instance ToJSON (Name Plugin)
 instance ToJSON (Name PluginKey)
- 
+
 instance ToJSON (Name WebPanel) where
    toJSON = nameToValue
 

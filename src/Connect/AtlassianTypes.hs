@@ -10,12 +10,12 @@ module Connect.AtlassianTypes
    , IssueDetails(..)
    ) where
 
-import qualified Data.Text    as T
+import qualified Data.ByteString as B
+import qualified Data.Text       as T
 import           GHC.Generics
-import           Mail.Hailgun
 
 type UserKey   = T.Text
-type UserEmail = UnverifiedEmailAddress
+type UserEmail = B.ByteString    -- TODO use a standard email type
 type IssueKey  = T.Text
 type IssueId   = Integer
 type IssueSummary = T.Text

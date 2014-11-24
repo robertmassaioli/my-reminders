@@ -33,7 +33,6 @@ import           Heartbeat
 import qualified Heist                                       as H
 import qualified Heist.Interpreted                           as HI
 import           MigrationHandler
-import qualified Persistence.Tenant                          as PT
 import           PurgeHandlers
 import           ReminderHandlers
 import qualified Snap.Core                                   as SC
@@ -76,7 +75,7 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
   SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
+      "productBaseUrl" H.## HI.textSplice $ T.pack . show . CT.baseUrl $ tenant
       "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
       -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
       "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey

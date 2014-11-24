@@ -5,13 +5,17 @@ module Connect.Connect
   , initConnectSnaplet
   ) where
 
+-- Helper Imports
 import           ConfigurationHelpers
 import           Data.ConfiguratorTimeUnits () -- TODO this needs to be extracted into a separate library.
 
+-- Atlassian Connect Imports
 import           Connect.Data
 import           Connect.Descriptor
 import qualified Connect.PageToken       as PT
 import qualified Connect.Zone            as CZ
+
+-- Standard imports
 import qualified Control.Monad           as CM
 import qualified Control.Monad.IO.Class  as MI
 import qualified Crypto.Cipher.AES       as CCA

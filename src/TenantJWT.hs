@@ -15,6 +15,9 @@ import qualified Persistence.Tenant             as PT
 import qualified SnapHelpers                    as SH
 import qualified Connect.Tenant                 as CT
 
+-- TODO Should this be moved into the Atlassian connect code? Or does the app handler code make it too specific?
+-- TODO Can we make it not wrap the request but instead run inside the request? That will let it be moved out.
+
 type UnverifiedJWT = J.JWT J.UnverifiedJWT
 
 withTenant :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
@@ -92,12 +95,12 @@ getTenant unverifiedJwt = do
     ret :: Monad m => y -> m (Either x y)
     ret = return . Right
 
-verifyTenant :: PT.Tenant -> UnverifiedJWT -> Maybe PT.Tenant
+verifyTenant :: CT.Tenant -> UnverifiedJWT -> Maybe CT.Tenant
 verifyTenant tenant unverifiedJwt = do
   guard (isJust $ J.verify tenantSecret unverifiedJwt)
   pure tenant
   where
-    tenantSecret = J.secret . PT.sharedSecret $ tenant
+    tenantSecret = J.secret . CT.sharedSecret $ tenant
 
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt

@@ -12,6 +12,8 @@ import           Data.Maybe              (fromMaybe)
 data Zone = Dev | Dog | Prod
    deriving(Eq, Show, Ord)
 
+-- Everything after this line is implimentation specific. It is up to the client how it decides what
+-- the zone is.
 zoneFromString :: String -> Maybe Zone
 zoneFromString "domain.dev.atlassian.io" = Just Dev
 zoneFromString "application.dev.atlassian.io" = Just Dev

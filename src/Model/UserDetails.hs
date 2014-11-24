@@ -12,9 +12,11 @@ import           Application
 import qualified Connect.AtlassianTypes      as AT
 import qualified Connect.Data                as CDT
 import qualified Connect.Descriptor          as CD
+import qualified Connect.Instances           as CI
+import qualified Connect.Tenant              as CT
 import qualified Control.Monad.IO.Class      as MI
 import           Data.Aeson
-import qualified Data.ByteString as B
+import qualified Data.ByteString             as B
 import qualified Data.ByteString.Char8       as BC
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Map                    as M (Map, fromList)
@@ -30,7 +32,6 @@ import           Network.HTTP.Client
 import           Network.HTTP.Types
 import           Network.URI
 import           NetworkHelpers
-import qualified Persistence.Tenant          as PT
 import           Web.Connect.QueryStringHash
 import qualified Web.JWT                     as JWT
 
@@ -54,12 +55,12 @@ data ProductErrorResponse = ProductErrorResponse
    , perMessage :: T.Text
    } deriving (Show, Generic)
 
-getUserDetails :: AT.UserKey -> PT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
+getUserDetails :: AT.UserKey -> CT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
   connectData <- CDT.getConnect
   rmConf <- getAppConf
-  let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (PT.sharedSecret tenant) GET (PT.baseUrl tenant) url
+  let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (CT.sharedSecret tenant) GET (CI.getURI . CT.baseUrl $ tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
     (  addHeader ("Accept","application/json")
     <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)
@@ -76,7 +77,7 @@ getUserDetails userKey tenant = do
     userQueryUri :: B.ByteString
     userQueryUri = BC.pack $ baseUrlString ++ "/rest/api/2/user?username="
 
-    baseUrlString = show . PT.baseUrl $ tenant
+    baseUrlString = show . CT.baseUrl $ tenant
 
 generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
 generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims

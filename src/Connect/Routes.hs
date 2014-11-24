@@ -12,6 +12,9 @@ import           Application
 import qualified AtlassianConnect             as AC
 import qualified Connect.Data                 as CD
 import           Connect.Descriptor           (Name (..))
+import qualified Connect.Instances            as CI
+import qualified Connect.LifecycleResponse    as CL
+import qualified Connect.Tenant               as CT
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import qualified Data.Aeson                   as A
@@ -25,7 +28,7 @@ import qualified Data.Text                    as T
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
 import           Persistence.PostgreSQL
-import           Persistence.Tenant
+import qualified Persistence.Tenant           as PT
 import qualified Snap.Core                    as SC
 import qualified Snap.Snaplet                 as SS
 import qualified SnapHelpers                  as SH
@@ -101,10 +104,10 @@ atlassianConnectHandler = do
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
    request <- SC.readRequestBody (1024 * 10)
-   let mTenantInfo = A.decode request :: Maybe LifecycleResponse
+   let mTenantInfo = A.decode request :: Maybe CL.LifecycleResponse
    maybe SH.respondBadRequest installedHandlerWithTenant mTenantInfo
 
-installedHandlerWithTenant :: LifecycleResponse -> SS.Handler b App ()
+installedHandlerWithTenant :: CL.LifecycleResponse -> SS.Handler b App ()
 installedHandlerWithTenant tenantInfo = do
    validHosts <- fmap CD.connectHostWhitelist CD.getConnect
    if validHostName validHosts tenantInfo
@@ -114,10 +117,10 @@ installedHandlerWithTenant tenantInfo = do
       tenantInsertionFailedResponse = SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
       domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
 
-insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
-insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
+insertTenantInfo :: CL.LifecycleResponse -> SS.Handler b App (Maybe Integer)
+insertTenantInfo info = SS.with db $ withConnection (`PT.insertTenantInformation` info)
 
-validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
+validHostName:: [CD.HostName] -> CL.LifecycleResponse -> Bool
 validHostName validHosts tenantInfo = isJust maybeValidhost
    where
       authorityMatchHost auth host = T.toLower host `T.isSuffixOf` (T.toLower . T.pack . uriRegName $ auth)
@@ -125,16 +128,16 @@ validHostName validHosts tenantInfo = isJust maybeValidhost
          auth <- tenantAuthority tenantInfo
          find (authorityMatchHost auth) validHosts
 
-tenantAuthority :: LifecycleResponse -> Maybe URIAuth
-tenantAuthority = uriAuthority . lrBaseUrl
+tenantAuthority :: CL.LifecycleResponse -> Maybe URIAuth
+tenantAuthority = uriAuthority . CI.getURI . CL.lrBaseUrl
 
 uninstalledHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 uninstalledHandler = do
    request <- SC.readRequestBody (1024 * 10)
-   let mTenantInfo = A.decode request :: Maybe LifecycleResponse
+   let mTenantInfo = A.decode request :: Maybe CL.LifecycleResponse
    maybe SH.respondBadRequest (\tenantInfo -> do
-      potentialTenant <- withConnection $ \conn -> lookupTenant conn (lrClientKey tenantInfo)
+      potentialTenant <- withConnection $ \conn -> PT.lookupTenant conn (CL.lrClientKey tenantInfo)
       case potentialTenant of
          Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
-         Just tenant -> withConnection (hibernateTenant tenant) >> SH.respondNoContent
+         Just tenant -> withConnection (PT.hibernateTenant tenant) >> SH.respondNoContent
       ) mTenantInfo
