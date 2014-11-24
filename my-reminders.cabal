@@ -26,8 +26,11 @@ Executable my-reminders
                  , Connect.Connect
                  , Connect.Data
                  , Connect.Descriptor
+                 , Connect.Instances
+                 , Connect.LifecycleResponse
                  , Connect.PageToken
                  , Connect.Routes
+                 , Connect.Tenant
                  , Connect.Zone
                  , Data.ConfiguratorTimeUnits
                  , Data.EnvironmentHelpers
@@ -35,6 +38,7 @@ Executable my-reminders
                  , Data.Padding.PKCS
                  , Data.Padding.Util
                  , Model.UserDetails
+                 , Persistence.Instances
                  , Persistence.Reminder
                  , Persistence.PostgreSQL
                  , Persistence.Tenant
