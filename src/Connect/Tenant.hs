@@ -9,7 +9,6 @@ import qualified Connect.AtlassianTypes as CA
 import           GHC.Generics
 import Data.Aeson.Types
 import qualified Data.Text as T
-import qualified Network.URI as NU
 import Connect.Instances
 
 -- This only knows about the tenant data type but it does not do anything with it

@@ -9,7 +9,6 @@ import           Connect.Instances
 import           Data.Aeson.Types
 import qualified Data.Text         as T
 import           GHC.Generics
-import qualified Network.URI       as NU
 
 type ClientKey = T.Text
 

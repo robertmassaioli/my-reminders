@@ -14,7 +14,6 @@ import qualified Connect.Data                 as CD
 import           Connect.Descriptor           (Name (..))
 import qualified Connect.Instances            as CI
 import qualified Connect.LifecycleResponse    as CL
-import qualified Connect.Tenant               as CT
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import qualified Data.Aeson                   as A
@@ -101,11 +100,13 @@ atlassianConnectHandler = do
           }
   SH.writeJson . AC.addonDescriptor $ dc
 
+getLifecycleResponse :: SS.Handler b a (Maybe CL.LifecycleResponse)
+getLifecycleResponse = do
+    request <- SC.readRequestBody (1024 * 10)
+    return . A.decode $ request
+
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
-installedHandler = do
-   request <- SC.readRequestBody (1024 * 10)
-   let mTenantInfo = A.decode request :: Maybe CL.LifecycleResponse
-   maybe SH.respondBadRequest installedHandlerWithTenant mTenantInfo
+installedHandler = maybe SH.respondBadRequest installedHandlerWithTenant =<< getLifecycleResponse
 
 installedHandlerWithTenant :: CL.LifecycleResponse -> SS.Handler b App ()
 installedHandlerWithTenant tenantInfo = do
@@ -133,11 +134,12 @@ tenantAuthority = uriAuthority . CI.getURI . CL.lrBaseUrl
 
 uninstalledHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 uninstalledHandler = do
-   request <- SC.readRequestBody (1024 * 10)
-   let mTenantInfo = A.decode request :: Maybe CL.LifecycleResponse
-   maybe SH.respondBadRequest (\tenantInfo -> do
-      potentialTenant <- withConnection $ \conn -> PT.lookupTenant conn (CL.lrClientKey tenantInfo)
-      case potentialTenant of
-         Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
-         Just tenant -> withConnection (PT.hibernateTenant tenant) >> SH.respondNoContent
-      ) mTenantInfo
+   mTenantInfo <- getLifecycleResponse
+   maybe SH.respondBadRequest uninstalledHandlerWithTenant mTenantInfo
+
+uninstalledHandlerWithTenant :: CL.LifecycleResponse -> SS.Handler b App ()
+uninstalledHandlerWithTenant tenantInfo = do
+   potentialTenant <- withConnection $ \conn -> PT.lookupTenant conn (CL.lrClientKey tenantInfo)
+   case potentialTenant of
+      Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
+      Just tenant -> withConnection (PT.hibernateTenant tenant) >> SH.respondNoContent

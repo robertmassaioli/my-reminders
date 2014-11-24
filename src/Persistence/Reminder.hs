@@ -22,7 +22,7 @@ module Persistence.Reminder
    ) where
 
 import qualified Connect.AtlassianTypes             as CA
-import qualified Connect.Instances                  as CI
+import           Connect.Instances                  ()
 import qualified Connect.Tenant                     as CT
 import           Control.Applicative
 import           Control.Monad
@@ -37,8 +37,8 @@ import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
 import           GHC.Int
 import           Network.URI                        (URI)
+import           Persistence.Instances              ()
 import           Persistence.PostgreSQL
-import Persistence.Instances
 
 type ReminderId = Integer
 
