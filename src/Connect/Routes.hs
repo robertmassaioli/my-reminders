@@ -20,7 +20,7 @@ import qualified Data.CaseInsensitive         as CI
 import           Data.List
 import           Data.List.Split              (splitOn)
 import qualified Data.Map.Lazy                as ML
-import           Data.Maybe                   (isJust, catMaybes, fromMaybe)
+import           Data.Maybe                   (catMaybes, fromMaybe, isJust)
 import qualified Data.Text                    as T
 import qualified Network.HTTP.Media.MediaType as NM
 import           Network.URI
@@ -35,7 +35,7 @@ data MediaType = ApplicationJson | TextHtml deriving (Eq)
 newtype OrdMediaType = OMT NM.MediaType deriving (Eq, Show)
 
 instance Ord OrdMediaType where
-   compare a b = compare (show a) (show b)   
+   compare a b = compare (show a) (show b)
 
 instance Show (MediaType) where
   show ApplicationJson = "application/json"
@@ -47,7 +47,7 @@ homeHandler sendHomePage = SC.method SC.GET handleGet <|> SH.respondWithError SH
     handleGet = do
       organisedHeaders <- organiseAcceptHeader
       case find isAcceptedMediaType organisedHeaders of
-        Just mediaType -> fromMaybe lookupFailed (ML.lookup (OMT mediaType) responseMap) 
+        Just mediaType -> fromMaybe lookupFailed (ML.lookup (OMT mediaType) responseMap)
         Nothing -> unknownHeader
 
     responseMap = ML.fromList
@@ -66,7 +66,7 @@ homeHandler sendHomePage = SC.method SC.GET handleGet <|> SH.respondWithError SH
 parseMediaType :: String -> Maybe NM.MediaType
 parseMediaType = NM.parse . BC.pack
 
--- An example accept header: 
+-- An example accept header:
 -- Just "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
 organiseAcceptHeader :: SS.Handler b v [NM.MediaType]
 organiseAcceptHeader = do
@@ -96,7 +96,7 @@ atlassianConnectHandler = do
           , AC.dcPluginKey = CD.connectPluginKey connectData
           , AC.dcBaseUrl = CD.connectBaseUrl connectData
           }
-  writeJson . AC.addonDescriptor $ dc
+  SH.writeJson . AC.addonDescriptor $ dc
 
 installedHandler :: CD.HasConnect (SS.Handler b App) => SS.Handler b App ()
 installedHandler = do
@@ -118,7 +118,7 @@ insertTenantInfo :: LifecycleResponse -> SS.Handler b App (Maybe Integer)
 insertTenantInfo info = SS.with db $ withConnection (`insertTenantInformation` info)
 
 validHostName:: [CD.HostName] -> LifecycleResponse -> Bool
-validHostName validHosts tenantInfo = isJust maybeValidhost 
+validHostName validHosts tenantInfo = isJust maybeValidhost
    where
       authorityMatchHost auth host = T.toLower host `T.isSuffixOf` (T.toLower . T.pack . uriRegName $ auth)
       maybeValidhost = do
@@ -138,9 +138,3 @@ uninstalledHandler = do
          Nothing -> SH.respondWithError SH.notFound "Tried to uninstall a tenant that did not even exist."
          Just tenant -> withConnection (hibernateTenant tenant) >> SH.respondNoContent
       ) mTenantInfo
-
--- TODO extract this into a helper module
-writeJson :: (SC.MonadSnap m, A.ToJSON a) => a -> m ()
-writeJson a = do
-   SC.modifyResponse . SC.setContentType . BC.pack . show $ ApplicationJson
-   SC.writeLBS $ A.encode a

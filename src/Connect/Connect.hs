@@ -6,6 +6,8 @@ module Connect.Connect
   ) where
 
 import           ConfigurationHelpers
+import           Data.ConfiguratorTimeUnits () -- TODO this needs to be extracted into a separate library.
+
 import           Connect.Data
 import           Connect.Descriptor
 import qualified Connect.PageToken       as PT
@@ -16,7 +18,6 @@ import qualified Crypto.Cipher.AES       as CCA
 import qualified Data.ByteString.Char8   as BSC
 import qualified Data.Configurator       as DC
 import qualified Data.Configurator.Types as DCT
-import           Data.ConfiguratorTimeUnits ()
 import qualified Data.EnvironmentHelpers as DE
 import           Data.Maybe              (fromMaybe)
 import           Data.Text
@@ -24,7 +25,6 @@ import           Data.Time.Units
 import qualified Network.HostName        as HN
 import qualified Network.URI             as NU
 import qualified Snap.Snaplet            as SS
-import qualified System.Exit             as SE
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -69,16 +69,12 @@ loadConnectConfig zone connectConf = do
   secret <- require connectConf "secret_key" "Missing secret key in connect configuration file."
   hostWhiteList <- validHosts
   let keyLength = BSC.length secret
-  CM.when (keyLength /= 32) $ do
-    putStrLn $ "Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength
-    SE.exitWith (SE.ExitFailure 1)
+  CM.when (keyLength /= 32) $ fail ("Expected Atlassian Connect secret_key to be 32 Hex Digits long but was actually: " ++ show keyLength)
   envBaseUrl <- DE.getEnv "CONNECT_BASE_URL"
   envSecretKey <- DE.getEnv "CONNECT_SECRET_KEY"
   let baseUrlToParse = fromMaybe rawBaseUrl envBaseUrl
   case NU.parseURI baseUrlToParse of
-    Nothing -> do
-      putStrLn $ "Could not parse the baseUrl in the configuration file: " ++ rawBaseUrl
-      SE.exitWith (SE.ExitFailure 2)
+    Nothing -> fail("Could not parse the baseUrl in the configuration file: " ++ rawBaseUrl)
     Just baseUrl -> do
       pageTokenTimeoutInSeconds <- DC.lookupDefault PT.defaultTimeoutSeconds connectConf "page_token_timeout_seconds"
       return ConnectConfig

@@ -4,6 +4,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 
+-- TODO the descriptor needs to be extracted into more modules and perhaps its own library
+
 -- TODO be more selective about what we export from here
 module Connect.Descriptor where
 
