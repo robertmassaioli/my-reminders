@@ -105,8 +105,8 @@ Executable my-reminders
 
   if flag(development)
     -- TODO(CHA-20): Fix snap-loader-dynamic dependency conflicts
-    -- build-depends:
-    --   snap-loader-dynamic
+    build-depends:
+      snap-loader-dynamic
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags. Additionally, disable all
