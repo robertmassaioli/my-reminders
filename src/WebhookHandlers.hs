@@ -8,8 +8,8 @@ import           AesonHelpers
 import           Application
 import qualified Connect.AtlassianTypes     as AT
 import qualified Connect.Tenant             as CT
-import           Control.Applicative        (pure, (<*>), (<$>))
-import           Control.Monad              (when)
+import           Control.Applicative        (pure, (<$>), (<*>))
+import           Control.Monad              (void, when)
 import           Data.Aeson
 import           Data.Aeson.Types           (Options, defaultOptions,
                                              fieldLabelModifier)
@@ -121,4 +121,4 @@ handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebh
 -- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
 -- against that tenant in the database.
 handleDelete :: CT.Tenant -> IssueUpdate -> AppHandler ()
-handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return ()
+handleDelete tenant issueUpdate = void $ DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate))

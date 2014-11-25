@@ -17,7 +17,6 @@ import qualified Connect.Data                                as CD
 import qualified Connect.PageToken                           as CPT
 import           Connect.Routes
 import qualified Connect.Tenant                              as CT
-import qualified Connect.Zone                                as CZ
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
@@ -32,6 +31,8 @@ import           Healthcheck
 import           Heartbeat
 import qualified Heist                                       as H
 import qualified Heist.Interpreted                           as HI
+import qualified LifecycleHandlers                           as LH
+import qualified MicrosZone                                  as MZ
 import           MigrationHandler
 import           PurgeHandlers
 import           ReminderHandlers
@@ -89,7 +90,7 @@ withTokenAndTenant processor = TJ.withTenant $ \ct -> do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ applicationRoutes ++ redirects
+routes = connectRoutes ++ LH.lifecycleRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
@@ -129,7 +130,7 @@ redirects =
 app :: SS.SnapletInit App App
 app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
-  zone <- liftIO CZ.fromEnv
+  zone <- liftIO MZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
   SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"

@@ -10,7 +10,7 @@ module AppConfig
 import           ConfigurationHelpers
 import           Connect.Descriptor
 import           Connect.Zone
-import           Control.Applicative        (pure, (<*>))
+import           Control.Applicative        (pure, (<*>), (<$>))
 import           Control.Monad              (join, when)
 import qualified Control.Monad.IO.Class     as MI
 import qualified Data.ByteString.Char8      as BSC
@@ -22,6 +22,7 @@ import           Data.Maybe                 (fromMaybe, isJust)
 import           Data.Text.Encoding         (encodeUtf8)
 import qualified Data.Time.Units            as DTU
 import           Mail.Hailgun
+import qualified MicrosZone                 as MZ
 import           Network.HTTP.Client        (Proxy (..))
 import qualified Network.URI                as NU
 import qualified Snap.Snaplet               as SS
@@ -74,11 +75,11 @@ loadConfFromEnvironment = do
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
       , ecHttpSecureProxy  = get "https_proxy"
-      , ecZone             = fromMaybe Dev $ zoneFromString =<< get "ZONE"
+      , ecZone             = fromMaybe Dev $ MZ.zoneFromString =<< get "ZONE"
       }
 
 search :: [(String, String)] -> String -> Maybe String
-search pairs key = fmap snd $ find ((==) key . fst) pairs
+search pairs key = snd <$> find ((==) key . fst) pairs
 
 guardConfig :: EnvConf -> IO ()
 guardConfig ec = when (isDogOrProd && not allKeysPresent) $ do
