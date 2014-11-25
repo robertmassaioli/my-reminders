@@ -5,7 +5,6 @@ module Connect.Routes
   , getLifecycleResponse -- TODO move to the LifecycleResponse package if that does not introduce more dependencies
   ) where
 
-import           Application
 import qualified AtlassianConnect             as AC
 import qualified Connect.Data                 as CD
 import           Connect.Descriptor           (Name (..))
@@ -13,6 +12,7 @@ import qualified Connect.LifecycleResponse    as CL
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
 import           Control.Monad                (mzero)
+import           Control.Monad.State.Class    (get)
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BC
 import qualified Data.CaseInsensitive         as CI
@@ -36,7 +36,7 @@ instance Show (MediaType) where
   show ApplicationJson = "application/json"
   show TextHtml = "text/html"
 
-homeHandler :: CD.HasConnect (SS.Handler b v) => SS.Handler b v () -> SS.Handler b v ()
+homeHandler :: SS.Handler b CD.Connect () -> SS.Handler b CD.Connect ()
 homeHandler sendHomePage = SC.method SC.GET handleGet <|> SH.respondWithError SH.badRequest "You can only GET the homepage."
   where
     handleGet = handleByMediaType mediaTypeMap <|> unknownHeader
@@ -76,17 +76,24 @@ getAcceptMediaTypes = do
 bsAccept :: CI.CI BC.ByteString
 bsAccept = CI.mk . BC.pack $ "Accept"
 
-connectRoutes :: [(BC.ByteString, SS.Handler App App ())]
+connectRoutes :: [(BC.ByteString, SS.Handler b CD.Connect ())]
 connectRoutes = fmap (ARO.first BC.pack) simpleConnectRoutes
 
-simpleConnectRoutes :: [(String, SS.Handler App App ())]
+-- Handler b v a
+-- b: lens from the base state to the current snaplets state (is the base state)
+-- v: is the state of the current "view" snaplet (or simply, current state)
+-- a: Monad return type
+-- The MonadSnaplet type class distills the essence of the operations used with this pattern.
+-- Its functions define fundamental methods for navigating snaplet trees.
+
+simpleConnectRoutes :: [(String, SS.Handler b CD.Connect ())]
 simpleConnectRoutes =
   [ ("/atlassian-connect.json" , atlassianConnectHandler)
   ]
 
-atlassianConnectHandler :: (CD.HasConnect (SS.Handler b v)) => SS.Handler b v ()
+atlassianConnectHandler :: SS.Handler b CD.Connect ()
 atlassianConnectHandler = do
-  connectData <- CD.getConnect
+  connectData <- get
   let dc = AC.DynamicDescriptorConfig
           { AC.dcPluginName = case CD.connectPluginName connectData of Name t -> Name t
           , AC.dcPluginKey = CD.connectPluginKey connectData

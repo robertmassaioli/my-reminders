@@ -15,7 +15,7 @@ import           Application
 import qualified Connect.Connect                             as CC
 import qualified Connect.Data                                as CD
 import qualified Connect.PageToken                           as CPT
-import           Connect.Routes
+import qualified Connect.Routes                              as CR
 import qualified Connect.Tenant                              as CT
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
@@ -90,11 +90,11 @@ withTokenAndTenant processor = TJ.withTenant $ \ct -> do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ LH.lifecycleRoutes ++ applicationRoutes ++ redirects
+routes = LH.lifecycleRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                            , homeHandler sendHomePage)
+  [ ("/"                            , SS.with connect $ CR.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
   , ("/panel/jira/reminder/create"  , createReminderPanel )
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
@@ -128,7 +128,7 @@ redirects =
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SS.SnapletInit App App
-app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
+app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO MZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone

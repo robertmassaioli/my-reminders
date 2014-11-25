@@ -29,6 +29,7 @@ import           Data.Time.Units
 import qualified Network.HostName        as HN
 import qualified Network.URI             as NU
 import qualified Snap.Snaplet            as SS
+import qualified Connect.Routes as CR
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -38,19 +39,12 @@ import qualified Snap.Snaplet            as SS
 -- connect snaplet could be responsible for providing the Atlassian Connect plugin json descriptor
 -- to the rest of the plugin. That would be great!
 
-toConnect :: ConnectConfig -> Connect
-toConnect conf = Connect
-  { connectAES = CCA.initAES $ ccSecretKey conf
-  , connectPluginName = Name $ ccPluginName conf
-  , connectPluginKey = PluginKey $ ccPluginKey conf
-  , connectBaseUrl = ccBaseUrl conf
-  , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
-  , connectHostWhitelist = ccHostWhiteList conf
-  }
-
 initConnectSnaplet :: IO String -> Maybe CZ.Zone -> SS.SnapletInit b Connect
-initConnectSnaplet configDataDir zone = SS.makeSnaplet "Connect" "Atlassian Connect state and operations." (Just configDataDir) $
-  MI.liftIO $ CM.liftM toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig zone
+-- TODO fix the config data dir to point to the correct place
+initConnectSnaplet configDataDir zone = SS.makeSnaplet "connect" "Atlassian Connect Snaplet" (Just configDataDir) $ do
+  SS.addRoutes CR.connectRoutes
+  MI.liftIO . fmap toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig zone
+
 
 data ConnectConfig = ConnectConfig
   { ccSecretKey        :: BSC.ByteString
@@ -61,9 +55,15 @@ data ConnectConfig = ConnectConfig
   , ccHostWhiteList    :: [Text]
   }
 
-validHosts :: IO[Text]
-validHosts = fmap hosts HN.getHostName
-    where hosts localhost = fmap pack (localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"])
+toConnect :: ConnectConfig -> Connect
+toConnect conf = Connect
+  { connectAES = CCA.initAES $ ccSecretKey conf
+  , connectPluginName = Name $ ccPluginName conf
+  , connectPluginKey = PluginKey $ ccPluginKey conf
+  , connectBaseUrl = ccBaseUrl conf
+  , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
+  , connectHostWhitelist = ccHostWhiteList conf
+  }
 
 loadConnectConfig :: Maybe CZ.Zone -> DCT.Config -> IO ConnectConfig
 loadConnectConfig zone connectConf = do
@@ -89,6 +89,10 @@ loadConnectConfig zone connectConf = do
         , ccPageTokenTimeout = pageTokenTimeoutInSeconds
         , ccHostWhiteList = hostWhiteList
         }
+
+validHosts :: IO[Text]
+validHosts = fmap hosts HN.getHostName
+    where hosts localhost = fmap pack (localhost : ["localhost", "jira-dev.com", "jira.com", "atlassian.net"])
 
 nameKeyAppend :: Maybe CZ.Zone -> Text
 nameKeyAppend (Just CZ.Prod) = empty
