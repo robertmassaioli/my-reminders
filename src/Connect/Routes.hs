@@ -5,9 +5,8 @@ module Connect.Routes
   , getLifecycleResponse -- TODO move to the LifecycleResponse package if that does not introduce more dependencies
   ) where
 
-import qualified AtlassianConnect             as AC
 import qualified Connect.Data                 as CD
-import           Connect.Descriptor           (Name (..))
+import           Connect.Descriptor           as D
 import qualified Connect.LifecycleResponse    as CL
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
@@ -94,12 +93,21 @@ simpleConnectRoutes =
 atlassianConnectHandler :: SS.Handler b CD.Connect ()
 atlassianConnectHandler = do
   connectData <- get
-  let dc = AC.DynamicDescriptorConfig
-          { AC.dcPluginName = case CD.connectPluginName connectData of Name t -> Name t
-          , AC.dcPluginKey = CD.connectPluginKey connectData
-          , AC.dcBaseUrl = CD.connectBaseUrl connectData
+  -- TODO Instead of giving this to the customer we should just override their descriptor with our stuff
+  -- TODO this is the price that you pay for using our code and the snaplet library. We can be opinionated about this.
+  let dc = CD.DynamicDescriptorConfig
+          { CD.dcPluginName = case CD.connectPluginName connectData of D.Name t -> D.Name t
+          , CD.dcPluginKey = CD.connectPluginKey connectData
+          , CD.dcBaseUrl = CD.connectBaseUrl connectData
           }
-  SH.writeJson . AC.addonDescriptor $ dc
+  SH.writeJson $ convertPluginDescriptor dc (CD.connectPlugin connectData)
+
+convertPluginDescriptor :: CD.DynamicDescriptorConfig -> D.Plugin -> D.Plugin
+convertPluginDescriptor dc plugin = plugin
+    { D.pluginKey = CD.dcPluginKey dc
+    , D.pluginName = Just . CD.dcPluginName $ dc
+    , D.pluginBaseUrl = CD.dcBaseUrl dc
+    }
 
 getLifecycleResponse :: SS.Handler b a (Maybe CL.LifecycleResponse)
 getLifecycleResponse = do

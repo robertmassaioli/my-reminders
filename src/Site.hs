@@ -12,6 +12,7 @@ module Site
 
 import qualified AppConfig                                   as CONF
 import           Application
+import qualified AtlassianConnect                            as AC
 import qualified Connect.Connect                             as CC
 import qualified Connect.Data                                as CD
 import qualified Connect.PageToken                           as CPT
@@ -137,7 +138,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
-  appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir zone)
+  appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir AC.addonDescriptor zone)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf

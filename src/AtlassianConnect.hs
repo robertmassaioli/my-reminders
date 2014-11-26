@@ -3,26 +3,19 @@
 module AtlassianConnect
   ( addonDescriptor
   , publicKeyUri
-  , DynamicDescriptorConfig(..)
   ) where
 
 import Network.URI
 import Data.Maybe
 import Connect.Descriptor
 
-data DynamicDescriptorConfig = DynamicDescriptorConfig
-  { dcPluginName :: Name Plugin
-  , dcPluginKey :: PluginKey
-  , dcBaseUrl :: URI
-  }
-
 atlassianHomepage :: URI
 atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 
-addonDescriptor :: DynamicDescriptorConfig -> Plugin
-addonDescriptor descriptorConfig =
+addonDescriptor :: Plugin
+addonDescriptor =
   basePlugin
-    { pluginName      = Just $ dcPluginName descriptorConfig
+    { pluginName      = Nothing -- Will be injected by the connect snaplet
     , pluginDescription  = Just "A universal personal reminder plugin for Cloud; never forget again."
     , vendor         = Just $ Vendor "Atlassian" atlassianHomepage
     , lifecycle = Just $ defaultLifecycle 
@@ -59,8 +52,7 @@ addonDescriptor descriptorConfig =
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     }
   where
-    basePlugin = pluginDescriptor (dcPluginKey descriptorConfig) baseURI jwtAuthentication
-    baseURI = dcBaseUrl descriptorConfig
+    basePlugin = pluginDescriptor (PluginKey "com.atlassian.myreminders") nullURI jwtAuthentication
     jwtAuthentication = Authentication Jwt Nothing
 
 publicKeyUri :: URI

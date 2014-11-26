@@ -39,11 +39,11 @@ import qualified Connect.Routes as CR
 -- connect snaplet could be responsible for providing the Atlassian Connect plugin json descriptor
 -- to the rest of the plugin. That would be great!
 
-initConnectSnaplet :: IO String -> Maybe CZ.Zone -> SS.SnapletInit b Connect
--- TODO fix the config data dir to point to the correct place
-initConnectSnaplet configDataDir zone = SS.makeSnaplet "connect" "Atlassian Connect Snaplet" (Just configDataDir) $ do
+initConnectSnaplet :: IO String -> Plugin -> Maybe CZ.Zone -> SS.SnapletInit b Connect
+initConnectSnaplet configDataDir plugin zone = SS.makeSnaplet "connect" "Atlassian Connect Snaplet" (Just configDataDir) $ do
   SS.addRoutes CR.connectRoutes
-  MI.liftIO . fmap toConnect $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig zone
+  -- TODO fix the config data dir to point to the correct place
+  MI.liftIO . fmap (toConnect plugin) $ SS.loadAppConfig "connect.cfg" "resources" >>= loadConnectConfig zone
 
 
 data ConnectConfig = ConnectConfig
@@ -55,9 +55,10 @@ data ConnectConfig = ConnectConfig
   , ccHostWhiteList    :: [Text]
   }
 
-toConnect :: ConnectConfig -> Connect
-toConnect conf = Connect
-  { connectAES = CCA.initAES $ ccSecretKey conf
+toConnect :: Plugin -> ConnectConfig -> Connect
+toConnect plugin conf = Connect
+  { connectPlugin = plugin
+  , connectAES = CCA.initAES $ ccSecretKey conf
   , connectPluginName = Name $ ccPluginName conf
   , connectPluginKey = PluginKey $ ccPluginKey conf
   , connectBaseUrl = ccBaseUrl conf

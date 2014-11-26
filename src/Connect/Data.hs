@@ -2,6 +2,7 @@ module Connect.Data
   ( Connect(..)
   , HasConnect(..)
   , HostName
+  , DynamicDescriptorConfig(..)
   ) where
 
 -- Connect Modules
@@ -14,6 +15,7 @@ import qualified Network.URI        as NU
 
 data Connect = Connect
   { connectAES              :: CCA.AES
+  , connectPlugin           :: Plugin
   , connectPluginName       :: Name Connect
   , connectPluginKey        :: PluginKey
   , connectBaseUrl          :: NU.URI
@@ -25,3 +27,9 @@ type HostName = T.Text
 
 class HasConnect m where
   getConnect :: m Connect
+
+data DynamicDescriptorConfig = DynamicDescriptorConfig
+  { dcPluginName :: Name Plugin
+  , dcPluginKey  :: PluginKey
+  , dcBaseUrl    :: NU.URI
+  }

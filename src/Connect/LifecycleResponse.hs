@@ -12,8 +12,8 @@ import           GHC.Generics
 
 type ClientKey = T.Text
 
-data LifecycleResponse = LifecycleResponseInstalled {
-    lrKey            :: T.Text
+data LifecycleResponse = LifecycleResponseInstalled
+  { lrKey            :: T.Text
   , lrClientKey      :: ClientKey
   , lrPublicKey      :: T.Text
   , lrSharedSecret   :: Maybe T.Text
