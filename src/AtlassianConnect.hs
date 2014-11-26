@@ -2,7 +2,6 @@
 
 module AtlassianConnect
   ( addonDescriptor
-  , publicKeyUri
   ) where
 
 import Network.URI
@@ -54,6 +53,3 @@ addonDescriptor =
   where
     basePlugin = pluginDescriptor (PluginKey "com.atlassian.myreminders") nullURI jwtAuthentication
     jwtAuthentication = Authentication Jwt Nothing
-
-publicKeyUri :: URI
-publicKeyUri = fromMaybe nullURI $ parseRelativeReference "/plugins/servlet/oauth/consumer-info"
