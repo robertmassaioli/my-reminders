@@ -3,20 +3,20 @@
 
 module SnapHelpers where
 
-import Data.Aeson
-import GHC.Generics
+import           Data.Aeson
+import           GHC.Generics
 
-import           Connect.Descriptor (Key(..))
-import qualified Control.Applicative as CA
-import           Control.Monad.IO.Class (liftIO)
-import qualified Snap.Core as SC
-import qualified Data.Text as T
-import qualified Data.ByteString.Char8 as BSC
-import           Data.Time.Clock (UTCTime, getCurrentTime)
+import qualified AppConfig               as CONF
+import qualified Control.Applicative     as CA
+import           Control.Monad.IO.Class  (liftIO)
+import qualified Data.ByteString.Char8   as BSC
+import           Data.Connect.Descriptor (Key (..))
+import qualified Data.Text               as T
+import           Data.Time.Clock         (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX
-import qualified AppConfig as CONF
+import qualified Snap.Core               as SC
 
-import Application
+import           Application
 
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode

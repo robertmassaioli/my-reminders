@@ -6,12 +6,12 @@ module Connect.Data
   ) where
 
 -- Connect Modules
-import           Connect.Descriptor
+import           Data.Connect.Descriptor
 
 -- Standard Modules
-import qualified Crypto.Cipher.AES  as CCA
-import qualified Data.Text          as T
-import qualified Network.URI        as NU
+import qualified Crypto.Cipher.AES       as CCA
+import qualified Data.Text               as T
+import qualified Network.URI             as NU
 
 data Connect = Connect
   { connectAES              :: CCA.AES

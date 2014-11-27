@@ -7,29 +7,29 @@ module Connect.Connect
 
 -- Helper Imports
 import           ConfigurationHelpers
-import           Data.ConfiguratorTimeUnits () -- TODO this needs to be extracted into a separate library.
+import           Data.ConfiguratorTimeUnits ()
 
 -- Atlassian Connect Imports
 import           Connect.Data
-import           Connect.Descriptor
-import qualified Connect.PageToken       as PT
-import qualified Connect.Zone            as CZ
+import qualified Connect.PageToken          as PT
+import qualified Connect.Zone               as CZ
+import qualified Data.Connect.Descriptor    as D
 
 -- Standard imports
-import qualified Control.Monad           as CM
-import qualified Control.Monad.IO.Class  as MI
-import qualified Crypto.Cipher.AES       as CCA
-import qualified Data.ByteString.Char8   as BSC
-import qualified Data.Configurator       as DC
-import qualified Data.Configurator.Types as DCT
-import qualified Data.EnvironmentHelpers as DE
-import           Data.Maybe              (fromMaybe)
+import qualified Connect.Routes             as CR
+import qualified Control.Monad              as CM
+import qualified Control.Monad.IO.Class     as MI
+import qualified Crypto.Cipher.AES          as CCA
+import qualified Data.ByteString.Char8      as BSC
+import qualified Data.Configurator          as DC
+import qualified Data.Configurator.Types    as DCT
+import qualified Data.EnvironmentHelpers    as DE
+import           Data.Maybe                 (fromMaybe)
 import           Data.Text
 import           Data.Time.Units
-import qualified Network.HostName        as HN
-import qualified Network.URI             as NU
-import qualified Snap.Snaplet            as SS
-import qualified Connect.Routes as CR
+import qualified Network.HostName           as HN
+import qualified Network.URI                as NU
+import qualified Snap.Snaplet               as SS
 
 -- This should be the Atlassian Connect Snaplet
 -- The primary purpose of this Snaplet should be to load Atlassian Connect specific configuration.
@@ -39,7 +39,7 @@ import qualified Connect.Routes as CR
 -- connect snaplet could be responsible for providing the Atlassian Connect plugin json descriptor
 -- to the rest of the plugin. That would be great!
 
-initConnectSnaplet :: IO String -> Plugin -> Maybe CZ.Zone -> SS.SnapletInit b Connect
+initConnectSnaplet :: IO String -> D.Plugin -> Maybe CZ.Zone -> SS.SnapletInit b Connect
 initConnectSnaplet configDataDir plugin zone = SS.makeSnaplet "connect" "Atlassian Connect Snaplet" (Just configDataDir) $ do
   SS.addRoutes CR.connectRoutes
   -- TODO fix the config data dir to point to the correct place
@@ -55,14 +55,14 @@ data ConnectConfig = ConnectConfig
   , ccHostWhiteList    :: [Text]
   }
 
-toConnect :: Plugin -> ConnectConfig -> Connect
+toConnect :: D.Plugin -> ConnectConfig -> Connect
 toConnect plugin conf = Connect
   { connectPlugin = plugin
   , connectAES = CCA.initAES $ ccSecretKey conf
-  , connectPluginName = Name $ ccPluginName conf
-  , connectPluginKey = PluginKey $ ccPluginKey conf
+  , connectPluginName = D.Name $ ccPluginName conf
+  , connectPluginKey = D.PluginKey $ ccPluginKey conf
   , connectBaseUrl = ccBaseUrl conf
-  , connectPageTokenTimeout = Timeout $ ccPageTokenTimeout conf
+  , connectPageTokenTimeout = D.Timeout $ ccPageTokenTimeout conf
   , connectHostWhitelist = ccHostWhiteList conf
   }
 

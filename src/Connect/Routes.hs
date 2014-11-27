@@ -6,7 +6,6 @@ module Connect.Routes
   ) where
 
 import qualified Connect.Data                 as CD
-import           Connect.Descriptor           as D
 import qualified Connect.LifecycleResponse    as CL
 import           Control.Applicative
 import qualified Control.Arrow                as ARO
@@ -15,6 +14,7 @@ import           Control.Monad.State.Class    (get)
 import qualified Data.Aeson                   as A
 import qualified Data.ByteString.Char8        as BC
 import qualified Data.CaseInsensitive         as CI
+import           Data.Connect.Descriptor      as D
 import           Data.List
 import           Data.List.Split              (splitOn)
 import qualified Data.Map.Lazy                as ML

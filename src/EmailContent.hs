@@ -5,8 +5,8 @@ module EmailContent
    ) where
 
 import           Connect.Connect         (connectPluginKey)
-import           Connect.Descriptor      (PluginKey (..))
 import           Data.ByteString.Lazy    (toStrict)
+import           Data.Connect.Descriptor (PluginKey (..))
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           EmailContext
 import           Mail.Hailgun

@@ -11,7 +11,6 @@ import           AppConfig
 import           Application
 import qualified Connect.AtlassianTypes      as AT
 import qualified Connect.Data                as CDT
-import qualified Connect.Descriptor          as CD
 import qualified Connect.Instances           as CI
 import qualified Connect.Tenant              as CT
 import qualified Control.Monad.IO.Class      as MI
@@ -19,6 +18,7 @@ import           Data.Aeson
 import qualified Data.ByteString             as B
 import qualified Data.ByteString.Char8       as BC
 import qualified Data.ByteString.Lazy        as BL
+import qualified Data.Connect.Descriptor     as CD
 import qualified Data.Map                    as M (Map, fromList)
 import           Data.Maybe
 import qualified Data.Text                   as T

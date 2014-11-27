@@ -14,7 +14,6 @@ module Persistence.Tenant (
   , purgeTenants
 ) where
 
-import           Connect.Descriptor               ()
 import qualified Connect.Instances                as CI
 import qualified Connect.LifecycleResponse        as CL
 import qualified Connect.Tenant                   as CT
@@ -28,7 +27,7 @@ import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Network.URI                      hiding (query)
 
-import           Persistence.Instances()
+import           Persistence.Instances ()
 import           Persistence.PostgreSQL
 
 lookupTenant
