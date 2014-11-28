@@ -1,9 +1,12 @@
 module Connect.RoutesTests where
 
 import           Connect.Data
-import           Connect.Routes
+import           Connect.Instances
+import           Connect.LifecycleResponse
+import           Connect.Routes                hiding (getLifecycleResponse)
 import           Data.Maybe
 import           Data.Text
+import           LifecycleHandlers
 import           Network.URI                          (URI (..), parseURI)
 import           Persistence.Tenant
 import           Snap.Snaplet.Test
@@ -18,7 +21,7 @@ tests =
   ]
 
 prop_validHostsMakeValidHostNames :: String -> Property
-prop_validHostsMakeValidHostNames hostname = property $ (validHostName [pack hostname] (getLifecycleResponse hostname)) == True
+prop_validHostsMakeValidHostNames hostname = property $ validHostName [pack hostname] (getLifecycleResponse hostname)
 
 genHostName :: Gen String
 genHostName = listOf1 $ oneof [genUnreserved, genSubDelims]
@@ -36,7 +39,7 @@ getLifecycleResponse hostname =
                                  lrSharedSecret = Nothing,
                                  lrServerVersion = Nothing,
                                  lrPluginsVersion = Nothing,
-                                 lrBaseUrl = fromJust $ parseURI ("http://" ++ hostname ++ "/plugin"),
+                                 lrBaseUrl = CURI . fromJust . parseURI $ "http://" ++ hostname ++ "/plugin",
                                  lrProductType = Nothing,
                                  lrDescription = Nothing,
                                  lrEventType = Nothing
