@@ -26,7 +26,7 @@ import qualified TenantJWT                  as WT
 handleIssueUpdateWebhook :: AppHandler ()
 handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
 
-handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler ()) -> AC.ConnectTenant -> AppHandler ()
+handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler ()) -> AC.TenantWithUser -> AppHandler ()
 handleWebhook webhookHandler (tenant, _) = do
    parsedRequest <- webhookDataFromRequest
    case parsedRequest of

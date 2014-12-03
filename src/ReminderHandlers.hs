@@ -137,7 +137,7 @@ toReminderResponse reminder = ReminderResponse
 standardAuthError :: AppHandler ()
 standardAuthError = respondWithError unauthorised "You need to login before you query for reminders."
 
-getRemindersForIssue :: AC.ConnectTenant -> AppHandler ()
+getRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 getRemindersForIssue (_, Nothing) = standardAuthError
 getRemindersForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe AC.IssueId)
@@ -147,7 +147,7 @@ getRemindersForIssue (tenant, Just userKey) = do
          writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
-clearRemindersForIssue :: AC.ConnectTenant -> AppHandler ()
+clearRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 clearRemindersForIssue _ = undefined
 
 handleUserReminders :: AppHandler ()
@@ -157,13 +157,13 @@ handleUserReminders = handleMethods
    , (SC.DELETE, WT.tenantFromToken bulkDeleteEmails)
    ]
 
-getUserReminders :: AC.ConnectTenant -> AppHandler ()
+getUserReminders :: AC.TenantWithUser -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
    userReminders <- SS.with db $ withConnection (P.getLiveRemindersByUser tenant userKey)
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
    
-bulkUpdateUserEmails :: AC.ConnectTenant -> AppHandler ()
+bulkUpdateUserEmails :: AC.TenantWithUser -> AppHandler ()
 bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
   potentialUserDetails <- UD.getUserDetails userKey tenant
@@ -179,7 +179,7 @@ bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \
       , AC.userEmail = BC.pack $ UD.emailAddress uwd
       }
 
-bulkDeleteEmails :: AC.ConnectTenant -> AppHandler ()
+bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
 bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
    SS.with db $ withConnection (P.deleteManyRemindersForUser tenant (pids reminderIds) userKey)
@@ -200,7 +200,7 @@ handleReminder = handleMethods
   , (SC.DELETE,  WT.tenantFromToken deleteReminderHandler)
   ]
 
-getReminderHandler :: AC.ConnectTenant -> AppHandler ()
+getReminderHandler :: AC.TenantWithUser -> AppHandler ()
 getReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 getReminderHandler (tenant, Just userKey) = do
    rawReminderId <- SC.getQueryParam "reminderId"
@@ -213,7 +213,7 @@ getReminderHandler (tenant, Just userKey) = do
             Just reminder -> writeJson (toReminderResponse reminder)
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
-deleteReminderHandler :: AC.ConnectTenant -> AppHandler ()
+deleteReminderHandler :: AC.TenantWithUser -> AppHandler ()
 deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 deleteReminderHandler (tenant, Just userKey) = do
    potentialRawReminderId <- SC.getPostParam "reminderId"
@@ -229,7 +229,7 @@ deleteReminderHandler (tenant, Just userKey) = do
                respondInternalServer
       Nothing -> respondWithError badRequest "A reminderId is required to see which reminder should be deleted."
 
-addReminderHandler :: AC.ConnectTenant -> AppHandler ()
+addReminderHandler :: AC.TenantWithUser -> AppHandler ()
 addReminderHandler ct = do
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
   let maybeReminder = eitherDecode request :: Either String ReminderRequest
@@ -237,7 +237,7 @@ addReminderHandler ct = do
     Left err -> respondWithError badRequest err
     Right reminderRequest -> addReminder reminderRequest ct
 
-addReminder :: ReminderRequest -> AC.ConnectTenant -> AppHandler ()
+addReminder :: ReminderRequest -> AC.TenantWithUser -> AppHandler ()
 addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addReminder reminderRequest (tenant, Just userKey) =
   if userKey /= requestUK

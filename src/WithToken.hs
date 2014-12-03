@@ -16,7 +16,7 @@ import           Application
 acHeaderName :: DC.CI BSC.ByteString
 acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
-tenantFromToken :: (AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
+tenantFromToken :: (AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
   let potentialTokens = SC.getHeaders acHeaderName request
@@ -41,7 +41,7 @@ tenantFromToken tenantApply = do
                else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
 
-lookupTenantWithPageToken :: AC.PageToken -> AppHandler (Maybe AC.ConnectTenant)
+lookupTenantWithPageToken :: AC.PageToken -> AppHandler (Maybe AC.TenantWithUser)
 lookupTenantWithPageToken pageToken =
   PP.withConnection $ \conn ->
     fmap (flip (,) (AC.pageTokenUser pageToken)) <$> TN.lookupTenant conn (AC.pageTokenHost pageToken)

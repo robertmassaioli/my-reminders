@@ -22,7 +22,6 @@ Executable my-reminders
   main-is: Main.hs
 
   other-modules:   AtlassianConnect
-                 , Connect.Zone
                  , Data.ConfiguratorTimeUnits
                  , Data.EnvironmentHelpers
                  , Data.Padding

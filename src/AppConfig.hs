@@ -8,7 +8,6 @@ module AppConfig
    ) where
 
 import           ConfigurationHelpers
-import           Connect.Zone
 import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (join, when)
 import qualified Control.Monad.IO.Class     as MI
@@ -59,7 +58,7 @@ data EnvConf = EnvConf
    , ecMailgunApiKey   :: Maybe String
    , ecHttpProxy       :: Maybe String
    , ecHttpSecureProxy :: Maybe String
-   , ecZone            :: Zone
+   , ecZone            :: MZ.Zone
    } deriving (Eq, Show)
 
 loadConfFromEnvironment :: IO EnvConf
@@ -75,7 +74,7 @@ loadConfFromEnvironment = do
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
       , ecHttpSecureProxy  = get "https_proxy"
-      , ecZone             = fromMaybe Dev $ MZ.zoneFromString =<< get "ZONE"
+      , ecZone             = fromMaybe MZ.Dev $ MZ.zoneFromString =<< get "ZONE"
       }
 
 search :: [(String, String)] -> String -> Maybe String
@@ -86,7 +85,7 @@ guardConfig ec = when (isDogOrProd && not allKeysPresent) $ do
    putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ (show . ecZone $ ec)
    exitWith (ExitFailure 10)
    where
-      isDogOrProd = ecZone ec `elem` [Dog, Prod]
+      isDogOrProd = ecZone ec `elem` [MZ.Dog, MZ.Prod]
       allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey, ecMailgunDomain, ecMailgunApiKey] <*> pure ec
 
 instance DCT.Configured (D.Key BSC.ByteString a) where

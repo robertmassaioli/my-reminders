@@ -20,7 +20,7 @@ import qualified Snap.AtlassianConnect                 as AC
 
 type UnverifiedJWT = J.JWT J.UnverifiedJWT
 
-withTenant :: (AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTenant :: (AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
@@ -69,7 +69,7 @@ flipEither :: Either a b -> Either b a
 flipEither (Left x)  = Right x
 flipEither (Right x) = Left x
 
-getTenant :: UnverifiedJWT -> AppHandler (Either String AC.ConnectTenant)
+getTenant :: UnverifiedJWT -> AppHandler (Either String AC.TenantWithUser)
 getTenant unverifiedJwt = do
   let potentialKey = getClientKey unverifiedJwt
   -- TODO collapse these cases

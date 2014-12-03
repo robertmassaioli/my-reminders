@@ -33,7 +33,7 @@ import           Web.Connect.QueryStringHash
 import qualified Web.JWT                     as JWT
 
 data UserWithDetails = UserWithDetails
-   { name         :: AT.UserKey
+   { name         :: AC.UserKey
    , emailAddress :: String
    , avatarUrls   :: M.Map String String
    , displayName  :: String
@@ -52,12 +52,12 @@ data ProductErrorResponse = ProductErrorResponse
    , perMessage :: T.Text
    } deriving (Show, Generic)
 
-getUserDetails :: AT.UserKey -> CT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
+getUserDetails :: AC.UserKey -> AC.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
   connectData <- AC.getConnect
   rmConf <- getAppConf
-  let signature = T.unpack $ generateJWTToken (AC.connectPluginKey connectData) currentTime (CT.sharedSecret tenant) GET (CI.getURI . CT.baseUrl $ tenant) url
+  let signature = T.unpack $ generateJWTToken (AC.connectPluginKey connectData) currentTime (AC.sharedSecret tenant) GET (AC.getURI . AC.baseUrl $ tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
     (  addHeader ("Accept","application/json")
     <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)
@@ -74,7 +74,7 @@ getUserDetails userKey tenant = do
     userQueryUri :: B.ByteString
     userQueryUri = BC.pack $ baseUrlString ++ "/rest/api/2/user?username="
 
-    baseUrlString = show . CT.baseUrl $ tenant
+    baseUrlString = show . AC.baseUrl $ tenant
 
 generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
 generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims

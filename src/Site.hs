@@ -69,7 +69,7 @@ viewRemindersPanel = createConnectPanel "view-jira-reminders"
 
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
-  connectData <- CD.getConnect
+  connectData <- AC.getConnect
   SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
@@ -79,7 +79,7 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
       "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey
 
 
-withTokenAndTenant :: (AC.PageToken -> AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
   token <- liftIO $ AC.generateTokenCurrentTime ct
   processor token ct
@@ -91,7 +91,7 @@ routes = LH.lifecycleRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                            , SS.with connect $ CR.homeHandler sendHomePage)
+  [ ("/"                            , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
   , ("/panel/jira/reminder/create"  , createReminderPanel )
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
@@ -134,7 +134,8 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
-  appConnect <- SS.nestSnaplet "connect" connect (AC.initConnectSnaplet configDataDir AC.addonDescriptor zone)
+  let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
+  appConnect <- SS.nestSnaplet "connect" connect (AC.initConnectSnaplet configDataDir modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf
