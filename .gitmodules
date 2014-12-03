@@ -1,0 +1,9 @@
+[submodule "vendor/atlassian-connect-descriptor"]
+	path = vendor/atlassian-connect-descriptor
+	url = git@bitbucket.org:robertmassaioli/atlassian-connect-descriptor.git
+[submodule "vendor/atlassian-connect"]
+	path = vendor/atlassian-connect
+	url = git@bitbucket.org:ssaasen/atlassian-connect-haskell.git
+[submodule "vendor/atlassian-connect-core"]
+	path = vendor/atlassian-connect-core
+	url = git@bitbucket.org:ajknoll/atlassian-connect-core.git

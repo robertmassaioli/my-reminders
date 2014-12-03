@@ -43,7 +43,7 @@ dbInitConf (Just _) = SS.makeSnaplet (T.pack "My Reminders RDS") (T.pack "Relati
    let ndIdleTime = fromIntegral (idle :: Integer)
    liftIO $ printDatabaseDetails host (show port) schema role
    pool <- liftIO $ createPool openConnection closeConnection stripes ndIdleTime maxRes
-   return $ Postgres pool
+   return $ PostgresPool pool
    where
       siGetEnv = liftIO . getEnv
 
