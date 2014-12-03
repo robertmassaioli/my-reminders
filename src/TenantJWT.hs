@@ -13,14 +13,14 @@ import           Application
 import qualified Persistence.PostgreSQL         as PP
 import qualified Persistence.Tenant             as PT
 import qualified SnapHelpers                    as SH
-import qualified Connect.Tenant                 as CT
+import qualified Snap.AtlassianConnect                 as AC
 
 -- TODO Should this be moved into the Atlassian connect code? Or does the app handler code make it too specific?
 -- TODO Can we make it not wrap the request but instead run inside the request? That will let it be moved out.
 
 type UnverifiedJWT = J.JWT J.UnverifiedJWT
 
-withTenant :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTenant :: (AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTenant tennantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
@@ -69,7 +69,7 @@ flipEither :: Either a b -> Either b a
 flipEither (Left x)  = Right x
 flipEither (Right x) = Left x
 
-getTenant :: UnverifiedJWT -> AppHandler (Either String CT.ConnectTenant)
+getTenant :: UnverifiedJWT -> AppHandler (Either String AC.ConnectTenant)
 getTenant unverifiedJwt = do
   let potentialKey = getClientKey unverifiedJwt
   -- TODO collapse these cases
@@ -95,12 +95,12 @@ getTenant unverifiedJwt = do
     ret :: Monad m => y -> m (Either x y)
     ret = return . Right
 
-verifyTenant :: CT.Tenant -> UnverifiedJWT -> Maybe CT.Tenant
+verifyTenant :: AC.Tenant -> UnverifiedJWT -> Maybe AC.Tenant
 verifyTenant tenant unverifiedJwt = do
   guard (isJust $ J.verify tenantSecret unverifiedJwt)
   pure tenant
   where
-    tenantSecret = J.secret . CT.sharedSecret $ tenant
+    tenantSecret = J.secret . AC.sharedSecret $ tenant
 
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt

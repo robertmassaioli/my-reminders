@@ -9,10 +9,7 @@ module Model.UserDetails
 
 import           AppConfig
 import           Application
-import qualified Connect.AtlassianTypes      as AT
-import qualified Connect.Data                as CDT
-import qualified Connect.Instances           as CI
-import qualified Connect.Tenant              as CT
+import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad.IO.Class      as MI
 import           Data.Aeson
 import qualified Data.ByteString             as B
@@ -58,9 +55,9 @@ data ProductErrorResponse = ProductErrorResponse
 getUserDetails :: AT.UserKey -> CT.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
 getUserDetails userKey tenant = do
   currentTime <- MI.liftIO P.getPOSIXTime
-  connectData <- CDT.getConnect
+  connectData <- AC.getConnect
   rmConf <- getAppConf
-  let signature = T.unpack $ generateJWTToken (CDT.connectPluginKey connectData) currentTime (CT.sharedSecret tenant) GET (CI.getURI . CT.baseUrl $ tenant) url
+  let signature = T.unpack $ generateJWTToken (AC.connectPluginKey connectData) currentTime (CT.sharedSecret tenant) GET (CI.getURI . CT.baseUrl $ tenant) url
   MI.liftIO $ runRequest defaultManagerSettings GET url
     (  addHeader ("Accept","application/json")
     <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)

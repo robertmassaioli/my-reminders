@@ -6,8 +6,7 @@ module ExpireHandlers
 
 import qualified AppConfig                           as CONF
 import           Application
-import           Connect.Connect                     (Connect (..))
-import           Connect.Data                        (getConnect)
+import           Snap.AtlassianConnect                     (Connect (..), getConnect)
 import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString                     as B

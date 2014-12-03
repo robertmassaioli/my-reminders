@@ -22,14 +22,6 @@ Executable my-reminders
   main-is: Main.hs
 
   other-modules:   AtlassianConnect
-                 , Connect.AtlassianTypes
-                 , Connect.Connect
-                 , Connect.Data
-                 , Connect.Instances
-                 , Connect.LifecycleResponse
-                 , Connect.PageToken
-                 , Connect.Routes
-                 , Connect.Tenant
                  , Connect.Zone
                  , Data.ConfiguratorTimeUnits
                  , Data.EnvironmentHelpers
@@ -65,6 +57,7 @@ Executable my-reminders
   Build-depends:
       base                      >= 4.6     && < 5
     , atlassian-connect-descriptor
+    , atlassian-connect-core
     , atlassian-connect         == 0.1.*
     , process                   == 1.2.*
     , filepath                  == 1.3.*
@@ -80,7 +73,6 @@ Executable my-reminders
     , containers                == 0.5.*
     , heist                     == 0.14.*
     , http-client               == 0.3.*
-    , http-media                == 0.1.*
     , http-types                == 0.8.*
     , hostname                  == 1.0
     , jwt                       >= 0.3     && < 0.5

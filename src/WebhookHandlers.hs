@@ -6,8 +6,7 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
-import qualified Connect.AtlassianTypes     as AT
-import qualified Connect.Tenant             as CT
+import qualified Snap.AtlassianConnect as AC
 import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (void, when)
 import           Data.Aeson
@@ -27,7 +26,7 @@ import qualified TenantJWT                  as WT
 handleIssueUpdateWebhook :: AppHandler ()
 handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
 
-handleWebhook :: (CT.Tenant -> IssueUpdate -> AppHandler ()) -> CT.ConnectTenant -> AppHandler ()
+handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler ()) -> AC.ConnectTenant -> AppHandler ()
 handleWebhook webhookHandler (tenant, _) = do
    parsedRequest <- webhookDataFromRequest
    case parsedRequest of
@@ -41,7 +40,7 @@ webhookDataFromRequest = eitherDecode <$> SC.readRequestBody dataLimitBytes
    where
       dataLimitBytes = 10 ^ (7 :: Integer) -- We want to not accept webhook responses larger than 10 MB
 
-handleUpdate :: CT.Tenant -> IssueUpdate -> AppHandler ()
+handleUpdate :: AC.Tenant -> IssueUpdate -> AppHandler ()
 handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
 
 -- Issues will be updated many times and the connect webhooks cannot be easily restricted to certain
@@ -53,7 +52,7 @@ handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB
 reminderUpdateRequired :: IssueUpdate -> Bool
 reminderUpdateRequired iu = any isJust $ [iuNewKey, iuNewSummary] <*> pure iu
 
-handleWebhookUpdate :: CT.Tenant -> IssueUpdate -> Connection -> IO ()
+handleWebhookUpdate :: AC.Tenant -> IssueUpdate -> Connection -> IO ()
 handleWebhookUpdate tenant issueUpdate conn = do
    maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey conn) (iuNewKey issueUpdate)
    maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary conn) (iuNewSummary issueUpdate)
@@ -76,7 +75,7 @@ webhookDataToIssueUpdate webhookData = IssueUpdate
       findCli fieldName = DL.find ((==) fieldName . cliField) cli
 
 data IssueUpdate = IssueUpdate
-   { iuId         :: AT.IssueId
+   { iuId         :: AC.IssueId
    , iuNewKey     :: Maybe T.Text
    , iuNewSummary :: Maybe T.Text
    } deriving (Show)
@@ -120,5 +119,5 @@ handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebh
 
 -- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
 -- against that tenant in the database.
-handleDelete :: CT.Tenant -> IssueUpdate -> AppHandler ()
+handleDelete :: AC.Tenant -> IssueUpdate -> AppHandler ()
 handleDelete tenant issueUpdate = void $ DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate))

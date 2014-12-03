@@ -13,14 +13,14 @@ import qualified Snap.Snaplet.Heist as SSH
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.PostgresqlSimple
 
-import qualified Connect.Data as CD
+import qualified Snap.AtlassianConnect as AC
 import qualified AppConfig as CONF
 ------------------------------------------------------------------------------
 data App = App
   { _heist   :: SS.Snaplet (SSH.Heist App)
   , _sess    :: SS.Snaplet SessionManager
   , _db      :: SS.Snaplet Postgres
-  , _connect :: SS.Snaplet CD.Connect
+  , _connect :: SS.Snaplet AC.Connect
   , _rmconf  :: SS.Snaplet CONF.AppConf
   }
 
@@ -32,7 +32,7 @@ instance SSH.HasHeist App where
 instance HasPostgres (SS.Handler b App) where
   getPostgresState = SS.with db get
 
-instance CD.HasConnect (SS.Handler b App) where
+instance AC.HasConnect (SS.Handler b App) where
    getConnect = SS.with connect get
 
 instance CONF.HasAppConf (SS.Handler b App) where

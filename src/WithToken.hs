@@ -2,9 +2,7 @@ module WithToken where
 
 import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
-
-import qualified Connect.PageToken as PT
-import qualified Connect.Data as CD
+import qualified Snap.AtlassianConnect as AC
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.CaseInsensitive as DC
 import qualified Data.Time.Clock as DTC
@@ -14,24 +12,23 @@ import qualified Snap.Core as SC
 import qualified SnapHelpers as SH
 
 import           Application
-import qualified Connect.Tenant as CT
 
 acHeaderName :: DC.CI BSC.ByteString
 acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java PageTokenValidatorAction#TOKEN_KEY
 
-tenantFromToken :: (CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
+tenantFromToken :: (AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
   let potentialTokens = SC.getHeaders acHeaderName request
   case potentialTokens of
     Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
     Just [acTokenHeader] -> do
-      connectData <- CD.getConnect
-      let potentiallyDecodedToken = PT.decryptPageToken (CD.connectAES connectData) acTokenHeader
+      connectData <- AC.getConnect
+      let potentiallyDecodedToken = AC.decryptPageToken (AC.connectAES connectData) acTokenHeader
       case potentiallyDecodedToken of
          Left errorMessage -> SH.respondWithError SH.badRequest $ "Error decoding the token you provided: " ++ errorMessage
          Right pageToken -> do
-            let tokenExpiryTime = DTC.addUTCTime (fromIntegral . CD.connectPageTokenTimeout $ connectData) (PT.pageTokenTimestamp pageToken)
+            let tokenExpiryTime = DTC.addUTCTime (fromIntegral . AC.connectPageTokenTimeout $ connectData) (AC.pageTokenTimestamp pageToken)
             currentTime <- liftIO DTC.getCurrentTime
             if DTC.diffUTCTime currentTime tokenExpiryTime < 0
                then do
@@ -44,10 +41,10 @@ tenantFromToken tenantApply = do
                else SH.respondWithError SH.unauthorised "Your token has expired. Please refresh the page."
     Just _ -> SH.respondWithError SH.badRequest "Too many page tokens were provided in the headers. Did not know which one to choose. Invalid request."
 
-lookupTenantWithPageToken :: PT.PageToken -> AppHandler (Maybe CT.ConnectTenant)
+lookupTenantWithPageToken :: AC.PageToken -> AppHandler (Maybe AC.ConnectTenant)
 lookupTenantWithPageToken pageToken =
   PP.withConnection $ \conn ->
-    fmap (flip (,) (PT.pageTokenUser pageToken)) <$> TN.lookupTenant conn (PT.pageTokenHost pageToken)
+    fmap (flip (,) (AC.pageTokenUser pageToken)) <$> TN.lookupTenant conn (AC.pageTokenHost pageToken)
 
 inSecond :: b -> a -> (a, b)
 inSecond x y = (y, x)

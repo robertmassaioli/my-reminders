@@ -4,13 +4,13 @@ module EmailContent
    ( reminderEmail
    ) where
 
-import           Connect.Connect         (connectPluginKey)
 import           Data.ByteString.Lazy    (toStrict)
 import           Data.Connect.Descriptor (PluginKey (..))
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           EmailContext
 import           Mail.Hailgun
 import           Persistence.Reminder
+import           Snap.AtlassianConnect   (connectPluginKey)
 import           Text.Hastache
 import           Text.Hastache.Context
 

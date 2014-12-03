@@ -14,9 +14,7 @@ module Persistence.Tenant (
   , purgeTenants
 ) where
 
-import qualified Connect.Instances                as CI
-import qualified Connect.LifecycleResponse        as CL
-import qualified Connect.Tenant                   as CT
+import qualified Snap.AtlassianConnect as AC
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class
@@ -32,8 +30,8 @@ import           Persistence.PostgreSQL
 
 lookupTenant
    :: Connection
-   -> CL.ClientKey
-   -> IO (Maybe CT.Tenant)
+   -> AC.ClientKey
+   -> IO (Maybe AC.Tenant)
 lookupTenant conn clientKey = do
    -- TODO Can we extract these SQL statements into their own constants so that we can
    -- just re-use them elsewhere?
@@ -47,7 +45,7 @@ lookupTenant conn clientKey = do
 
 removeTenantInformation
    :: Connection
-   -> CL.ClientKey
+   -> AC.ClientKey
    -> IO Int64
 removeTenantInformation conn clientKey =
     liftIO $ execute conn [sql| DELETE FROM tenant WHERE key = ?  |] (Only clientKey)
@@ -65,12 +63,12 @@ removeTenantInformation conn clientKey =
 
 insertTenantInformation
    :: Connection
-   -> CL.LifecycleResponse
+   -> AC.LifecycleResponse
    -> IO (Maybe Integer)
-insertTenantInformation conn lri@(CL.LifecycleResponseInstalled {}) = do
-   let newClientKey = CL.lrClientKey lri
-   let newBaseUri = CL.lrBaseUrl lri
-   oldClientKey <- getClientKeyForBaseUrl conn (CI.getURI newBaseUri)
+insertTenantInformation conn lri@(AC.LifecycleResponseInstalled {}) = do
+   let newClientKey = AC.lrClientKey lri
+   let newBaseUri = AC.lrBaseUrl lri
+   oldClientKey <- getClientKeyForBaseUrl conn (AC.getURI newBaseUri)
    existingTenant <- lookupTenant conn newClientKey
    let newAndOldKeysEqual = fmap (== newClientKey) oldClientKey
    case (existingTenant, newAndOldKeysEqual) of
@@ -84,17 +82,17 @@ insertTenantInformation conn lri@(CL.LifecycleResponseInstalled {}) = do
       (Just tenant, _) -> do
          updateTenantDetails newTenant conn
          wakeTenant newTenant conn
-         return . Just . CT.tenantId $ newTenant
+         return . Just . AC.tenantId $ newTenant
          where
             -- After much discussion it seems that the only thing that we want to update is the base
             -- url if it changes. Everything else should never change unless we delete the tenant
             -- first and then recreate it.
             newTenant = tenant
-               { CT.baseUrl = CL.lrBaseUrl lri
-               , CT.sharedSecret = fromMaybe (CT.sharedSecret tenant) (CL.lrSharedSecret lri)
+               { AC.baseUrl = AC.lrBaseUrl lri
+               , AC.sharedSecret = fromMaybe (AC.sharedSecret tenant) (AC.lrSharedSecret lri)
                }
 
-updateTenantDetails :: CT.Tenant -> Connection ->  IO Int64
+updateTenantDetails :: AC.Tenant -> Connection ->  IO Int64
 updateTenantDetails tenant conn =
    liftIO $ execute conn [sql|
       UPDATE tenant SET
@@ -103,16 +101,16 @@ updateTenantDetails tenant conn =
          baseUrl = ?,
          productType = ?
       WHERE id = ?
-   |] (CT.publicKey tenant, CT.sharedSecret tenant, CI.getURI . CT.baseUrl $ tenant, CT.productType tenant, CT.tenantId tenant)
+   |] (AC.publicKey tenant, AC.sharedSecret tenant, AC.getURI . AC.baseUrl $ tenant, AC.productType tenant, AC.tenantId tenant)
 
-rawInsertTenantInformation :: Connection -> CL.LifecycleResponse -> IO [Integer]
-rawInsertTenantInformation conn lri@(CL.LifecycleResponseInstalled {}) =
+rawInsertTenantInformation :: Connection -> AC.LifecycleResponse -> IO [Integer]
+rawInsertTenantInformation conn lri@(AC.LifecycleResponseInstalled {}) =
    fmap join . liftIO $ insertReturning conn [sql|
       INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
       VALUES (?, ?, ?, ?, ?) RETURNING id
-   |] (CL.lrClientKey lri, CL.lrPublicKey lri, CL.lrSharedSecret lri, show $ CL.lrBaseUrl lri, CL.lrProductType lri)
+   |] (AC.lrClientKey lri, AC.lrPublicKey lri, AC.lrSharedSecret lri, show $ AC.lrBaseUrl lri, AC.lrProductType lri)
 
-getClientKeyForBaseUrl :: Connection -> URI -> IO (Maybe CL.ClientKey)
+getClientKeyForBaseUrl :: Connection -> URI -> IO (Maybe AC.ClientKey)
 getClientKeyForBaseUrl conn baseUrl = do
    clientKeys <- liftIO $ query conn [sql|
       SELECT key from tenant where baseUrl = ?
@@ -129,19 +127,19 @@ getTenantCount conn = do
    |]
    return . fromOnly . head $ counts
 
-hibernateTenant :: CT.Tenant -> Connection -> IO ()
+hibernateTenant :: AC.Tenant -> Connection -> IO ()
 hibernateTenant tenant conn = do
    currentTime <- getCurrentTime
    liftIO $ execute conn [sql|
       UPDATE tenant SET sleep_date = ? WHERE id = ?
-   |] (currentTime, CT.tenantId tenant)
+   |] (currentTime, AC.tenantId tenant)
    return ()
 
-wakeTenant :: CT.Tenant -> Connection -> IO ()
+wakeTenant :: AC.Tenant -> Connection -> IO ()
 wakeTenant tenant conn = do
    liftIO $ execute conn [sql|
       UPDATE tenant SET sleep_date = NULL WHERE id = ?
-   |] (Only . CT.tenantId $ tenant)
+   |] (Only . AC.tenantId $ tenant)
    return ()
 
 markPurgedTenants :: UTCTime -> Connection -> IO ()

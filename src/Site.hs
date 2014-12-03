@@ -13,11 +13,7 @@ module Site
 import qualified AppConfig                                   as CONF
 import           Application
 import qualified AtlassianConnect                            as AC
-import qualified Connect.Connect                             as CC
-import qualified Connect.Data                                as CD
-import qualified Connect.PageToken                           as CPT
-import qualified Connect.Routes                              as CR
-import qualified Connect.Tenant                              as CT
+import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
@@ -77,15 +73,15 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
   SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## HI.textSplice $ T.pack . show . CT.baseUrl $ tenant
-      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      "productBaseUrl" H.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
+      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
       -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
       "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey
 
 
-withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant :: (AC.PageToken -> AC.ConnectTenant -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
-  token <- liftIO $ CPT.generateTokenCurrentTime ct
+  token <- liftIO $ AC.generateTokenCurrentTime ct
   processor token ct
 
 ------------------------------------------------------------------------------
@@ -138,7 +134,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
-  appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir AC.addonDescriptor zone)
+  appConnect <- SS.nestSnaplet "connect" connect (AC.initConnectSnaplet configDataDir AC.addonDescriptor zone)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf

@@ -1,9 +1,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 module Persistence.Instances where
 
-import qualified Connect.Instances                    as CI
-import qualified Connect.LifecycleResponse            as CL
-import qualified Connect.Tenant                       as CT
+import qualified Snap.AtlassianConnect as AC
 import           Control.Applicative
 import qualified Data.ByteString.Char8                as BSC
 import           Data.Maybe                           (fromMaybe)
@@ -12,11 +10,11 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.ToField
 import           Network.URI
 
-instance FromRow CL.ClientKey where
+instance FromRow AC.ClientKey where
    fromRow = field
 
-instance FromRow CT.Tenant where
-    fromRow = CT.Tenant <$> field <*> field <*> field <*> field <*> (CI.CURI <$> field) <*> field
+instance FromRow AC.Tenant where
+    fromRow = AC.Tenant <$> field <*> field <*> field <*> field <*> (AC.CURI <$> field) <*> field
 
 instance FromField URI where
     fromField _ (Just bstr) = pure $ fromMaybe nullURI $ parseURI (BSC.unpack bstr)
