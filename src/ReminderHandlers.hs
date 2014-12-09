@@ -9,22 +9,23 @@ module ReminderHandlers
   ) where
 
 import           Application
+import           Control.Monad              (void)
 import           Data.Aeson
-import           Data.Aeson.Types           (defaultOptions, fieldLabelModifier, Options)
+import           Data.Aeson.Types           (Options, defaultOptions,
+                                             fieldLabelModifier)
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.Text                  as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
+import qualified Model.UserDetails          as UD
+import           Persistence.PostgreSQL
+import qualified Persistence.Reminder       as P
+import qualified Snap.AtlassianConnect      as AC
 import qualified Snap.Core                  as SC
 import qualified Snap.Snaplet               as SS
-
-import qualified Snap.AtlassianConnect as AC
-import qualified Persistence.Reminder       as P
-import           Persistence.PostgreSQL
 import           SnapHelpers
 import qualified WithToken                  as WT
-import qualified Model.UserDetails as UD
 
 type TimeDelay = Integer
 
@@ -46,14 +47,14 @@ data ReminderRequest = ReminderRequest
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
-   { prsReminderId     :: Integer
-   , prsIssueId        :: AC.IssueId
-   , prsIssueKey       :: AC.IssueKey
-   , prsIssueSummary   :: AC.IssueSummary
-   , prsUserKey        :: AC.UserKey
-   , prsUserEmail      :: String
-   , prsMessage        :: Maybe T.Text
-   , prsDate           :: UTCTime
+   { prsReminderId   :: Integer
+   , prsIssueId      :: AC.IssueId
+   , prsIssueKey     :: AC.IssueKey
+   , prsIssueSummary :: AC.IssueSummary
+   , prsUserKey      :: AC.UserKey
+   , prsUserEmail    :: String
+   , prsMessage      :: Maybe T.Text
+   , prsDate         :: UTCTime
    } deriving (Eq, Show, Generic)
 
 data ReminderIdList = ReminderIdList
@@ -162,16 +163,14 @@ getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
    userReminders <- SS.with db $ withConnection (P.getLiveRemindersByUser tenant userKey)
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
-   
+
 bulkUpdateUserEmails :: AC.TenantWithUser -> AppHandler ()
 bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
-  potentialUserDetails <- UD.getUserDetails userKey tenant
+  potentialUserDetails <- UD.getUserDetails tenant userKey
   case potentialUserDetails of
     Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
-    Right userDetails -> do
-      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
-      return ()
+    Right userDetails -> void $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
   where
     userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
     userDetailsConvert uwd = AC.UserDetails

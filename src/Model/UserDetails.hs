@@ -9,7 +9,6 @@ module Model.UserDetails
 
 import           AppConfig
 import           Application
-import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad.IO.Class      as MI
 import           Data.Aeson
 import qualified Data.ByteString             as B
@@ -17,7 +16,6 @@ import qualified Data.ByteString.Char8       as BC
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Connect.Descriptor     as CD
 import qualified Data.Map                    as M (Map, fromList)
-import           Data.Maybe
 import qualified Data.Text                   as T
 import           Data.Text.Encoding          (decodeUtf8, encodeUtf8)
 import qualified Data.Time.Clock.POSIX       as P
@@ -29,6 +27,7 @@ import           Network.HTTP.Client
 import           Network.HTTP.Types
 import           Network.URI
 import           NetworkHelpers
+import qualified Snap.AtlassianConnect       as AC
 import           Web.Connect.QueryStringHash
 import qualified Web.JWT                     as JWT
 
@@ -52,49 +51,65 @@ data ProductErrorResponse = ProductErrorResponse
    , perMessage :: T.Text
    } deriving (Show, Generic)
 
-getUserDetails :: AC.UserKey -> AC.Tenant -> AppHandler (Either ProductErrorResponse UserWithDetails)
-getUserDetails userKey tenant = do
-  currentTime <- MI.liftIO P.getPOSIXTime
-  connectData <- AC.getConnect
-  rmConf <- getAppConf
-  let signature = T.unpack $ generateJWTToken (AC.connectPluginKey connectData) currentTime (AC.sharedSecret tenant) GET (AC.getURI . AC.baseUrl $ tenant) url
-  MI.liftIO $ runRequest defaultManagerSettings GET url
-    (  addHeader ("Accept","application/json")
-    <> addHeader ("Authorization", BC.pack $ "JWT " ++ signature)
-    <> setPotentialProxy (getProxyFromConf baseUrlString rmConf)
-    )
-    (basicResponder responder)
+getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either ProductErrorResponse UserWithDetails)
+getUserDetails tenant userKey = makeGetRequest tenant usernameUrl
   where
-    url :: T.Text
-    url = decodeUtf8 $ userQueryUri `B.append` encodeParam userKey
+    usernameUrl :: T.Text
+    usernameUrl = userQueryUri `T.append` encodeParam userKey
 
-    encodeParam :: T.Text -> B.ByteString
-    encodeParam = urlEncode True . encodeUtf8
+    encodeParam :: T.Text -> T.Text
+    encodeParam = decodeUtf8 . urlEncode True . encodeUtf8
 
-    userQueryUri :: B.ByteString
-    userQueryUri = BC.pack $ baseUrlString ++ "/rest/api/2/user?username="
+    userQueryUri :: T.Text
+    userQueryUri = "/rest/api/2/user?username="
 
-    baseUrlString = show . AC.baseUrl $ tenant
+-- TODO extract everything below this line to the Atlassian Connect Core Library
 
-generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> T.Text
-generateJWTToken (CD.PluginKey pluginKey) currentTime sharedSecret' method' ourURL requestURL = JWT.encodeSigned algo secret' claims
-  where
-    algo = JWT.HS256
-    secret' = JWT.secret sharedSecret'
-    queryStringHash = createQueryStringHash method' ourURL requestURL
+makeGetRequest :: FromJSON a => AC.Tenant -> T.Text -> AppHandler (Either ProductErrorResponse a)
+makeGetRequest tenant productRelativeUrl = do
+    currentTime <- MI.liftIO P.getPOSIXTime
+    pluginKey <- fmap AC.connectPluginKey AC.getConnect
+    case generateJWTToken pluginKey currentTime (AC.sharedSecret tenant) GET productBaseUrl url of
+        Nothing -> return . Left $ ProductErrorResponse 500 "Failed to generate a JWT token to make the request."
+        (Just signature) -> do
+            rmConf <- getAppConf
+            MI.liftIO $ runRequest defaultManagerSettings GET url
+                (  addHeader ("Accept","application/json")
+                <> addHeader ("Authorization", jwtPrefix `B.append` encodeUtf8 signature)
+                <> setPotentialProxy (getProxyFromConf productBaseUrlString rmConf)
+                )
+                (basicResponder responder)
+    where
+        jwtPrefix :: B.ByteString
+        jwtPrefix = BC.pack "JWT "
 
-    claims = JWT.JWTClaimsSet { JWT.iss = JWT.stringOrURI pluginKey
-                              , JWT.iat = JWT.intDate currentTime
-                              , JWT.exp = JWT.intDate (currentTime + timeUnitToDiffTime expiryPeriod)
-                              , JWT.sub = Nothing
-                              , JWT.aud = Nothing
-                              , JWT.nbf = Nothing
-                              , JWT.jti = Nothing
-                              , JWT.unregisteredClaims = M.fromList [("qsh", String $ fromJust queryStringHash)] -- TODO fromJust is horrible. Remove it's use.
-                              }
+        url = T.pack productBaseUrlString `T.append` productRelativeUrl
+        productBaseUrlString = show productBaseUrl
+        productBaseUrl = AC.getURI . AC.baseUrl $ tenant
 
-    expiryPeriod :: Minute
-    expiryPeriod = 3
+generateJWTToken :: CD.PluginKey -> P.POSIXTime -> T.Text -> StdMethod -> URI -> T.Text -> Maybe T.Text
+generateJWTToken pluginKey fromTime sharedSecret' method' ourURL requestURL = do
+  queryStringHash <- createQueryStringHash method' ourURL requestURL
+  return $ JWT.encodeSigned JWT.HS256 (JWT.secret sharedSecret') (createClaims pluginKey fromTime queryStringHash)
+
+createClaims :: CD.PluginKey -> P.POSIXTime -> T.Text -> JWT.JWTClaimsSet
+createClaims (CD.PluginKey pluginKey) fromTime queryStringHash = JWT.JWTClaimsSet
+    { JWT.iss = JWT.stringOrURI pluginKey
+    , JWT.iat = JWT.intDate fromTime
+    , JWT.exp = JWT.intDate expiryTime
+    , JWT.sub = Nothing
+    , JWT.aud = Nothing
+    , JWT.nbf = Nothing
+    , JWT.jti = Nothing
+    , JWT.unregisteredClaims = M.fromList [("qsh", String queryStringHash)] -- TODO fromJust is horrible. Remove it's use.
+    }
+    where
+        expiryTime :: P.POSIXTime
+        expiryTime = fromTime + timeUnitToDiffTime expiryPeriod
+
+        -- Our default expiry period when talking to the host product directly
+        expiryPeriod :: Minute
+        expiryPeriod = 1
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
 responder 200 body = case eitherDecode body of
