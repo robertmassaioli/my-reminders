@@ -16,6 +16,7 @@ import qualified Data.ByteString.Char8       as BC
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.Connect.Descriptor     as CD
 import qualified Data.Map                    as M (Map, fromList)
+import           Data.Monoid
 import qualified Data.Text                   as T
 import           Data.Text.Encoding          (decodeUtf8, encodeUtf8)
 import qualified Data.Time.Clock.POSIX       as P
@@ -28,8 +29,10 @@ import           Network.HTTP.Types
 import           Network.URI
 import           NetworkHelpers
 import qualified Snap.AtlassianConnect       as AC
+import qualified Snap.Snaplet                as SS
 import           Web.Connect.QueryStringHash
 import qualified Web.JWT                     as JWT
+import Control.Monad.State (get)
 
 data UserWithDetails = UserWithDetails
    { name         :: AC.UserKey
@@ -52,33 +55,34 @@ data ProductErrorResponse = ProductErrorResponse
    } deriving (Show, Generic)
 
 getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either ProductErrorResponse UserWithDetails)
-getUserDetails tenant userKey = makeGetRequest tenant usernameUrl
+getUserDetails tenant userKey = do
+    rmConf <- getAppConf
+    SS.with connect $ makeGetRequest tenant usernameUrl (proxyUpdate rmConf)
   where
+    proxyUpdate rmConf = setPotentialProxy (getProxyFromConf productBaseUrlString rmConf)
+    productBaseUrlString = show . AC.getURI . AC.baseUrl $ tenant
+
     usernameUrl :: T.Text
-    usernameUrl = userQueryUri `T.append` encodeParam userKey
+    usernameUrl = "/rest/api/2/user?username=" `T.append` encodeParam userKey
 
-    encodeParam :: T.Text -> T.Text
-    encodeParam = decodeUtf8 . urlEncode True . encodeUtf8
-
-    userQueryUri :: T.Text
-    userQueryUri = "/rest/api/2/user?username="
+encodeParam :: T.Text -> T.Text
+encodeParam = decodeUtf8 . urlEncode True . encodeUtf8
 
 -- TODO extract everything below this line to the Atlassian Connect Core Library
 
-makeGetRequest :: FromJSON a => AC.Tenant -> T.Text -> AppHandler (Either ProductErrorResponse a)
-makeGetRequest tenant productRelativeUrl = do
+-- TODO we cannot rely upon AppHandler, just AtlassianConnect. Which means that we should extract out the endo for the proxy
+makeGetRequest :: FromJSON a => AC.Tenant -> T.Text -> Endo Request -> SS.Handler b AC.Connect (Either ProductErrorResponse a)
+makeGetRequest tenant productRelativeUrl requestModifications = do
     currentTime <- MI.liftIO P.getPOSIXTime
-    pluginKey <- fmap AC.connectPluginKey AC.getConnect
+    pluginKey <- fmap AC.connectPluginKey get
     case generateJWTToken pluginKey currentTime (AC.sharedSecret tenant) GET productBaseUrl url of
         Nothing -> return . Left $ ProductErrorResponse 500 "Failed to generate a JWT token to make the request."
-        (Just signature) -> do
-            rmConf <- getAppConf
-            MI.liftIO $ runRequest defaultManagerSettings GET url
-                (  addHeader ("Accept","application/json")
-                <> addHeader ("Authorization", jwtPrefix `B.append` encodeUtf8 signature)
-                <> setPotentialProxy (getProxyFromConf productBaseUrlString rmConf)
-                )
-                (basicResponder responder)
+        (Just signature) -> MI.liftIO $ runRequest defaultManagerSettings GET url
+            (  addHeader ("Accept","application/json")
+            <> addHeader ("Authorization", jwtPrefix `B.append` encodeUtf8 signature)
+            <> requestModifications
+            )
+            (basicResponder responder)
     where
         jwtPrefix :: B.ByteString
         jwtPrefix = BC.pack "JWT "
@@ -113,6 +117,6 @@ createClaims (CD.PluginKey pluginKey) fromTime queryStringHash = JWT.JWTClaimsSe
 
 responder :: FromJSON a => Int -> BL.ByteString -> Either ProductErrorResponse a
 responder 200 body = case eitherDecode body of
-   Right user -> Right user
-   Left err -> Left $ ProductErrorResponse 200 (T.pack $ "Can't parse json response: " ++ show err)
+   Right jsonResponse -> Right jsonResponse
+   Left err -> Left $ ProductErrorResponse 200 (T.pack $ "Could not parse the json response: " ++ show err)
 responder responseCode body = Left $ ProductErrorResponse responseCode (decodeUtf8 . BL.toStrict $ body)

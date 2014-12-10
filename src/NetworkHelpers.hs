@@ -22,7 +22,7 @@ setPotentialProxy = maybeEndo setProxy
 
 getProxyFromConf :: String -> AppConf -> Maybe Proxy
 getProxyFromConf baseUrl conf = 
-  if isPrefixOf "https" baseUrl
+  if "https" `isPrefixOf` baseUrl
     then rmHttpSecureProxy conf
     else rmHttpProxy conf
 
