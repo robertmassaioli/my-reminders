@@ -57,7 +57,6 @@ Executable my-reminders
       base                      >= 4.6     && < 5
     , atlassian-connect-descriptor
     , atlassian-connect-core
-    , atlassian-connect         == 0.1.*
     , process                   == 1.2.*
     , filepath                  == 1.3.*
     , directory                 >= 1.1     && < 1.3
