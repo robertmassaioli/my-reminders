@@ -9,23 +9,24 @@ module ReminderHandlers
   ) where
 
 import           Application
-import           Control.Monad              (void)
+import           Control.Monad                     (void)
 import           Data.Aeson
-import           Data.Aeson.Types           (Options, defaultOptions,
-                                             fieldLabelModifier)
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.Text                  as T
+import           Data.Aeson.Types                  (Options, defaultOptions,
+                                                    fieldLabelModifier)
+import qualified Data.ByteString.Char8             as BC
+import qualified Data.Text                         as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
-import qualified Model.UserDetails          as UD
+import qualified Model.UserDetails                 as UD
 import           Persistence.PostgreSQL
-import qualified Persistence.Reminder       as P
-import qualified Snap.AtlassianConnect      as AC
-import qualified Snap.Core                  as SC
-import qualified Snap.Snaplet               as SS
+import qualified Persistence.Reminder              as P
+import qualified Snap.AtlassianConnect             as AC
+import qualified Snap.AtlassianConnect.HostRequest as AC
+import qualified Snap.Core                         as SC
+import qualified Snap.Snaplet                      as SS
 import           SnapHelpers
-import qualified WithToken                  as WT
+import qualified WithToken                         as WT
 
 type TimeDelay = Integer
 
@@ -169,7 +170,7 @@ bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
   potentialUserDetails <- UD.getUserDetails tenant userKey
   case potentialUserDetails of
-    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
+    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
     Right userDetails -> void $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
   where
     userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
