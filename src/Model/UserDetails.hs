@@ -18,6 +18,8 @@ import           NetworkHelpers
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Snaplet                      as SS
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as BC
 
 data UserWithDetails = UserWithDetails
    { name         :: AC.UserKey
@@ -35,13 +37,16 @@ instance ToJSON UserWithDetails
 getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either AC.ProductErrorResponse UserWithDetails)
 getUserDetails tenant userKey = do
     rmConf <- getAppConf
-    SS.with connect $ AC.makeGetRequest tenant usernameUrl (proxyUpdate rmConf)
+    SS.with connect $ AC.hostGetRequest tenant usernameUrl queryParams (proxyUpdate rmConf)
   where
     proxyUpdate rmConf = setPotentialProxy (getProxyFromConf productBaseUrlString rmConf)
     productBaseUrlString = show . AC.getURI . AC.baseUrl $ tenant
 
-    usernameUrl :: T.Text
-    usernameUrl = "/rest/api/2/user?username=" `T.append` encodeParam userKey
+    usernameUrl :: B.ByteString
+    usernameUrl = "/rest/api/2/user"
+
+    queryParams :: [(B.ByteString, Maybe B.ByteString)]
+    queryParams = [("username", Just . encodeUtf8 $ userKey)]
 
 encodeParam :: T.Text -> T.Text
 encodeParam = decodeUtf8 . urlEncode True . encodeUtf8
