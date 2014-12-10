@@ -11,6 +11,21 @@ by a certain date then you would really like to be reminded to check up on that 
 date. That is what the My Reminders plugin for JIRA solves, it will remind you of an issue in a given
 amount of time.
 
+## Screenshots
+
+### Create a Reminder
+
+![Creating a reminder](https://marketplace-cdn.atlassian.com/files/images/3cdcd53d-7492-4378-ac0c-749283ae2028.png)
+
+
+### Recieve an Email Reminder
+
+![Recieve an Email Reminder](https://marketplace-cdn.atlassian.com/files/images/ef111287-5d77-49a7-ae67-cc596b71dd26.png)
+
+### Manage your Reminders
+
+![Manage your Reminders](https://marketplace-cdn.atlassian.com/files/images/b268f65e-0f7f-4dd7-8cd4-f2dd42b15b7e.png)
+
 ## Developing the Atlassian Connect Addon
 
 ### Database setup
