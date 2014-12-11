@@ -135,7 +135,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
-  appConnect <- SS.nestSnaplet "connect" connect (AC.initConnectSnaplet configDataDir modifiedDescriptor)
+  appConnect <- SS.nestSnaplet "connect" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf

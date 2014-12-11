@@ -9,6 +9,7 @@ module Model.UserDetails
 import           AppConfig
 import           Application
 import           Data.Aeson
+import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
 import qualified Data.Text                         as T
 import           Data.Text.Encoding                (decodeUtf8, encodeUtf8)
@@ -18,8 +19,6 @@ import           NetworkHelpers
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Snaplet                      as SS
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as BC
 
 data UserWithDetails = UserWithDetails
    { name         :: AC.UserKey
@@ -47,6 +46,3 @@ getUserDetails tenant userKey = do
 
     queryParams :: [(B.ByteString, Maybe B.ByteString)]
     queryParams = [("username", Just . encodeUtf8 $ userKey)]
-
-encodeParam :: T.Text -> T.Text
-encodeParam = decodeUtf8 . urlEncode True . encodeUtf8
