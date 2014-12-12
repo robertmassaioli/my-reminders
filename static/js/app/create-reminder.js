@@ -1,4 +1,4 @@
-define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/pagetoken'], function(URI, HostRequest, Mustache, moment) {
+define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken'], function(URI, HostRequest, Mustache, moment, RS) {
    require(['aui/form-validation']);
 
    AJS.$.fn.flashClass = function(c, userOptions) {
@@ -35,6 +35,10 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          year: "Year"
       };
 
+      var resetPanelHeight = function() {
+         RS.resizeToBottomOf(AJS.$(".bottom-container"));
+      };
+
       var createReminder = function(timeDelay, timeUnit, message) {
          setCreationState(creationState.creating);
 
@@ -53,7 +57,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                },
                User: {
                   Key: user.key,
-                  Email: user.emailAddress,
+                  Email: user.emailAddress
                },
                TimeDelay: timeDelay,
                TimeUnit: timeUnit
@@ -138,6 +142,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          if(state === creationState.created || state == creationState.failed) {
             timeoutHandle = setTimeout(function() {
                setCreationState(creationState.notCreating);
+               resetPanelHeight();
             }, 3000);
          }
       };
@@ -219,10 +224,20 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                });
 
                // Surface the messages in tooltips.
-               AJS.$(".reminders .reminder").tooltip({
-                  aria: true,
-                  title: setTooltipTitle,
-                  gravity: "nw"
+               AJS.$(".reminders .reminder").each(function() {
+                  // We need to make sure that the tooltips don't cause the window to get larger vertically
+                  // Or to scrunch up on one side of the screen. For that reason always make the tooltipl flow
+                  // upwards (south) of the lozenge and if the reminder is left of center make it flow right (west) and
+                  // vice versa.
+                  var reminder = AJS.$(this);
+                  var reminderCenter = reminder.position().left + (reminder.width() / 2);
+                  var windowCenter = AJS.$(window).width() / 2;
+                  var isLeft = reminderCenter < windowCenter;
+                  reminder.tooltip({
+                     aria: true,
+                     title: setTooltipTitle,
+                     gravity: isLeft ? "sw" : "se"
+                  });
                });
             }
 
@@ -247,7 +262,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             AP.resize();
             genericErrorTimer = setTimeout(function() {
                AJS.$("#error-message").addClass("hidden");
-               AP.resize();
+               resetPanelHeight();
             }, 10000);
          }
       };
@@ -263,7 +278,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          AJS.$("#reminder-help").tooltip({
             aria: true,
             title: setTooltipTitle,
-            gravity: "nw"
+            gravity: "w"
          });
 
          AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
@@ -310,7 +325,12 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
          AJS.$(".custom-operations .cancel").click(handle(function() {
             resetCreateForm();
+            resetPanelHeight();
          }));
+
+         AJS.$("body").on('remove', '.tipsy', function() {
+            resetPanelHeight();
+         });
 
          setCreationState(creationState.notCreating);
          resetCreateForm();
