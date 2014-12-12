@@ -14,7 +14,7 @@ atlassianHomepage = fromJust $ parseURI "http://www.atlassian.com/"
 addonDescriptor :: Plugin
 addonDescriptor =
   basePlugin
-    { pluginName      = Nothing -- Will be injected by the connect snaplet
+    { pluginName      = Just . Name $ "My Reminders"
     , pluginDescription  = Just "A universal personal reminder plugin for Cloud; never forget again."
     , vendor         = Just $ Vendor (Name "Atlassian") atlassianHomepage
     , lifecycle = Just $ defaultLifecycle
@@ -38,6 +38,8 @@ addonJiraModules = emptyJIRAModules
          , wpUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
          , wpLocation = "atl.jira.view.issue.right.context"
          , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+         , wpWeight = Nothing
+         , wpLayout = Nothing
          }
       ]
     , jiraGeneralPages =

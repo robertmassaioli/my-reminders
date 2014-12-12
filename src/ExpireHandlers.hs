@@ -6,7 +6,6 @@ module ExpireHandlers
 
 import qualified AppConfig                           as CONF
 import           Application
-import           Snap.AtlassianConnect                     (Connect (..), getConnect)
 import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString                     as B
@@ -22,6 +21,7 @@ import           Finder
 import           Mail.Hailgun
 import           Persistence.PostgreSQL              (withConnection)
 import           Persistence.Reminder
+import           Snap.AtlassianConnect               (Connect (..), getConnect)
 import qualified Snap.Core                           as SC
 import qualified Snap.Snaplet                        as SS
 import           SnapHelpers
