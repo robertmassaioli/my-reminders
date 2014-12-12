@@ -11,10 +11,8 @@ import           Application
 import           Data.Aeson
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
-import qualified Data.Text                         as T
-import           Data.Text.Encoding                (decodeUtf8, encodeUtf8)
+import           Data.Text.Encoding                (encodeUtf8)
 import           GHC.Generics
-import           Network.HTTP.Types
 import           NetworkHelpers
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC
