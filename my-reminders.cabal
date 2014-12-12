@@ -10,8 +10,6 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >= 1.20
 
-data-files:  resources/connect.cfg
-
 Flag development
   Description: Whether to build the server in development (interpreted) mode
   Default: False
@@ -28,6 +26,7 @@ Executable my-reminders
                  , Data.Padding.PKCS
                  , Data.Padding.Util
                  , Model.UserDetails
+                 , Paths_my_reminders
                  , Persistence.Instances
                  , Persistence.Reminder
                  , Persistence.PostgreSQL
