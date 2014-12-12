@@ -9,24 +9,24 @@ module ReminderHandlers
   ) where
 
 import           Application
+import           Control.Monad                     (void)
 import           Data.Aeson
-import           Data.Aeson.Types           (defaultOptions, fieldLabelModifier, Options)
-import qualified Data.ByteString.Char8      as BC
-import qualified Data.Text                  as T
+import           Data.Aeson.Types                  (Options, defaultOptions,
+                                                    fieldLabelModifier)
+import qualified Data.ByteString.Char8             as BC
+import qualified Data.Text                         as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
-import qualified Snap.Core                  as SC
-import qualified Snap.Snaplet               as SS
-
-import qualified Connect.AtlassianTypes     as CA
-import qualified Connect.Tenant             as CT
-import qualified Persistence.Reminder       as P
+import qualified Model.UserDetails                 as UD
 import           Persistence.PostgreSQL
-import qualified Persistence.Tenant         as TN
+import qualified Persistence.Reminder              as P
+import qualified Snap.AtlassianConnect             as AC
+import qualified Snap.AtlassianConnect.HostRequest as AC
+import qualified Snap.Core                         as SC
+import qualified Snap.Snaplet                      as SS
 import           SnapHelpers
-import qualified WithToken                  as WT
-import qualified Model.UserDetails as UD
+import qualified WithToken                         as WT
 
 type TimeDelay = Integer
 
@@ -42,20 +42,20 @@ data TimeUnit
 data ReminderRequest = ReminderRequest
   { prqTimeDelay :: TimeDelay
   , prqTimeUnit  :: TimeUnit
-  , prqIssue     :: CA.IssueDetails
-  , prqUser      :: CA.UserDetails
+  , prqIssue     :: AC.IssueDetails
+  , prqUser      :: AC.UserDetails
   , prqMessage   :: Maybe T.Text
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
-   { prsReminderId     :: Integer
-   , prsIssueId        :: CA.IssueId
-   , prsIssueKey       :: CA.IssueKey
-   , prsIssueSummary   :: CA.IssueSummary
-   , prsUserKey        :: CA.UserKey
-   , prsUserEmail      :: String
-   , prsMessage        :: Maybe T.Text
-   , prsDate           :: UTCTime
+   { prsReminderId   :: Integer
+   , prsIssueId      :: AC.IssueId
+   , prsIssueKey     :: AC.IssueKey
+   , prsIssueSummary :: AC.IssueSummary
+   , prsUserKey      :: AC.UserKey
+   , prsUserEmail    :: String
+   , prsMessage      :: Maybe T.Text
+   , prsDate         :: UTCTime
    } deriving (Eq, Show, Generic)
 
 data ReminderIdList = ReminderIdList
@@ -71,26 +71,26 @@ instance FromJSON TimeUnit
 issueDetailsOptions :: Options
 issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
 
-instance ToJSON CA.UserDetails where
+instance ToJSON AC.UserDetails where
    toJSON o = object
-      [ "Key" .= CA.userKey o
-      , "Email" .= (BC.unpack . CA.userEmail $ o)
+      [ "Key" .= AC.userKey o
+      , "Email" .= (BC.unpack . AC.userEmail $ o)
       ]
 
-instance FromJSON CA.UserDetails where
+instance FromJSON AC.UserDetails where
    parseJSON (Object o) = do
       key <- o .: "Key"
       email <- o .: "Email"
-      return CA.UserDetails
-         { CA.userKey = key
-         , CA.userEmail = BC.pack email
+      return AC.UserDetails
+         { AC.userKey = key
+         , AC.userEmail = BC.pack email
          }
    parseJSON _ = fail "Expect the User to be a JSON object but it was not."
 
-instance ToJSON CA.IssueDetails where
+instance ToJSON AC.IssueDetails where
    toJSON = genericToJSON issueDetailsOptions
 
-instance FromJSON CA.IssueDetails where
+instance FromJSON AC.IssueDetails where
    parseJSON = genericParseJSON issueDetailsOptions
 
 instance ToJSON ReminderRequest where
@@ -139,17 +139,17 @@ toReminderResponse reminder = ReminderResponse
 standardAuthError :: AppHandler ()
 standardAuthError = respondWithError unauthorised "You need to login before you query for reminders."
 
-getRemindersForIssue :: CT.ConnectTenant -> AppHandler ()
+getRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 getRemindersForIssue (_, Nothing) = standardAuthError
 getRemindersForIssue (tenant, Just userKey) = do
-   potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe CA.IssueId)
+   potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe AC.IssueId)
    case potentialIssueId of
       Just issueId -> do
          issueReminders <- SS.with db $ withConnection (\connection -> P.getLiveRemindersForIssueByUser connection tenant userKey issueId)
          writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
-clearRemindersForIssue :: CT.ConnectTenant -> AppHandler ()
+clearRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 clearRemindersForIssue _ = undefined
 
 handleUserReminders :: AppHandler ()
@@ -159,29 +159,27 @@ handleUserReminders = handleMethods
    , (SC.DELETE, WT.tenantFromToken bulkDeleteEmails)
    ]
 
-getUserReminders :: CT.ConnectTenant -> AppHandler ()
+getUserReminders :: AC.TenantWithUser -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
    userReminders <- SS.with db $ withConnection (P.getLiveRemindersByUser tenant userKey)
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
-   
-bulkUpdateUserEmails :: CT.ConnectTenant -> AppHandler ()
+
+bulkUpdateUserEmails :: AC.TenantWithUser -> AppHandler ()
 bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
-  potentialUserDetails <- UD.getUserDetails userKey tenant
+  potentialUserDetails <- UD.getUserDetails tenant userKey
   case potentialUserDetails of
-    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . UD.perMessage) err)
-    Right userDetails -> do
-      SS.with db $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
-      return ()
+    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
+    Right userDetails -> void $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
   where
-    userDetailsConvert :: UD.UserWithDetails -> CA.UserDetails
-    userDetailsConvert uwd = CA.UserDetails
-      { CA.userKey = UD.name uwd
-      , CA.userEmail = BC.pack $ UD.emailAddress uwd
+    userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
+    userDetailsConvert uwd = AC.UserDetails
+      { AC.userKey = UD.name uwd
+      , AC.userEmail = BC.pack $ UD.emailAddress uwd
       }
 
-bulkDeleteEmails :: CT.ConnectTenant -> AppHandler ()
+bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
 bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
    SS.with db $ withConnection (P.deleteManyRemindersForUser tenant (pids reminderIds) userKey)
@@ -202,7 +200,7 @@ handleReminder = handleMethods
   , (SC.DELETE,  WT.tenantFromToken deleteReminderHandler)
   ]
 
-getReminderHandler :: CT.ConnectTenant -> AppHandler ()
+getReminderHandler :: AC.TenantWithUser -> AppHandler ()
 getReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 getReminderHandler (tenant, Just userKey) = do
    rawReminderId <- SC.getQueryParam "reminderId"
@@ -215,7 +213,7 @@ getReminderHandler (tenant, Just userKey) = do
             Just reminder -> writeJson (toReminderResponse reminder)
       Nothing -> respondWithError badRequest "reminderId not found, please pass the reminderId in the request. Do not know which reminder to lookup."
 
-deleteReminderHandler :: CT.ConnectTenant -> AppHandler ()
+deleteReminderHandler :: AC.TenantWithUser -> AppHandler ()
 deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 deleteReminderHandler (tenant, Just userKey) = do
    potentialRawReminderId <- SC.getPostParam "reminderId"
@@ -231,7 +229,7 @@ deleteReminderHandler (tenant, Just userKey) = do
                respondInternalServer
       Nothing -> respondWithError badRequest "A reminderId is required to see which reminder should be deleted."
 
-addReminderHandler :: CT.ConnectTenant -> AppHandler ()
+addReminderHandler :: AC.TenantWithUser -> AppHandler ()
 addReminderHandler ct = do
   request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
   let maybeReminder = eitherDecode request :: Either String ReminderRequest
@@ -239,7 +237,7 @@ addReminderHandler ct = do
     Left err -> respondWithError badRequest err
     Right reminderRequest -> addReminder reminderRequest ct
 
-addReminder :: ReminderRequest -> CT.ConnectTenant -> AppHandler ()
+addReminder :: ReminderRequest -> AC.TenantWithUser -> AppHandler ()
 addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addReminder reminderRequest (tenant, Just userKey) =
   if userKey /= requestUK
@@ -250,16 +248,16 @@ addReminder reminderRequest (tenant, Just userKey) =
         Just _ -> respondNoContent
         Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
   where
-    requestUK = CA.userKey . prqUser $ reminderRequest
+    requestUK = AC.userKey . prqUser $ reminderRequest
 
-addReminderFromRequest :: ReminderRequest -> TN.Tenant -> CA.UserDetails -> Connection -> IO (Maybe Integer)
+addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userDetails conn = do
   currentTime <- getCurrentTime
   let date' = addUTCTime dateDiff currentTime
   P.addReminder conn date' tenantId' iDetails userDetails message'
   where
     dateDiff = timeDiffForReminderRequest reminderRequest
-    tenantId' = TN.tenantId tenant
+    tenantId' = AC.tenantId tenant
     iDetails = prqIssue reminderRequest
     message' = prqMessage reminderRequest
 

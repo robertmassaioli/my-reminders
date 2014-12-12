@@ -8,20 +8,20 @@ module AppConfig
    ) where
 
 import           ConfigurationHelpers
-import           Connect.Descriptor
-import           Connect.Zone
-import           Control.Applicative        (pure, (<*>))
+import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (join, when)
 import qualified Control.Monad.IO.Class     as MI
 import qualified Data.ByteString.Char8      as BSC
 import qualified Data.Configurator.Types    as DCT
 import           Data.ConfiguratorTimeUnits ()
+import qualified Data.Connect.Descriptor    as D
 import qualified Data.EnvironmentHelpers    as DE
 import           Data.List                  (find)
 import           Data.Maybe                 (fromMaybe, isJust)
 import           Data.Text.Encoding         (encodeUtf8)
 import qualified Data.Time.Units            as DTU
 import           Mail.Hailgun
+import qualified MicrosZone                 as MZ
 import           Network.HTTP.Client        (Proxy (..))
 import qualified Network.URI                as NU
 import qualified Snap.Snaplet               as SS
@@ -30,16 +30,16 @@ import           System.Exit                (ExitCode (..), exitWith)
 import           Text.PrettyPrint.Boxes
 
 data AppConf = AppConf
-   { rmExpireKey              :: Key BSC.ByteString AppConf
+   { rmExpireKey              :: D.Key BSC.ByteString AppConf
    , rmHailgunContext         :: HailgunContext
    , rmFromUser               :: String
    , rmMaxExpiryWindowMinutes :: DTU.Minute
-   , rmPurgeKey               :: Key BSC.ByteString AppConf
+   , rmPurgeKey               :: D.Key BSC.ByteString AppConf
    , rmPurgeRetention         :: DTU.Day
    , rmHttpProxy              :: Maybe Proxy
    , rmHttpSecureProxy        :: Maybe Proxy
-   , rmMigrationKey           :: Key BSC.ByteString AppConf
-   , rmStatisticsKey          :: Key BSC.ByteString AppConf
+   , rmMigrationKey           :: D.Key BSC.ByteString AppConf
+   , rmStatisticsKey          :: D.Key BSC.ByteString AppConf
    }
 
 class HasAppConf m where
@@ -58,7 +58,7 @@ data EnvConf = EnvConf
    , ecMailgunApiKey   :: Maybe String
    , ecHttpProxy       :: Maybe String
    , ecHttpSecureProxy :: Maybe String
-   , ecZone            :: Zone
+   , ecZone            :: MZ.Zone
    } deriving (Eq, Show)
 
 loadConfFromEnvironment :: IO EnvConf
@@ -74,22 +74,22 @@ loadConfFromEnvironment = do
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
       , ecHttpSecureProxy  = get "https_proxy"
-      , ecZone             = fromMaybe Dev $ zoneFromString =<< get "ZONE"
+      , ecZone             = fromMaybe MZ.Dev $ MZ.zoneFromString =<< get "ZONE"
       }
 
 search :: [(String, String)] -> String -> Maybe String
-search pairs key = fmap snd $ find ((==) key . fst) pairs
+search pairs key = snd <$> find ((==) key . fst) pairs
 
 guardConfig :: EnvConf -> IO ()
 guardConfig ec = when (isDogOrProd && not allKeysPresent) $ do
    putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ (show . ecZone $ ec)
    exitWith (ExitFailure 10)
    where
-      isDogOrProd = ecZone ec `elem` [Dog, Prod]
+      isDogOrProd = ecZone ec `elem` [MZ.Dog, MZ.Prod]
       allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey, ecMailgunDomain, ecMailgunApiKey] <*> pure ec
 
-instance DCT.Configured (Key BSC.ByteString a) where
-  convert (DCT.String s) = Just (Key (encodeUtf8 s))
+instance DCT.Configured (D.Key BSC.ByteString a) where
+  convert (DCT.String s) = Just (D.Key (encodeUtf8 s))
   convert _ = Nothing
 
 loadAppConfOrExit :: DCT.Config -> IO AppConf
@@ -128,8 +128,8 @@ loadAppConfOrExit config = do
       , rmStatisticsKey = fromConf (fmap packInKey . ecStatisticsKey) statisticsKey
       }
 
-packInKey :: String -> Key BSC.ByteString a
-packInKey = Key . BSC.pack
+packInKey :: String -> D.Key BSC.ByteString a
+packInKey = D.Key . BSC.pack
 
 envOrDefault :: EnvConf -> (EnvConf -> Maybe a) -> a -> a
 envOrDefault env f def = fromMaybe def $ f env

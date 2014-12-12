@@ -12,12 +12,8 @@ module Site
 
 import qualified AppConfig                                   as CONF
 import           Application
-import qualified Connect.Connect                             as CC
-import qualified Connect.Data                                as CD
-import qualified Connect.PageToken                           as CPT
-import           Connect.Routes
-import qualified Connect.Tenant                              as CT
-import qualified Connect.Zone                                as CZ
+import qualified AtlassianConnect                            as AC
+import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
@@ -32,8 +28,9 @@ import           Healthcheck
 import           Heartbeat
 import qualified Heist                                       as H
 import qualified Heist.Interpreted                           as HI
+import qualified LifecycleHandlers                           as LH
+import qualified MicrosZone                                  as MZ
 import           MigrationHandler
-import qualified Persistence.Tenant                          as PT
 import           PurgeHandlers
 import           ReminderHandlers
 import qualified Snap.Core                                   as SC
@@ -72,31 +69,31 @@ viewRemindersPanel = createConnectPanel "view-jira-reminders"
 
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
-  connectData <- CD.getConnect
+  connectData <- AC.getConnect
   SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## HI.textSplice $ T.pack . show . PT.baseUrl $ tenant
-      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (CPT.encryptPageToken (CC.connectAES connectData) token)
+      "productBaseUrl" H.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
+      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
       -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
       "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey
 
 
-withTokenAndTenant :: (CPT.PageToken -> CT.ConnectTenant -> AppHandler ()) -> AppHandler ()
+withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
 withTokenAndTenant processor = TJ.withTenant $ \ct -> do
-  token <- liftIO $ CPT.generateTokenCurrentTime ct
+  token <- liftIO $ AC.generateTokenCurrentTime ct
   processor token ct
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, SS.Handler App App ())]
-routes = connectRoutes ++ applicationRoutes ++ redirects
+routes = LH.lifecycleRoutes ++ applicationRoutes ++ redirects
 
 applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
-  [ ("/"                            , homeHandler sendHomePage)
+  [ ("/"                            , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
-  , ("/panel/jira/reminder/create"  , createReminderPanel )
+  , ("/panel/jira/reminder/create"  , createReminderPanel)
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
   , ("/rest/reminder"               , handleReminder)
   , ("/rest/reminders"              , handleReminders)
@@ -128,16 +125,17 @@ redirects =
 ------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SS.SnapletInit App App
-app = SS.makeSnaplet "app" "reminder-me connect" Nothing $ do
+app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
-  zone <- liftIO CZ.fromEnv
+  zone <- liftIO MZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
   SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
-  appConnect <- SS.nestSnaplet "connect" connect (CC.initConnectSnaplet configDataDir zone)
+  let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
+  appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf

@@ -6,10 +6,9 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
-import qualified Connect.AtlassianTypes     as AT
-import qualified Connect.Tenant             as CT
-import           Control.Applicative        (pure, (<*>), (<$>))
-import           Control.Monad              (when)
+import qualified Snap.AtlassianConnect as AC
+import           Control.Applicative        (pure, (<$>), (<*>))
+import           Control.Monad              (void, when)
 import           Data.Aeson
 import           Data.Aeson.Types           (Options, defaultOptions,
                                              fieldLabelModifier)
@@ -20,7 +19,6 @@ import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import qualified Persistence.PostgreSQL     as DB
 import qualified Persistence.Reminder       as P
-import qualified Persistence.Tenant         as PT
 import qualified Snap.Core                  as SC
 import qualified SnapHelpers                as SH
 import qualified TenantJWT                  as WT
@@ -28,7 +26,7 @@ import qualified TenantJWT                  as WT
 handleIssueUpdateWebhook :: AppHandler ()
 handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
 
-handleWebhook :: (PT.Tenant -> IssueUpdate -> AppHandler ()) -> CT.ConnectTenant -> AppHandler ()
+handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler ()) -> AC.TenantWithUser -> AppHandler ()
 handleWebhook webhookHandler (tenant, _) = do
    parsedRequest <- webhookDataFromRequest
    case parsedRequest of
@@ -42,7 +40,7 @@ webhookDataFromRequest = eitherDecode <$> SC.readRequestBody dataLimitBytes
    where
       dataLimitBytes = 10 ^ (7 :: Integer) -- We want to not accept webhook responses larger than 10 MB
 
-handleUpdate :: PT.Tenant -> IssueUpdate -> AppHandler ()
+handleUpdate :: AC.Tenant -> IssueUpdate -> AppHandler ()
 handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
 
 -- Issues will be updated many times and the connect webhooks cannot be easily restricted to certain
@@ -54,7 +52,7 @@ handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB
 reminderUpdateRequired :: IssueUpdate -> Bool
 reminderUpdateRequired iu = any isJust $ [iuNewKey, iuNewSummary] <*> pure iu
 
-handleWebhookUpdate :: PT.Tenant -> IssueUpdate -> Connection -> IO ()
+handleWebhookUpdate :: AC.Tenant -> IssueUpdate -> Connection -> IO ()
 handleWebhookUpdate tenant issueUpdate conn = do
    maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey conn) (iuNewKey issueUpdate)
    maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary conn) (iuNewSummary issueUpdate)
@@ -77,7 +75,7 @@ webhookDataToIssueUpdate webhookData = IssueUpdate
       findCli fieldName = DL.find ((==) fieldName . cliField) cli
 
 data IssueUpdate = IssueUpdate
-   { iuId         :: AT.IssueId
+   { iuId         :: AC.IssueId
    , iuNewKey     :: Maybe T.Text
    , iuNewSummary :: Maybe T.Text
    } deriving (Show)
@@ -121,5 +119,5 @@ handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebh
 
 -- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
 -- against that tenant in the database.
-handleDelete :: PT.Tenant -> IssueUpdate -> AppHandler ()
-handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return ()
+handleDelete :: AC.Tenant -> IssueUpdate -> AppHandler ()
+handleDelete tenant issueUpdate = void $ DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate))

@@ -5,7 +5,7 @@ module Persistence.PostgreSQL
 
 import Database.PostgreSQL.Simple.FromField (FromField)
 import Database.PostgreSQL.Simple
-import Snap.Snaplet.PostgresqlSimple (getPostgresState, pgPool, HasPostgres)
+import Snap.Snaplet.PostgresqlSimple (getPostgresState, HasPostgres, Postgres(..))
 import Control.Monad.IO.Class
 
 import qualified Data.Pool as P
@@ -16,5 +16,7 @@ insertReturning = query
 withConnection :: HasPostgres m => (Connection -> IO a) -> m a
 withConnection f = do
   postgres <- getPostgresState
-  P.withResource (pgPool postgres) $ \conn ->
+  let postgresPool = case postgres of PostgresPool pgPool -> pgPool
+                                      _ -> error "Postgres connection is not a Pool"
+  P.withResource postgresPool $ \conn ->
     liftIO $ withTransaction conn (f conn)

@@ -21,7 +21,7 @@ module Persistence.Reminder
    , deleteManyRemindersForUser
    ) where
 
-import qualified Connect.AtlassianTypes             as CA
+import qualified Snap.AtlassianConnect as AC
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class
@@ -35,21 +35,21 @@ import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
 import           GHC.Int
 import           Network.URI                        (URI)
+import           Persistence.Instances              ()
 import           Persistence.PostgreSQL
-import qualified Persistence.Tenant                 as PT
 
 type ReminderId = Integer
 
 data Reminder = Reminder
    { reminderReminderId           :: ReminderId
    , reminderTenantId             :: Integer
-   , reminderIssueId              :: CA.IssueId
-   , reminderOriginalIssueKey     :: CA.IssueKey
-   , reminderIssueKey             :: CA.IssueKey
-   , reminderOriginalIssueSummary :: CA.IssueSummary
-   , reminderIssueSummary         :: CA.IssueSummary
-   , reminderUserKey              :: CA.UserKey
-   , reminderUserEmail            :: CA.UserEmail
+   , reminderIssueId              :: AC.IssueId
+   , reminderOriginalIssueKey     :: AC.IssueKey
+   , reminderIssueKey             :: AC.IssueKey
+   , reminderOriginalIssueSummary :: AC.IssueSummary
+   , reminderIssueSummary         :: AC.IssueSummary
+   , reminderUserKey              :: AC.UserKey
+   , reminderUserEmail            :: AC.UserEmail
    , reminderMessage              :: Maybe T.Text
    , reminderDate                 :: UTCTime
    } deriving (Eq,Show,Generic)
@@ -59,13 +59,13 @@ instance FromRow Reminder where
 
 data EmailReminder = EmailReminder
    { erReminderId           :: ReminderId
-   , erIssueId              :: CA.IssueId
-   , erOriginalIssueKey     :: CA.IssueKey
-   , erIssueKey             :: CA.IssueKey
-   , erOriginalIssueSummary :: CA.IssueSummary
-   , erIssueSummary         :: CA.IssueSummary
-   , erUserKey              :: CA.UserKey
-   , erUserEmail            :: CA.UserEmail
+   , erIssueId              :: AC.IssueId
+   , erOriginalIssueKey     :: AC.IssueKey
+   , erIssueKey             :: AC.IssueKey
+   , erOriginalIssueSummary :: AC.IssueSummary
+   , erIssueSummary         :: AC.IssueSummary
+   , erUserKey              :: AC.UserKey
+   , erUserEmail            :: AC.UserEmail
    , erReminderMessage      :: Maybe T.Text
    , erReminderDate         :: UTCTime
    , erTenantBaseUrl        :: URI
@@ -74,7 +74,7 @@ data EmailReminder = EmailReminder
 instance FromRow EmailReminder where
    fromRow = EmailReminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
-addReminder :: Connection -> UTCTime -> Integer -> CA.IssueDetails -> CA.UserDetails -> Maybe T.Text -> IO (Maybe Integer)
+addReminder :: Connection -> UTCTime -> Integer -> AC.IssueDetails -> AC.UserDetails -> Maybe T.Text -> IO (Maybe Integer)
 addReminder conn date tenantId issueDetails userDetails message = do
   reminderID <- liftIO $ insertReturning conn
     [sql|
@@ -83,58 +83,58 @@ addReminder conn date tenantId issueDetails userDetails message = do
     |] (tenantId, iid, ikey, ikey, isum, isum, ukey, uemail, message, date)
   return . listToMaybe $ join reminderID
   where
-    iid = CA.issueId issueDetails
-    ikey = CA.issueKey issueDetails
-    isum = CA.issueSummary issueDetails
-    ukey = CA.userKey userDetails
-    uemail = CA.userEmail userDetails
+    iid = AC.issueId issueDetails
+    ikey = AC.issueKey issueDetails
+    isum = AC.issueSummary issueDetails
+    ukey = AC.userKey userDetails
+    uemail = AC.userEmail userDetails
 
-getReminderByUser :: PT.Tenant -> CA.UserKey -> ReminderId -> Connection -> IO (Maybe Reminder)
+getReminderByUser :: AC.Tenant -> AC.UserKey -> ReminderId -> Connection -> IO (Maybe Reminder)
 getReminderByUser tenant userKey pid conn = do
    result <- liftIO $ query conn
       [sql|
          SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM reminder WHERE id = ? AND tenantId = ? AND userKey = ?
-      |] (pid, PT.tenantId tenant, T.encodeUtf8 userKey)
+      |] (pid, AC.tenantId tenant, T.encodeUtf8 userKey)
    return . listToMaybe $ result
 
-getLiveRemindersByUser :: PT.Tenant -> CA.UserKey -> Connection -> IO [Reminder]
+getLiveRemindersByUser :: AC.Tenant -> AC.UserKey -> Connection -> IO [Reminder]
 getLiveRemindersByUser tenant userKey connection = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
          SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM reminder WHERE tenantId = ? AND userKey = ? AND date > ? ORDER BY date ASC
       |]
-      (PT.tenantId tenant, T.encodeUtf8 userKey, now)
+      (AC.tenantId tenant, T.encodeUtf8 userKey, now)
 
-getLiveRemindersForIssueByUser :: Connection -> PT.Tenant -> CA.UserKey -> CA.IssueId -> IO [Reminder]
+getLiveRemindersForIssueByUser :: Connection -> AC.Tenant -> AC.UserKey -> AC.IssueId -> IO [Reminder]
 getLiveRemindersForIssueByUser connection tenant userKey issueId = do
    now <- getCurrentTime
    liftIO $ query connection
       [sql|
          SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM reminder WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
       |]
-      (PT.tenantId tenant, issueId, T.encodeUtf8 userKey, now)
+      (AC.tenantId tenant, issueId, T.encodeUtf8 userKey, now)
 
-updateKeysForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueKey -> Connection -> IO Int64
+updateKeysForReminders :: AC.Tenant -> AC.IssueId -> AC.IssueKey -> Connection -> IO Int64
 updateKeysForReminders tenant issueId newIssueKey conn = liftIO $ execute conn
    [sql|
       UPDATE reminder SET issueKey = ? WHERE tenantId = ? AND issueId = ?
    |]
-   (newIssueKey, PT.tenantId tenant, issueId)
+   (newIssueKey, AC.tenantId tenant, issueId)
 
-updateSummariesForReminders :: PT.Tenant -> CA.IssueId -> CA.IssueSummary -> Connection -> IO Int64
+updateSummariesForReminders :: AC.Tenant -> AC.IssueId -> AC.IssueSummary -> Connection -> IO Int64
 updateSummariesForReminders tenant issueId newIssueSummary conn = liftIO $ execute conn
    [sql|
       UPDATE reminder SET issueSummary = ? WHERE tenantId = ? AND issueId = ?
    |]
-   (newIssueSummary, PT.tenantId tenant, issueId)
+   (newIssueSummary, AC.tenantId tenant, issueId)
 
-updateEmailForUser :: PT.Tenant -> CA.UserDetails -> [ReminderId] -> Connection -> IO Int64
+updateEmailForUser :: AC.Tenant -> AC.UserDetails -> [ReminderId] -> Connection -> IO Int64
 updateEmailForUser tenant userDetails reminderIds conn = liftIO $ execute conn
    [sql|
       UPDATE reminder SET userEmail = ? WHERE tenantId = ? AND userKey = ? AND id in ?
    |]
-   (CA.userEmail userDetails, PT.tenantId tenant, T.encodeUtf8 . CA.userKey $ userDetails, In reminderIds)
+   (AC.userEmail userDetails, AC.tenantId tenant, T.encodeUtf8 . AC.userKey $ userDetails, In reminderIds)
 
 getExpiredReminders :: UTCTime -> Connection -> IO [EmailReminder]
 getExpiredReminders expireTime conn = liftIO $ query conn
@@ -155,20 +155,20 @@ deleteManyReminders reminderIds conn = execute conn
       DELETE from reminder WHERE id in ?
    |] (Only . In $ reminderIds)
 
-deleteReminderForUser :: PT.Tenant -> CA.UserKey -> ReminderId -> Connection -> IO Int64
+deleteReminderForUser :: AC.Tenant -> AC.UserKey -> ReminderId -> Connection -> IO Int64
 deleteReminderForUser tenant userKey reminderId conn = execute conn
    [sql|
       DELETE from reminder WHERE id = ? AND tenantId = ? AND userKey = ?
-   |] (reminderId, PT.tenantId tenant, T.encodeUtf8 userKey)
+   |] (reminderId, AC.tenantId tenant, T.encodeUtf8 userKey)
 
-deleteRemindersForIssue :: PT.Tenant -> CA.IssueId -> Connection -> IO Int64
+deleteRemindersForIssue :: AC.Tenant -> AC.IssueId -> Connection -> IO Int64
 deleteRemindersForIssue tenant issueId conn = execute conn
    [sql|
       DELETE from reminder WHERE tenantId = ? AND issueId = ?
-   |] (PT.tenantId tenant, issueId)
+   |] (AC.tenantId tenant, issueId)
 
-deleteManyRemindersForUser :: PT.Tenant -> [ReminderId] -> CA.UserKey -> Connection -> IO Int64
+deleteManyRemindersForUser :: AC.Tenant -> [ReminderId] -> AC.UserKey -> Connection -> IO Int64
 deleteManyRemindersForUser tenant reminderIds userKey conn = execute conn
    [sql|
       DELETE from reminder WHERE tenantId = ? AND userKey = ? AND id in ?
-   |] (PT.tenantId tenant, userKey, In reminderIds)
+   |] (AC.tenantId tenant, userKey, In reminderIds)

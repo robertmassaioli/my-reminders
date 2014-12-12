@@ -4,13 +4,13 @@ module EmailContent
    ( reminderEmail
    ) where
 
-import           Connect.Connect         (connectPluginKey)
-import           Connect.Descriptor      (PluginKey (..))
 import           Data.ByteString.Lazy    (toStrict)
+import           Data.Connect.Descriptor (PluginKey (..), pluginKey)
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           EmailContext
 import           Mail.Hailgun
 import           Persistence.Reminder
+import           Snap.AtlassianConnect   (connectPlugin)
 import           Text.Hastache
 import           Text.Hastache.Context
 
@@ -30,7 +30,7 @@ reminderEmail emailContext reminder = do
       context "reminderMessage" = MuVariable . erReminderMessage $ reminder
       context "originalIssueKey" = MuVariable . erOriginalIssueKey $ reminder
       context "originalIssueSummary" = MuVariable . erOriginalIssueSummary $ reminder
-      context "pluginKey" = MuVariable . fromPluginKey . connectPluginKey . ecConnectConf $ emailContext
+      context "pluginKey" = MuVariable . fromPluginKey . pluginKey . connectPlugin . ecConnectConf $ emailContext
       context "showOriginal" = MuBool originalIsDifferent
       context _ = MuNothing
 

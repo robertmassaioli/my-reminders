@@ -11,12 +11,10 @@ dev: $(SOURCE)
 
 setup:
 			cabal sandbox init
-			cabal sandbox add-source vendor/atlassian-connect
 			cabal install --only-dependencies --enable-tests
 
 setup-verbose-install:
 			cabal sandbox init
-			cabal sandbox add-source vendor/atlassian-connect
 			cabal install --only-dependencies --enable-tests -v
 
 compile:
