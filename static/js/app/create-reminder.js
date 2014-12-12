@@ -1,4 +1,5 @@
-define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken'], function(URI, HostRequest, Mustache, moment, RS) {
+define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken', '../lib/jquery.datetimepicker'],
+   function(URI, HostRequest, Mustache, moment, RS) {
    require(['aui/form-validation']);
 
    AJS.$.fn.flashClass = function(c, userOptions) {
@@ -39,7 +40,8 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          RS.resizeToBottomOf(AJS.$(".bottom-container"));
       };
 
-      var createReminder = function(timeDelay, timeUnit, message) {
+      var createReminder = function(reminderDate, message) {
+         AJS.log(reminderDate);
          setCreationState(creationState.creating);
 
          var userRequest = HostRequest.userDetails(userKey);
@@ -48,6 +50,8 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          return AJS.$.when(userRequest, issueRequest).then(function(userResponse, issueResponse) {
             var user = JSON.parse(userResponse[0]);
             var issue = JSON.parse(issueResponse[0]);
+
+            var haskellFormat = "YYYY-MM-DDTHH:mm:ss.SSS";
             var requestData = {
                Issue: {
                    Key: issueKey,
@@ -59,8 +63,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                   Key: user.key,
                   Email: user.emailAddress
                },
-               TimeDelay: timeDelay,
-               TimeUnit: timeUnit
+               ReminderDate: reminderDate.format(haskellFormat) + 'Z'
             };
 
             if(message) {
@@ -282,18 +285,16 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             gravity: "w"
          });
 
+         AJS.$("#remindDatePicker").datetimepicker({
+            inline:true
+         });
+
          AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
-            var magnitude = parseInt(AJS.$("#custom-reminder-magnitude").val());
-            var timeUnit = AJS.$("#custom-reminder-timeunit").val();
-            if(timeUnit === "Month") {
-               timeUnit = timeUnits.week;
-               magnitude *= 4;
-            }
+            var reminderDate = moment(AJS.$("#remindDatePicker").val());
             var message = AJS.$("#custom-reminder-message").val();
 
-            if(!isNaN(magnitude)) {
-               createReminder(magnitude, timeUnit, message).done(resetCreateForm);
-            }
+            // TODO check that the reminder date is vaild
+            createReminder(reminderDate, message).done(resetCreateForm);
          }));
 
          AJS.$(".reminders").on("click", ".reminder .aui-icon-close", function() {
@@ -317,11 +318,11 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          }));
 
          AJS.$("#add-reminder-tomorrow").click(handle(function() {
-            createReminder(1, timeUnits.day);
+            createReminder(moment().add(1, 'days'));
          }));
 
          AJS.$("#add-reminder-next-week").click(handle(function() {
-            createReminder(1, timeUnits.week);
+            createReminder(moment().add(7, 'days'));
          }));
 
          AJS.$(".custom-operations .cancel").click(handle(function() {
