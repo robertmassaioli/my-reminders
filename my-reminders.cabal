@@ -131,7 +131,6 @@ test-suite my-reminders-props
     , MissingH
     , MonadCatchIO-transformers
     , aeson
-    , atlassian-connect
     , base64-bytestring
     , boxes
     , bytestring

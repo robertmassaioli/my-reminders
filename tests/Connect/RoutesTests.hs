@@ -1,19 +1,16 @@
 module Connect.RoutesTests where
 
-import           Connect.Data
-import           Connect.Instances
-import           Connect.LifecycleResponse
-import           Connect.Routes                hiding (getLifecycleResponse)
 import           Data.Maybe
 import           Data.Text
 import           LifecycleHandlers
 import           Network.URI                          (URI (..), parseURI)
 import           Persistence.Tenant
+import           Snap.AtlassianConnect                hiding
+                                                       (getLifecycleResponse)
 import           Snap.Snaplet.Test
 import           Test.Framework
 import           Test.Framework.Providers.QuickCheck2 (testProperty)
 import           Test.QuickCheck
-
 
 tests :: [Test]
 tests =
@@ -29,7 +26,6 @@ genHostName = listOf1 $ oneof [genUnreserved, genSubDelims]
 genUnreserved = elements $ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'] ++ ['-', '.', '_', '~']
 genSubDelims = elements ['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=']
 -- genPctEncoded = '%'
-
 
 getLifecycleResponse:: String -> LifecycleResponse
 getLifecycleResponse hostname =
