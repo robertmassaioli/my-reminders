@@ -93,7 +93,7 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                            , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
-  , ("/panel/jira/reminder/create"  , createReminderPanel )
+  , ("/panel/jira/reminder/create"  , createReminderPanel)
   , ("/panel/jira/reminders/view"   , viewRemindersPanel)
   , ("/rest/reminder"               , handleReminder)
   , ("/rest/reminders"              , handleReminders)
