@@ -275,6 +275,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
          setupTemplates();
          setTimeout(refreshReminders, 1); // So that the Acpt token has time to be injected
 
+         // The gravity on this reminder is carefully selected to not make the panel expand.
          AJS.$("#reminder-help").tooltip({
             aria: true,
             title: setTooltipTitle,
@@ -327,10 +328,6 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             resetCreateForm();
             resetPanelHeight();
          }));
-
-         AJS.$("body").on('remove', '.tipsy', function() {
-            resetPanelHeight();
-         });
 
          setCreationState(creationState.notCreating);
          resetCreateForm();
