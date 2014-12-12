@@ -41,7 +41,7 @@ RUN cabal update && cabal install cabal-install
 # IMPORTANT: This must produce a statically-compiled binary (with respect to
 # Cabal dependencies) that does not depend on a local cabal installation. The
 # production Docker image will not run a cabal install.
-RUN cabal sandbox init && cabal sandbox add-source vendor/atlassian-connect && cabal install
+RUN cabal sandbox init && cabal install
 
 # Setup the default command to run for the container.
 CMD ["/home/haskell/build/.cabal-sandbox/bin/my-reminders", "--access-log=-", "--error-log=stderr"]
