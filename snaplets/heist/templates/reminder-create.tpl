@@ -48,7 +48,7 @@
            </div>
        </div>
    </form>
-   <div class="reminders-container">
+   <div class="reminders-container bottom-container">
       <div>Upcoming reminders: <span id="no-reminders">None yet; create some.</span><span id="reminder-help" title="Hover over the reminders for more information." class="aui-icon aui-icon-small aui-iconfont-info">Info</span></div>
       <div id="upcoming-reminders" class="reminders"></div>
    </div>
