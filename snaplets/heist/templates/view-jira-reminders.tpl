@@ -33,8 +33,7 @@
             <button id="delete-reminders" class="aui-button">Delete</button>
          </p>
 
-         <!-- TODO When https://ecosystem.atlassian.net/browse/AUI-2846 is resolved then please make this table use aui-table-sortable -->
-         <table id="reminders" class="aui">
+         <table id="reminders" class="aui aui-table-sortable">
              <thead>
                  <tr>
                      <th class="aui-table-column-unsortable"><input type="checkbox" id="master-selector" /></th>
@@ -48,6 +47,14 @@
              </tbody>
          </table>
          <!-- TODO have a message here in case no reminders exist -->
+         <div id="no-reminders-message" class="hidden">
+             <div class="aui-message aui-message-info">
+                 <p class="title">
+                     <strong>You currently have no reminders</strong>
+                 </p>
+                 <p>Go to a JIRA issue that you want to be reminded about and go create one in the sidebar. If you want to know more about reminders then you can <a target="_blank" href="/docs/home">read our documentation</a>.</p>
+             </div>
+         </div>
       </div>
    </section></div></div>
 </apply>

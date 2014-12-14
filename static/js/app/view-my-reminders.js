@@ -10,7 +10,7 @@ define(['lib/mustache', 'lib/moment-timezone', 'host/request', 'connect/pagetoke
 
       var getMeta = function(name) {
          return AJS.$("meta[name=" + name + "]").attr("content");
-      }
+      };
 
       var userKey = getMeta("userKey");
       var baseurl = getMeta("hostBaseUrl");
@@ -23,6 +23,7 @@ define(['lib/mustache', 'lib/moment-timezone', 'host/request', 'connect/pagetoke
       AJS.log("The user key is: " + userKey);
 
       var remindersContainer = AJS.$("#reminders tbody.container");
+      var noRemindersMessage = AJS.$("#no-reminders-message");
 
       var allReminderSelects = function() {
          return remindersContainer.find(".reminder .select");
@@ -74,15 +75,21 @@ define(['lib/mustache', 'lib/moment-timezone', 'host/request', 'connect/pagetoke
             var reminders = JSON.parse(reminderResponse[0]);
             var user = JSON.parse(userResponse[0]);
 
-            remindersContainer.empty();
-            AJS.$.each(reminders, function(index, reminder) {
-               reminder.issueLink = baseurl + "/browse/" + reminder.IssueKey;
-               var tzDate = moment(reminder["Date"]).tz(user.timeZone);
-               reminder.momentDate = tzDate;
-               reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
+            var hasReminders = reminders.length > 0;
+            remindersContainer.toggleClass("hidden", !hasReminders);
+            noRemindersMessage.toggleClass("hidden", hasReminders);
 
-               remindersContainer.append(Mustache.render(templates.reminderRow, reminder));
-            });
+            if(hasReminders) {
+               remindersContainer.empty();
+               AJS.$.each(reminders, function (index, reminder)
+               {
+                  reminder.issueLink = baseurl + "/browse/" + reminder.IssueKey;
+                  reminder.momentDate = moment(reminder["Date"]).tz(user.timeZone);;
+                  reminder.fullDate = reminder.momentDate.format('D MMM YYYY hh:mmA');
+
+                  remindersContainer.append(Mustache.render(templates.reminderRow, reminder));
+               });
+            }
 
             setIndeterminateState();
          });
