@@ -79,8 +79,8 @@ define(['lib/mustache', 'lib/moment-timezone', 'host/request', 'connect/pagetoke
             remindersContainer.toggleClass("hidden", !hasReminders);
             noRemindersMessage.toggleClass("hidden", hasReminders);
 
+            remindersContainer.empty();
             if(hasReminders) {
-               remindersContainer.empty();
                AJS.$.each(reminders, function (index, reminder)
                {
                   reminder.issueLink = baseurl + "/browse/" + reminder.IssueKey;
