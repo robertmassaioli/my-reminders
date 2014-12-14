@@ -4,7 +4,7 @@
       <script>require(['app/create-reminder']);</script>
 
       <css href="/static/css/create-reminder.css" />
-      <css href="/static/css/jquery.datetimepicker.css" />
+      <css href="/static/css/anytime.5.0.5.css" />
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{ReminderId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
@@ -23,10 +23,11 @@
            <span id="reminder-creation-error"   class="aui-icon aui-icon-error">Error</span>
        </span>
    </div>
-   <form action="#" method="post" id="create-reminder-form" class="aui hidden">
-       <input id="remindDatePicker" type="text" />
-       <fieldset>
-           <div class="field-group custom-container">
+   <form action="#" method="post" id="create-reminder-form" class="aui hidden top-label">
+       <div class="date-box"><input id="remindDatePicker" type="text" /></div>
+       <div class="time-box"><input id="remindTimePicker" type="text" /></div>
+       <fieldset class="top-label">
+           <div class="field-group top-label custom-container">
                <label for="custom-reminder-message">Message</label>
                <textarea id="custom-reminder-message" class="textarea" rows="3" cols="10"></textarea>
                <div class="description">A short optional reminder mesage</div>

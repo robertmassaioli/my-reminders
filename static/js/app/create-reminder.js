@@ -1,4 +1,4 @@
-define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken', '../lib/jquery.datetimepicker'],
+define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken', '../lib/anytime'],
    function(URI, HostRequest, Mustache, moment, RS) {
    require(['aui/form-validation']);
 
@@ -19,7 +19,6 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
    };
 
    AJS.$(function() {
-      AJS.log("Create reminder loaded...");
       var queryParams = URI(window.location.href).query(true);
       var issueId = parseInt(queryParams["issue_id"]);
       if(isNaN(issueId)) {
@@ -41,7 +40,6 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
       };
 
       var createReminder = function(reminderDate, message) {
-         AJS.log(reminderDate);
          setCreationState(creationState.creating);
 
          var userRequest = HostRequest.userDetails(userKey);
@@ -63,7 +61,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                   Key: user.key,
                   Email: user.emailAddress
                },
-               ReminderDate: reminderDate.format(haskellFormat) + 'Z'
+               ReminderDate: reminderDate.utc().format(haskellFormat) + 'Z'
             };
 
             if(message) {
@@ -285,12 +283,29 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             gravity: "w"
          });
 
-         AJS.$("#remindDatePicker").datetimepicker({
-            inline:true
+         var fmt1 = '%m/%d/%Y';
+         var fmt2 = '%h%p %i';
+         var conv1 = new AnyTime.Converter({format:fmt1});
+         var conv2 = new AnyTime.Converter({format:fmt2});
+         var now = new Date();
+
+         AJS.$("#remindDatePicker")[0].value = conv1.format(now);
+         AJS.$("#remindDatePicker").AnyTime_picker({
+            format: fmt1,
+            hideInput: true,
+            placement: "inline"
+         });
+
+         AJS.$("#remindTimePicker")[0].value = conv2.format(now);
+         AJS.$("#remindTimePicker").AnyTime_picker({
+            format: fmt2,
+            hideInput: true,
+            placement: "inline"
          });
 
          AJS.$('#create-reminder-form .custom-operations .submit').click(handle(function() {
-            var reminderDate = moment(AJS.$("#remindDatePicker").val());
+            var input = AJS.$("#remindDatePicker").val() + ' ' + AJS.$("#remindTimePicker").val();
+            var reminderDate = moment(input, "MM/DD/YYYY HHa mm");
             var message = AJS.$("#custom-reminder-message").val();
 
             // TODO check that the reminder date is vaild

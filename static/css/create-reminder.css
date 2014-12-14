@@ -22,3 +22,7 @@ body {
 .aui-button:focus {
    outline: 0;
 }
+
+.time-box {
+    margin-top: 10px;
+}
