@@ -24,8 +24,8 @@
        </span>
    </div>
    <form action="#" method="post" id="create-reminder-form" class="aui hidden top-label">
-       <div class="date-box"><input id="remindDatePicker" type="text" /></div>
-       <div class="time-box"><input id="remindTimePicker" type="text" /></div>
+       <div class="date-box atlassian-datepicker"><input id="remindDatePicker" type="text" /></div>
+       <div class="time-box atlassian-datepicker"><input id="remindTimePicker" type="text" /></div>
        <fieldset class="top-label">
            <div class="field-group top-label custom-container">
                <label for="custom-reminder-message">Message</label>
