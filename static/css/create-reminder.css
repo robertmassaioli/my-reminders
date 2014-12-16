@@ -34,7 +34,7 @@ https://design.atlassian.com/2.0/product/foundations/colors/
 Hopefully this has been a pretty good re-branding job of a free library.
 */
 .atlassian-datepicker .AnyTime-win {
-    background-color: #ebf2f9;
+    background-color: white;
     border: 3px solid #3572b0;
 }
 
@@ -45,9 +45,9 @@ Hopefully this has been a pretty good re-branding job of a free library.
 
 .atlassian-datepicker .AnyTime-pkr .AnyTime-btn
 {
-    background-color:#3572b0;
+    background-color:#ebf2f9;
     border:1px solid #999999;
-    color: #f5f5f5;
+    color: black;
 }
 
 .atlassian-datepicker .AnyTime-pkr .AnyTime-cur-btn {
