@@ -46,7 +46,6 @@
              <tbody class="container">
              </tbody>
          </table>
-         <!-- TODO have a message here in case no reminders exist -->
          <div id="no-reminders-message" class="hidden">
              <div class="aui-message aui-message-info">
                  <p class="title">
