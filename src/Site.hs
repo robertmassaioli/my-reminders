@@ -61,12 +61,6 @@ showDocPage = do
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createReminderPanel :: AppHandler ()
-createReminderPanel = createConnectPanel "reminder-create"
-
-viewRemindersPanel :: AppHandler ()
-viewRemindersPanel = createConnectPanel "view-jira-reminders"
-
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
@@ -93,8 +87,9 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                            , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
-  , ("/panel/jira/reminder/create"  , createReminderPanel)
-  , ("/panel/jira/reminders/view"   , viewRemindersPanel)
+  , ("/panel/jira/reminder/create"  , createConnectPanel "create-reminder")
+  , ("/panel/jira/reminder/simple"  , createConnectPanel "view-issue-reminders")
+  , ("/panel/jira/reminders/view"   , createConnectPanel "view-jira-reminders")
   , ("/rest/reminder"               , handleReminder)
   , ("/rest/reminders"              , handleReminders)
   , ("/rest/user/reminders"         , handleUserReminders)

@@ -10,10 +10,13 @@
    },
    'modules': [
       {
-         'name': 'app/create-reminder'
+         'name': 'app/view-issue-reminders'
       },
       {
          'name': 'app/view-my-reminders'
+      },
+      {
+         'name': 'app/create-reminder'
       },
       {
          'name': 'app/doc-page'

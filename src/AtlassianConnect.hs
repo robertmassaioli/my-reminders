@@ -33,9 +33,9 @@ addonJiraModules :: JIRAModules
 addonJiraModules = emptyJIRAModules
     { jiraWebPanels =
       [ WebPanel
-         { wpKey = "create-reminder-panel"
+         { wpKey = "view-issue-reminders"
          , wpName = Name "My reminders"
-         , wpUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+         , wpUrl = "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
          , wpLocation = "atl.jira.view.issue.right.context"
          , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
          , wpWeight = Nothing
@@ -53,6 +53,15 @@ addonJiraModules = emptyJIRAModules
          , generalPageWeight = Nothing
          , generalPageConditions = []
          }
+      , GeneralPage
+        { generalPageName = Name "Create reminder"
+        , generalPageKey = "create-reminder-dialog"
+        , generalPageUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+        , generalPageLocation = Just "completely-invalid-location"
+        , generalPageIcon = Nothing
+        , generalPageWeight = Nothing
+        , generalPageConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+        }
       ]
     , jiraWebhooks =
       [ Webhook { webhookEvent = JiraIssueUpdated, webhookUrl = "/rest/webhook/issue/update" }
