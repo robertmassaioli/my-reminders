@@ -280,7 +280,8 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
             deleteRequest.done(function() {
                $reminder.mouseout(); // IMPORTANT: This mouseout is the solution to: https://github.com/jaz303/tipsy/issues/19
-               $reminder.remove();
+               $reminder.remove(); // Remove the actual lozenge
+               resetPanelHeight(); // Make sure you reclaim height.
             });
 
             deleteRequest.fail(function() {
