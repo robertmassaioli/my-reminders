@@ -2,15 +2,15 @@ module PurgeHandlers
    ( handlePurgeRequest
    ) where
 
+import qualified AppConfig              as CONF
+import           AppHelpers
 import           Application
-import           Data.Time.Clock (addUTCTime)
+import           Data.Time.Clock        (addUTCTime)
 import           Data.TimeUnitUTC
-import           Persistence.Tenant
 import           Persistence.PostgreSQL
-import qualified AppConfig as CONF
-import qualified Snap.Core as SC
+import           Persistence.Tenant
+import qualified Snap.Core              as SC
 import           SnapHelpers
-import AppHelpers
 
 handlePurgeRequest :: AppHandler ()
 handlePurgeRequest = handleMethods

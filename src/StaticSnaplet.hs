@@ -65,6 +65,9 @@ data StaticConf = StaticConf
     { scResourcesVersion :: String
     } deriving (Show)
 
+-- We should first try and directly match and extract the resources version, and it it does match then
+-- pass the route onwards without the resources version present. Otherwise, if no matching route could
+-- be found then we should redirect the to the same URL but with the resources version injected.
 versionRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 versionRoutes =
     [ (":rv/"   , handlePotentialResourcesVersion (SC.route staticRoutes))
@@ -80,6 +83,20 @@ handlePotentialResourcesVersion handle = do
             actualResourcesVersion <- BC.pack . scResourcesVersion <$> get
             if passedResourcesVersion == actualResourcesVersion then handle else SC.pass
 
+-- Add the resources version between the context path and the path information and redirect to that
+redirectStatic :: SS.Handler a StaticConf ()
+redirectStatic = do
+    sc <- get
+    r <- SC.getRequest
+    let cp = SC.rqContextPath r
+    let pathInfo = SC.rqPathInfo r
+    SC.redirect $ cp `append` addResourcesVersion sc pathInfo
+
+addResourcesVersion :: StaticConf -> BC.ByteString -> BC.ByteString
+addResourcesVersion (StaticConf rv) original = BC.pack rv `append` BC.pack "/" `append` original
+
+-- These are the real routes to our resources. If you could not find any resources that match then you should
+-- return a HTTP 404.
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
   [ ("css"    , staticServeDirectory "static/css")
@@ -93,14 +110,3 @@ staticServeDirectory path = (serveDirectory path >> cacheForever) <|> SH.respond
 
 cacheForever :: SS.Handler a b ()
 cacheForever = SC.modifyResponse (SC.setHeader (CI.mk "Cache-Control") "max-age=31536000")
-
-redirectStatic :: SS.Handler a StaticConf ()
-redirectStatic = do
-    sc <- get
-    r <- SC.getRequest
-    let cp = SC.rqContextPath r
-    let pathInfo = SC.rqPathInfo r
-    SC.redirect $ cp `append` addResourcesVersion sc pathInfo
-
-addResourcesVersion :: StaticConf -> BC.ByteString -> BC.ByteString
-addResourcesVersion (StaticConf rv) original = BC.pack rv `append` BC.pack "/" `append` original

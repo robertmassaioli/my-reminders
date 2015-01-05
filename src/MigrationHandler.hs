@@ -3,6 +3,7 @@ module MigrationHandler
    ) where
 
 import qualified AppConfig               as CONF
+import qualified AppHelpers              as AH
 import           Application
 import           Control.Applicative     ((<$>))
 import           Control.Monad.IO.Class  (liftIO)
@@ -14,7 +15,6 @@ import qualified SnapHelpers             as SH
 import           System.FilePath         ((</>))
 import           System.Process          (callProcess)
 import           Text.Read               (readMaybe)
-import qualified AppHelpers as AH
 
 migrationRequest :: AppHandler ()
 migrationRequest = SH.handleMethods
