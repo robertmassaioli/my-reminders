@@ -110,6 +110,13 @@ applicationRoutes =
   , ("/robots.txt"                  , serveFile "static/files/robots.txt")
   ]
 
+staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
+staticRoutes =
+  [ ("css"    , staticServeDirectory "static/css")
+  , ("images" , staticServeDirectory "static/images")
+  , ("js"     , staticServeDirectory "static-js")
+  ]
+
 -- We should always redirect to external services or common operations, that way when we want to
 -- change where that points to, we only have to quickly update those links here
 redirects :: [(ByteString, SS.Handler App App ())]
@@ -135,7 +142,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
   appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
-  appStatic <- SS.nestSnaplet "static" static (initStaticSnaplet appHeist)
+  appStatic <- SS.nestSnaplet "static" static (initStaticSnaplet PMR.version staticRoutes appHeist)
   liftIO . putStrLn $ "## Ending Init Phase"
   return $ App appHeist appSession appDb appConnect appAppConf appStatic
 

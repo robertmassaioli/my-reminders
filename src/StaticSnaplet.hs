@@ -2,6 +2,7 @@
 module StaticSnaplet
     ( initStaticSnaplet
     , StaticConf
+    , staticServeDirectory
     ) where
 
 import           Control.Applicative
@@ -15,7 +16,7 @@ import           Data.Maybe                (isNothing)
 import           Data.Monoid               (mempty)
 import qualified Data.Text                 as T
 import qualified Data.UUID.V4              as UUID
-import           Data.Version              (showVersion)
+import           Data.Version              (Version(..), showVersion)
 import qualified Heist                     as H
 import qualified Heist.Internal.Types      as HIT
 import qualified Heist.Interpreted         as HI
@@ -27,12 +28,14 @@ import           Snap.Util.FileServe
 import qualified SnapHelpers               as SH
 import qualified Text.XmlHtml              as X
 
-import qualified Paths_my_reminders        as PMR
-
-initStaticSnaplet :: SS.Snaplet (SSH.Heist b) -> SS.SnapletInit b StaticConf
-initStaticSnaplet appHeist = SS.makeSnaplet "Static Content" "Static content per version" Nothing $ do
-    conf <- MI.liftIO generateStaticConf
-    SS.addRoutes versionRoutes
+initStaticSnaplet
+    :: Version
+    -> [(ByteString, SS.Handler b StaticConf ())]
+    -> SS.Snaplet (SSH.Heist b)
+    -> SS.SnapletInit b StaticConf
+initStaticSnaplet version staticRoutes appHeist = SS.makeSnaplet "Static Content" "Static content per version" Nothing $ do
+    conf <- MI.liftIO $ generateStaticConf version
+    SS.addRoutes $ versionRoutes staticRoutes
     SSH.addConfig appHeist (spliceConfig conf)
     return conf
 
@@ -54,10 +57,10 @@ resourcesVersion = return . text . scResourcesVersion
 text :: String -> [X.Node]
 text x = [X.TextNode (T.pack x)]
 
-generateStaticConf :: IO StaticConf
-generateStaticConf = do
+generateStaticConf :: Version -> IO StaticConf
+generateStaticConf version = do
    zone <- fromEnv
-   versionString <- generateResourcesVersion zone
+   versionString <- generateResourcesVersion version zone
    return StaticConf
       { scResourcesVersion = versionString
       , scCacheForever = not . isLocal $ zone
@@ -65,21 +68,18 @@ generateStaticConf = do
    where
       isLocal = isNothing
 
-generateResourcesVersion :: Maybe Zone -> IO String
-generateResourcesVersion (Just _) = return baseVersionString
-generateResourcesVersion Nothing  = do
+generateResourcesVersion :: Version -> Maybe Zone -> IO String
+generateResourcesVersion v (Just _) = return . showVersion $ v
+generateResourcesVersion v Nothing  = do
     hash <- UUID.nextRandom
-    return $ baseVersionString ++ "-" ++ show hash
-
-baseVersionString :: String
-baseVersionString = showVersion PMR.version
+    return $ showVersion v ++ "-" ++ show hash
 
 -- We should first try and directly match and extract the resources version, and it it does match then
 -- pass the route onwards without the resources version present. Otherwise, if no matching route could
 -- be found then we should redirect the to the same URL but with the resources version injected.
-versionRoutes :: [(ByteString, SS.Handler a StaticConf ())]
-versionRoutes =
-    [ (":rv/"   , handlePotentialResourcesVersion (SC.route staticRoutes))
+versionRoutes :: [(ByteString, SS.Handler a StaticConf ())] -> [(ByteString, SS.Handler a StaticConf ())]
+versionRoutes staticRoutes =
+    [ (":rv/"   , handlePotentialResourcesVersion (SC.route $ unmatchedRoute : staticRoutes))
     , (""       , redirectStatic)
     ]
 
@@ -104,15 +104,8 @@ redirectStatic = do
 addResourcesVersion :: StaticConf -> BC.ByteString -> BC.ByteString
 addResourcesVersion (StaticConf rv _) original = BC.pack rv `append` BC.pack "/" `append` original
 
--- These are the real routes to our resources. If you could not find any resources that match then you should
--- return a HTTP 404.
-staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
-staticRoutes =
-  [ ("css"    , staticServeDirectory "static/css")
-  , ("images" , staticServeDirectory "static/images")
-  , ("js"     , staticServeDirectory "static-js")
-  , (""       , SH.respondNotFound) -- If nothing else was matched then stop immediately.
-  ]
+unmatchedRoute :: (ByteString, SS.Handler a b ())
+unmatchedRoute = ("", SH.respondNotFound)
 
 staticServeDirectory :: FilePath -> SS.Handler a StaticConf ()
 staticServeDirectory path = rawStaticServeDirectory path <|> SH.respondNotFound
