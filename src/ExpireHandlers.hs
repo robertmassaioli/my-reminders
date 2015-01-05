@@ -5,6 +5,7 @@ module ExpireHandlers
    ) where
 
 import qualified AppConfig                           as CONF
+import           AppHelpers
 import           Application
 import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local

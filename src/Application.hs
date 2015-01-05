@@ -15,6 +15,7 @@ import           Snap.Snaplet.PostgresqlSimple
 
 import qualified Snap.AtlassianConnect as AC
 import qualified AppConfig as CONF
+import qualified StaticSnaplet as STATIC
 ------------------------------------------------------------------------------
 data App = App
   { _heist   :: SS.Snaplet (SSH.Heist App)
@@ -22,6 +23,7 @@ data App = App
   , _db      :: SS.Snaplet Postgres
   , _connect :: SS.Snaplet AC.Connect
   , _rmconf  :: SS.Snaplet CONF.AppConf
+  , _static  :: SS.Snaplet STATIC.StaticConf
   }
 
 makeLenses ''App

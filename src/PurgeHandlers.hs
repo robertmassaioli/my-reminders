@@ -10,6 +10,7 @@ import           Persistence.PostgreSQL
 import qualified AppConfig as CONF
 import qualified Snap.Core as SC
 import           SnapHelpers
+import AppHelpers
 
 handlePurgeRequest :: AppHandler ()
 handlePurgeRequest = handleMethods

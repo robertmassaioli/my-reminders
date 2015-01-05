@@ -6,6 +6,7 @@ import           Persistence.PostgreSQL
 import           Persistence.Statistics
 import qualified Snap.Core              as SC
 import           SnapHelpers
+import AppHelpers
 
 handleStatistics :: AppHandler ()
 handleStatistics = handleMethods

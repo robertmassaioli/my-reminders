@@ -1,9 +1,9 @@
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js src="/static/js/app/view-my-reminders.js" />
+      <js src="/static/${resourcesVersion}/js/app/view-my-reminders.js" />
       <script>require(['app/view-my-reminders']);</script>
 
-      <css href="/static/css/view-my-reminders.css" />
+      <css href="/static/${resourcesVersion}/css/view-my-reminders.css" />
 
       <script id="reminder-row" type="x-tmpl-mustache">
          <tr class="reminder" data-reminder-id="{{ReminderId}}">

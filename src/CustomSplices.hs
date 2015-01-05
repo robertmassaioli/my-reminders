@@ -16,6 +16,8 @@ spliceConfig :: H.SpliceConfig (SS.Handler a a)
 spliceConfig = mempty 
    & HIT.scInterpretedSplices .~ customSplices
 
+-- TODO add a compiled splice to put the resource version key down
+
 customSplices :: HIT.Splices (HI.Splice (SS.Handler a a))
 customSplices = do
    "hasSplice" H.## hasSplice

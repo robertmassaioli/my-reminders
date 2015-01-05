@@ -1,22 +1,13 @@
-
 {-# LANGUAGE DeriveGeneric #-}
-
 module SnapHelpers where
 
 import           Data.Aeson
 import           GHC.Generics
 
-import qualified AppConfig               as CONF
 import qualified Control.Applicative     as CA
-import           Control.Monad.IO.Class  (liftIO)
 import qualified Data.ByteString.Char8   as BSC
-import           Data.Connect.Descriptor (Key (..))
 import qualified Data.Text               as T
-import           Data.Time.Clock         (UTCTime, getCurrentTime)
-import           Data.Time.Clock.POSIX
 import qualified Snap.Core               as SC
-
-import           Application
 
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
@@ -52,9 +43,6 @@ writeJson a = do
   SC.modifyResponse . SC.setContentType . BSC.pack $ "application/json"
   SC.writeLBS $ encode a
 
-logErrorS :: String -> AppHandler ()
-logErrorS = SC.logError . BSC.pack
-
 data ErrorResponse = ErrorResponse
   { errorMessages :: [String]
   } deriving (Show, Generic)
@@ -75,21 +63,3 @@ respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
   SC.writeBS . BSC.pack $ response
   respondWith errorCode
-
-getTimestampOrCurrentTime :: AppHandler UTCTime
-getTimestampOrCurrentTime =
-  SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
-    let maybeTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> maybeRawTimestamp :: Maybe UTCTime
-    in maybe (liftIO getCurrentTime) return maybeTimestamp)
-
-integerPosixToUTCTime :: Integer -> UTCTime
-integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
-
-getKeyAndConfirm :: (CONF.AppConf -> Key BSC.ByteString CONF.AppConf) -> AppHandler () -> AppHandler ()
-getKeyAndConfirm getKey success =
-  SC.getParam (BSC.pack "key") >>=
-    maybe
-       (respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif")
-       (\expireKey -> CONF.getAppConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
-           then respondWithError forbidden "You lack the required permissions."
-           else success))
