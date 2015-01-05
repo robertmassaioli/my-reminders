@@ -19,7 +19,7 @@ import           Data.Version              (showVersion)
 import qualified Heist                     as H
 import qualified Heist.Internal.Types      as HIT
 import qualified Heist.Interpreted         as HI
-import           MicrosZone                (fromEnv)
+import           MicrosZone                (Zone(..), fromEnv)
 import qualified Snap.Core                 as SC
 import qualified Snap.Snaplet              as SS
 import qualified Snap.Snaplet.Heist        as SSH
@@ -31,10 +31,15 @@ import qualified Paths_my_reminders        as PMR
 
 initStaticSnaplet :: SS.Snaplet (SSH.Heist b) -> SS.SnapletInit b StaticConf
 initStaticSnaplet appHeist = SS.makeSnaplet "Static Content" "Static content per version" Nothing $ do
-    conf <- StaticConf <$> MI.liftIO generateResourcesVersion
+    conf <- MI.liftIO generateStaticConf
     SS.addRoutes versionRoutes
     SSH.addConfig appHeist (spliceConfig conf)
     return conf
+
+data StaticConf = StaticConf
+    { scResourcesVersion :: String
+    , scCacheForever     :: Bool
+    } deriving (Show)
 
 spliceConfig :: StaticConf -> H.SpliceConfig (SS.Handler a a)
 spliceConfig sc = mempty
@@ -49,21 +54,25 @@ resourcesVersion = return . text . scResourcesVersion
 text :: String -> [X.Node]
 text x = [X.TextNode (T.pack x)]
 
-generateResourcesVersion :: IO String
-generateResourcesVersion = do
-   localZone <- isLocal <$> fromEnv
-   if localZone
-      then do
-         randomKey <- UUID.nextRandom
-         return $ versionString ++ "-" ++ show randomKey
-      else return versionString
+generateStaticConf :: IO StaticConf
+generateStaticConf = do
+   zone <- fromEnv
+   versionString <- generateResourcesVersion zone
+   return StaticConf
+      { scResourcesVersion = versionString
+      , scCacheForever = not . isLocal $ zone
+      }
    where
       isLocal = isNothing
-      versionString = showVersion PMR.version
 
-data StaticConf = StaticConf
-    { scResourcesVersion :: String
-    } deriving (Show)
+generateResourcesVersion :: Maybe Zone -> IO String
+generateResourcesVersion (Just _) = return baseVersionString
+generateResourcesVersion Nothing  = do
+    hash <- UUID.nextRandom
+    return $ baseVersionString ++ "-" ++ show hash
+
+baseVersionString :: String
+baseVersionString = showVersion PMR.version
 
 -- We should first try and directly match and extract the resources version, and it it does match then
 -- pass the route onwards without the resources version present. Otherwise, if no matching route could
@@ -93,7 +102,7 @@ redirectStatic = do
     SC.redirect $ cp `append` addResourcesVersion sc pathInfo
 
 addResourcesVersion :: StaticConf -> BC.ByteString -> BC.ByteString
-addResourcesVersion (StaticConf rv) original = BC.pack rv `append` BC.pack "/" `append` original
+addResourcesVersion (StaticConf rv _) original = BC.pack rv `append` BC.pack "/" `append` original
 
 -- These are the real routes to our resources. If you could not find any resources that match then you should
 -- return a HTTP 404.
@@ -105,8 +114,20 @@ staticRoutes =
   , (""       , SH.respondNotFound) -- If nothing else was matched then stop immediately.
   ]
 
-staticServeDirectory :: FilePath -> SS.Handler a b ()
-staticServeDirectory path = (serveDirectory path >> cacheForever) <|> SH.respondNotFound
+staticServeDirectory :: FilePath -> SS.Handler a StaticConf ()
+staticServeDirectory path = rawStaticServeDirectory path <|> SH.respondNotFound
+
+rawStaticServeDirectory :: FilePath -> SS.Handler a StaticConf ()
+rawStaticServeDirectory path = do
+    serveDirectory path
+    shouldCacheForever <- scCacheForever <$> get
+    if shouldCacheForever then cacheForever else noCache
 
 cacheForever :: SS.Handler a b ()
-cacheForever = SC.modifyResponse (SC.setHeader (CI.mk "Cache-Control") "max-age=31536000")
+cacheForever = cache "max-age=31536000"
+
+noCache :: SS.Handler a b ()
+noCache = cache "no-cache"
+
+cache :: BC.ByteString -> SS.Handler a b ()
+cache v = SC.modifyResponse (SC.setHeader (CI.mk "Cache-Control") v)
