@@ -1,12 +1,12 @@
 module StatisticsHandlers (handleStatistics) where
 
 import qualified AppConfig              as CONF
+import           AppHelpers
 import           Application
 import           Persistence.PostgreSQL
 import           Persistence.Statistics
 import qualified Snap.Core              as SC
 import           SnapHelpers
-import AppHelpers
 
 handleStatistics :: AppHandler ()
 handleStatistics = handleMethods
