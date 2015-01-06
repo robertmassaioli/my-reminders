@@ -112,9 +112,9 @@ applicationRoutes =
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , staticServeDirectory "static/css")
-  , ("images" , staticServeDirectory "static/images")
-  , ("js"     , staticServeDirectory "static-js")
+  [ ("css"    , serveDirectory "static/css")
+  , ("images" , serveDirectory "static/images")
+  , ("js"     , serveDirectory "static-js")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to

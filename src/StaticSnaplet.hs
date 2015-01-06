@@ -2,10 +2,10 @@
 module StaticSnaplet
     ( initStaticSnaplet
     , StaticConf
-    , staticServeDirectory
     ) where
 
 import           Control.Applicative
+import           Control.Arrow             (second)
 import           Control.Lens              ((&), (.~))
 import qualified Control.Monad.IO.Class    as MI
 import           Control.Monad.State.Class (get)
@@ -16,22 +16,26 @@ import           Data.Maybe                (isNothing)
 import           Data.Monoid               (mempty)
 import qualified Data.Text                 as T
 import qualified Data.UUID.V4              as UUID
-import           Data.Version              (Version(..), showVersion)
+import           Data.Version              (Version (..), showVersion)
 import qualified Heist                     as H
 import qualified Heist.Internal.Types      as HIT
 import qualified Heist.Interpreted         as HI
-import           MicrosZone                (Zone(..), fromEnv)
+import           MicrosZone                (Zone (..), fromEnv)
 import qualified Snap.Core                 as SC
 import qualified Snap.Snaplet              as SS
 import qualified Snap.Snaplet.Heist        as SSH
-import           Snap.Util.FileServe
 import qualified SnapHelpers               as SH
 import qualified Text.XmlHtml              as X
 
+-- | This initialiser is responsible for creating a Static Snaplet; all of the resources served by this snaplet
+-- will be treated as immutable for the Version provided. It is here for the purpose of providing a way to serve
+-- assets (such as CSS, JS and Images) to the browser and make sure that the browser caches these assets for as long
+-- as possible. If you make any changes to your assets at all you will need to bump the Version that you provide to this
+-- snaplet on your next deployment so that the browser knows to redownload your assets.
 initStaticSnaplet
-    :: Version
-    -> [(ByteString, SS.Handler b StaticConf ())]
-    -> SS.Snaplet (SSH.Heist b)
+    :: Version -- ^ The current version of these assets
+    -> [(ByteString, SS.Handler b StaticConf ())] -- ^ Your static content routes.
+    -> SS.Snaplet (SSH.Heist b) -- ^ The application heist snaplet.
     -> SS.SnapletInit b StaticConf
 initStaticSnaplet version staticRoutes appHeist = SS.makeSnaplet "Static Content" "Static content per version" Nothing $ do
     conf <- MI.liftIO $ generateStaticConf version
@@ -79,9 +83,11 @@ generateResourcesVersion v Nothing  = do
 -- be found then we should redirect the to the same URL but with the resources version injected.
 versionRoutes :: [(ByteString, SS.Handler a StaticConf ())] -> [(ByteString, SS.Handler a StaticConf ())]
 versionRoutes staticRoutes =
-    [ (":rv/"   , handlePotentialResourcesVersion (SC.route $ unmatchedRoute : staticRoutes))
+    [ (":rv/"   , handlePotentialResourcesVersion (SC.route $ unmatchedRoute : wrappedRoutes))
     , (""       , redirectStatic)
     ]
+    where
+        wrappedRoutes = map (second wrapHandlerInCacheOrNotFound) staticRoutes
 
 handlePotentialResourcesVersion :: SS.Handler a StaticConf () -> SS.Handler a StaticConf ()
 handlePotentialResourcesVersion handle = do
@@ -107,12 +113,12 @@ addResourcesVersion (StaticConf rv _) original = BC.pack rv `append` BC.pack "/"
 unmatchedRoute :: (ByteString, SS.Handler a b ())
 unmatchedRoute = ("", SH.respondNotFound)
 
-staticServeDirectory :: FilePath -> SS.Handler a StaticConf ()
-staticServeDirectory path = rawStaticServeDirectory path <|> SH.respondNotFound
+wrapHandlerInCacheOrNotFound :: SS.Handler a StaticConf () -> SS.Handler a StaticConf ()
+wrapHandlerInCacheOrNotFound handle = wrapHandlerInCache handle <|>  SH.respondNotFound
 
-rawStaticServeDirectory :: FilePath -> SS.Handler a StaticConf ()
-rawStaticServeDirectory path = do
-    serveDirectory path
+wrapHandlerInCache :: SS.Handler a StaticConf () -> SS.Handler a StaticConf ()
+wrapHandlerInCache handle = do
+    handle
     shouldCacheForever <- scCacheForever <$> get
     if shouldCacheForever then cacheForever else noCache
 
