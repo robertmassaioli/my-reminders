@@ -13,7 +13,6 @@ module Site
 import qualified AppConfig                                   as CONF
 import           Application
 import qualified AtlassianConnect                            as AC
-import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
@@ -33,12 +32,14 @@ import qualified MicrosZone                                  as MZ
 import           MigrationHandler
 import           PurgeHandlers
 import           ReminderHandlers
+import qualified Snap.AtlassianConnect                       as AC
 import qualified Snap.Core                                   as SC
 import qualified Snap.Snaplet                                as SS
 import qualified Snap.Snaplet.Heist                          as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
+import           StaticSnaplet
 import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
@@ -106,10 +107,14 @@ applicationRoutes =
   , ("/rest/heartbeat"              , heartbeatRequest)
   , ("/rest/migration"              , migrationRequest)
   , ("/rest/statistics"             , handleStatistics)
-  , ("/static/css"                  , serveDirectory "static/css")
-  , ("/static/images"               , serveDirectory "static/images")
-  , ("/static/js"                   , serveDirectory "static-js")
   , ("/robots.txt"                  , serveFile "static/files/robots.txt")
+  ]
+
+staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
+staticRoutes =
+  [ ("css"    , serveDirectory "static/css")
+  , ("images" , serveDirectory "static/images")
+  , ("js"     , serveDirectory "static-js")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
@@ -137,8 +142,9 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
   appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
+  appStatic <- SS.nestSnaplet "static" static (initStaticSnaplet PMR.version staticRoutes appHeist)
   liftIO . putStrLn $ "## Ending Init Phase"
-  return $ App appHeist appSession appDb appConnect appAppConf
+  return $ App appHeist appSession appDb appConnect appAppConf appStatic
 
 configDataDir :: IO String
 configDataDir = CM.liftM (++ "/resources") PMR.getDataDir

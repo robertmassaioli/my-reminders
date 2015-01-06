@@ -81,11 +81,10 @@ search :: [(String, String)] -> String -> Maybe String
 search pairs key = snd <$> find ((==) key . fst) pairs
 
 guardConfig :: EnvConf -> IO ()
-guardConfig ec = when (isDogOrProd && not allKeysPresent) $ do
+guardConfig ec = when (isDogOrProd ec && not allKeysPresent) $ do
    putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ (show . ecZone $ ec)
    exitWith (ExitFailure 10)
    where
-      isDogOrProd = ecZone ec `elem` [MZ.Dog, MZ.Prod]
       allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey, ecMailgunDomain, ecMailgunApiKey] <*> pure ec
 
 instance DCT.Configured (D.Key BSC.ByteString a) where
@@ -127,6 +126,9 @@ loadAppConfOrExit config = do
       , rmMigrationKey = fromConf (fmap packInKey . ecMigrationKey) migrationKey
       , rmStatisticsKey = fromConf (fmap packInKey . ecStatisticsKey) statisticsKey
       }
+
+isDogOrProd :: EnvConf -> Bool
+isDogOrProd ec = ecZone ec `elem` [MZ.Dog, MZ.Prod]
 
 packInKey :: String -> D.Key BSC.ByteString a
 packInKey = D.Key . BSC.pack

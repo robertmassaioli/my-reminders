@@ -1,22 +1,16 @@
-
 {-# LANGUAGE DeriveGeneric #-}
-
 module SnapHelpers where
 
+import qualified Control.Applicative    as CA
+import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
+import qualified Data.ByteString.Char8  as BSC
+import qualified Data.Text              as T
+import           Data.Time.Clock        (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX  (posixSecondsToUTCTime)
 import           GHC.Generics
-
-import qualified AppConfig               as CONF
-import qualified Control.Applicative     as CA
-import           Control.Monad.IO.Class  (liftIO)
-import qualified Data.ByteString.Char8   as BSC
-import           Data.Connect.Descriptor (Key (..))
-import qualified Data.Text               as T
-import           Data.Time.Clock         (UTCTime, getCurrentTime)
-import           Data.Time.Clock.POSIX
-import qualified Snap.Core               as SC
-
-import           Application
+import qualified Snap.Core              as SC
+import qualified Snap.Snaplet           as SS
 
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
@@ -52,9 +46,6 @@ writeJson a = do
   SC.modifyResponse . SC.setContentType . BSC.pack $ "application/json"
   SC.writeLBS $ encode a
 
-logErrorS :: String -> AppHandler ()
-logErrorS = SC.logError . BSC.pack
-
 data ErrorResponse = ErrorResponse
   { errorMessages :: [String]
   } deriving (Show, Generic)
@@ -76,7 +67,10 @@ respondPlainWithError errorCode response = do
   SC.writeBS . BSC.pack $ response
   respondWith errorCode
 
-getTimestampOrCurrentTime :: AppHandler UTCTime
+logErrorS :: String -> SS.Handler a b ()
+logErrorS = SC.logError . BSC.pack
+
+getTimestampOrCurrentTime :: SS.Handler a b UTCTime
 getTimestampOrCurrentTime =
   SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
     let maybeTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> maybeRawTimestamp :: Maybe UTCTime
@@ -84,12 +78,3 @@ getTimestampOrCurrentTime =
 
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
-
-getKeyAndConfirm :: (CONF.AppConf -> Key BSC.ByteString CONF.AppConf) -> AppHandler () -> AppHandler ()
-getKeyAndConfirm getKey success =
-  SC.getParam (BSC.pack "key") >>=
-    maybe
-       (respondWithError forbidden "Speak friend and enter. However: http://i.imgur.com/fVDH5bN.gif")
-       (\expireKey -> CONF.getAppConf >>= (\rmConf -> if getKey rmConf /= (Key expireKey)
-           then respondWithError forbidden "You lack the required permissions."
-           else success))
