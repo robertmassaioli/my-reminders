@@ -7,7 +7,7 @@ import           Application
 import qualified Data.ByteString.Char8   as BSC
 import           Data.Connect.Descriptor (Key (..))
 import qualified Snap.Core               as SC
-import qualified SnapHelpers as SH
+import qualified SnapHelpers             as SH
 
 getKeyAndConfirm
     :: (CONF.AppConf -> Key BSC.ByteString CONF.AppConf)
