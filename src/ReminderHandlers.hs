@@ -8,7 +8,6 @@ module ReminderHandlers
   , handleUserReminders
   ) where
 
-import           AppHelpers
 import           Application
 import           Control.Monad                     (void)
 import           Data.Aeson

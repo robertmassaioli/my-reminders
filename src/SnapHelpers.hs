@@ -1,13 +1,16 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SnapHelpers where
 
+import qualified Control.Applicative    as CA
+import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
+import qualified Data.ByteString.Char8  as BSC
+import qualified Data.Text              as T
+import           Data.Time.Clock        (UTCTime, getCurrentTime)
+import           Data.Time.Clock.POSIX  (posixSecondsToUTCTime)
 import           GHC.Generics
-
-import qualified Control.Applicative     as CA
-import qualified Data.ByteString.Char8   as BSC
-import qualified Data.Text               as T
-import qualified Snap.Core               as SC
+import qualified Snap.Core              as SC
+import qualified Snap.Snaplet           as SS
 
 respondWith :: SC.MonadSnap m => Int -> m ()
 respondWith = SC.modifyResponse . SC.setResponseCode
@@ -63,3 +66,15 @@ respondPlainWithError :: SC.MonadSnap m => Int -> String -> m ()
 respondPlainWithError errorCode response = do
   SC.writeBS . BSC.pack $ response
   respondWith errorCode
+
+logErrorS :: String -> SS.Handler a b ()
+logErrorS = SC.logError . BSC.pack
+
+getTimestampOrCurrentTime :: SS.Handler a b UTCTime
+getTimestampOrCurrentTime =
+  SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
+    let maybeTimestamp = (integerPosixToUTCTime . read . BSC.unpack) CA.<$> maybeRawTimestamp :: Maybe UTCTime
+    in maybe (liftIO getCurrentTime) return maybeTimestamp)
+
+integerPosixToUTCTime :: Integer -> UTCTime
+integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
