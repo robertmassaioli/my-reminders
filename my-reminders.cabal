@@ -96,6 +96,7 @@ Executable my-reminders
     , split                     == 0.2.*
     , utf8-string               >= 0.3.8   && < 0.4
     , uuid                      == 1.3.*
+    , email-validate            == 2.*
 
   if flag(development)
     build-depends:
@@ -169,3 +170,4 @@ test-suite my-reminders-props
     , split
     , utf8-string
     , uuid
+    , email-validate

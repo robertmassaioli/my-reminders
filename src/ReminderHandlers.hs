@@ -27,6 +27,7 @@ import qualified Snap.Core                         as SC
 import qualified Snap.Snaplet                      as SS
 import           SnapHelpers
 import qualified WithToken                         as WT
+import qualified Text.Email.Validate as EV
 
 type TimeDelay = Integer
 
@@ -239,16 +240,18 @@ addReminderHandler ct = do
 
 addReminder :: ReminderRequest -> AC.TenantWithUser -> AppHandler ()
 addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addReminder reminderRequest (tenant, Just userKey) =
-  if userKey /= requestUK
-    then respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
-    else do
-      addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
-      case addedReminder of
-        Just _ -> respondNoContent
-        Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
+addReminder reminderRequest (tenant, Just userKey)
+    | userKey /= requestUK = respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
+    | isNotValid emailAddress = respondWithError badRequest $ "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
+    | otherwise = do
+        addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
+        case addedReminder of
+          Just _ -> respondNoContent
+          Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
   where
+    isNotValid = not . EV.isValid
     requestUK = AC.userKey . prqUser $ reminderRequest
+    emailAddress = AC.userEmail . prqUser $ reminderRequest
 
 addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userDetails conn = do
