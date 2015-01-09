@@ -1,6 +1,6 @@
 EACJ_USER=${bamboo_micros_user}
 EACJ_PASSWORD=${bamboo_micros_password}
-NPM_AUTH_TOKEN=${bamboo_npm_auth_token}
+NPM_AUTH_TOKEN=${bamboo_npm_auth_password}
 
 if [ "x$EACJ_USER" == "x" ]
 then
