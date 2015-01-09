@@ -1,6 +1,18 @@
 EACJ_USER=${bamboo_micros_user}
 EACJ_PASSWORD=${bamboo_micros_password}
 
+if [ "x$EACJ_USER" == "x" ]
+then
+   echo "Error: no EACJ username was provided"
+   exit 1
+fi
+
+if [ "x$EACJ_PASSWORD" == "x" ]
+then
+   echo "Error: no EACJ password was provided"
+   exit 1
+fi
+
 echo "Setting the npm registry to use the atlassian registry."
 npm config set registry=https://npm.atlassian.io
 
