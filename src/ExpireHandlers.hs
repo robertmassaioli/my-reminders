@@ -57,7 +57,7 @@ expireUsingTimestamp timestamp rmConf connectConf conn = do
          htmlTemplate <- T.readFile (emailDirectory </> "reminder-email.html")
          -- load the required attachments for every single email
          attachments <- loadAttachments [emailDirectory </> "ios7-stopwatch-outline.png"]
-         -- putStrLn $ "Expired reminders: " ++ (show . length $ expiredReminders)
+         putStrLn $ "Expired reminders: " ++ showLength expiredReminders
          let context = EmailContext
                            { ecConnectConf = connectConf
                            , ecAppConf = rmConf
@@ -66,9 +66,12 @@ expireUsingTimestamp timestamp rmConf connectConf conn = do
                            , ecAttachments = attachments
                            }
          sentReminders <- sendReminders context expiredReminders
-         -- putStrLn $ "Sent reminders: " ++ (show sentReminders)
+         putStrLn $ "Sent reminders: " ++ showLength sentReminders
          removeSentReminders sentReminders conn
          return ()
+
+showLength :: [a] -> String
+showLength = show . length
 
 addEmailDirectory :: FilePath -> FilePath
 addEmailDirectory f = f </> "static" </> "email"
@@ -94,7 +97,7 @@ loadAttachment filepath = do
 -- it going into the future.
 sendReminders :: EmailContext -> [EmailReminder] -> IO [EmailReminder]
 sendReminders context reminders =
-   fmap fst <$> filter snd <$> withPool 10 (flip parallel (fmap send reminders))
+   fmap fst <$> filter snd <$> withPool 10 (`parallel` fmap send reminders)
    where
       send = sendReminder context
 
@@ -102,8 +105,16 @@ sendReminder :: EmailContext -> EmailReminder -> IO (EmailReminder, Bool)
 sendReminder context reminder = do
    potentialMessage <- reminderToHailgunMessage context reminder
    case potentialMessage of
-      Left _ -> return (reminder, False)
-      Right message -> (,) reminder <$> isRight <$> sendEmail (CONF.rmHailgunContext . ecAppConf $ context) message
+      Left errorMessage -> do
+         putStrLn $ "Error generating email: " ++ errorMessage
+         return (reminder, False)
+      Right message -> do
+         emailResponse <- sendEmail (CONF.rmHailgunContext . ecAppConf $ context) message
+         case emailResponse of
+            Left errorMessage -> do
+               putStrLn $ "Error sending email: " ++ herMessage errorMessage
+               return (reminder, False)
+            Right _ -> return (reminder, True)
 
 reminderToHailgunMessage :: EmailContext -> EmailReminder -> IO (Either HailgunErrorMessage HailgunMessage)
 reminderToHailgunMessage context reminder = do
