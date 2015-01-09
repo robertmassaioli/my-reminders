@@ -27,6 +27,12 @@ $EACJ_PASSWORD
 rmassaioli@atlassian.com
 CREDS
 
+if ! grep '//npm-private.atlassian.io/:_authToken' ~/.npmrc > /dev/null
+then
+   echo "You have failed to generate an authentication token for NPM."
+   exit 1
+fi
+
 echo "Installing micros-cli"
 ./npm install --production '@atlassian/micros-cli'
 
