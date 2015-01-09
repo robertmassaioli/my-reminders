@@ -27,6 +27,7 @@ import qualified Snap.Core                         as SC
 import qualified Snap.Snaplet                      as SS
 import           SnapHelpers
 import qualified WithToken                         as WT
+import qualified Text.Email.Validate as EV
 
 type TimeDelay = Integer
 
@@ -243,10 +244,14 @@ addReminder reminderRequest (tenant, Just userKey) =
   if userKey /= requestUK
     then respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
     else do
-      addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
-      case addedReminder of
-        Just _ -> respondNoContent
-        Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
+      let emailAddress = AC.userEmail . prqUser $ reminderRequest
+      if EV.isValid emailAddress
+        then do
+          addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
+          case addedReminder of
+            Just _ -> respondNoContent
+            Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
+        else respondWithError badRequest $ "Oops, your email address " ++ show emailAddress ++ " is not valid; please change it in your profile settings."
   where
     requestUK = AC.userKey . prqUser $ reminderRequest
 

@@ -11,7 +11,6 @@ import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString                     as B
 import qualified Data.ByteString.Char8               as BSC
-import           Data.Either                         (isRight)
 import qualified Data.Text                           as T
 import qualified Data.Text.IO                        as T
 import           Data.Time.Clock                     (UTCTime)
@@ -106,8 +105,8 @@ sendReminder context reminder = do
    potentialMessage <- reminderToHailgunMessage context reminder
    case potentialMessage of
       Left errorMessage -> do
-         putStrLn $ "Error generating email: " ++ errorMessage
-         return (reminder, False)
+         putStrLn $ "Error generating email (deleting reminder): " ++ errorMessage
+         return (reminder, True) -- If we can't even generate the email for this reminder then just delete it
       Right message -> do
          emailResponse <- sendEmail (CONF.rmHailgunContext . ecAppConf $ context) message
          case emailResponse of
