@@ -20,7 +20,16 @@ then
    exit 1
 fi
 
+echo "Logging in to $DOCKER_REMOTE"
 ${DOCKER_CMD} login -u "$DOCKER_LOGIN_USERNAME" -p "$DOCKER_LOGIN_PASSWORD" -e "$DOCKER_LOGIN_EMAIL" "$DOCKER_REMOTE"
+
+echo "Loading the previously built docker image: $DOCKER_SAVE_FILE"
 ${DOCKER_CMD} load -i "$DOCKER_SAVE_FILE"
-${DOCKER_CMD} tag "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION"
+
+echo "Tagging $IMAGE_TAG as $DOCKER_PUSH_LOCATION"
+${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION"
+
+echo "Pussing $DOCKER_PUSH_LOCATION to $DOCKER_REMOTE"
 ${DOCKER_CMD} push "$DOCKER_PUSH_LOCATION"
+
+echo "Successfully pushed docker image to $DOCKER_REMOTE!"

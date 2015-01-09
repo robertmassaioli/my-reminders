@@ -1,2 +1,2 @@
 <!-- We need RequireJS -->
-<js src="/static/js/require.js" />
+<js src="/static/${resourcesVersion}/js/require.js" />

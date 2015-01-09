@@ -1,10 +1,10 @@
 <apply template="connect-panel">
     <bind tag="header-extra">
-        <js src="/static/js/app/create-reminder.js" />
+        <js src="/static/${resourcesVersion}/js/app/create-reminder.js" />
         <script>require(['app/create-reminder']);</script>
 
-        <css href="/static/css/create-reminder.css" />
-        <css href="/static/css/jquery.datetimepicker.css" />
+        <css href="/static/${resourcesVersion}/css/create-reminder.css" />
+        <css href="/static/${resourcesVersion}/css/jquery.datetimepicker.css" />
     </bind>
 
     <section role="dialog" id="add-reminder-dialog" class="ac-dialog aui-layer aui-dialog2 aui-dialog2-medium">
