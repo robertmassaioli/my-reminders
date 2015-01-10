@@ -20,11 +20,19 @@ then
    exit 1
 fi
 
+${DOCKER_CMD} --version
+
+echo "Listing current images..."
+${DOCKER_CMD} images
+
 echo "Logging in to $DOCKER_REMOTE"
 ${DOCKER_CMD} login -u "$DOCKER_LOGIN_USERNAME" -p "$DOCKER_LOGIN_PASSWORD" -e "$DOCKER_LOGIN_EMAIL" "$DOCKER_REMOTE"
 
 echo "Loading the previously built docker image: $DOCKER_SAVE_FILE"
 ${DOCKER_CMD} load -i "$DOCKER_SAVE_FILE"
+
+echo "Showing current images..."
+${DOCKER_CMD} images
 
 echo "Tagging $IMAGE_TAG as $DOCKER_PUSH_LOCATION"
 ${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.output
@@ -34,6 +42,9 @@ then
    echo "Error: docker tag experienced a fatal error."
    exit 1
 fi
+
+echo "Showing current (tagged) images..."
+${DOCKER_CMD} images
 
 echo "Pussing $DOCKER_PUSH_LOCATION to $DOCKER_REMOTE"
 ${DOCKER_CMD} push "$DOCKER_PUSH_LOCATION" 2>&1 > docker-push.output
