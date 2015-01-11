@@ -5,7 +5,8 @@ DOCKER_SAVE_FILE="${DOCKER_SAVE_FILE:-my-reminders.docker.save.tar}"
 DOCKER_PROPERTIES_FILE="${DOCKER_PROPERTIES_FILE:-my-reminders.docker.properties}"
 SERVICE_ID="${SERVICE_ID:-my-reminders}"
 DOCKER_REMOTE="${DOCKER_REMOTE:-docker.atlassian.io}"
-DOCKER_PUSH_LOCATION="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}:${RELEASE_VERSION}"
+DOCKER_REMOTE_REPO="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}"
+DOCKER_PUSH_LOCATION="${DOCKER_REMOTE_REPO}:${RELEASE_VERSION}"
 
 if [ ! -f "${DOCKER_PROPERTIES_FILE}" ]
 then
@@ -54,7 +55,7 @@ ${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.outp
 echo "Showing current (tagged) images..."
 ${DOCKER_CMD} images
 
-if ! ${DOCKER_CMD} images | grep "${DOCKER_PUSH_LOCATION}"
+if ! ${DOCKER_CMD} images | grep "${DOCKER_REMOTE_REPO}"
 then
    echo "Error: the image was not tagged successfully. It will not be possible to push image '${DOCKER_PUSH_LOCATION}'"
    exit 1
