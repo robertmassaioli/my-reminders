@@ -1,12 +1,20 @@
 #!/bin/bash -e
 
-CURRENT_IMAGE_TAG=`git describe`
-IMAGE_TAG=${IMAGE_TAG:-$CURRENT_IMAGE_TAG}
 DOCKER_CMD=${DOCKER_CMD:-docker}
 DOCKER_SAVE_FILE="${DOCKER_SAVE_FILE:-my-reminders.docker.save.tar}"
+DOCKER_PROPERTIES_FILE="${DOCKER_PROPERTIES_FILE:-my-reminders.docker.properties}"
 SERVICE_ID="${SERVICE_ID:-my-reminders}"
 DOCKER_REMOTE="${DOCKER_REMOTE:-docker.atlassian.io}"
 DOCKER_PUSH_LOCATION="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}:${RELEASE_VERSION}"
+
+if [ ! -f "${DOCKER_PROPERTIES_FILE}" ]
+then
+   echo "Could not find the docker properties file: $PWD/$DOCKER_PROPERTIES_FILE"
+   exit 1
+fi
+
+IMAGE_TAG=`grep 'IMAGE_TAG' "${DOCKER_PROPERTIES_FILE}" | sed 's/IMAGE_TAG=//'`
+echo "Loaded the IMAGE_TAG: $IMAGE_TAG"
 
 if [ "x$DOCKER_LOGIN_USERNAME" = "x" -o "x$DOCKER_LOGIN_PASSWORD" = "x" -o "x$DOCKER_LOGIN_EMAIL" = "x" ]
 then
