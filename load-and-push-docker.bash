@@ -36,9 +36,9 @@ ${DOCKER_CMD} images
 
 echo "Cleaning up all images and containers..."
 # Delete all containers
-${DOCKER_CMD} rm $(${DOCKER_CMD} ps -a -q)
+${DOCKER_CMD} rm -f $(${DOCKER_CMD} ps -a -q)
 # Delete all images
-${DOCKER_CMD} rmi $(${DOCKER_CMD} images -q)
+${DOCKER_CMD} rmi -f $(${DOCKER_CMD} images -q)
 
 echo "Listing cleansed images..."
 ${DOCKER_CMD} images
