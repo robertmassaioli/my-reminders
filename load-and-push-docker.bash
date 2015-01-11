@@ -42,17 +42,23 @@ ${DOCKER_CMD} load -i "$DOCKER_SAVE_FILE"
 echo "Showing current images..."
 ${DOCKER_CMD} images
 
-echo "Tagging $IMAGE_TAG as $DOCKER_PUSH_LOCATION"
-${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.output
-
-if grep 'level="fatal"' docker-tag.output
+if ! ${DOCKER_CMD} images | grep "$IMAGE_TAG"
 then
-   echo "Error: docker tag experienced a fatal error."
+   echo "Error: the image that was loaded did not match the image tag '$IMAGE_TAG'"
    exit 1
 fi
 
+echo "Tagging $IMAGE_TAG as $DOCKER_PUSH_LOCATION"
+${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.output
+
 echo "Showing current (tagged) images..."
 ${DOCKER_CMD} images
+
+if ! ${DOCKER_CMD} images | grep "${DOCKER_PUSH_LOCATION}"
+then
+   echo "Error: the image was not tagged successfully. It will not be possible to push image '${DOCKER_PUSH_LOCATION}'"
+   exit 1
+fi
 
 echo "Pussing $DOCKER_PUSH_LOCATION to $DOCKER_REMOTE"
 ${DOCKER_CMD} push "$DOCKER_PUSH_LOCATION" 2>&1 > docker-push.output
