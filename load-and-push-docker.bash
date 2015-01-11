@@ -34,6 +34,15 @@ ${DOCKER_CMD} --version
 echo "Listing current images..."
 ${DOCKER_CMD} images
 
+echo "Cleaning up all images and containers..."
+# Delete all containers
+${DOCKER_CMD} rm $(${DOCKER_CMD} ps -a -q)
+# Delete all images
+${DOCKER_CMD} rmi $(${DOCKER_CMD} images -q)
+
+echo "Listing cleansed images..."
+${DOCKER_CMD} images
+
 echo "Logging in to $DOCKER_REMOTE"
 ${DOCKER_CMD} login -u "$DOCKER_LOGIN_USERNAME" -p "$DOCKER_LOGIN_PASSWORD" -e "$DOCKER_LOGIN_EMAIL" "$DOCKER_REMOTE"
 
@@ -61,7 +70,7 @@ then
    exit 1
 fi
 
-echo "Pussing $DOCKER_PUSH_LOCATION to $DOCKER_REMOTE"
+echo "Pushing $DOCKER_PUSH_LOCATION to $DOCKER_REMOTE"
 ${DOCKER_CMD} push "$DOCKER_PUSH_LOCATION" 2>&1 > docker-push.output
 
 if grep 'level="fatal"' docker-push.output
