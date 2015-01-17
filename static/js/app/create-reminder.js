@@ -24,8 +24,9 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
       if(isNaN(issueId)) {
          throw "No issue id on the page. Cannot do anything.";
       }
+      // TODO replace with code like what we see in the ShipIt Voting Plugin PageContext
       var issueKey = queryParams["issue_key"];
-      var userKey = queryParams["user_id"];
+      var userKey = queryParams["user_key"];
 
       var timeUnits = {
          minute: "Minute",
