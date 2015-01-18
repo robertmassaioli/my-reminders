@@ -14,7 +14,7 @@ define(['moment', '../lib/jquery.datetimepicker'], function(moment) {
         // TODO init the datepicker
         AJS.$("#reminderDate").datetimepicker();
 
-        AP.require(['events'], function(events) {
+        AP.require(['dialog', 'events'], function(dialog, events){
             AJS.log("Dialog: Loaded the create reminder dialog.");
             AJS.log(events);
             events.emit('dialog.loaded');
@@ -39,6 +39,7 @@ define(['moment', '../lib/jquery.datetimepicker'], function(moment) {
             AJS.$("#button-close").click(handle(function() {
                 AJS.log("Dialog: Clicked the close button in the dialog.");
                 events.emit('add-reminder-cancelled');
+                dialog.close();
             }));
         });
     });

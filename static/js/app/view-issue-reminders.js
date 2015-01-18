@@ -321,7 +321,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                events.on('add-reminder-cancelled', function() {
                   AJS.log("Panel: Clicked close.");
                   //removeListeners();
-                  dialog.close();
+                  //dialog.close();
                });
             }));
          });
