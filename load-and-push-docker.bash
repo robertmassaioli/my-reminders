@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+echo "Starting the load and push of the docker image..."
+
 DOCKER_CMD=${DOCKER_CMD:-docker}
 DOCKER_SAVE_FILE="${DOCKER_SAVE_FILE:-my-reminders.docker.save.tar}"
 DOCKER_PROPERTIES_FILE="${DOCKER_PROPERTIES_FILE:-my-reminders.docker.properties}"
@@ -29,6 +31,7 @@ then
    exit 1
 fi
 
+echo "Printing the docker version"
 ${DOCKER_CMD} --version
 
 echo "Listing current images..."
