@@ -51,7 +51,6 @@ toSafeTenant t = SafeTenant
     , stProductType = AC.productType t
     }
 
--- TODO have a GET url where you can get a list of all of the tenants
 adminSearch :: AppHandler ()
 adminSearch = getKeyAndConfirm CONF.rmAdminKey $ handleMethods
     [ (SC.GET, performTenantSearch)
@@ -64,7 +63,6 @@ performTenantSearch = do
     tenants <- withConnection (findTenantsByBaseUrl (T.decodeUtf8 searchUrl))
     writeJson . toSafeTenants $ tenants
 
--- TODO have a DELETE url where you can delete all of the data for a tenant
 adminTenant :: AppHandler ()
 adminTenant = getKeyAndConfirm CONF.rmAdminKey $ handleMethods
     [ (SC.DELETE, deleteTenant)
