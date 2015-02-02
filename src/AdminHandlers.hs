@@ -9,18 +9,19 @@ import           AesonHelpers
 import qualified AppConfig              as CONF
 import           AppHelpers
 import           Application
+import           Control.Monad          (void)
 import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.Maybe             (fromMaybe)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
 import           GHC.Generics
+import qualified Network.URI            as NU
 import           Persistence.PostgreSQL
 import           Persistence.Tenant
 import qualified Snap.AtlassianConnect  as AC
 import qualified Snap.Core              as SC
 import           SnapHelpers
-import qualified  Network.URI as NU
 
 data SafeTenant = SafeTenant
     { stKey         :: AC.TenantKey   -- ^ The unique identifier for this tenant accross Atlassian Connect.
@@ -74,6 +75,4 @@ deleteTenant = do
     potentialTenantKey <- SC.getParam "tenant_key"
     case potentialTenantKey of
         Nothing -> respondWithError badRequest "You need to provide a tenant_key to specify the tenant to delete."
-        Just tenantKey -> do
-            withConnection (`removeTenantInformation` T.decodeUtf8 tenantKey)
-            return ()
+        Just tenantKey -> void $ withConnection (`removeTenantInformation` T.decodeUtf8 tenantKey)
