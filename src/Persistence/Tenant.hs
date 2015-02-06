@@ -12,20 +12,22 @@ module Persistence.Tenant (
   , wakeTenant
   , markPurgedTenants
   , purgeTenants
+  , findTenantsByBaseUrl
 ) where
 
-import qualified Snap.AtlassianConnect as AC
 import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Data.Int
 import           Data.Maybe
+import qualified Data.Text                        as T
 import           Data.Time.Clock                  (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Network.URI                      hiding (query)
+import qualified Snap.AtlassianConnect            as AC
 
-import           Persistence.Instances ()
+import           Persistence.Instances            ()
 import           Persistence.PostgreSQL
 
 lookupTenant
@@ -156,3 +158,14 @@ purgeTenants :: UTCTime -> Connection -> IO Int64
 purgeTenants beforeTime conn = liftIO $ execute conn [sql|
       DELETE FROM tenant WHERE sleep_date IS NOT NULL AND sleep_date < ?
    |] (Only beforeTime)
+
+findTenantsByBaseUrl :: T.Text -> Connection -> IO [AC.Tenant]
+findTenantsByBaseUrl uri conn =
+   liftIO $ query conn [sql|
+      SELECT id, key, publicKey, sharedSecret, baseUrl, productType
+      FROM tenant
+      WHERE baseUrl like ?
+   |] (Only . surroundLike $ uri)
+
+surroundLike :: T.Text -> T.Text
+surroundLike x = "%" `T.append` x `T.append` "%"

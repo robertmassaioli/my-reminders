@@ -40,6 +40,7 @@ data AppConf = AppConf
    , rmHttpSecureProxy        :: Maybe Proxy
    , rmMigrationKey           :: D.Key BSC.ByteString AppConf
    , rmStatisticsKey          :: D.Key BSC.ByteString AppConf
+   , rmAdminKey               :: D.Key BSC.ByteString AppConf
    }
 
 class HasAppConf m where
@@ -54,6 +55,7 @@ data EnvConf = EnvConf
    , ecPurgeKey        :: Maybe String
    , ecMigrationKey    :: Maybe String
    , ecStatisticsKey   :: Maybe String
+   , ecAdminKey        :: Maybe String
    , ecMailgunDomain   :: Maybe String
    , ecMailgunApiKey   :: Maybe String
    , ecHttpProxy       :: Maybe String
@@ -70,6 +72,7 @@ loadConfFromEnvironment = do
       , ecPurgeKey         = get "PURGE_KEY"
       , ecMigrationKey     = get "MIGRATION_KEY"
       , ecStatisticsKey    = get "STATISTICS_KEY"
+      , ecAdminKey         = get "ADMIN_KEY"
       , ecMailgunDomain    = get "MAILGUN_DOMAIN"
       , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
@@ -97,7 +100,8 @@ loadAppConfOrExit config = do
    printEnvironmentConf environmentConf
    guardConfig environmentConf
 
-   statisticsKey <- require config "statistics-key" "Missing 'statistics-key': for gettinig statistics data."
+   adminKey <- require config "admin-key" "Missing 'admin-key': for performing admin only operations."
+   statisticsKey <- require config "statistics-key" "Missing 'statistics-key': for getting statistics data."
    migrationKey <- require config "migration-key" "Missing 'migration-key': for trigerring migrations."
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
    mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
@@ -125,6 +129,7 @@ loadAppConfOrExit config = do
       , rmHttpSecureProxy = httpSecureProxy
       , rmMigrationKey = fromConf (fmap packInKey . ecMigrationKey) migrationKey
       , rmStatisticsKey = fromConf (fmap packInKey . ecStatisticsKey) statisticsKey
+      , rmAdminKey = fromConf (fmap packInKey . ecAdminKey) adminKey
       }
 
 isDogOrProd :: EnvConf -> Bool
