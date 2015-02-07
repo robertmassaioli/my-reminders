@@ -1,5 +1,5 @@
 Name:                my-reminders
-Version:             0.1
+Version:             0.3
 Synopsis:            My reminders plugin for Atlassian Cloud
 Description:         Set issue reminders for the future!
 License:             AllRightsReserved
@@ -54,7 +54,7 @@ Executable my-reminders
   default-language: Haskell2010
   Build-depends:
       base                      >= 4.6     && < 5
-    , atlassian-connect-descriptor >= 0.2
+    , atlassian-connect-descriptor >= 0.3
     , atlassian-connect-core    == 0.4.*
     , process                   == 1.2.*
     , filepath                  == 1.3.*
@@ -96,6 +96,7 @@ Executable my-reminders
     , split                     == 0.2.*
     , utf8-string               >= 0.3.8   && < 0.4
     , uuid                      == 1.3.*
+    , email-validate            == 2.*
 
   if flag(development)
     build-depends:
@@ -169,3 +170,4 @@ test-suite my-reminders-props
     , split
     , utf8-string
     , uuid
+    , email-validate

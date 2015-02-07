@@ -10,6 +10,7 @@ module Site
   ( app
   ) where
 
+import           AdminHandlers
 import qualified AppConfig                                   as CONF
 import           Application
 import qualified AtlassianConnect                            as AC
@@ -102,6 +103,8 @@ applicationRoutes =
   , ("/rest/heartbeat"              , heartbeatRequest)
   , ("/rest/migration"              , migrationRequest)
   , ("/rest/statistics"             , handleStatistics)
+  , ("/rest/admin/tenant/search"    , adminSearch)
+  , ("/rest/admin/tenant"           , adminTenant)
   , ("/robots.txt"                  , serveFile "static/files/robots.txt")
   ]
 
