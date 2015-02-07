@@ -34,6 +34,7 @@ define(['moment', '../lib/jquery.datetimepicker'], function(moment) {
                 };
                 AJS.log(createData);
                 events.emit('add-reminder-submit', createData);
+                dialog.close();
             }));
             // Bind the close button
             AJS.$("#button-close").click(handle(function() {

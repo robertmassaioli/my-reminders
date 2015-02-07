@@ -303,25 +303,21 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
                AJS.log("Panel: Binding events after dialog create.");
                AJS.log(events);
-               //var removeListeners = function() {
-               //   events.offAll('add-reminder-submit');
-               //   events.offAll('add-reminder-cancelled');
-               //};
+               var removeListeners = function() {
+                  events.offAll('add-reminder-submit');
+                  events.offAll('add-reminder-cancelled');
+               };
 
-               events.on('add-reminder-submit', function(createData) {
+               events.once('add-reminder-submit', function(createData) {
                   AJS.log('Panel: clicked reminder added');
-                  //removeListeners();
+                  removeListeners();
                   AJS.log(createData);
-                  var request = createReminder(moment(createData.dueDate), createData.message);
-                  request.done(function() {
-                     dialog.close();
-                  });
+                  createReminder(moment(createData.dueDate), createData.message);
                });
 
-               events.on('add-reminder-cancelled', function() {
+               events.once('add-reminder-cancelled', function() {
                   AJS.log("Panel: Clicked close.");
-                  //removeListeners();
-                  //dialog.close();
+                  removeListeners();
                });
             }));
          });
