@@ -34,7 +34,8 @@ addonJiraModules = emptyJIRAModules
     { jmWebPanels =
       [ WebPanel
          { wpKey = "view-issue-reminders"
-         , wpName = Name "Your reminders for this issue."
+         , wpName = simpleText "My reminders"
+         , wpTooltip = Just . simpleText $ "Your reminders for this issue."
          , wpUrl = "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
          , wpLocation = "atl.jira.view.issue.right.context"
          , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
@@ -55,14 +56,15 @@ addonJiraModules = emptyJIRAModules
          , jiraPageConditions = []
          , jiraPageParams = noParams
          }
-      , GeneralPage
-        { generalPageName = Name "Create reminder"
-        , generalPageKey = "create-reminder-dialog"
-        , generalPageUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
-        , generalPageLocation = Just "completely-invalid-location"
-        , generalPageIcon = Nothing
-        , generalPageWeight = Nothing
-        , generalPageConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+      , JIRAPage
+        { jiraPageName = simpleText "Create reminder"
+        , jiraPageKey = "create-reminder-dialog"
+        , jiraPageUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+        , jiraPageLocation = Just "completely-invalid-location"
+        , jiraPageIcon = Nothing
+        , jiraPageWeight = Nothing
+        , jiraPageConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+        , jiraPageParams = noParams
         }
       ]
     , jmWebhooks =
