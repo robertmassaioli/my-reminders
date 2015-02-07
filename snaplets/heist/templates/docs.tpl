@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
    <head profile="http://www.w3.org/2005/10/profile">
-      <link rel="icon" type="image/ico" href="/static/images/favicon.v3.ico" />
+      <link rel="icon" type="image/ico" href="/static/${resourcesVersion}/images/favicon.v3.ico" />
 
       <apply template="headers/requirejs" />
       <apply template="headers/aui" />
       <apply template="headers/aui-experimental" />
-      <js src="/static/js/app/doc-page.js" />
+      <js src="/static/${resourcesVersion}/js/app/doc-page.js" />
       <script>require(['app/doc-page']);</script>
    </head>
    <body>

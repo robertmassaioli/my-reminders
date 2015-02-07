@@ -3,6 +3,7 @@ module MigrationHandler
    ) where
 
 import qualified AppConfig               as CONF
+import qualified AppHelpers              as AH
 import           Application
 import           Control.Applicative     ((<$>))
 import           Control.Monad.IO.Class  (liftIO)
@@ -23,7 +24,7 @@ migrationRequest = SH.handleMethods
 -- This should be an idempotent operation, this means that we should require that the user pass in
 -- the ID of the migration that they wish to run up to.
 handleMigrationRun :: AppHandler ()
-handleMigrationRun = SH.getKeyAndConfirm CONF.rmMigrationKey handleFlywayMigrate
+handleMigrationRun = AH.getKeyAndConfirm CONF.rmMigrationKey handleFlywayMigrate
 
 handleFlywayMigrate :: AppHandler ()
 handleFlywayMigrate = either (SH.respondWithError SH.badRequest) (liftIO . flywayMigrate) =<< getFlywayOptions

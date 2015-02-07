@@ -31,30 +31,43 @@ addonDescriptor =
 
 addonJiraModules :: JIRAModules
 addonJiraModules = emptyJIRAModules
-    { jiraWebPanels =
+    { jmWebPanels =
       [ WebPanel
-         { wpKey = "create-reminder-panel"
-         , wpName = Name "My reminders"
-         , wpUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+         { wpKey = "view-issue-reminders"
+         , wpName = simpleText "My reminders"
+         , wpTooltip = Just . simpleText $ "Your reminders for this issue."
+         , wpUrl = "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
          , wpLocation = "atl.jira.view.issue.right.context"
          , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
          , wpWeight = Nothing
          , wpLayout = Nothing
+         , wpParams = noParams
          }
       ]
-    , jiraGeneralPages =
-      [ GeneralPage
-         { generalPageName = Name "My Reminders"
-         , generalPageKey = "view-my-reminders"
-         , generalPageUrl = "/panel/jira/reminders/view"
+    , jmGeneralPages =
+      [ JIRAPage
+         { jiraPageName = simpleText "My Reminders"
+         , jiraPageKey = "view-my-reminders"
+         , jiraPageUrl = "/panel/jira/reminders/view"
          -- See: https://developer.atlassian.com/display/JIRADEV/User+Accessible+Locations#UserAccessibleLocations-AddingNewItemstoExistingWebSections
-         , generalPageLocation = Just "system.user.options/personal"
-         , generalPageIcon = Nothing
-         , generalPageWeight = Nothing
-         , generalPageConditions = []
+         , jiraPageLocation = Just "system.user.options/personal"
+         , jiraPageIcon = Nothing
+         , jiraPageWeight = Nothing
+         , jiraPageConditions = []
+         , jiraPageParams = noParams
          }
+      , JIRAPage
+        { jiraPageName = simpleText "Create reminder"
+        , jiraPageKey = "create-reminder-dialog"
+        , jiraPageUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+        , jiraPageLocation = Just "completely-invalid-location"
+        , jiraPageIcon = Nothing
+        , jiraPageWeight = Nothing
+        , jiraPageConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+        , jiraPageParams = noParams
+        }
       ]
-    , jiraWebhooks =
+    , jmWebhooks =
       [ Webhook { webhookEvent = JiraIssueUpdated, webhookUrl = "/rest/webhook/issue/update" }
       , Webhook { webhookEvent = JiraIssueDeleted, webhookUrl = "/rest/webhook/issue/delete" }
       ]

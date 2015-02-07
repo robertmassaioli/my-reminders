@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-MICROS_CMD=${MICROS_CMD:-micros}
+MICROS_CMD=${MICROS_CMD:-./node_modules/@atlassian/micros-cli/micros.js}
 
 if [ "x$DEPLOY_ENVIRONMENT" = "x" ]
 then

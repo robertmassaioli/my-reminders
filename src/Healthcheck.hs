@@ -132,7 +132,7 @@ expiryHealthcheck = do
          , hsTime = currentTime
          , hsSeverity = CRITICAL
          , hsDocumentation = Just . T.pack $ "If you see this error start by making sure that the database healthcheck succeeds. If it does then "
-            ++ "check that the service that triggers the expiry handler has been firing correctly. Likely to be Easy Cron (http://www.easycron.com)."
+            ++ "check that the service that triggers the expiry handler has been firing correctly. Likely to be Easy Cron (http://www.easycron.com). "
             ++ "After that contact the developers for further aid."
          }
          

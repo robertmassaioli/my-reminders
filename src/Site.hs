@@ -10,10 +10,10 @@ module Site
   ( app
   ) where
 
+import           AdminHandlers
 import qualified AppConfig                                   as CONF
 import           Application
 import qualified AtlassianConnect                            as AC
-import qualified Snap.AtlassianConnect as AC
 import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
@@ -33,12 +33,14 @@ import qualified MicrosZone                                  as MZ
 import           MigrationHandler
 import           PurgeHandlers
 import           ReminderHandlers
+import qualified Snap.AtlassianConnect                       as AC
 import qualified Snap.Core                                   as SC
 import qualified Snap.Snaplet                                as SS
 import qualified Snap.Snaplet.Heist                          as SSH
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
+import           StaticSnaplet
 import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
@@ -61,12 +63,6 @@ showDocPage = do
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createReminderPanel :: AppHandler ()
-createReminderPanel = createConnectPanel "reminder-create"
-
-viewRemindersPanel :: AppHandler ()
-viewRemindersPanel = createConnectPanel "view-jira-reminders"
-
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
@@ -93,8 +89,9 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                            , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"             , showDocPage)
-  , ("/panel/jira/reminder/create"  , createReminderPanel)
-  , ("/panel/jira/reminders/view"   , viewRemindersPanel)
+  , ("/panel/jira/reminder/create"  , createConnectPanel "create-reminder")
+  , ("/panel/jira/reminder/simple"  , createConnectPanel "view-issue-reminders")
+  , ("/panel/jira/reminders/view"   , createConnectPanel "view-jira-reminders")
   , ("/rest/reminder"               , handleReminder)
   , ("/rest/reminders"              , handleReminders)
   , ("/rest/user/reminders"         , handleUserReminders)
@@ -106,10 +103,16 @@ applicationRoutes =
   , ("/rest/heartbeat"              , heartbeatRequest)
   , ("/rest/migration"              , migrationRequest)
   , ("/rest/statistics"             , handleStatistics)
-  , ("/static/css"                  , serveDirectory "static/css")
-  , ("/static/images"               , serveDirectory "static/images")
-  , ("/static/js"                   , serveDirectory "static-js")
+  , ("/rest/admin/tenant/search"    , adminSearch)
+  , ("/rest/admin/tenant"           , adminTenant)
   , ("/robots.txt"                  , serveFile "static/files/robots.txt")
+  ]
+
+staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
+staticRoutes =
+  [ ("css"    , serveDirectory "static/css")
+  , ("images" , serveDirectory "static/images")
+  , ("js"     , serveDirectory "static-js")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
@@ -137,8 +140,9 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
   appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
+  appStatic <- SS.nestSnaplet "static" static (initStaticSnaplet PMR.version staticRoutes appHeist)
   liftIO . putStrLn $ "## Ending Init Phase"
-  return $ App appHeist appSession appDb appConnect appAppConf
+  return $ App appHeist appSession appDb appConnect appAppConf appStatic
 
 configDataDir :: IO String
 configDataDir = CM.liftM (++ "/resources") PMR.getDataDir
