@@ -294,7 +294,7 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                AJS.log('Panel: the dialog was created');
             });
 
-            AJS.$("#add-reminder").click(handle(function() {
+            var customReminderHandler = handle(function() {
                dialog.create({
                   key: 'create-reminder-dialog',
                   width: '600px',
@@ -319,7 +319,10 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
                   AJS.log("Panel: Clicked close.");
                   removeListeners();
                });
-            }));
+            });
+
+            AJS.$("#add-reminder").click(customReminderHandler);
+            AJS.$("#add-custom-reminder").click(customReminderHandler);
          });
 
          AJS.$("#add-reminder-tomorrow").click(handle(function() {
@@ -328,6 +331,10 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
          AJS.$("#add-reminder-next-week").click(handle(function() {
             createReminder(moment().add(7, 'days'));
+         }));
+
+         AJS.$("#add-reminder-more").click(handle(function() {
+            AP.resize();
          }));
 
          setCreationState(creationState.notCreating);

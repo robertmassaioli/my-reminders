@@ -13,7 +13,14 @@
    <!-- TODO work out per user which one gets pressed the most and optimise for that -->
    <!-- TODO textinput instead of textarea because textinputs can have a maxlength -->
    <div class="reminder-actions">
-      <button id="add-reminder" class="aui-button"><span class="aui-icon aui-icon-small aui-iconfont-add">Add</span> Reminder</button>
+       <div id="split-button-demo" class="aui-buttons"><button id="add-reminder" class="aui-button aui-button-split-main"><span class="aui-icon aui-icon-small aui-iconfont-add">Add</span> Reminder</button><button id="add-reminder-more" class="aui-button aui-dropdown2-trigger aui-button-split-more" aria-owns="split-container-dropdown" aria-haspopup="true">Split button more</button></div>
+       <div id="split-container-dropdown" class="aui-dropdown2 aui-style-default" data-container="split-button-demo">
+           <ul class="aui-list-truncate">
+               <li><a id="add-reminder-tomorrow"    href="#">Tomorrow</a></li>
+               <li><a id="add-reminder-next-week"   href="#">In a week</a></li>
+               <li><a id="add-custom-reminder"      href="#">Select a time...</a></li>
+           </ul>
+       </div>
       <span class="status-container">
            <span id="reminder-creation-pending" class="aui-icon aui-icon-wait">Wait</span>
            <span id="reminder-creation-error"   class="aui-icon aui-icon-error">Error</span>
