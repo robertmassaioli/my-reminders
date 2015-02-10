@@ -29,8 +29,6 @@ import           SnapHelpers
 import qualified WithToken                         as WT
 import qualified Text.Email.Validate as EV
 
-type TimeDelay = Integer
-
 -- No Month time because month's are not always the same length. Approximate months as four weeks.
 data TimeUnit
    = Minute
@@ -41,11 +39,10 @@ data TimeUnit
    deriving (Show, Eq, Generic)
 
 data ReminderRequest = ReminderRequest
-  { prqTimeDelay :: TimeDelay
-  , prqTimeUnit  :: TimeUnit
-  , prqIssue     :: AC.IssueDetails
-  , prqUser      :: AC.UserDetails
-  , prqMessage   :: Maybe T.Text
+  { prqReminderDate :: UTCTime
+  , prqIssue        :: AC.IssueDetails
+  , prqUser         :: AC.UserDetails
+  , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
 data ReminderResponse = ReminderResponse
@@ -99,14 +96,12 @@ instance ToJSON ReminderRequest where
 
 instance FromJSON ReminderRequest where
    parseJSON (Object o) = do
-      delay    <- o .:  "TimeDelay"
-      unit     <- o .:  "TimeUnit"
+      reminderDate    <- o .:  "ReminderDate"
       issue    <- o .:  "Issue"
       user     <- o .:  "User"
       message  <- o .:? "Message"
       return ReminderRequest
-         { prqTimeDelay = delay
-         , prqTimeUnit = unit
+         { prqReminderDate = reminderDate
          , prqIssue = issue
          , prqUser = user
          , prqMessage = message
@@ -254,23 +249,10 @@ addReminder reminderRequest (tenant, Just userKey)
     emailAddress = AC.userEmail . prqUser $ reminderRequest
 
 addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
-addReminderFromRequest reminderRequest tenant userDetails conn = do
-  currentTime <- getCurrentTime
-  let date' = addUTCTime dateDiff currentTime
+addReminderFromRequest reminderRequest tenant userDetails conn =
   P.addReminder conn date' tenantId' iDetails userDetails message'
   where
-    dateDiff = timeDiffForReminderRequest reminderRequest
+    date' = prqReminderDate reminderRequest
     tenantId' = AC.tenantId tenant
     iDetails = prqIssue reminderRequest
     message' = prqMessage reminderRequest
-
-timeDiffForReminderRequest :: ReminderRequest -> NominalDiffTime
-timeDiffForReminderRequest request = toDiffTime (prqTimeDelay request) (prqTimeUnit request)
-
-toDiffTime :: TimeDelay -> TimeUnit -> NominalDiffTime
-toDiffTime mag unit = case unit of
-   Minute   -> fromIntegral $ mag * 60
-   Hour     -> toDiffTime (mag * 60)   Minute
-   Day      -> toDiffTime (mag * 24)   Hour
-   Week     -> toDiffTime (mag * 7)    Day
-   Year     -> toDiffTime (mag * 365)  Day
