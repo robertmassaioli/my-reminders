@@ -325,12 +325,24 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             AJS.$("#add-custom-reminder").click(customReminderHandler);
          });
 
+         var randomIntegerInRange = function(start, end) {
+            var smallest = Math.min(start, end);
+            var largest = Math.max(start, end);
+            var difference = largest - smallest;
+            return smallest + Math.floor(Math.random() * difference);
+         };
+
+         var setToMorningHour = function(date) {
+            date.hours(randomIntegerInRange(6, 8)).minutes(randomIntegerInRange(0, 60));
+            return date;
+         };
+
          AJS.$("#add-reminder-tomorrow").click(handle(function() {
-            createReminder(moment().add(1, 'days'));
+            createReminder(setToMorningHour(moment().add(1, 'days')));
          }));
 
          AJS.$("#add-reminder-next-week").click(handle(function() {
-            createReminder(moment().add(7, 'days'));
+            createReminder(setToMorningHour(moment().add(7, 'days')));
          }));
 
          AJS.$("#add-reminder-more").click(handle(function() {
