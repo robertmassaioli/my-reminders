@@ -1,7 +1,7 @@
 <apply template="connect-panel">
     <bind tag="header-extra">
-        <js src="/static/${resourcesVersion}/js/app/create-reminder.js" />
-        <script>require(['app/create-reminder']);</script>
+        <js src="/static/${resourcesVersion}/js/app/create-reminder-v2.js" />
+        <script>require(['app/create-reminder-v2']);</script>
 
         <css href="/static/${resourcesVersion}/css/create-reminder.css" />
         <css href="/static/${resourcesVersion}/css/jquery.datetimepicker.css" />
