@@ -43,6 +43,17 @@ addonJiraModules = emptyJIRAModules
          , wpLayout = Nothing
          , wpParams = noParams
          }
+      , WebPanel
+         { wpKey = "create-issue-reminders-v1"
+         , wpName = simpleText "My reminders"
+         , wpTooltip = Just . simpleText $ "Your reminders for this issue."
+         , wpUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+         , wpLocation = "atl.jira.view.issue.right.context"
+         , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
+         , wpWeight = Nothing
+         , wpLayout = Nothing
+         , wpParams = noParams
+         }
       ]
     , jmGeneralPages =
       [ JIRAPage
