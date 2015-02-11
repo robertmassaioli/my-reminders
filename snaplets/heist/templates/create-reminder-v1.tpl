@@ -6,7 +6,7 @@
         <css href="/static/${resourcesVersion}/css/create-reminder.css" />
 
         <script id="reminder-lozenge" type="x-tmpl-mustache">
-         <span data-reminder-id="{{ReminderId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closab
+         <span data-reminder-id="{{ReminderId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
       </script>
     </bind>
 
