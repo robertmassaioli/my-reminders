@@ -59,7 +59,7 @@ addonJiraModules = emptyJIRAModules
       , JIRAPage
         { jiraPageName = simpleText "Create reminder"
         , jiraPageKey = "create-reminder-dialog"
-        , jiraPageUrl = "/panel/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
+        , jiraPageUrl = "/panel/v2/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
         , jiraPageLocation = Just "completely-invalid-location"
         , jiraPageIcon = Nothing
         , jiraPageWeight = Nothing
