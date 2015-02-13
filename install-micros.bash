@@ -1,6 +1,10 @@
+echo "Starting the install micros-cli process."
+
 EACJ_USER=${bamboo_micros_user}
 EACJ_PASSWORD=${bamboo_micros_password}
 NPM_AUTH_TOKEN=${bamboo_npm_auth_password}
+
+echo "==> Running the pre install checks..."
 
 if [ "x$EACJ_USER" == "x" ]
 then
