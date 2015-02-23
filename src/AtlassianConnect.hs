@@ -31,7 +31,7 @@ addonDescriptor =
 
 addonJiraModules :: JIRAModules
 addonJiraModules = emptyJIRAModules
-    { jmWebPanels =
+    { jmWebPanels = Just
       [ WebPanel
          { wpKey = "view-issue-reminders"
          , wpName = simpleText "My reminders"
@@ -44,7 +44,7 @@ addonJiraModules = emptyJIRAModules
          , wpParams = noParams
          }
       ]
-    , jmGeneralPages =
+    , jmGeneralPages = Just
       [ JIRAPage
          { jiraPageName = simpleText "My Reminders"
          , jiraPageKey = "view-my-reminders"
@@ -67,7 +67,7 @@ addonJiraModules = emptyJIRAModules
         , jiraPageParams = noParams
         }
       ]
-    , jmWebhooks =
+    , jmWebhooks = Just
       [ Webhook { webhookEvent = JiraIssueUpdated, webhookUrl = "/rest/webhook/issue/update" }
       , Webhook { webhookEvent = JiraIssueDeleted, webhookUrl = "/rest/webhook/issue/delete" }
       ]
