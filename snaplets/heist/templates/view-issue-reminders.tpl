@@ -1,9 +1,9 @@
 <apply template="connect-panel">
    <bind tag="header-extra">
-      <js src="/static/js/app/view-issue-reminders.js" />
+      <js src="/static/${resourcesVersion}/js/app/view-issue-reminders.js" />
       <script>require(['app/view-issue-reminders']);</script>
 
-      <css href="/static/css/view-issue-reminders.css" />
+      <css href="/static/${resourcesVersion}/css/view-issue-reminders.css" />
 
       <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{ReminderId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
