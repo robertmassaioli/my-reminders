@@ -83,7 +83,7 @@ then
 fi
 
 echo "Checking the docker repository to see if the push succeeded..."
-if ! curl -q -u "${DOCKER_USERNAME}:${DOCKER_PASSWORD}" "https://${DOCKER_REMOTE}/v1/repositories/atlassian/${SERVICE_ID}/tags/${RELEASE_VERSION}"
+if ! curl -f -q -u "${DOCKER_USERNAME}:${DOCKER_PASSWORD}" "https://${DOCKER_REMOTE}/v1/repositories/atlassian/${SERVICE_ID}/tags/${RELEASE_VERSION}"
 then
    echo "Error: the docker push seems to have failed because it is not present in the repository."
    exit 2
