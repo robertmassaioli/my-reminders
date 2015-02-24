@@ -82,4 +82,11 @@ then
    exit 1
 fi
 
+echo "Checking the docker repository to see if the push succeeded..."
+if ! curl -u "${DOCKER_USERNAME}:${DOCKER_PASSWORD}" "https://${DOCKER_REMOTE}/v1/repositories/atlassian/${SERVICE_ID}/tags" | grep "${RELEASE_VERSION}" > /dev/null
+then
+   echo "Error: the docker push seems to have failed because it is not present in the repository."
+   exit 2
+fi
+
 echo "Successfully pushed docker image to $DOCKER_REMOTE!"
