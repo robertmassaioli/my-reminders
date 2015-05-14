@@ -8,6 +8,7 @@ module Application where
 
 ------------------------------------------------------------------------------
 import           Control.Lens
+import           Control.Monad.Reader          (local)
 import           Control.Monad.State           (get)
 import qualified Snap.Snaplet                  as SS
 import qualified Snap.Snaplet.Heist            as SSH
@@ -34,6 +35,7 @@ instance SSH.HasHeist App where
 
 instance HasPostgres (SS.Handler b App) where
   getPostgresState = SS.with db get
+  setLocalPostgresState s = local $ set (db . SS.snapletValue) s
 
 instance AC.HasConnect (SS.Handler b App) where
    getConnect = SS.with connect get
