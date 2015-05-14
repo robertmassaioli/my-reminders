@@ -4,7 +4,6 @@ module CustomSplices (spliceConfig) where
 import           Control.Lens ((&), (.~))
 import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Text as T
-import           Data.Monoid (mempty)
 import qualified Heist as H
 import qualified Heist.Interpreted as HI
 import qualified Heist.Internal.Types as HIT

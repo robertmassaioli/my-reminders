@@ -6,7 +6,6 @@ module Healthcheck
 
 import           Application
 import           AesonHelpers (baseOptions, stripFieldNamePrefix)
-import           Control.Applicative ((<$>))
 import qualified Control.Exception as E
 import           Control.Monad.CatchIO (MonadCatchIO(..), tryJust)
 import           Control.Monad.IO.Class (liftIO)

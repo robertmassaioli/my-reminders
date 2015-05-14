@@ -7,7 +7,6 @@ module ExpireHandlers
 import qualified AppConfig                           as CONF
 import           AppHelpers
 import           Application
-import           Control.Applicative                 ((<$>))
 import           Control.Concurrent.ParallelIO.Local
 import qualified Data.ByteString                     as B
 import qualified Data.ByteString.Char8               as BSC

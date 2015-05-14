@@ -6,7 +6,6 @@ module Persistence.Statistics
     , getStatistics
     ) where
 
-import           Control.Applicative
 import           Data.Aeson
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromRow

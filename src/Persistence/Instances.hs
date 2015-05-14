@@ -2,7 +2,6 @@
 module Persistence.Instances where
 
 import qualified Snap.AtlassianConnect as AC
-import           Control.Applicative
 import qualified Data.ByteString.Char8                as BSC
 import           Data.Maybe                           (fromMaybe)
 import           Database.PostgreSQL.Simple.FromField
