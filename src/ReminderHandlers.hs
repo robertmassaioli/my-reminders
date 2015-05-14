@@ -226,27 +226,26 @@ deleteReminderHandler (tenant, Just userKey) = do
       Nothing -> respondWithError badRequest "A reminderId is required to see which reminder should be deleted."
 
 addReminderHandler :: AC.TenantWithUser -> AppHandler ()
-addReminderHandler ct = do
-  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
-  let maybeReminder = eitherDecode request :: Either String ReminderRequest
-  case maybeReminder of
-    Left err -> respondWithError badRequest err
-    Right reminderRequest -> addReminder reminderRequest ct
+addReminderHandler connectTenant = do
+  request <- SC.readRequestBody requestMaxLength
+  let reminderOrError = eitherDecode request :: Either String ReminderRequest
+  either (respondWithError badRequest) (addReminder connectTenant) reminderOrError
+  where
+    requestMaxLength = 1024 * 10 -- TODO this magic number is crappy, improve
 
-addReminder :: ReminderRequest -> AC.TenantWithUser -> AppHandler ()
-addReminder _ (_, Nothing) = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addReminder reminderRequest (tenant, Just userKey)
+addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
+addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
+addReminder (tenant, Just userKey) reminderRequest
     | userKey /= requestUK = respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
     | isNotValid emailAddress = respondWithError badRequest $ "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
-    | otherwise = do
-        addedReminder <- SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest))
-        case addedReminder of
-          Just _ -> respondNoContent
-          Nothing -> respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey)
+    | otherwise =
+        SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest)) >>=
+          maybe (respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey))
+                (const respondNoContent)
   where
     isNotValid = not . EV.isValid
-    requestUK = AC.userKey . prqUser $ reminderRequest
-    emailAddress = AC.userEmail . prqUser $ reminderRequest
+    requestUK = AC.userKey $ prqUser reminderRequest
+    emailAddress = AC.userEmail $ prqUser reminderRequest
 
 addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userDetails conn =
