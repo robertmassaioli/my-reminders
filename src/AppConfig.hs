@@ -46,7 +46,7 @@ class HasAppConf m where
    getAppConf :: m AppConf
 
 initAppConfOrExit :: IO String -> SS.SnapletInit b AppConf
-initAppConfOrExit configDataDir = SS.makeSnaplet "Applicaiton Configuration" "Application configuration and state." (Just configDataDir) $
+initAppConfOrExit configDataDir = SS.makeSnaplet "Application Configuration" "Application configuration and state." (Just configDataDir) $
   MI.liftIO $ SS.loadAppConfig "my-reminders.cfg" "resources" >>= loadAppConfOrExit
 
 data EnvConf = EnvConf
