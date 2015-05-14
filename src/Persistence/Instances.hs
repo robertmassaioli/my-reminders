@@ -1,13 +1,14 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 module Persistence.Instances where
 
-import qualified Snap.AtlassianConnect as AC
+import           Control.Applicative                  (pure, (<$>), (<*>))
 import qualified Data.ByteString.Char8                as BSC
 import           Data.Maybe                           (fromMaybe)
 import           Database.PostgreSQL.Simple.FromField
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.ToField
 import           Network.URI
+import qualified Snap.AtlassianConnect                as AC
 
 instance FromRow AC.ClientKey where
    fromRow = field

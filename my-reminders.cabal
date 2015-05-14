@@ -172,3 +172,7 @@ test-suite my-reminders-props
     , utf8-string
     , uuid
     , xmlhtml
+
+ if impl(ghc < 7.10.1)
+    build-depends:
+      Cabal

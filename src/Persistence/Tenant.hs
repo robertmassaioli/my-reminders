@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE RecordWildCards   #-}
 
 module Persistence.Tenant (
     lookupTenant
@@ -15,6 +14,7 @@ module Persistence.Tenant (
   , findTenantsByBaseUrl
 ) where
 
+import           Control.Applicative              ((<$>))
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Data.Int
