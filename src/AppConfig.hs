@@ -8,6 +8,7 @@ module AppConfig
    ) where
 
 import           ConfigurationHelpers
+import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (join, when)
 import qualified Control.Monad.IO.Class     as MI
 import qualified Data.ByteString.Char8      as BSC
