@@ -81,11 +81,10 @@ Executable my-reminders
     , mtl                       == 2.*
     , network                   == 2.6.*
     , network-api-support       == 0.2.*
+    , network-uri               == 2.6.*
     , parallel-io               == 0.3.*
     , postgresql-simple         == 0.4.*
-    , primitive                 == 0.5.4.0
     , resource-pool-catchio     == 0.2.1.*
-    , semigroupoids             == 4.3
     , snap                      == 0.14.*
     , snap-core                 >= 0.9     && < 0.11
     , snap-loader-static
@@ -153,6 +152,7 @@ test-suite my-reminders-props
     , mtl
     , network
     , network-api-support
+    , network-uri
     , hastache
     , parallel-io
     , postgresql-simple
