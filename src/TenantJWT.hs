@@ -1,6 +1,5 @@
 module TenantJWT ( withTenant ) where
 
-import           Control.Applicative
 import           Control.Monad (join, guard)
 import qualified Data.ByteString.Char8          as B
 import qualified Data.CaseInsensitive           as DC

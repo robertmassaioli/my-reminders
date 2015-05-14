@@ -7,7 +7,6 @@ module WebhookHandlers
 import           AesonHelpers
 import           Application
 import qualified Snap.AtlassianConnect as AC
-import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (void, when)
 import           Data.Aeson
 import           Data.Aeson.Types           (Options, defaultOptions,

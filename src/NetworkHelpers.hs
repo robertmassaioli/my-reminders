@@ -1,4 +1,4 @@
-module NetworkHelpers 
+module NetworkHelpers
    ( setProxy
    , setPotentialProxy
    , getProxyFromConf
@@ -21,7 +21,7 @@ setPotentialProxy :: Maybe Proxy -> RequestTransformer
 setPotentialProxy = maybeEndo setProxy
 
 getProxyFromConf :: String -> AppConf -> Maybe Proxy
-getProxyFromConf baseUrl conf = 
+getProxyFromConf baseUrl conf =
   if "https" `isPrefixOf` baseUrl
     then rmHttpSecureProxy conf
     else rmHttpProxy conf

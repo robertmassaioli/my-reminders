@@ -1,6 +1,5 @@
 module WithToken where
 
-import           Control.Applicative ((<$>))
 import           Control.Monad.IO.Class (liftIO)
 import qualified Snap.AtlassianConnect as AC
 import qualified Data.ByteString.Char8 as BSC
