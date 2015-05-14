@@ -75,13 +75,12 @@ instance FromRow EmailReminder where
    fromRow = EmailReminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 addReminder :: Connection -> UTCTime -> Integer -> AC.IssueDetails -> AC.UserDetails -> Maybe T.Text -> IO (Maybe Integer)
-addReminder conn date tenantId issueDetails userDetails message = do
-  reminderID <- liftIO $ insertReturning conn
+addReminder conn date tenantId issueDetails userDetails message =
+  listToMaybe . join <$> insertReturning conn
     [sql|
       INSERT INTO reminder (tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date)
       VALUES (?,?,?,?,?,?,?,?,?,?) RETURNING id
     |] (tenantId, iid, ikey, ikey, isum, isum, ukey, uemail, message, date)
-  return . listToMaybe $ join reminderID
   where
     iid = AC.issueId issueDetails
     ikey = AC.issueKey issueDetails
@@ -90,12 +89,11 @@ addReminder conn date tenantId issueDetails userDetails message = do
     uemail = AC.userEmail userDetails
 
 getReminderByUser :: AC.Tenant -> AC.UserKey -> ReminderId -> Connection -> IO (Maybe Reminder)
-getReminderByUser tenant userKey pid conn = do
-   result <- liftIO $ query conn
+getReminderByUser tenant userKey pid conn =
+   listToMaybe <$> query conn
       [sql|
          SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userEmail, message, date FROM reminder WHERE id = ? AND tenantId = ? AND userKey = ?
       |] (pid, AC.tenantId tenant, T.encodeUtf8 userKey)
-   return . listToMaybe $ result
 
 getLiveRemindersByUser :: AC.Tenant -> AC.UserKey -> Connection -> IO [Reminder]
 getLiveRemindersByUser tenant userKey connection = do
