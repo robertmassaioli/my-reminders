@@ -227,11 +227,9 @@ deleteReminderHandler (tenant, Just userKey) = do
 
 addReminderHandler :: AC.TenantWithUser -> AppHandler ()
 addReminderHandler connectTenant = do
-  request <- SC.readRequestBody requestMaxLength
+  request <- SC.readRequestBody size10KB
   let reminderOrError = eitherDecode request :: Either String ReminderRequest
   either (respondWithError badRequest) (addReminder connectTenant) reminderOrError
-  where
-    requestMaxLength = 1024 * 10 -- TODO this magic number is crappy, improve
 
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
