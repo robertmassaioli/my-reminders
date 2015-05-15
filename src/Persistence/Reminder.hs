@@ -21,8 +21,7 @@ module Persistence.Reminder
    , deleteManyRemindersForUser
    ) where
 
-import qualified Snap.AtlassianConnect as AC
-import           Control.Applicative
+import           Control.Applicative                ((<$>), (<*>))
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Data.Maybe
@@ -37,6 +36,7 @@ import           GHC.Int
 import           Network.URI                        (URI)
 import           Persistence.Instances              ()
 import           Persistence.PostgreSQL
+import qualified Snap.AtlassianConnect              as AC
 
 type ReminderId = Integer
 

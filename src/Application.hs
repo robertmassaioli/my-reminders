@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 ------------------------------------------------------------------------------
 -- | This module defines our application's state type and an alias for its
@@ -6,16 +7,17 @@
 module Application where
 
 ------------------------------------------------------------------------------
-import           Snap                (get)
 import           Control.Lens
-import qualified Snap.Snaplet as SS
-import qualified Snap.Snaplet.Heist as SSH
-import           Snap.Snaplet.Session
+import           Control.Monad.Reader          (local)
+import           Control.Monad.State           (get)
+import qualified Snap.Snaplet                  as SS
+import qualified Snap.Snaplet.Heist            as SSH
 import           Snap.Snaplet.PostgresqlSimple
+import           Snap.Snaplet.Session
 
-import qualified Snap.AtlassianConnect as AC
-import qualified AppConfig as CONF
-import qualified StaticSnaplet as STATIC
+import qualified AppConfig                     as CONF
+import qualified Snap.AtlassianConnect         as AC
+import qualified StaticSnaplet                 as STATIC
 ------------------------------------------------------------------------------
 data App = App
   { _heist   :: SS.Snaplet (SSH.Heist App)
@@ -33,6 +35,7 @@ instance SSH.HasHeist App where
 
 instance HasPostgres (SS.Handler b App) where
   getPostgresState = SS.with db get
+  setLocalPostgresState s = local $ set (db . SS.snapletValue) s
 
 instance AC.HasConnect (SS.Handler b App) where
    getConnect = SS.with connect get

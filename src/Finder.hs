@@ -4,7 +4,7 @@ module Finder
     , findWithFilter
     ) where
 
-import           Control.Applicative
+import           Control.Applicative ((<$>))
 import           Control.Monad       (filterM)
 import           Data.List           (inits)
 import           Data.Maybe          (listToMaybe)

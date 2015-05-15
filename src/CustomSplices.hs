@@ -1,19 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
 module CustomSplices (spliceConfig) where
 
-import           Control.Lens ((&), (.~))
+import           Control.Lens           ((&), (.~))
 import           Control.Monad.IO.Class (liftIO)
-import qualified Data.Text as T
-import           Data.Monoid (mempty)
-import qualified Heist as H
-import qualified Heist.Interpreted as HI
-import qualified Heist.Internal.Types as HIT
-import qualified Snap.Snaplet as SS
-import qualified Snap.Snaplet.Heist as SSH
-import qualified Text.XmlHtml as X
+import           Data.Monoid            (mempty)
+import qualified Data.Text              as T
+import qualified Heist                  as H
+import qualified Heist.Internal.Types   as HIT
+import qualified Heist.Interpreted      as HI
+import qualified Snap.Snaplet           as SS
+import qualified Snap.Snaplet.Heist     as SSH
+import qualified Text.XmlHtml           as X
 
 spliceConfig :: H.SpliceConfig (SS.Handler a a)
-spliceConfig = mempty 
+spliceConfig = mempty
    & HIT.scInterpretedSplices .~ customSplices
 
 customSplices :: HIT.Splices (HI.Splice (SS.Handler a a))
@@ -49,7 +49,7 @@ jsInclude = do
    potentialSrc <- fmap (X.getAttribute "src") H.getParamNode
    case potentialSrc of
       Nothing -> return . comment $ "<js> tag had no 'src' attribute"
-      Just src -> return [X.Element 
+      Just src -> return [X.Element
          { X.elementTag = T.pack "script"
          , X.elementAttrs =
             [ (T.pack "src", src)
@@ -64,7 +64,7 @@ cssInclude = do
    potentialHref <- fmap (X.getAttribute "href") H.getParamNode
    case potentialHref of
       Nothing -> return . comment $ "<css> tag had no 'href' attribute"
-      Just href -> return [X.Element 
+      Just href -> return [X.Element
          { X.elementTag = T.pack "link"
          , X.elementAttrs =
             [ (T.pack "href", href)

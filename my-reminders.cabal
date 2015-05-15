@@ -55,48 +55,49 @@ Executable my-reminders
   Build-depends:
       base                      >= 4.6     && < 5
     , atlassian-connect-descriptor >= 0.4
-    , atlassian-connect-core    == 0.4.*
+    , atlassian-connect-core    == 0.5.*
     , process                   == 1.2.*
-    , filepath                  == 1.3.*
+    , filepath                  == 1.4.*
     , directory                 >= 1.1     && < 1.3
     , MissingH                  == 1.*
     , MonadCatchIO-transformers >= 0.2.1   && < 0.4
-    , aeson                     >  0.7.0.3 && < 0.8
+    , aeson                     == 0.8.*
     , base64-bytestring         == 1.0.*
+    , boxes                     == 0.1.*
     , bytestring                >= 0.9.1   && < 0.11
     , case-insensitive          == 1.*
     , cipher-aes                == 0.2.*
     , configurator              == 0.3.*
     , containers                == 0.5.*
+    , email-validate            == 2.*
+    , hailgun                   == 0.4.*
+    , hastache                  == 0.6.*
     , heist                     == 0.14.*
-    , http-client               == 0.3.*
+    , http-client               == 0.4.*
     , http-types                == 0.8.*
     , hostname                  == 1.0
-    , jwt                       >= 0.3     && < 0.5
+    , jwt                       == 0.6.*
     , lens                      == 4.*
     , mtl                       == 2.*
-    , network                   == 2.4.*
-    , network-api-support       == 0.1.*
+    , network                   == 2.6.*
+    , network-api-support       == 0.2.*
+    , network-uri               == 2.6.*
+    , parallel-io               == 0.3.*
     , postgresql-simple         == 0.4.*
     , resource-pool-catchio     == 0.2.1.*
-    , snap                      >= 0.13.3  && < 0.14
+    , snap                      == 0.14.*
     , snap-core                 >= 0.9     && < 0.11
     , snap-loader-static
     , snap-server
-    , snaplet-postgresql-simple == 0.6.*
-    , text                      >= 0.11    && <= 1.1.1.3
-    , time                      >= 1.1     && < 1.5
-    , transformers              == 0.3.*
-    , xmlhtml                   == 0.2.*
-    , hailgun                   == 0.4.*
-    , hastache                  == 0.6.*
-    , parallel-io               == 0.3.*
-    , time-units                == 1.*
-    , boxes                     == 0.1.*
+    , snaplet-postgresql-simple == 0.6.0.2
     , split                     == 0.2.*
+    , text                      == 1.2.*
+    , time                      == 1.5.*
+    , time-units                == 1.*
+    , transformers              == 0.4.*
     , utf8-string               >= 0.3.8   && < 0.4
     , uuid                      == 1.3.*
-    , email-validate            == 2.*
+    , xmlhtml                   == 0.2.*
 
   if flag(development)
     build-depends:
@@ -119,12 +120,6 @@ test-suite my-reminders-props
   main-is:                  TestRunner.hs
   build-depends:
       base
-    , atlassian-connect-descriptor
-    , atlassian-connect-core
-    , process                   == 1.2.*
-    , filepath                  == 1.3.*
-    , directory                 >= 1.1     && < 1.3
-    , Cabal
     , QuickCheck                 == 2.7.*
     , quickcheck-instances       == 0.3.*
     , test-framework             == 0.8.*
@@ -133,6 +128,8 @@ test-suite my-reminders-props
     , MissingH
     , MonadCatchIO-transformers
     , aeson
+    , atlassian-connect-descriptor
+    , atlassian-connect-core
     , base64-bytestring
     , boxes
     , bytestring
@@ -140,6 +137,9 @@ test-suite my-reminders-props
     , cipher-aes
     , configurator
     , containers
+    , directory
+    , email-validate
+    , filepath
     , hailgun
     , heist
     , http-client
@@ -151,23 +151,27 @@ test-suite my-reminders-props
     , mtl
     , network
     , network-api-support
+    , network-uri
     , hastache
     , parallel-io
     , postgresql-simple
+    , process
     , resource-pool-catchio
     , snap
     , snap-core
     , snap-loader-static
     , snap-server
     , snaplet-postgresql-simple
+    , split
     , tagsoup
     , text
     , time
     , time-units
     , transformers
-    , xmlhtml
-    , boxes
-    , split
     , utf8-string
     , uuid
-    , email-validate
+    , xmlhtml
+
+ if impl(ghc < 7.10.1)
+    build-depends:
+      Cabal

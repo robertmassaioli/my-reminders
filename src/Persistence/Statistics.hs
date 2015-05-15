@@ -1,12 +1,12 @@
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE QuasiQuotes          #-}
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 module Persistence.Statistics
     ( Statistics(..)
     , getStatistics
     ) where
 
-import           Control.Applicative
+import           Control.Applicative                ((<$>), (<*>))
 import           Data.Aeson
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromRow

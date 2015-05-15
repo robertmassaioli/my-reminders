@@ -1,29 +1,29 @@
-{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Healthcheck
    ( healthcheckRequest
    ) where
 
+import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
+import qualified AppConfig              as CONF
 import           Application
-import           AesonHelpers (baseOptions, stripFieldNamePrefix)
-import           Control.Applicative ((<$>))
-import qualified Control.Exception as E
-import           Control.Monad.CatchIO (MonadCatchIO(..), tryJust)
+import           Control.Applicative    ((<$>))
+import qualified Control.Exception      as E
+import           Control.Monad.CatchIO  (MonadCatchIO (..), tryJust)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Aeson.Types
-import           Data.Maybe (isNothing)
-import qualified Data.Text as T
+import           Data.Maybe             (isNothing)
+import qualified Data.Text              as T
 import           Data.Time.Clock
-import qualified Data.Time.Units as DTU
+import qualified Data.Time.Units        as DTU
 import           Data.TimeUnitUTC
 import           GHC.Generics
-import           Mail.Hailgun (getDomains, herMessage, Page(..))
+import           Mail.Hailgun           (Page (..), getDomains, herMessage)
 import           Persistence.PostgreSQL (withConnection)
-import           Persistence.Tenant (getTenantCount)
-import           Persistence.Reminder (getExpiredReminders)
-import qualified AppConfig as CONF
-import qualified Snap.Core as SC
+import           Persistence.Reminder   (getExpiredReminders)
+import           Persistence.Tenant     (getTenantCount)
+import qualified Snap.Core              as SC
 import           SnapHelpers
 
 healthcheckRequest :: AppHandler ()
@@ -44,7 +44,7 @@ getHealthcheckRequest = do
 -- Important: This is our curated list of healthchecks. Anything in this list will run as a
 -- healthcheck for this service.
 curatedHealthchecks :: [Healthcheck]
-curatedHealthchecks = 
+curatedHealthchecks =
    [ databaseHealthCheck
    , mailgunHealthcheck
    , expiryHealthcheck
@@ -107,7 +107,7 @@ mailgunHealthcheck = do
 
 -- The purpose of this Healthcheck is to ensure that the third party that is supposed to be
 -- triggering expiry is actually doing its job.
-expiryHealthcheck :: Healthcheck 
+expiryHealthcheck :: Healthcheck
 expiryHealthcheck = do
    currentTime <- liftIO getCurrentTime
    expiryWindowMaxMinutes <- fmap CONF.rmMaxExpiryWindowMinutes CONF.getAppConf
@@ -115,11 +115,11 @@ expiryHealthcheck = do
    result <- simpleCatch (withConnection $ getExpiredReminders expireTime)
    return $ case result of
       Left e -> status (Just . show $ e) currentTime expiryWindowMaxMinutes
-      Right reminders -> 
+      Right reminders ->
          if null reminders
             then status Nothing currentTime expiryWindowMaxMinutes
             else status (Just $ "The number of reminders outside the window is: " ++ (show . length $ reminders)) currentTime expiryWindowMaxMinutes
-   where 
+   where
       status :: (DTU.TimeUnit a, Show a) => Maybe String -> UTCTime -> a -> HealthStatus
       status potentialException currentTime windowSize = HealthStatus
          { hsName = T.pack "Expiry Window Exceeded Healthcheck"
@@ -135,7 +135,7 @@ expiryHealthcheck = do
             ++ "check that the service that triggers the expiry handler has been firing correctly. Likely to be Easy Cron (http://www.easycron.com). "
             ++ "After that contact the developers for further aid."
          }
-         
+
 
 application :: HealthcheckApplication
 application = ConnectApplication { haName = T.pack "my-reminders" }
@@ -173,27 +173,27 @@ instance ToJSON HealthcheckRunResult where
    toJSON hrr@(HealthcheckRunResult {}) = object [ T.pack "status" .= hrrStatus hrr ]
 
 data HealthStatus = HealthStatus
-   { hsName             :: T.Text
-   , hsDescription      :: T.Text
-   , hsIsHealthy        :: Bool
-   , hsFailureReason    :: Maybe T.Text
-   , hsApplication      :: HealthcheckApplication
-   , hsTime             :: UTCTime
-   , hsSeverity         :: HealthStatusSeverity
-   , hsDocumentation    :: Maybe T.Text
+   { hsName          :: T.Text
+   , hsDescription   :: T.Text
+   , hsIsHealthy     :: Bool
+   , hsFailureReason :: Maybe T.Text
+   , hsApplication   :: HealthcheckApplication
+   , hsTime          :: UTCTime
+   , hsSeverity      :: HealthStatusSeverity
+   , hsDocumentation :: Maybe T.Text
    } deriving (Generic)
 
 instance ToJSON HealthStatus where
    toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "hs" })
 
-data HealthcheckApplication = ConnectApplication 
+data HealthcheckApplication = ConnectApplication
    { haName :: T.Text
    }
 
 instance ToJSON HealthcheckApplication where
    toJSON = toJSON . haName
 
-data HealthStatusSeverity 
+data HealthStatusSeverity
    = UNDEFINED
    | MINOR
    | MAJOR
