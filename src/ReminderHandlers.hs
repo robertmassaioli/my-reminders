@@ -236,16 +236,20 @@ addReminderHandler connectTenant = do
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addReminder (tenant, Just userKey) reminderRequest
-    | userKey /= requestUK = respondWithError badRequest ("Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey)
-    | isNotValid emailAddress = respondWithError badRequest $ "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
+    | userKey /= requestUK = respondWithError badRequest userMismatchError
+    | isNotValid emailAddress = respondWithError badRequest emailMismatchError
     | otherwise =
         SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest)) >>=
-          maybe (respondWithError internalServer ("Failed to insert new reminder: " ++ show userKey))
+          maybe (respondWithError internalServer insertFailedError)
                 (const respondNoContent)
   where
     isNotValid = not . EV.isValid
     requestUK = AC.userKey $ prqUser reminderRequest
     emailAddress = AC.userEmail $ prqUser reminderRequest
+    -- Error strings
+    userMismatchError = "Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey
+    emailMismatchError = "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
+    insertFailedError = "Failed to insert new reminder: " ++ show userKey
 
 addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userDetails conn =
