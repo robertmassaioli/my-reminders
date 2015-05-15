@@ -89,8 +89,7 @@ Executable my-reminders
     , snap-core                 >= 0.9     && < 0.11
     , snap-loader-static
     , snap-server
-    -- snaplet-postgresql-simple 0.6.0.2 has base <4.8 for some reason
-    , snaplet-postgresql-simple == 0.6.0.1
+    , snaplet-postgresql-simple == 0.6.0.2
     , split                     == 0.2.*
     , text                      == 1.2.*
     , time                      == 1.5.*
