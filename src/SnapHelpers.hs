@@ -5,6 +5,7 @@ import qualified Control.Applicative    as CA
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import qualified Data.ByteString.Char8  as BSC
+import           Data.Int               (Int64)
 import qualified Data.Text              as T
 import           Data.Time.Clock        (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX  (posixSecondsToUTCTime)
@@ -78,3 +79,11 @@ getTimestampOrCurrentTime =
 
 integerPosixToUTCTime :: Integer -> UTCTime
 integerPosixToUTCTime = posixSecondsToUTCTime . fromIntegral
+
+size1KB, size10KB, size500KB, size1MB, size5MB, size10MB :: Int64
+size1KB = 1024
+size10KB = size1KB * 10
+size500KB = size1KB * 500
+size1MB = size10KB * 1024
+size5MB = size1MB * 5
+size10MB = size1MB * 10
