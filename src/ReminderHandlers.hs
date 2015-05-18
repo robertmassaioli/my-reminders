@@ -183,7 +183,7 @@ bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \remi
 
 parseReminderIdListFromRequest :: (ReminderIdList -> AppHandler ()) -> AppHandler ()
 parseReminderIdListFromRequest f = do
-  request <- SC.readRequestBody (1024 * 10) -- TODO this magic number is crappy, improve
+  request <- SC.readRequestBody size10KB
   let maybeReminder = eitherDecode request :: Either String ReminderIdList
   case maybeReminder of
     Left err -> respondWithError badRequest ("Could not understand the data provided: " ++ err)
@@ -228,8 +228,8 @@ deleteReminderHandler (tenant, Just userKey) = do
 addReminderHandler :: AC.TenantWithUser -> AppHandler ()
 addReminderHandler connectTenant = do
   request <- SC.readRequestBody size10KB
-  let reminderOrError = eitherDecode request :: Either String ReminderRequest
-  either (respondWithError badRequest) (addReminder connectTenant) reminderOrError
+  let errorOrReminder = eitherDecode request :: Either String ReminderRequest
+  either (respondWithError badRequest) (addReminder connectTenant) errorOrReminder
 
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
