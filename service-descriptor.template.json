@@ -2,6 +2,7 @@
 {
    "description": "My reminders allows you to set reminders on issues.",
    "name": "My Reminders",
+   "organization": "RD:Customer Purchasing Platform",
    "externalAccess": true,
    "resources": [{
       "type": "postgres-db",
