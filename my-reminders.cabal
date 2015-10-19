@@ -2,7 +2,7 @@ Name:                my-reminders
 Version:             0.6
 Synopsis:            My reminders plugin for Atlassian Cloud
 Description:         Set issue reminders for the future!
-License:             AllRightsReserved
+License:             MIT
 Author:              Robert Massaioli, Eero Kaukonen, Sidney Shek, Avi Knoll
 Maintainer:          ekaukonen@atlassian.com
 Stability:           Experimental
