@@ -18,6 +18,7 @@
            <ul class="aui-list-truncate">
                <li><a id="add-reminder-tomorrow"    href="#">Tomorrow</a></li>
                <li><a id="add-reminder-next-week"   href="#">In a week</a></li>
+               <li><a id="add-reminder-next-month"  href="#">In a month</a></li>
                <li><a id="add-custom-reminder"      href="#">Select a time...</a></li>
            </ul>
        </div>

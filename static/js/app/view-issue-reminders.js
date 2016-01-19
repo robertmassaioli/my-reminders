@@ -346,6 +346,10 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             createReminder(setToMorningHour(moment().add(7, 'days')));
          }));
 
+         AJS.$("#add-reminder-next-month").click(handle(function() {
+            createReminder(setToMorningHour(moment().add(1, 'months')));
+         }));
+
          AJS.$("#add-reminder-more").click(handle(function() {
             AP.resize();
          }));
