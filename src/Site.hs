@@ -111,7 +111,7 @@ applicationRoutes =
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , serveDirectory "static/css")
+  [ ("css"    , serveDirectory "static-css")
   , ("images" , serveDirectory "static/images")
   , ("js"     , serveDirectory "static-js")
   ]

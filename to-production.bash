@@ -30,8 +30,14 @@ cp -R snaplets "$COPY_DIR"
 cp -R resources "$COPY_DIR"
 cp -R migrations "$COPY_DIR"
 cp -R static "$COPY_DIR"
+
+# Bulid Javascript Resources
 ${RJS_CMD} -o build.js
 cp -R static-js "$COPY_DIR"
+
+# Build CSS Resources
+bash scripts/build-css.bash
+cp -R static-css "$COPY_DIR"
 
 echo "## Getting the required dependencies out of the build..."
 if [ "x$CONTAINER_ID" == "x" ]

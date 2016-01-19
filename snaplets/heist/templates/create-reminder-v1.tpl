@@ -1,9 +1,10 @@
 <apply template="connect-panel">
+    <bind tag="body-class">create-reminder-v1</bind>
     <bind tag="header-extra">
         <js src="/static/${resourcesVersion}/js/app/create-reminder-v1.js" />
         <script>require(['app/create-reminder-v1']);</script>
 
-        <css href="/static/${resourcesVersion}/css/create-reminder-v1.css" />
+        <css href="/static/${resourcesVersion}/css/app.css" />
 
         <script id="reminder-lozenge" type="x-tmpl-mustache">
          <span data-reminder-id="{{ReminderId}}" title="{{#Message}}{{Message}} ({{/Message}}{{fullDate}}{{#Message}}){{/Message}} [{{UserEmail}}]" class="reminder aui-label aui-label-closeable">{{prettyDate}}<span tabindex="0" class="aui-icon aui-icon-close" original-title="(remove closableNoUrl)">(remove closableNoUrl)</span></span>
@@ -38,7 +39,7 @@
             <div class="field-group custom-container">
                 <label for="custom-reminder-message">Message</label>
                 <textarea id="custom-reminder-message" class="textarea" rows="3" cols="10"></textarea>
-                <div class="description">A short optional reminder mesage</div>
+                <div class="description">A short optional reminder message</div>
             </div>
         </fieldset>
         <div class="buttons-container custom-container custom-operations">
