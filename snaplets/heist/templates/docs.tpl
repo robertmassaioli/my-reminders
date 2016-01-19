@@ -60,5 +60,15 @@
             </section>
          </div>
       </div>
+
+      <footer id="footer" role="contentinfo">
+         <section class="footer-body">
+            <ul>
+               <li><a target="_blank" href="https://developer.atlassian.com/static/connect/docs/latest/index.html">Atlassian Connect</a></li>
+               <li><a target="_blank" href="/atlassian-connect.json">Add-on descriptor</a></li>
+            </ul>
+            <div id="footer-logo"><a href="http://www.atlassian.com/" target="_blank">Atlassian</a></div>
+         </section>
+      </footer>
    </body>
 </html>
