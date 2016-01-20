@@ -1,7 +1,0 @@
-.atlassian-connect-infinite-expand-fix {
-   /* This is to work around an unknown bug in Atlassian connect that causes the iframe
-    * to continue to expand infinitely if the margin settings are incorrect. You have to be really
-    * careful with the margins in your outer level elements to prevent this.
-    */
-   margin-top: 0px;
-}

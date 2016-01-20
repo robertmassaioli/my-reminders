@@ -89,7 +89,6 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                              , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"               , showDocPage)
-  , ("/panel/jira/reminder/create"    , createConnectPanel "create-reminder-v1")
   , ("/panel/v2/jira/reminder/create" , createConnectPanel "create-reminder-v2")
   , ("/panel/jira/reminder/simple"    , createConnectPanel "view-issue-reminders")
   , ("/panel/jira/reminders/view"     , createConnectPanel "view-jira-reminders")
@@ -111,7 +110,7 @@ applicationRoutes =
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , serveDirectory "static/css")
+  [ ("css"    , serveDirectory "static-css")
   , ("images" , serveDirectory "static/images")
   , ("js"     , serveDirectory "static-js")
   ]

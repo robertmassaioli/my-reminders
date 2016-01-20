@@ -29,7 +29,5 @@
 
       <header-extra />
    </head>
-   <body>
-      <apply-content />
-   </body>
+   <body class="body ${body-class}"><apply-content /></body>
 </html>
