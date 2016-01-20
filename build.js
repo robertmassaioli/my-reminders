@@ -16,9 +16,6 @@
          'name': 'app/view-my-reminders'
       },
       {
-         'name': 'app/create-reminder-v1'
-      },
-      {
          'name': 'app/create-reminder-v2'
       },
       {

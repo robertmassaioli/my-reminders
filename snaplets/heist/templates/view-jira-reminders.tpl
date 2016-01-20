@@ -1,9 +1,10 @@
 <apply template="connect-panel">
+   <bind tag="body-class">view-jira-reminders</bind>
    <bind tag="header-extra">
       <js src="/static/${resourcesVersion}/js/app/view-my-reminders.js" />
       <script>require(['app/view-my-reminders']);</script>
 
-      <css href="/static/${resourcesVersion}/css/view-my-reminders.css" />
+      <css href="/static/${resourcesVersion}/css/app.css" />
 
       <script id="reminder-row" type="x-tmpl-mustache">
          <tr class="reminder" data-reminder-id="{{ReminderId}}">
