@@ -36,6 +36,7 @@
    "scaling": {
       "min": 1
    },
-   "downstreamServices": []
+   "downstreamServices": [],
+   "cleanup": false
 }
 {{/.}}
