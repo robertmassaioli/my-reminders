@@ -83,13 +83,13 @@ Executable my-reminders
     , network-api-support       == 0.2.*
     , network-uri               == 2.6.*
     , parallel-io               == 0.3.*
-    , postgresql-simple         == 0.4.*
+    , postgresql-simple         >= 0.4
     , resource-pool-catchio     == 0.2.1.*
     , snap                      == 0.14.*
     , snap-core                 >= 0.9     && < 0.11
     , snap-loader-static
     , snap-server
-    , snaplet-postgresql-simple == 0.6.0.2
+    , snaplet-postgresql-simple >= 0.6.0.2
     , split                     == 0.2.*
     , text                      == 1.2.*
     , time                      == 1.5.*
