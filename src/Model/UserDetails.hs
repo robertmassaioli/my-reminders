@@ -6,14 +6,13 @@ module Model.UserDetails
    , UserWithDetails(..)
    ) where
 
-import           AppConfig
 import           Application
 import           Data.Aeson
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
+import           Data.Monoid                       (mempty)
 import           Data.Text.Encoding                (encodeUtf8)
 import           GHC.Generics
-import           NetworkHelpers
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Snaplet                      as SS
@@ -32,13 +31,8 @@ instance FromJSON UserWithDetails
 instance ToJSON UserWithDetails
 
 getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either AC.ProductErrorResponse UserWithDetails)
-getUserDetails tenant userKey = do
-    rmConf <- getAppConf
-    SS.with connect $ AC.hostGetRequest tenant usernameUrl queryParams (proxyUpdate rmConf)
+getUserDetails tenant userKey = SS.with connect $ AC.hostGetRequest tenant usernameUrl queryParams mempty
   where
-    proxyUpdate rmConf = setPotentialProxy (getProxyFromConf productBaseUrlString rmConf)
-    productBaseUrlString = show . AC.getURI . AC.baseUrl $ tenant
-
     usernameUrl :: B.ByteString
     usernameUrl = "/rest/api/2/user"
 
