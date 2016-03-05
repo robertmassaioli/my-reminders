@@ -119,7 +119,7 @@ loadAppConfOrExit config = do
       , rmHailgunContext = HailgunContext
          { hailgunDomain = fromConf ecMailgunDomain mailgunDomain
          , hailgunApiKey = fromConf ecMailgunApiKey mailgunApiKey
-         , hailgunProxy  = httpSecureProxy
+         , hailgunProxy  = Nothing
          }
       , rmFromUser = fromUser
       , rmMaxExpiryWindowMinutes = maxExpiryWindowMinutes
