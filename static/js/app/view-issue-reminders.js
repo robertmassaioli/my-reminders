@@ -1,5 +1,9 @@
-define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', 'connect/pagetoken'],
-   function(URI, HostRequest, Mustache, moment, RS) {
+define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-timezone", 'connect/panel-resize', '../helpers/PageContext', 'connect/pagetoken'],
+   function(URI, HostRequest, Mustache, moment, RS, PC) {
+
+   function isBlank(str) {
+      return (!str || /^\s*$/.test(str));
+   }
 
    AJS.$.fn.flashClass = function(c, userOptions) {
       var defaults = {
@@ -18,14 +22,14 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
    };
 
    AJS.$(function() {
-      var queryParams = URI(window.location.href).query(true);
-      var issueId = parseInt(queryParams["issue_id"]);
+      var pageContext = PC.load();
+      var issueId = pageContext.issue.id;
       if(isNaN(issueId)) {
          throw "No issue id on the page. Cannot do anything.";
       }
       // TODO replace with code like what we see in the ShipIt Voting Plugin PageContext
-      var issueKey = queryParams["issue_key"];
-      var userKey = queryParams["user_key"];
+      var issueKey = pageContext.issue.key;
+      var userKey = pageContext.user.key;
 
       var timeUnits = {
          minute: "Minute",
@@ -49,44 +53,57 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             var user = JSON.parse(userResponse[0]);
             var issue = JSON.parse(issueResponse[0]);
 
-            var haskellFormat = "YYYY-MM-DDTHH:mm:ss.SSS";
-            var requestData = {
-               Issue: {
-                   Key: issueKey,
-                   Id: issueId,
-                   Summary: issue.fields.summary,
-                   ReturnUrl: window.location.href
-               },
-               User: {
-                  Key: user.key,
-                  Email: user.emailAddress
-               },
-               ReminderDate: reminderDate.utc().format(haskellFormat) + 'Z'
-            };
+            if(isBlank(user.emailAddress)) {
+               AJS.$("#missing-email-address .title").html("Your profile has no email address. Please <a target='_top' href='" + pageContext.productBaseUrl  + "/secure/ViewProfile.jspa'>update your profile</a> to include your email address and then try again.");
+               var errorBlock = AJS.$("#missing-email-address");
+               errorBlock.removeClass("hidden");
+               AP.resize();
+               setTimeout(function() {
+                  errorBlock.addClass("hidden");
+                  resetPanelHeight();
+               }, 10000);
+               setCreationState(creationState.failed, "user with missing email address");
+               return AJS.$.Deferred(function(self) { self.reject(); });
+            } else {
+               var haskellFormat = "YYYY-MM-DDTHH:mm:ss.SSS";
+               var requestData = {
+                  Issue: {
+                      Key: issueKey,
+                      Id: issueId,
+                      Summary: issue.fields.summary,
+                      ReturnUrl: window.location.href
+                  },
+                  User: {
+                     Key: user.key,
+                     Email: user.emailAddress
+                  },
+                  ReminderDate: reminderDate.utc().format(haskellFormat) + 'Z'
+               };
 
-            if(message) {
-               requestData.Message = message;
+               if(message) {
+                  requestData.Message = message;
+               }
+
+               var request = AJS.$.ajax({
+                  url: "/rest/reminder",
+                  type: "PUT",
+                  cache: false,
+                  contentType: "application/json",
+                  dataType: "text", 
+                  data: JSON.stringify(requestData)
+               });
+
+               request.done(function() {
+                  setCreationState(creationState.created, user.emailAddress);
+                  refreshReminders();
+               });
+
+               request.fail(function() {
+                  setCreationState(creationState.failed, user.emailAddress);
+               });
+
+               return request;
             }
-
-            var request = AJS.$.ajax({
-               url: "/rest/reminder",
-               type: "PUT",
-               cache: false,
-               contentType: "application/json",
-               dataType: "text", 
-               data: JSON.stringify(requestData)
-            });
-
-            request.done(function() {
-               setCreationState(creationState.created, user.emailAddress);
-               refreshReminders();
-            });
-
-            request.fail(function() {
-               setCreationState(creationState.failed, user.emailAddress);
-            });
-
-            return request;
          });
       };
 
@@ -239,22 +256,26 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
 
       var genericErrorTimer;
 
+      var showErrorMessage = function(title, message) {
+         // Clear the previous token
+         if(genericErrorTimer) {
+            clearTimeout(genericErrorTimer);
+            genericErrorTimer = null;
+         }
+
+         // Just show the first error message because most of the time we just return one.
+         AJS.$("#error-message").removeClass("hidden").find(".title").text(title);
+         AP.resize();
+         genericErrorTimer = setTimeout(function() {
+            AJS.$("#error-message").addClass("hidden");
+            resetPanelHeight();
+         }, 10000);
+      };
+
       var handleGenericError = function(jqXHR) {
          var jsonError = JSON.parse(jqXHR.responseText);
          if(jsonError && jsonError.errorMessages) {
-            // Clear the previous token
-            if(genericErrorTimer) {
-               clearTimeout(genericErrorTimer);
-               genericErrorTimer = null;
-            }
-
-            // Just show the first error message because most of the time we just return one.
-            AJS.$("#error-message").removeClass("hidden").find(".title").text(jsonError.errorMessages[0]);
-            AP.resize();
-            genericErrorTimer = setTimeout(function() {
-               AJS.$("#error-message").addClass("hidden");
-               resetPanelHeight();
-            }, 10000);
+            showErrorMessage(jsonError.errorMessages[0]);
          }
       };
 
