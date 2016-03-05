@@ -38,6 +38,12 @@
            <strong class="title">Loading error message...</strong>
        </p>
    </div>
+   <div id="missing-email-address" class="aui-message aui-message-warning hidden">
+       <p class="title">
+           <span class="aui-icon icon-error"></span>
+           <strong class="title">Loading error message...</strong>
+       </p>
+   </div>
    <div id="success-message" class="aui-message aui-message-success hidden">
       <p class="title">
          <span class="aui-icon icon-success"></span>
