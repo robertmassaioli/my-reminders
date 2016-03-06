@@ -1,0 +1,13 @@
+# This is a sample build configuration for Haskell.
+# Do not use tabs to indent your configuration
+# You can specify a custom docker image from Dockerhub# for your build environment      
+image: docker.atlassian.io/haskell/lts-preinstalled:2.19
+pipeline:
+  - job:
+      script:
+        - cabal sandbox init
+        - cabal update
+        - cabal install --enable-tests --only-dependencies
+        - cabal configure --enable-tests
+        - cabal build
+        - cabal test
