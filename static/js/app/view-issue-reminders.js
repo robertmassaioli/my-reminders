@@ -54,7 +54,8 @@ define([ "../lib/URI", "../host/request", "../lib/mustache", "../lib/moment-time
             var issue = JSON.parse(issueResponse[0]);
 
             if(isBlank(user.emailAddress)) {
-               AJS.$("#missing-email-address .title").html("Your profile has no email address. Please <a target='_top' href='" + pageContext.productBaseUrl  + "/secure/ViewProfile.jspa'>update your profile</a> to include your email address and then try again.");
+               AJS.$("#missing-email-address .user-profile").attr('href', pageContext.productBaseUrl + '/secure/ViewProfile.jspa');
+               AJS.$("#missing-email-address .email-visibility").attr('href', pageContext.productBaseUrl + '/secure/admin/EditApplicationProperties!default.jspa');
                var errorBlock = AJS.$("#missing-email-address");
                errorBlock.removeClass("hidden");
                AP.resize();
