@@ -39,10 +39,14 @@
        </p>
    </div>
    <div id="missing-email-address" class="aui-message aui-message-warning hidden">
-       <p class="title">
-           <span class="aui-icon icon-error"></span>
-           <strong class="title">Loading error message...</strong>
-       </p>
+      <p class="title">
+         <strong>My Reminders could not load your email address.</strong>
+      </p>
+      <p>Please ensure that:</p>
+      <ul>
+         <li>Your <a class="email-visibility" href="">site wide Email Visibility</a> has been set to "Public" or "Show to logged in users only".</li>
+         <li><a class="user-profile" href="">Your user profile</a> has your email address set.</li>
+      </ul>
    </div>
    <div id="success-message" class="aui-message aui-message-success hidden">
       <p class="title">
