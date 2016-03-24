@@ -1,5 +1,5 @@
 <apply template="connect-panel">
-    <bind tag="body-class">create-reminder-v2</bind>
+    <bind tag="body-class">create-reminder</bind>
     <bind tag="header-extra">
         <js src="/static/${resourcesVersion}/js/app/create-reminder-v2.js" />
         <script>require(['app/create-reminder-v2']);</script>
