@@ -13,7 +13,7 @@ define(function() {
                key: userkey
             },
             success: self.resolve,
-            fail: self.reject
+            error: self.reject
          });
       });
    };
@@ -27,7 +27,7 @@ define(function() {
             cache: true,  // This does not work thanks to https://ecosystem.atlassian.net/browse/AC-1253
             dataType: "text",
             success: self.resolve,
-            fail: self.reject
+            error: self.reject
          });
       });
    };
