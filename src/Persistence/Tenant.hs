@@ -90,7 +90,6 @@ insertTenantInformation conn lri@(AC.LifecycleResponseInstalled {}) = do
             -- first and then recreate it.
             newTenant = tenant
                { AC.baseUrl = AC.lrBaseUrl lri
-               , AC.sharedSecret = fromMaybe (AC.sharedSecret tenant) (AC.lrSharedSecret lri)
                }
 
 updateTenantDetails :: AC.Tenant -> Connection ->  IO Int64
