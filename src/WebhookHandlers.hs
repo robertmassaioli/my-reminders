@@ -24,24 +24,26 @@ import qualified SnapHelpers                as SH
 import qualified TenantJWT                  as WT
 
 handleIssueUpdateWebhook :: AppHandler ()
-handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleUpdate))]
+handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, void $ WT.withTenant (handleWebhook handleUpdate))]
 
-handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler ()) -> AC.TenantWithUser -> AppHandler ()
+handleWebhook :: (AC.Tenant -> IssueUpdate -> AppHandler (Maybe a)) -> AC.TenantWithUser -> AppHandler (Maybe a)
 handleWebhook webhookHandler (tenant, _) = do
    parsedRequest <- webhookDataFromRequest
    case parsedRequest of
-      Left _ -> SH.respondNoContent
+      Left _ -> SH.respondNoContent >> return Nothing
       Right webhookData -> do
-         webhookHandler tenant (webhookDataToIssueUpdate webhookData)
          SH.respondNoContent
+         webhookHandler tenant (webhookDataToIssueUpdate webhookData)
 
 webhookDataFromRequest :: AppHandler (Either String WebhookData)
 webhookDataFromRequest = eitherDecode <$> SC.readRequestBody dataLimitBytes
    where
       dataLimitBytes = 10 ^ (7 :: Integer) -- We want to not accept webhook responses larger than 10 MB
 
-handleUpdate :: AC.Tenant -> IssueUpdate -> AppHandler ()
-handleUpdate tenant issueUpdate = when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
+handleUpdate :: AC.Tenant -> IssueUpdate -> AppHandler (Maybe a)
+handleUpdate tenant issueUpdate = do
+  when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
+  return Nothing
 
 -- Issues will be updated many times and the connect webhooks cannot be easily restricted to certain
 -- projects if we want to remain flexible. Therefore, for every instance that we are added to we are
@@ -115,9 +117,9 @@ instance FromJSON ChangeLogItem where
    parseJSON = genericParseJSON (parseOptions "cli")
 
 handleIssueDeleteWebhook :: AppHandler ()
-handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, WT.withTenant (handleWebhook handleDelete))]
+handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, void $ WT.withTenant (handleWebhook handleDelete))]
 
 -- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
 -- against that tenant in the database.
-handleDelete :: AC.Tenant -> IssueUpdate -> AppHandler ()
-handleDelete tenant issueUpdate = void $ DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate))
+handleDelete :: AC.Tenant -> IssueUpdate -> AppHandler (Maybe a)
+handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return Nothing

@@ -76,9 +76,10 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
 
 
 withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
-withTokenAndTenant processor = TJ.withTenant $ \ct -> do
+withTokenAndTenant processor = CM.void $ TJ.withTenant $ \ct -> do
   token <- liftIO $ AC.generateTokenCurrentTime ct
   processor token ct
+  return Nothing
 
 ------------------------------------------------------------------------------
 -- | The application's routes.

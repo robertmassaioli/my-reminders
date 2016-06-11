@@ -16,6 +16,7 @@ import qualified Persistence.Tenant     as PT
 import qualified Snap.AtlassianConnect  as AC
 import qualified Snap.Snaplet           as SS
 import qualified SnapHelpers            as SH
+import qualified TenantJWT              as WT
 
 lifecycleRoutes :: [(BC.ByteString, SS.Handler App App ())]
 lifecycleRoutes = fmap (ARO.first BC.pack) standardHandlers
@@ -36,11 +37,11 @@ installedHandlerWithTenant tenantInfo = do
       then insertTenantInfo tenantInfo >>= maybe tenantInsertionFailedResponse (const SH.respondNoContent)
       else domainNotSupportedResponse
    where
-      tenantInsertionFailedResponse = SH.respondWithError SH.internalServer "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
+      tenantInsertionFailedResponse = SH.respondWithError SH.unauthorised "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
       domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
 
-insertTenantInfo :: AC.LifecycleResponse -> SS.Handler b App (Maybe Integer)
-insertTenantInfo info = SS.with db $ withConnection (`PT.insertTenantInformation` info)
+insertTenantInfo :: AC.HasConnect (SS.Handler b App) => AC.LifecycleResponse -> SS.Handler b App (Maybe Integer)
+insertTenantInfo info = WT.withMaybeTenant $ \maybeTenantWithUser -> SS.with db $ withConnection (\conn -> PT.insertTenantInformation conn (fst <$> maybeTenantWithUser) info)
 
 validHostName:: [AC.HostName] -> AC.LifecycleResponse -> Bool
 validHostName validHosts tenantInfo = isJust maybeValidhost

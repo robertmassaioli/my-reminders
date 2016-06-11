@@ -17,6 +17,7 @@ module Persistence.Tenant (
 import           Control.Applicative              ((<$>))
 import           Control.Monad
 import           Control.Monad.IO.Class
+import           Data.Function                    (on)
 import           Data.Int
 import           Data.Maybe
 import qualified Data.Text                        as T
@@ -24,10 +25,9 @@ import           Data.Time.Clock                  (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Network.URI                      hiding (query)
-import qualified Snap.AtlassianConnect            as AC
-
 import           Persistence.Instances            ()
 import           Persistence.PostgreSQL
+import qualified Snap.AtlassianConnect            as AC
 
 lookupTenant
    :: Connection
@@ -64,23 +64,24 @@ removeTenantInformation conn clientKey =
 
 insertTenantInformation
    :: Connection
+   -> Maybe AC.Tenant
    -> AC.LifecycleResponse
    -> IO (Maybe Integer)
-insertTenantInformation conn lri@(AC.LifecycleResponseInstalled {}) = do
+insertTenantInformation conn maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
    let newClientKey = AC.lrClientKey lri
    let newBaseUri = AC.lrBaseUrl lri
    oldClientKey <- getClientKeyForBaseUrl conn (AC.getURI newBaseUri)
    existingTenant <- lookupTenant conn newClientKey
    let newAndOldKeysEqual = fmap (== newClientKey) oldClientKey
-   case (existingTenant, newAndOldKeysEqual) of
+   case (existingTenant, newAndOldKeysEqual, maybeTenant) of
       -- The base url is already being used by somebody else TODO should warn about this in production
-      (_, Just False) -> return Nothing
+      (_, Just False, _) -> return Nothing
       -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
-      (Nothing, Just True)  -> error "This is a contradiction in state, we both could and could not find clientKeys."
+      (Nothing, Just True, _)  -> error "This is a contradiction in state, we both could and could not find clientKeys."
       -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
-      (Nothing, Nothing) -> listToMaybe <$> rawInsertTenantInformation conn lri
+      (Nothing, Nothing, _) -> listToMaybe <$> rawInsertTenantInformation conn lri
       -- We have seen this tenant before but we may have new information for it. Update it.
-      (Just tenant, _) -> do
+      (Just tenant, _, Just claimedTenant) | on (==) AC.key tenant claimedTenant -> do
          updateTenantDetails newTenant conn
          wakeTenant newTenant conn
          return . Just . AC.tenantId $ newTenant
@@ -90,7 +91,10 @@ insertTenantInformation conn lri@(AC.LifecycleResponseInstalled {}) = do
             -- first and then recreate it.
             newTenant = tenant
                { AC.baseUrl = AC.lrBaseUrl lri
+               , AC.sharedSecret = fromMaybe (AC.sharedSecret tenant) (AC.lrSharedSecret lri)
                }
+      -- The authorisation between tenants does not match
+      (_, _, _) -> return Nothing
 
 updateTenantDetails :: AC.Tenant -> Connection ->  IO Int64
 updateTenantDetails tenant conn =
