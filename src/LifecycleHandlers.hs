@@ -5,6 +5,7 @@ module LifecycleHandlers
     ) where
 
 import           Application
+import           Control.Applicative
 import qualified Control.Arrow          as ARO
 import qualified Data.ByteString.Char8  as BC
 import           Data.List              (find)
