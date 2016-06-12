@@ -6,7 +6,6 @@ pipelines:
   default:
     - step:
         script:
-          - cabal sandbox init
           - cabal update
           - cabal install --enable-tests --only-dependencies
           - cabal configure --enable-tests
