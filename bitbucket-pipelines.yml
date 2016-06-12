@@ -7,7 +7,7 @@ pipelines:
     - step:
         script:
           - cabal update
-          - cabal install --enable-tests --only-dependencies
+          - cabal install --enable-tests --only-dependencies --force-reinstalls
           - cabal configure --enable-tests
           - cabal build
           - cabal test
