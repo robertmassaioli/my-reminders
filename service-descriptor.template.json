@@ -34,7 +34,7 @@
       "email": "rmassaioli@atlassian.com" 
    },
    "scaling": {
-      "min": 1
+      "min": 2
    },
    "downstreamServices": [],
    "cleanup": false
