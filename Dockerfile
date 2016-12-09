@@ -7,7 +7,7 @@
 # of required dependencies.
 
 # TODO replace with my own haskell platform docker creations.
-FROM zsol/haskell-platform-2014.2.0.0:plain
+FROM haskell:7.10.3
 # FROM ubuntu:14.04
 MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
 
