@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y libpq-dev
 # Copy our context into the build directory and start working from there
 USER root
 ADD /   /home/haskell/build
-RUN chown -R haskell:haskell /home/haskell/build
+# RUN chown -R haskell:haskell /home/haskell/build
 
 # Setup the Haskell Envoronment
 USER haskell
