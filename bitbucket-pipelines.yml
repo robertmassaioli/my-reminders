@@ -6,6 +6,7 @@ pipelines:
   default:
     - step:
         script:
+          - sudo apt-get install pkg-config
           - cabal update
           - cabal install --enable-tests --only-dependencies --force-reinstalls
           - cabal configure --enable-tests
