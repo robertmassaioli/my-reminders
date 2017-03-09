@@ -21,10 +21,10 @@ RUN apt-get update && apt-get install -y libpq-dev
 # Copy our context into the build directory and start working from there
 USER root
 ADD /   /home/haskell/build
-RUN chown -R haskell:haskell /home/haskell/build
+# RUN chown -R haskell:haskell /home/haskell/build
 
 # Setup the Haskell Envoronment
-USER haskell
+# USER haskell
 WORKDIR /home/haskell/build
 ENV LANG en_US.UTF-8 # See: https://github.com/haskell/cabal/issues/1883#issuecomment-44150139
 ENV PATH /home/haskell/.cabal/bin:$PATH
