@@ -2,7 +2,7 @@
 # It is designed to be minimal by requiring only the dependencies of the production executable.
 # It is also designed to be easy to maintain by being as short as possible.
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
 
 # Expose the default port, port 8080
