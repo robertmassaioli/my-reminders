@@ -1,7 +1,7 @@
 # This is a sample build configuration for Haskell.
 # Do not use tabs to indent your configuration
 # You can specify a custom docker image from Dockerhub# for your build environment
-image: zsol/haskell-platform-2014.2.0.0:latest
+image: haskell:8.0.2
 pipelines:
   default:
     - step:
