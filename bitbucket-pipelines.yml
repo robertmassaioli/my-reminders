@@ -1,12 +1,12 @@
 # This is a sample build configuration for Haskell.
 # Do not use tabs to indent your configuration
 # You can specify a custom docker image from Dockerhub# for your build environment
-image: haskell:7.10.3
+image: haskell:8.0.2
 pipelines:
   default:
     - step:
         script:
-          - apt-get update && apt-get install -y libpq-dev
+          - apt-get update && apt-get install -y libpq-dev pkgconf
           - cabal update
           - cabal install --verbose=2 --enable-tests --only-dependencies --force-reinstalls
           - cabal configure --verbose=2 --enable-tests

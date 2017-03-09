@@ -12,6 +12,12 @@ cabal.sandbox.config
 site_key.txt
 tags
 
+# Database
+postgres_data
+
+# Docker build 
+production
+
 # Snap generated files
 snaplets/Connect
 snaplets/Remind\ Me\ Configuration
@@ -25,3 +31,6 @@ log
 
 # OSX Files
 .DS_store
+
+# NPM Modules
+node_modules

@@ -7,7 +7,7 @@
 # of required dependencies.
 
 # TODO replace with my own haskell platform docker creations.
-FROM haskell:7.10.3
+FROM haskell:8.0.2
 # FROM ubuntu:14.04
 MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
 
@@ -16,7 +16,7 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq-dev
+RUN apt-get update && apt-get install -y libpq-dev pkgconf
 
 # Copy our context into the build directory and start working from there
 USER root

@@ -19,10 +19,10 @@ acHeaderName = DC.mk . BSC.pack $ "X-acpt" -- See atlassian-connect-play-java Pa
 tenantFromToken :: (AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
 tenantFromToken tenantApply = do
   request <- SC.getRequest
-  let potentialTokens = SC.getHeaders acHeaderName request
+  let potentialTokens = SC.getHeader acHeaderName request
   case potentialTokens of
     Nothing -> SH.respondWithError SH.badRequest "You need to provide a page token in the headers to use this resource. None was provided."
-    Just [acTokenHeader] -> do
+    Just acTokenHeader -> do
       connectData <- AC.getConnect
       let potentiallyDecodedToken = AC.decryptPageToken (AC.connectAES connectData) acTokenHeader
       case potentiallyDecodedToken of

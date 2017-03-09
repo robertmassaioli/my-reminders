@@ -42,6 +42,6 @@ instance AC.HasConnect (SS.Handler b App) where
 
 instance CONF.HasAppConf (SS.Handler b App) where
    getAppConf = SS.with rmconf get
-
+  
 ------------------------------------------------------------------------------
 type AppHandler = SS.Handler App App

@@ -62,9 +62,9 @@ getJWTTokenFromParam = do
 -- This method will extract the JWT token from the Auth header if it is present.
 getJWTTokenFromAuthHeader :: SS.Handler b App (Either String UnverifiedJWT)
 getJWTTokenFromAuthHeader = do
-   authHeader <- fmap (SC.getHeaders authorizationHeaderName) SC.getRequest
+   authHeader <- fmap (SC.getHeader authorizationHeaderName) SC.getRequest
    case authHeader of
-      Just (firstHeader : _) -> if B.isPrefixOf jwtPrefix firstHeader
+      Just firstHeader -> if B.isPrefixOf jwtPrefix firstHeader
          then return $ maybe (Left "The JWT Auth header could not be parsed.") Right (decodeByteString . dropJwtPrefix $ firstHeader)
          else return . Left $ "The Authorization header did not contain a JWT token: " ++ show firstHeader
       _ -> return . Left $ "There was no Authorization header in the request."

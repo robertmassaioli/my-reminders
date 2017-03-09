@@ -11,6 +11,7 @@ import qualified Heist.Interpreted      as HI
 import qualified Snap.Snaplet           as SS
 import qualified Snap.Snaplet.Heist     as SSH
 import qualified Text.XmlHtml           as X
+import qualified Data.Map.Syntax        as MS
 
 spliceConfig :: H.SpliceConfig (SS.Handler a a)
 spliceConfig = mempty
@@ -18,10 +19,10 @@ spliceConfig = mempty
 
 customSplices :: HIT.Splices (HI.Splice (SS.Handler a a))
 customSplices = do
-   "hasSplice" H.## hasSplice
-   "includeFile" H.## includeFile
-   "js" H.## jsInclude
-   "css" H.## cssInclude
+   "hasSplice" MS.## hasSplice
+   "includeFile" MS.## includeFile
+   "js" MS.## jsInclude
+   "css" MS.## cssInclude
    H.defaultInterpretedSplices
 
 hasSplice :: SSH.SnapletISplice a

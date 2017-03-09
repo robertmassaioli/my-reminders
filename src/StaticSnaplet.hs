@@ -26,6 +26,7 @@ import qualified Snap.Snaplet              as SS
 import qualified Snap.Snaplet.Heist        as SSH
 import qualified SnapHelpers               as SH
 import qualified Text.XmlHtml              as X
+import qualified Data.Map.Syntax           as MS
 
 -- | This initialiser is responsible for creating a Static Snaplet; all of the resources served by this snaplet
 -- will be treated as immutable for the Version provided. It is here for the purpose of providing a way to serve
@@ -53,7 +54,7 @@ spliceConfig sc = mempty
    & HIT.scInterpretedSplices .~ customSplices sc
 
 customSplices :: StaticConf -> HIT.Splices (HI.Splice (SS.Handler a a))
-customSplices sc = "resourcesVersion" H.## resourcesVersion sc
+customSplices sc = "resourcesVersion" MS.## resourcesVersion sc
 
 resourcesVersion :: StaticConf -> SSH.SnapletISplice a
 resourcesVersion = return . text . scResourcesVersion
