@@ -26,7 +26,6 @@ import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
 import           Healthcheck
 import           Heartbeat
-import qualified Heist                                       as H
 import qualified Heist.Interpreted                           as HI
 import qualified LifecycleHandlers                           as LH
 import qualified MicrosZone                                  as MZ
@@ -44,6 +43,7 @@ import           StaticSnaplet
 import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
+import qualified Data.Map.Syntax        as MS
 
 import qualified Paths_my_reminders                          as PMR
 
@@ -57,7 +57,7 @@ showDocPage = do
       Nothing -> SH.respondNotFound
       Just rawFileName -> SSH.heistLocal (environment . decodeUtf8 $ rawFileName) $ SSH.render "docs"
    where
-      environment fileName = HI.bindSplices $ "fileName" H.## HI.textSplice fileName
+      environment fileName = HI.bindSplices $ "fileName" MS.## HI.textSplice fileName
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -69,10 +69,10 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
   SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
   where
     context connectData tenant token userKey = do
-      "productBaseUrl" H.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
-      "connectPageToken" H.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
+      "productBaseUrl" MS.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
+      "connectPageToken" MS.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
       -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
-      "userKey" H.## HI.textSplice $ fromMaybe T.empty userKey
+      "userKey" MS.## HI.textSplice $ fromMaybe T.empty userKey
 
 
 withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
@@ -136,7 +136,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
   SSH.addConfig appHeist spliceConfig
-  appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+  appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" Nothing (Just 3600)
   appDb      <- SS.nestSnaplet "db" db (DS.dbInitConf zone)
   let modifiedDescriptor = MZ.modifyDescriptorUsingZone zone AC.addonDescriptor
   appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)

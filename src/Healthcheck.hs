@@ -9,7 +9,10 @@ import qualified AppConfig              as CONF
 import           Application
 import           Control.Applicative    ((<$>))
 import qualified Control.Exception      as E
-import           Control.Monad.CatchIO  (MonadCatchIO (..), tryJust)
+import qualified Control.Exception.Lifted as EL
+-- import qualified Control.Monad.Catch    as MC
+-- import           Control.Monad.CatchIO  (MonadCatchIO (..), tryJust)
+--import qualified Control.Monad.Trans.Control as C
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Aeson.Types
@@ -57,8 +60,8 @@ runHealthchecks healthchecks = HealthcheckRunResult <$> sequence healthchecks
 anyHealthcheckFailed :: HealthcheckRunResult -> Bool
 anyHealthcheckFailed (HealthcheckRunResult statuses) = any (not . hsIsHealthy) statuses
 
-simpleCatch :: (MonadCatchIO m, Functor m) => m a -> m (Either E.SomeException a)
-simpleCatch = tryJust exceptionFilter
+simpleCatch :: AppHandler a -> AppHandler (Either E.SomeException a)
+simpleCatch = EL.tryJust exceptionFilter
 
 databaseHealthCheck :: Healthcheck
 databaseHealthCheck = do
