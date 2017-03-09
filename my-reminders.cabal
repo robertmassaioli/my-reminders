@@ -124,7 +124,7 @@ test-suite my-reminders-props
     , test-framework             == 0.8.*
     , test-framework-quickcheck2 == 0.3.*
 
-    , MonadCatchIO-transformers
+    , lifted-base
     , aeson
     , atlassian-connect-descriptor
     , atlassian-connect-core
@@ -154,7 +154,7 @@ test-suite my-reminders-props
     , parallel-io
     , postgresql-simple
     , process
-    , resource-pool-catchio
+    , resource-pool
     , snap
     , snap-core
     , snap-loader-static
