@@ -6,7 +6,7 @@ pipelines:
   default:
     - step:
         script:
-          - apt-get update && apt-get install -y pkgconf
+          - apt-get update && apt-get install -y libpq-dev pkgconf
           - cabal update
           - cabal install --enable-tests --only-dependencies --force-reinstalls
           - cabal configure --enable-tests
