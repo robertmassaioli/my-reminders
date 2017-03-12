@@ -62,7 +62,7 @@ then
 fi
 
 echo "Tagging $IMAGE_TAG as $DOCKER_PUSH_LOCATION"
-${DOCKER_CMD} tag -f "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.output
+${DOCKER_CMD} tag "$IMAGE_TAG" "$DOCKER_PUSH_LOCATION" 2>&1 > docker-tag.output
 
 echo "Showing current (tagged) images..."
 ${DOCKER_CMD} images
