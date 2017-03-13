@@ -10,7 +10,7 @@ EXPOSE 8080
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless libnss3 libnss-lwres libnss-mdns
+RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless libnss3 libnss-lwres libnss-mdns netbase
 
 # Copy our context into the build directory and start working from there
 USER root
