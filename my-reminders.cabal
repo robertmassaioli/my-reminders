@@ -54,8 +54,8 @@ Executable my-reminders
   Build-depends:
       base                      >= 4.6     && < 5
     , aeson                     >= 0.8
-    , atlassian-connect-core    >= 0.6
-    , atlassian-connect-descriptor >= 0.4
+    , atlassian-connect-core    >= 0.6     && < 0.8
+    , atlassian-connect-descriptor >= 0.4  
     , base64-bytestring         == 1.0.*
     , boxes                     == 0.1.*
     , bytestring                >= 0.9.1   && < 0.11
