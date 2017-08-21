@@ -37,4 +37,4 @@ getUserDetails tenant userKey = SS.with connect $ AC.hostGetRequest tenant usern
     usernameUrl = "/rest/api/2/user"
 
     queryParams :: [(B.ByteString, Maybe B.ByteString)]
-    queryParams = [("username", Just . encodeUtf8 $ userKey)]
+    queryParams = [("key", Just . encodeUtf8 $ userKey)]
