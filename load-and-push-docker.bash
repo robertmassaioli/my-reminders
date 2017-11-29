@@ -6,7 +6,7 @@ DOCKER_CMD=${DOCKER_CMD:-docker}
 DOCKER_SAVE_FILE="${DOCKER_SAVE_FILE:-my-reminders.docker.save.tar}"
 DOCKER_PROPERTIES_FILE="${DOCKER_PROPERTIES_FILE:-my-reminders.docker.properties}"
 SERVICE_ID="${SERVICE_ID:-my-reminders}"
-DOCKER_REMOTE="${DOCKER_REMOTE:-docker.atlassian.io}"
+DOCKER_REMOTE="${DOCKER_REMOTE:-docker.atl-paas.net}"
 DOCKER_REMOTE_REPO="${DOCKER_REMOTE}/atlassian/${SERVICE_ID}"
 DOCKER_PUSH_LOCATION="${DOCKER_REMOTE_REPO}:${RELEASE_VERSION}"
 
@@ -21,7 +21,7 @@ echo "Loaded the IMAGE_TAG: $IMAGE_TAG"
 
 if [ "x$DOCKER_LOGIN_USERNAME" = "x" -o "x$DOCKER_LOGIN_PASSWORD" = "x" -o "x$DOCKER_LOGIN_EMAIL" = "x" ]
 then
-   echo "You need to provide your docker login details to push to docker.atlassian.io."
+   echo "You need to provide your docker login details to push to docker.atl-paas.net."
    exit 1
 fi
 

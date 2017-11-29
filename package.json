@@ -13,10 +13,11 @@
     "mustang": "^0.1.2",
     "ngrok": "^2.2.0",
     "npm": "^2.1.18",
-    "mustache": "^1.0.0"
+    "mustache": "^1.0.0",
+    "micros": "micros"
   },
   "devDependencies": {
-    "@atlassian/micros-cli": "^4.35.7"
+    "@atlassian/micros-cli": "^5.16.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -23,6 +23,9 @@ zoneFromString "useast.staging.atlassian.io" = Just Dog
 zoneFromString "uswest.staging.atlassian.io"  = Just Dog
 zoneFromString "useast.atlassian.io" = Just Prod
 zoneFromString "uswest.atlassian.io"  = Just Prod
+zoneFromString "dev.public.atl-paas.net" = Just Dev
+zoneFromString "staging.public.atl-paas.net" = Just Dog
+zoneFromString "prod.public.atl-paas.net" = Just Prod
 zoneFromString _        = Nothing
 
 fromEnv :: IO (Maybe Zone)

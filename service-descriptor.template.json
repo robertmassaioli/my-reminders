@@ -3,14 +3,17 @@
    "description": "My reminders allows you to set reminders on issues.",
    "name": "My Reminders",
    "organization": "RD:Customer Purchasing Platform",
-   "externalAccess": true,
+   "network": {
+      "ingress": "external",
+      "egress":  "internet-only"
+   },
    "resources": [{
       "type": "postgres-db",
       "name": "my-reminders"
    }],
    "links": {
       "binary": {
-         "name": "docker.atlassian.io/atlassian/my-reminders",
+         "name": "docker.atl-paas.net/atlassian/my-reminders",
          "type": "docker",
          "tag": "{{RELEASE_VERSION}}"
       },
