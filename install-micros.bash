@@ -29,7 +29,7 @@ npm install npm@2
 ln -s ./node_modules/npm/bin/npm .
 
 echo "Setting the npm registry to use the atlassian registry."
-./npm config set registry=https://npm.atlassian.io
+./npm config set registry=https://npm-private.atlassian.io
 
 echo "Logging into the NPM registry with EACJ credentials: $EACJ_USER"
 ##./npm login --registry=https://npm-private.atlassian.io --scope=atlassian <<CREDS
@@ -38,7 +38,6 @@ echo "Logging into the NPM registry with EACJ credentials: $EACJ_USER"
 ##rmassaioli@atlassian.com
 ##CREDS
 cat > ~/.npmrc <<RAWDOC
-registry=https://npm.atlassian.io/
 @atlassian:registry=https://npm-private.atlassian.io/
 //npm-private.atlassian.io/:_authToken=$NPM_AUTH_TOKEN
 RAWDOC
