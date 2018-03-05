@@ -41,3 +41,6 @@ snaplets/Remind\ Me\ Configuration/
 
 # Generated descriptor
 /service-descriptor.json
+
+# Bin dir
+/bin

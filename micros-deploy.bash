@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-MICROS_CMD=${MICROS_CMD:-$(npm bin)/micros}
+MICROS_CMD=${MICROS_CMD:-bin/micros}
 
 if [ "x$DEPLOY_ENVIRONMENT" = "x" ]
 then

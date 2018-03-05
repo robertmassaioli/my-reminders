@@ -1,8 +1,5 @@
 #!/bin/bash -e
 
-npm install mustang
-MUSTANG_EXECUTABLE="${MUSTANG_EXECUTABLE:-./node_modules/mustang/lib/app.js}"
-
 TEMPLATES_FILE="${TEMPLATES_FILE:-template-vars.csv}"
 echo "RELEASE_VERSION" > "${TEMPLATES_FILE}"
 echo "${RELEASE_VERSION}" >> "${TEMPLATES_FILE}"
@@ -10,4 +7,5 @@ echo "${RELEASE_VERSION}" >> "${TEMPLATES_FILE}"
 SERVICE_DESCRIPTOR_TEMPLATE="${SERVICE_DESCRIPTOR_TEMPLATE:-service-descriptor.template.json}"
 SERVICE_DESCRIPTOR="${SERVICE_DESCRIPTOR:-service-descriptor.json}"
 
-${MUSTANG_EXECUTABLE} -t "${SERVICE_DESCRIPTOR_TEMPLATE}" -i "${TEMPLATES_FILE}" > "${SERVICE_DESCRIPTOR}"
+npm install
+npm run mustang -- -t "${SERVICE_DESCRIPTOR_TEMPLATE}" -i "${TEMPLATES_FILE}" > "${SERVICE_DESCRIPTOR}"
