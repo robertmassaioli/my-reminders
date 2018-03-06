@@ -8,4 +8,4 @@ SERVICE_DESCRIPTOR_TEMPLATE="${SERVICE_DESCRIPTOR_TEMPLATE:-service-descriptor.t
 SERVICE_DESCRIPTOR="${SERVICE_DESCRIPTOR:-service-descriptor.json}"
 
 npm install
-npm run mustang -- -t "${SERVICE_DESCRIPTOR_TEMPLATE}" -i "${TEMPLATES_FILE}" > "${SERVICE_DESCRIPTOR}"
+npm run --silent mustang -- -t "${SERVICE_DESCRIPTOR_TEMPLATE}" -i "${TEMPLATES_FILE}" > "${SERVICE_DESCRIPTOR}"
