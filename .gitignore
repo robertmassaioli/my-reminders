@@ -44,3 +44,7 @@ snaplets/Remind\ Me\ Configuration/
 
 # Bin dir
 /bin
+
+# Private files
+set-dev-env.bash
+set-prod-env.bash

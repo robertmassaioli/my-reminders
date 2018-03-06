@@ -19,8 +19,12 @@
     "@atlassian/micros-cli": "^5.16.5"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "mustang": "mustang"
+    "build": "npm run build-css && npm run build-js",
+    "build-css": "mkdir -p static-css && lessc --verbose static/less/app.less static-css/app.css",
+    "build-js": "r.js -o build.js",
+    "mustang": "mustang",
+    "lessc": "lessc",
+    "r.js": "r.js"
   },
   "repository": {
     "type": "git",
