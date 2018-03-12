@@ -24,7 +24,8 @@
     "build-js": "r.js -o build.js",
     "mustang": "mustang",
     "lessc": "lessc",
-    "r.js": "r.js"
+    "r.js": "r.js",
+    "ngrok": "ngrok"
   },
   "repository": {
     "type": "git",
