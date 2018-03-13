@@ -22,6 +22,7 @@ import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
 import           Data.Text.Encoding                          (decodeUtf8)
+import qualified Data.Text.IO                                as T
 import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
 import           Healthcheck
@@ -44,6 +45,7 @@ import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
 import qualified Data.Map.Syntax        as MS
+import qualified Text.HTML.TagSoup as TS
 
 import qualified Paths_my_reminders                          as PMR
 
@@ -66,13 +68,36 @@ showDocPage = do
 createConnectPanel :: ByteString -> AppHandler ()
 createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
-  SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
+  rawHtmlContent <- liftIO readIndex
+  let updatedHtmlContent = TS.renderTags . injectTags (metaTags connectData tenant token userKey) . TS.parseTags $ rawHtmlContent
+  SC.writeText updatedHtmlContent
   where
-    context connectData tenant token userKey = do
-      "productBaseUrl" MS.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
-      "connectPageToken" MS.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
-      -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
-      "userKey" MS.## HI.textSplice $ fromMaybe T.empty userKey
+    readIndex :: IO T.Text
+    readIndex = T.readFile "frontend/build/index.html"
+    
+    injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
+    injectTags mts tags = preHead ++ (head : toMetaTags mts) ++ afterHead
+      where
+        (preHead, (head : afterHead)) = span (TS.isTagOpenName "head") tags
+    
+    toMetaTags :: [MetaTag] -> [TS.Tag T.Text]
+    toMetaTags = concat . map toMetaTag
+      where 
+        toMetaTag mt = 
+            [ TS.TagOpen "meta" [("name", mtName mt), ("content", mtContent mt)]
+            , TS.TagClose "meta"
+            ]
+
+    metaTags connectData tenant token userKey = 
+      [ MT "userKey" (fromMaybe T.empty userKey)
+      , MT "productBaseUrl" (T.pack . show . AC.baseUrl $ tenant)
+      , MT "acpt" (SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token))
+      ]
+
+data MetaTag = MT 
+  { mtName :: T.Text
+  , mtContent :: T.Text
+  }
 
 
 withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
@@ -111,9 +136,9 @@ applicationRoutes =
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , serveDirectory "static-css")
+  [ ("css"    , serveDirectory "frontend/build/static/css")
   , ("images" , serveDirectory "static/images")
-  , ("js"     , serveDirectory "static-js")
+  , ("js"     , serveDirectory "frontend/build/static/js")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
