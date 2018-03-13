@@ -65,8 +65,8 @@ showDocPage = do
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createConnectPanel :: ByteString -> AppHandler ()
-createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
+loadConnectPanel :: AppHandler ()
+loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
   rawHtmlContent <- liftIO readIndex
   let updatedHtmlContent = TS.renderTags . injectTags (metaTags connectData tenant token userKey) . TS.parseTags $ rawHtmlContent
@@ -74,7 +74,7 @@ createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey)
   where
     readIndex :: IO T.Text
     readIndex = T.readFile "frontend/build/index.html"
-    
+
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
     injectTags mts tags = preHead ++ (head : toMetaTags mts) ++ afterHead
       where
@@ -115,9 +115,9 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                              , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"               , showDocPage)
-  , ("/panel/v2/jira/reminder/create" , createConnectPanel "create-reminder-v2")
-  , ("/panel/jira/reminder/simple"    , createConnectPanel "view-issue-reminders")
-  , ("/panel/jira/reminders/view"     , createConnectPanel "view-jira-reminders")
+  , ("/panel/v2/jira/reminder/create" , loadConnectPanel)
+  , ("/panel/jira/reminder/simple"    , loadConnectPanel)
+  , ("/panel/jira/reminders/view"     , loadConnectPanel)
   , ("/rest/reminder"                 , handleReminder)
   , ("/rest/reminders"                , handleReminders)
   , ("/rest/user/reminders"           , handleUserReminders)

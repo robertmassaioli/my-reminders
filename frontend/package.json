@@ -19,7 +19,8 @@
     "react-dom": "^16.2.0",
     "react-router-dom": "^4.2.2",
     "react-scripts-ts": "2.13.0",
-    "styled-components": "^3.2.1"
+    "styled-components": "^3.2.1",
+    "urijs": "^1.19.1"
   },
   "scripts": {
     "start": "react-scripts-ts start",
@@ -35,10 +36,11 @@
     "@types/jest": "^22.2.0",
     "@types/moment-timezone": "^0.5.4",
     "@types/node": "^9.4.6",
+    "@types/react": "^16.0.40",
     "@types/react-dom": "^16.0.4",
     "@types/react-router-dom": "^4.2.4",
-    "@types/react": "^16.0.40",
     "@types/storybook__react": "^3.0.7",
+    "@types/urijs": "^1.15.36",
     "awesome-typescript-loader": "^4.0.1",
     "depcheck": "^0.6.9",
     "typescript": "^2.7.2"

@@ -471,6 +471,10 @@
   version "22.2.0"
   resolved "https://registry.yarnpkg.com/@types/jest/-/jest-22.2.0.tgz#55ce83139f7ad1b48b414c3927746614c6963c0f"
 
+"@types/jquery@*":
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.3.1.tgz#55758d44d422756d6329cbf54e6d41931d7ba28f"
+
 "@types/moment-timezone@^0.5.4":
   version "0.5.4"
   resolved "https://registry.yarnpkg.com/@types/moment-timezone/-/moment-timezone-0.5.4.tgz#b600e033f871f3074c283e2bd26fe4f4ec3949d4"
@@ -513,6 +517,12 @@
   dependencies:
     "@types/react" "*"
     "@types/webpack-env" "*"
+
+"@types/urijs@^1.15.36":
+  version "1.15.36"
+  resolved "https://registry.yarnpkg.com/@types/urijs/-/urijs-1.15.36.tgz#13e481d2fedad94880080a32b739388bc3b52e4b"
+  dependencies:
+    "@types/jquery" "*"
 
 "@types/webpack-env@*":
   version "1.13.5"
@@ -8926,7 +8936,7 @@ upper-case@^1.1.1:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/upper-case/-/upper-case-1.1.3.tgz#f6b4501c2ec4cdd26ba78be7222961de77621598"
 
-urijs@^1.16.1:
+urijs@^1.16.1, urijs@^1.19.1:
   version "1.19.1"
   resolved "https://registry.yarnpkg.com/urijs/-/urijs-1.19.1.tgz#5b0ff530c0cbde8386f6342235ba5ca6e995d25a"
 

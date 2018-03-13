@@ -386,3 +386,7 @@ declare module '@atlaskit/empty-state' {
 
     export default class EmptyState extends React.Component<EmptyStateProps> {}
 }
+
+declare namespace AP {
+    function resize(): void;
+}

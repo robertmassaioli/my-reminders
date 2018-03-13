@@ -1,46 +1,61 @@
 import * as React from 'react';
-import { Reminder } from './Reminder';
-import { IssueView } from './IssueView';
+import { IssueViewComponent } from './IssueViewComponent';
 import { AllRemindersView } from './AllRemindersView';
 import { ReminderCreateDialog } from './ReminderCreateDialog';
-import { IssueViewActions } from './IssueViewActions';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { loadPageContext, PageContext } from './page-context';
+import Spinner from '@atlaskit/spinner';
 
-class App extends React.Component {
-  private exampleReminders: JSX.Element[] = (() => {
-    let rows = new Array<JSX.Element>();
-    for (let i = 0; i < 10; i++) {
-    rows.push((
-      <Reminder
-        reminder={{
-          id: 100,
-          message: 'Catch up with Karen about the thing at the place.',
-          expiresAt: new Date(new Date().getTime() + Math.random() * 200000000),
-          timezone: 'Australia/Sydney'
-        }} 
-      />
-      ));
+type AppState = {
+  pageContext: PageContext | undefined;
+  apLoaded: boolean;
+};
+
+class App extends React.Component<{}, AppState> {
+  componentWillMount() {
+    const pc = loadPageContext();
+
+    this.setState({
+      pageContext: pc,
+      apLoaded: false
+    });
+
+    if (pc) {
+      const script = document.createElement('script');
+      script.src = `${pc.productBaseUrl}/atlassian-connect/all.js`;
+      
+      script.onload = () => {
+        this.setState(s => {
+          return {
+            ...s,
+            apLoaded: true
+          };
+        });
+      };
+
+      document.getElementsByTagName('head')[0].appendChild(script);
     }
-    return rows;
-  })();
+  }
+
+  componentDidUpdate() {
+    if(this.state.apLoaded) {
+      AP.resize();
+    }
+  }
 
   render() {
-    const noOp = () => {
-      return 0;
-    };
+    if (!this.state.pageContext) {
+      return <div>Error state: no page context!</div>;
+    } else if (!this.state.apLoaded) {
+      return <Spinner delay={100} size="large" />;
+    }
+
     return (
       <Router>
-        <Route exact path="/panel/jira/reminder/simple" component={IssueView} />
-        <Route exact path="/panel/jira/reminders/view" component={AllRemindersView} /> 
-        <Route exact path="/panel/v2/jira/reminder/create" component={ReminderCreateDialog} />
         <div className="App">
-          <IssueViewActions onAddReminder={noOp} onTomorrow={noOp} onInAWeek={noOp} onInAMonth={noOp}/>
-          
-          <div className="noReminders"><p>No upcoming reminders</p></div>
-
-          <div className="reminders">
-            {this.exampleReminders}
-          </div>
+          <Route exact={true} path="/panel/jira/reminder/simple" component={IssueViewComponent} />
+          <Route exact={true} path="/panel/jira/reminders/view" component={AllRemindersView} /> 
+          <Route exact={true} path="/panel/v2/jira/reminder/create" component={ReminderCreateDialog} />
         </div>
       </Router>
     );
