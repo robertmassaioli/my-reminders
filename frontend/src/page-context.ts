@@ -21,6 +21,7 @@ export type PageContext = {
         name: string;
     },
     productBaseUrl: string;
+    acpt: string;
 };
 
 // tslint:disable-next-line: no-any
@@ -33,23 +34,30 @@ function es(value: any): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }
 
+function fromMeta(name: string): string | undefined {
+    const metaTags = Array.from(document.getElementsByTagName('meta'));
+
+    const metaTag = metaTags.find(meta => meta.getAttribute('name') === name);
+
+    if (!metaTag) {
+        return undefined;
+    }
+    const content = metaTag.getAttribute('content');
+    return content ? content : undefined;
+}
+
 export function loadPageContext(): PageContext | undefined {
     var queryParams = URI(window.location.href).query(true);
 
-    const metaTags = Array.from(document.getElementsByTagName('meta'));
-
-    const productBaseUrlMeta = metaTags.find(meta => meta.getAttribute('name') === 'productBaseUrl');
-
-    if (!productBaseUrlMeta) {
-        return undefined;
-    }
-    const pProductBaseUrl = productBaseUrlMeta.getAttribute('content');
-    if (!pProductBaseUrl) {
+    const pAcpt = fromMeta('acpt');
+    const pProductBaseUrl = fromMeta('productBaseUrl');
+    if (!pProductBaseUrl || !pAcpt) {
         return undefined;
     }
 
     let pageContext: PageContext = {
-        productBaseUrl: pProductBaseUrl
+        productBaseUrl: pProductBaseUrl,
+        acpt: pAcpt
     };
 
     /* tslint:disable:no-string-literal */

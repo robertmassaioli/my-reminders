@@ -389,4 +389,34 @@ declare module '@atlaskit/empty-state' {
 
 declare namespace AP {
     function resize(): void;
+
+    interface StandardRequestOptions {
+        url: string;
+        cache?: false;
+        headers?: { [header: string]: string };
+        // headers TODO
+    }
+
+    interface GetRequestOptions extends StandardRequestOptions {
+        type: 'GET'
+    }
+
+    interface PostPutRequestOptions extends StandardRequestOptions {
+        type: 'POST' | 'PUT';
+        data: any;
+        contentType: string;
+    }
+
+    interface DeleteRequestOptions extends StandardRequestOptions {
+        type: 'DELETE';
+        data?: any;
+        contentType?: string;
+    }
+
+    interface RequestResponse {
+        body: string;
+        xhr: XMLHttpRequest;
+    }
+
+    function request(options: GetRequestOptions | PostPutRequestOptions | DeleteRequestOptions): Promise<RequestResponse>;
 }
