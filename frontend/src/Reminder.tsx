@@ -1,13 +1,13 @@
 import * as React from 'react';
 import Button from '@atlaskit/button';
 import CrossCircleIcon from '@atlaskit/icon/glyph/cross-circle';
-import * as moment from 'moment';
 import 'moment-timezone-all';
 import styled from 'styled-components';
 import { ReminderView } from './Data';
 
 export type ReminderProps = {
     reminder: ReminderView;
+    onDelete: () => void;
 };
   
 export class Reminder extends React.PureComponent<ReminderProps> {
@@ -34,21 +34,26 @@ export class Reminder extends React.PureComponent<ReminderProps> {
     `;
 
     private static renderExpiry(r: ReminderView): string {
-        const expires = moment(r.expiresAt).tz(r.timezone);
-        return expires.fromNow().replace(/^in/, 'In');
+        return r.expiresAt.fromNow().replace(/^in/, 'In');
     }
 
     render() {
         const r = this.props.reminder;
 
+        const message = r.message || 'Reminder';
         return (
             <this.Container>
                 <div className="content">
-                    <this.Title>{r.message}</this.Title>
+                    <this.Title>{message}</this.Title>
                     <this.SubInfo>{Reminder.renderExpiry(r)}</this.SubInfo>
                 </div>
                 <div className="operations">
-                    <Button appearance="subtle"><CrossCircleIcon size="small" label="close" /></Button>
+                    <Button 
+                        appearance="subtle" 
+                        onClick={() => this.props.onDelete && this.props.onDelete()}
+                    >
+                        <CrossCircleIcon size="small" label="delete" />
+                    </Button>
                 </div>
             </this.Container>
         );

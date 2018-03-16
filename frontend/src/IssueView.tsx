@@ -7,6 +7,7 @@ import EmptyState from '@atlaskit/empty-state';
 
 export type IssueViewProps = {
     reminders: ReminderView[];
+    onReminderDeleted(id: number): void;
 };
 
 export class IssueView extends React.PureComponent<IssueViewProps & IssueViewActionsProps> {
@@ -33,7 +34,7 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
         if (this.props.reminders.length > 0) {
             const rs = this.props.reminders.map(r => {
                 return (
-                    <Reminder key={r.id} reminder={r} />
+                    <Reminder key={r.id} reminder={r} onDelete={() => this.props.onReminderDeleted(r.id)} />
                 );
             });
             return (

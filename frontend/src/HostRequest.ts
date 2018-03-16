@@ -1,3 +1,5 @@
+import * as URI from 'urijs';
+
 export interface UserDetails {
     timeZone: string;
     emailAddress?: string;
@@ -9,8 +11,9 @@ export interface UserDetails {
 }
 
 export function requestUserDetails(userKey: string): Promise<UserDetails> {
+    const url = URI('/rest/api/latest/user').addSearch('key', userKey);
     return AP.request({
-        url: '/rest/api/latest/user',
+        url: url.toString(),
         type: 'GET'
     }).then(rsp => {
         const parsedBody = JSON.parse(rsp.body);

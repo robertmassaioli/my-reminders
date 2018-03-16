@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { storiesOf, Story } from '@storybook/react';
+import { action } from '@storybook/addon-actions';
 import { Reminder } from '../Reminder';
 import { IssueViewActions, IssueViewActionsProps } from '../IssueViewActions';
 import { ReminderCreateDialog } from '../ReminderCreateDialog';
 import { RemindersList } from '../RemindersList';
 import { AllRemindersView } from '../AllRemindersView';
 import { IssueView } from '../IssueView';
+import * as moment from 'moment';
 
 type partialStoriesOf = (name: string) => Story;
 
@@ -63,18 +65,20 @@ export default function stories(storyCreator: partialStoriesOf) {
         message: `A really ${'super '.repeat(20)} long message!`
     }];
 
+  const deleteAction = action('Reminder delete clicked');
+
   storyCreator('Issue view')
     .add('Empty view', () => (
-        <IssueView reminders={[]} {...issueViewActionsProps} />
+        <IssueView reminders={[]} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
     ))
     .add('One reminder', () => (
         <IssueView 
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
-                expiresAt: new Date(new Date().getTime() + msPerDay * 4),
-                timezone: 'Australia/Sydney'
+                expiresAt: moment().add(4, 'days')
             }]}
+            onReminderDeleted={deleteAction}
             {...issueViewActionsProps}
         />
     ))
@@ -83,19 +87,17 @@ export default function stories(storyCreator: partialStoriesOf) {
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
-                expiresAt: new Date(new Date().getTime() + msPerHour * 4),
-                timezone: 'Australia/Sydney'
+                expiresAt: moment().add(4, 'hours')
             }, {
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
-                expiresAt: new Date(new Date().getTime() + msPerDay * 4),
-                timezone: 'Australia/Sydney'
+                expiresAt: moment().add(4, 'days')
             }, {
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
-                expiresAt: new Date(new Date().getTime() + msPerDay * 8),
-                timezone: 'Australia/Sydney'
+                expiresAt: moment().add(8, 'days')
             }]}
+            onReminderDeleted={deleteAction}
             {...issueViewActionsProps}
         />
     ));
@@ -160,9 +162,9 @@ export default function stories(storyCreator: partialStoriesOf) {
         reminder={{
             id: 1234,
             message: 'A single reminder for you.',
-            expiresAt: new Date(new Date().getTime() + msPerDay * 5),
-            timezone: 'Australia/Sydney'
+            expiresAt: moment().add(5, 'days')
         }}
+        onDelete={deleteAction}
       />
     ))
     .add('Long description', () => (
@@ -173,9 +175,9 @@ export default function stories(storyCreator: partialStoriesOf) {
                 started writing it, not knowing what it was, And they\'ll continue writing it forever just because, \
                 This is the reminder that never ends, It just goes on and on my friends, Some people started writing \
                 it, not knowing what it was, And they\'ll continue writing it forever just because...',
-                expiresAt: new Date(new Date().getTime() + msPerDay * 5),
-                timezone: 'Australia/Sydney'
+                expiresAt: moment().add(3, 'days')
             }}
+            onDelete={deleteAction}
         /> 
     ))
     .add('Multiple reminders', () => {
@@ -196,9 +198,9 @@ export default function stories(storyCreator: partialStoriesOf) {
                     reminder={{
                         id: 1,
                         message: 'A reminder that is repeated a lot.',
-                        expiresAt: new Date(new Date().getTime() + time),
-                        timezone: 'Australia/Sydney'
+                        expiresAt: moment().add(time, 'milliseconds')
                     }}
+                    onDelete={deleteAction}
                 />
             );
         });
@@ -209,17 +211,17 @@ export default function stories(storyCreator: partialStoriesOf) {
                 reminder={{
                     id: 1,
                     message: 'A reminder that is repeated a lot.',
-                    expiresAt: new Date(new Date().getTime() + msPerDay * 3),
-                    timezone: 'Australia/Sydney'
+                    expiresAt: moment().add(3, 'days')
                 }}
+                onDelete={deleteAction}
             />
             <Reminder
                 reminder={{
                     id: 1,
                     message: 'A reminder that is repeated a lot.',
-                    expiresAt: new Date(new Date().getTime() + msPerDay * 3),
-                    timezone: 'Australia/Sydney'
+                    expiresAt: moment().add(3, 'days')
                 }}
+                onDelete={deleteAction}
             />
         </div>
     ));

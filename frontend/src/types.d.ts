@@ -419,4 +419,19 @@ declare namespace AP {
     }
 
     function request(options: GetRequestOptions | PostPutRequestOptions | DeleteRequestOptions): Promise<RequestResponse>;
+
+    namespace flag {
+        interface Flag {
+
+        }
+
+        interface FlagCreateOptions {
+            title: string;
+            body: string;
+            type?: "info" | "success" | "warning" | "error";
+            close?: 'manual' | 'auto';
+        }
+
+        function create(options: FlagCreateOptions): Flag;
+    }
 }

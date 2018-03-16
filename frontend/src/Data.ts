@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+
 export type Reminder = {
     id: number;
     key: string;
@@ -9,7 +11,6 @@ export type Reminder = {
 
 export type ReminderView = {
     id: number;
-    message: string;
-    expiresAt: Date;
-    timezone: string;
+    message?: string;
+    expiresAt: moment.Moment;
 };
