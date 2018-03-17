@@ -86,7 +86,7 @@ export class IssueViewComponent
     render() {
         const ld = this.state.loadedDetails;
         if (typeof ld === 'undefined') {
-            return <p>Loading issue reminers...</p>;
+            return <p>Loading issue reminders...</p>;
         } else if (ld === 'reminders-failed-to-load') {
             return (
                 <EmptyState 
@@ -110,9 +110,33 @@ export class IssueViewComponent
                 onTomorrow={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'days')))} 
                 onInAWeek={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'week')))}  
                 onInAMonth={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'month')))} 
-                onReminderDeleted={noOp}
+                onReminderDeleted={id => this.onDeleteReminder(id)}
             />
         );
+    }
+
+    private onDeleteReminder(reminderId: number) {
+        createDefaultApi(this.props.pageContext).reminderDelete(reminderId).then(() => {
+            this.setState(s => {
+                if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
+                    return {
+                        loadedDetails: {
+                            ...s.loadedDetails,
+                            reminders: s.loadedDetails.reminders.filter(r => r.id !== reminderId)
+                        }
+                    };
+                } else {
+                    return s;
+                }
+            });
+        }).catch(() => {
+            AP.flag.create({
+                title: 'Could not delete reminder', 
+                body: `Please try again and refresh the page if the problem persists.`,
+                type: 'error',
+                close: 'auto'
+            });
+        });
     }
 
     private refreshRemindersList() {
@@ -181,7 +205,12 @@ export class IssueViewComponent
                 this.refreshRemindersList();
             })
             .catch(() => {
-                // TODO what do we do when this fails? Show the error state for a set amount of time.
+                AP.flag.create({
+                    title: 'Could not create reminder', 
+                    body: `Reminder not set for ${emailAddress}`,
+                    type: 'error',
+                    close: 'auto'
+                });
             });
         }
     }

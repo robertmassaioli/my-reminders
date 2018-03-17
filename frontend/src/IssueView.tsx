@@ -32,7 +32,9 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
 
     private ReminderView(): JSX.Element {
         if (this.props.reminders.length > 0) {
-            const rs = this.props.reminders.map(r => {
+            const rs = this.props.reminders
+            .sort((a, b) => a.expiresAt.isBefore(b.expiresAt) ? -1 : 1)
+            .map(r => {
                 return (
                     <Reminder key={r.id} reminder={r} onDelete={() => this.props.onReminderDeleted(r.id)} />
                 );

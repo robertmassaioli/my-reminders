@@ -99,11 +99,9 @@ paths:
         Delete the reminder with the given id.
       security: 
         - api_key: []
-      consumes: 
-        - application/x-www-form-urlencoded
       parameters: 
         - name: reminderId
-          in: formData
+          in: query
           type: number
           required: true
       responses:

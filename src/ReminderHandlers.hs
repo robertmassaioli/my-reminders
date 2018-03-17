@@ -205,7 +205,7 @@ getReminderHandler (tenant, Just userKey) = do
 deleteReminderHandler :: AC.TenantWithUser -> AppHandler ()
 deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 deleteReminderHandler (tenant, Just userKey) = do
-   potentialRawReminderId <- SC.getPostParam "reminderId"
+   potentialRawReminderId <- SC.getQueryParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
