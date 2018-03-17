@@ -21,8 +21,9 @@ export type DialogCancelData = {
 
 export type DialogCreateData = {
     type: 'create';
-    time: Date;
-    message: string;
-}
+    date: string;
+    time: string;
+    message?: string;
+};
 
 export type DialogEventData = DialogCancelData | DialogCreateData;

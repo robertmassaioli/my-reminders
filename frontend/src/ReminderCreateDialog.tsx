@@ -7,11 +7,17 @@ import * as moment from 'moment';
 import styled from 'styled-components';
 
 export type ReminderCreateDialogProps = {
-    onCreate(time: Date, message: string): void;
+    onCreate(date: string, time: string, message?: string): void;
     onCancel(): void;
 };
 
-export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDialogProps> {
+type ReminderCreateDialogState = {
+    date: string;
+    time: string;
+    message?: string;
+};
+
+export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDialogProps, ReminderCreateDialogState> {
     private readonly times = this.generateTimes();
 
     // tslint:disable:max-line-length
@@ -41,17 +47,29 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
         color: #C1C7D0;
     `;
 
-    render() {
+    componentWillMount() {
         const now = moment();
         now.add((10 - now.minutes() % 10), 'minutes');
         now.add(1, 'day');
-        const defaultDate = [now.format('YYYY-MM-DD'), now.format('HH:mm')];
+
+        this.setState({
+            date: now.format('YYYY-MM-DD'),
+            time: now.format('HH:mm')
+        });
+    }
+
+    render() {
+        const defaultDate = [this.state.date, this.state.time];
         return (
             <this.ReminderCreateContainer>
                 <div>
                     <h1>New reminder</h1>
                     <Label label="Due date" />
-                    <DateTimePicker onChange={() => this.onDateChange()} times={this.times} defaultValue={defaultDate}/>
+                    <DateTimePicker 
+                        onChange={(date, time) => this.onDateChange(date, time)} 
+                        times={this.times} 
+                        defaultValue={defaultDate}
+                    />
                     <FieldTextArea 
                         label="Description" 
                         isSpellCheckEnabled={true}
@@ -59,6 +77,7 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
                         enableResize={true}
                         minimumRows={4} 
                         maxLength={2000}
+                        onChange={(e) => this.onMessageChanged(e)}
                     />
                     <this.Subtle>What do you want to be reminded about?</this.Subtle>
                 </div>
@@ -72,8 +91,26 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
         );
     }
 
-    private onDateChange() {
-        // TODO
+    private onDateChange(date: string, time: string) {
+        this.setState(s => {
+            return {
+                ...s,
+                date: date,
+                time: time
+            };
+        });
+    }
+
+    private onMessageChanged(event: React.SyntheticEvent<HTMLTextAreaElement>) {
+        const target = event.target;
+        if (target instanceof HTMLTextAreaElement) {
+            this.setState(s => {
+                return {
+                    ...s,
+                    message: target.value
+                };
+            });
+        }
     }
 
     private generateTimes(): Array<string> {
@@ -94,7 +131,6 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
     }
 
     private clickCreate() {
-        // TODO pass through the right details
-        this.props.onCreate(new Date(), '');
+        this.props.onCreate(this.state.date, this.state.time, this.state.message);
     }
 }

@@ -290,7 +290,7 @@ declare module '@atlaskit/field-text-area' {
         name?: string;
         placeholder?: string;
         value?: 'string' | 'number';
-        onChange?: () => void;
+        onChange?: (element: React.SyntheticEvent<HTMLTextAreaElement>) => void;
         id?: string;
         isLabelHidden?: boolean;
         invalidMessage?: JSX.Element;
@@ -463,5 +463,40 @@ declare namespace AP {
         function create(options: DialogSizeOptions | DialogDimensionOptions) : Dialog;
 
         function close(data?: object): void;
+    }
+
+    namespace events {
+        type EventData = object;
+
+        type EventListner = (data: EventData) => void;
+        type EventFilter = (data: EventData) => boolean;
+
+        function on(name: string, listener: EventListener): void;
+
+        function onPublic(name: string, listener: EventListener, filter: EventFilter): void;
+
+        function once(name: string, listener: EventListener): void;
+
+        function oncePublic(name: string, listener: EventListener, filter: EventFilter): void;
+
+        function onAny(listener: EventListener): void;
+
+        function onAnyPublic(listener: EventListener, filter: EventFilter): void;
+
+        function off(name: string, listener: EventListener): void;
+
+        function offPublic(name: string, listener: EventListener): void;
+
+        function offAll(name: string): void;
+
+        function offAllPublic(name: string): void;
+
+        function offAny(listener: EventListener): void;
+
+        function offAnyPublic(listener: EventListener): void;
+
+        function emit(name: string, ...args: EventData[]): void;
+
+        function emitPublic(name: string, ...args: EventData[]): void;
     }
 }

@@ -3,7 +3,7 @@ import { RouteProps } from 'react-router';
 import { PageContext } from './page-context';
 import EmptyState from '@atlaskit/empty-state';
 import { IssueView } from './IssueView';
-import { ReminderView } from './Data';
+import { ReminderView, DialogEventData } from './Data';
 import * as moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
@@ -76,6 +76,17 @@ export class IssueViewContainer
         this.setState({
             state: 'loading'
         });
+
+        // Handle dialog close events
+        AP.events.on('dialog.close', data => {
+            const dialogData = data as DialogEventData;
+            this.onDialogClosed(dialogData);
+        });
+    }
+
+    componentWillUnmount() {
+        // Removing the dialog close event handler
+        AP.events.offAll('dialog.close');
     }
 
     componentDidMount() {
@@ -104,9 +115,9 @@ export class IssueViewContainer
             <IssueView 
                 reminders={ld ? ld.reminders : undefined} 
                 onAddReminder={() => this.onOpenAdvanced()} 
-                onTomorrow={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'days')))} 
-                onInAWeek={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'week')))}  
-                onInAMonth={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'month')))} 
+                onTomorrow={() => this.createReminder(setToMorningHour(moment().add(1, 'days')))} 
+                onInAWeek={() => this.createReminder(setToMorningHour(moment().add(1, 'week')))}  
+                onInAMonth={() => this.createReminder(setToMorningHour(moment().add(1, 'month')))} 
                 onReminderDeleted={id => this.onDeleteReminder(id)}
             />
         );
@@ -117,6 +128,14 @@ export class IssueViewContainer
             key: 'create-reminder-dialog',
             size: 'small'
         });
+    }
+
+    private onDialogClosed(data: DialogEventData): void {
+        if (data.type === 'create') {
+            const message = data.message && data.message.length > 0 ? data.message : undefined;
+            const time = moment(`${data.date} ${data.time}`, moment.ISO_8601);
+            this.createReminder(time, message);
+        }
     }
 
     private onDeleteReminder(reminderId: number) {
@@ -182,7 +201,7 @@ export class IssueViewContainer
         }
     }
 
-    private createReminderTomorrow(forDate: moment.Moment) {
+    private createReminder(forDate: moment.Moment, message?: string) {
         const ld = this.state.loadedDetails;
         if (ld && ld !== 'reminders-failed-to-load' && ld.user.emailAddress) {
             const emailAddress = ld.user.emailAddress;
@@ -199,6 +218,10 @@ export class IssueViewContainer
                 },
                 reminderDate: forDate.toDate()
             };
+
+            if (message) {
+                requestData.message = message;
+            }
 
             createReminder(requestData, this.props.pageContext)
             .then(() => {

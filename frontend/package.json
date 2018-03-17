@@ -27,7 +27,8 @@
   "scripts": {
     "prestart": "npm run gen-fetch",
     "start": "react-scripts-ts start",
-    "build": "npm run gen-fetch && react-scripts-ts build",
+    "build": "npm run gen-fetch && npm run build-ts",
+    "build-ts": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "storybook": "start-storybook -p 9001 -c .storybook",
