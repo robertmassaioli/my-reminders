@@ -434,4 +434,34 @@ declare namespace AP {
 
         function create(options: FlagCreateOptions): Flag;
     }
+
+    namespace dialog {
+        interface DialogCommonOptions {
+            key: string;
+            chrome?: boolean;
+            header?: string;
+            submitText?: string;
+            cancelText?: string;
+            hint?: string;
+            customData?: object;
+            closeOnEscape?: boolean;
+        }
+
+        interface DialogSizeOptions extends DialogCommonOptions {
+            size: 'small' | 'medium' | 'large' | 'x-large' | 'fullscreen';
+        }
+
+        interface DialogDimensionOptions extends DialogCommonOptions {
+            width: string;
+            height: string;
+        }
+          
+        interface Dialog {
+            on: (event: 'close', callbackFn: () => void) => void;
+        }
+
+        function create(options: DialogSizeOptions | DialogDimensionOptions) : Dialog;
+
+        function close(data?: object): void;
+    }
 }

@@ -8,6 +8,7 @@ import { RemindersList } from '../RemindersList';
 import { AllRemindersView } from '../AllRemindersView';
 import { IssueView } from '../IssueView';
 import * as moment from 'moment';
+import styled from 'styled-components';
 
 type partialStoriesOf = (name: string) => Story;
 
@@ -67,7 +68,15 @@ export default function stories(storyCreator: partialStoriesOf) {
 
   const deleteAction = action('Reminder delete clicked');
 
+  const BlackBack = styled.div`
+    background-color: black;
+    margin: auto;
+  `;
+
   storyCreator('Issue view')
+    .add('Loading view', () => (
+        <IssueView reminders={undefined} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
+    ))
     .add('Empty view', () => (
         <IssueView reminders={[]} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
     ))
@@ -136,7 +145,9 @@ export default function stories(storyCreator: partialStoriesOf) {
 
   storyCreator('Create reminder')
     .add('Default view', () => (
-        <ReminderCreateDialog onCreate={noOp} onCancel={noOp} />
+        <BlackBack>
+            <ReminderCreateDialog onCreate={noOp} onCancel={noOp} />
+        </BlackBack>
     ));
 
   storyCreator('Issue View Actions')

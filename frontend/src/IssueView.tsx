@@ -4,9 +4,10 @@ import { IssueViewActions, IssueViewActionsProps } from './IssueViewActions';
 import { ReminderView } from './Data';
 import { Reminder } from './Reminder';
 import EmptyState from '@atlaskit/empty-state';
+import Spinner from '@atlaskit/spinner';
 
 export type IssueViewProps = {
-    reminders: ReminderView[];
+    reminders: ReminderView[] | undefined;
     onReminderDeleted(id: number): void;
 };
 
@@ -31,25 +32,31 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
     }
 
     private ReminderView(): JSX.Element {
-        if (this.props.reminders.length > 0) {
-            const rs = this.props.reminders
-            .sort((a, b) => a.expiresAt.isBefore(b.expiresAt) ? -1 : 1)
-            .map(r => {
-                return (
-                    <Reminder key={r.id} reminder={r} onDelete={() => this.props.onReminderDeleted(r.id)} />
-                );
-            });
+        const reminders = this.props.reminders;
+        if (!reminders) {
             return (
-                <IssueView.ReminderContainer>{rs}</IssueView.ReminderContainer>
+                <Spinner size="small" />
             );
         } else {
-            return (
-                <EmptyState 
-                    header="No reminders"
-                    description="There are no pending reminders for this issue. Create some!"
-                    size="narrow"
-                />
-            );
+            if (reminders.length > 0) {
+                const rs = reminders.sort((a, b) => a.expiresAt.isBefore(b.expiresAt) ? -1 : 1)
+                .map(r => {
+                    return (
+                        <Reminder key={r.id} reminder={r} onDelete={() => this.props.onReminderDeleted(r.id)} />
+                    );
+                });
+                return (
+                    <IssueView.ReminderContainer>{rs}</IssueView.ReminderContainer>
+                );
+            } else {
+                return (
+                    <EmptyState 
+                        header="No reminders"
+                        description="There are no pending reminders for this issue. Create some!"
+                        size="narrow"
+                    />
+                );
+            }
         }
     }
 }

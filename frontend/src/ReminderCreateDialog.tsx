@@ -14,16 +14,21 @@ export type ReminderCreateDialogProps = {
 export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDialogProps> {
     private readonly times = this.generateTimes();
 
+    // tslint:disable:max-line-length
     private ReminderCreateContainer = styled.div`
         padding-left: 30px;
         padding-right: 30px;
         padding-top: 15px;
         padding-bottom: 15px;
 
+        background-color: rgb(255, 255, 255);
+        box-shadow: rgba(9, 30, 66, 0.08) 0px 0px 0px 1px, rgba(9, 30, 66, 0.08) 0px 2px 1px, rgba(9, 30, 66, 0.31) 0px 0px 20px -6px;
+
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     `;
+    // tslint:enable:max-line-length
 
     private ReminderCreateActions = styled.div`
         margin-top: 20px;

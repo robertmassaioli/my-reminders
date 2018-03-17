@@ -9,7 +9,7 @@ import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
 import { DefaultApi, ReminderResponse, ReminderRequest } from './reminders-client';
 
-type IssueViewComponentProps = {
+type IssueViewContainerProps = {
     pageContext: PageContext;
 };
 
@@ -26,7 +26,8 @@ type LoadedDetails = {
     }
 };
 
-type IssueViewComponentState = {
+type IssueViewContainerState = {
+    state: 'loading' | 'loaded';
     loadedDetails?: LoadedDetails | 'reminders-failed-to-load';
 };
 
@@ -57,8 +58,8 @@ function setToMorningHour(date: moment.Moment): moment.Moment {
     return date;
 }
 
-export class IssueViewComponent 
-    extends React.PureComponent<RouteProps & IssueViewComponentProps, IssueViewComponentState> {
+export class IssueViewContainer
+    extends React.PureComponent<RouteProps & IssueViewContainerProps, IssueViewContainerState> {
 
     private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[]): ReminderView[] {
         return reminders.map(r => {
@@ -72,7 +73,9 @@ export class IssueViewComponent
     }
      
     componentWillMount() {
-        this.setState({});
+        this.setState({
+            state: 'loading'
+        });
     }
 
     componentDidMount() {
@@ -85,9 +88,7 @@ export class IssueViewComponent
 
     render() {
         const ld = this.state.loadedDetails;
-        if (typeof ld === 'undefined') {
-            return <p>Loading issue reminders...</p>;
-        } else if (ld === 'reminders-failed-to-load') {
+        if (typeof ld !== 'undefined' && ld === 'reminders-failed-to-load') {
             return (
                 <EmptyState 
                     header="Could not load reminders"
@@ -99,14 +100,10 @@ export class IssueViewComponent
             );
         }
 
-        const noOp = () => {
-            // noOp
-        };
-
         return (
             <IssueView 
-                reminders={ld.reminders} 
-                onAddReminder={noOp} 
+                reminders={ld ? ld.reminders : undefined} 
+                onAddReminder={() => this.onOpenAdvanced()} 
                 onTomorrow={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'days')))} 
                 onInAWeek={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'week')))}  
                 onInAMonth={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'month')))} 
@@ -115,11 +112,19 @@ export class IssueViewComponent
         );
     }
 
+    private onOpenAdvanced(): void {
+        AP.dialog.create({
+            key: 'create-reminder-dialog',
+            size: 'small'
+        });
+    }
+
     private onDeleteReminder(reminderId: number) {
         createDefaultApi(this.props.pageContext).reminderDelete(reminderId).then(() => {
             this.setState(s => {
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {
+                        state: s.state,
                         loadedDetails: {
                             ...s.loadedDetails,
                             reminders: s.loadedDetails.reminders.filter(r => r.id !== reminderId)
@@ -151,8 +156,9 @@ export class IssueViewComponent
             Promise.all([userRequest, issueRequest, remindersRequest])
             .then(([userDetails, issueDetails, reminders]) => {
                 this.setState({
+                    state: 'loaded',
                     loadedDetails: {
-                        reminders: IssueViewComponent.calculateReminderViews(userDetails, reminders),
+                        reminders: IssueViewContainer.calculateReminderViews(userDetails, reminders),
                         issue: {
                             id: issue.id,
                             key: issue.key,

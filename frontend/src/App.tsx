@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { IssueViewComponent } from './IssueViewComponent';
+import { IssueViewContainer } from './IssueViewContainer';
 import { AllRemindersView } from './AllRemindersView';
-import { ReminderCreateDialog } from './ReminderCreateDialog';
+import { ReminderCreateContainer } from './ReminderCreateContainer';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { loadPageContext, PageContext } from './page-context';
 import Spinner from '@atlaskit/spinner';
@@ -58,10 +58,14 @@ class App extends React.Component<{}, AppState> {
             <Route 
                 exact={true} 
                 path="/panel/jira/reminder/simple" 
-                render={(props) => <IssueViewComponent {...props} pageContext={pc} />} 
+                render={(props) => <IssueViewContainer {...props} pageContext={pc} />} 
             />
             <Route exact={true} path="/panel/jira/reminders/view" component={AllRemindersView} /> 
-            <Route exact={true} path="/panel/v2/jira/reminder/create" component={ReminderCreateDialog} />
+            <Route 
+              exact={true} 
+              path="/panel/v2/jira/reminder/create" 
+              render={(props) => <ReminderCreateContainer {...props} pageContext={pc} />}
+            />
           </Switch>
         </div>
       </Router>

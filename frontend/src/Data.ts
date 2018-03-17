@@ -14,3 +14,15 @@ export type ReminderView = {
     message?: string;
     expiresAt: moment.Moment;
 };
+
+export type DialogCancelData = {
+    type: 'cancel';
+};  
+
+export type DialogCreateData = {
+    type: 'create';
+    time: Date;
+    message: string;
+}
+
+export type DialogEventData = DialogCancelData | DialogCreateData;
