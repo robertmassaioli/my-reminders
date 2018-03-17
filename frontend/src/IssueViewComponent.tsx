@@ -7,6 +7,7 @@ import { ReminderView } from './Data';
 import * as moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
+import { DefaultApi, ReminderResponse, ReminderRequest } from './reminders-client';
 
 type IssueViewComponentProps = {
     pageContext: PageContext;
@@ -29,55 +30,19 @@ type IssueViewComponentState = {
     loadedDetails?: LoadedDetails | 'reminders-failed-to-load';
 };
 
-type ReminderResponse = {
-    ReminderId: number;
-    IssueId: number;
-    IssueKey: string;
-    IssueSummary: string;
-    UserKey: string;
-    UserEmail: string;
-    Message?: string;
-    Date: string;
-};
-
-type ReminderData = {
-    Issue: {
-        Key: string;
-        Id: number;
-        Summary: string;
-        ReturnUrl: string;
-    },
-    User: {
-        Key: string;
-        Email: string;
-    },
-    ReminderDate: string;
-    Message?: string;
-};
-
-function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
-    return fetch(`/rest/reminders?issueId=${issueId}`, {
-        method: 'GET',
-        cache: 'no-cache',
-        headers: {
-            'X-acpt': pageContext.acpt
-        }
-    })
-    .then(rsp => rsp.json())
-    .then(json => {
-        return json as ReminderResponse[];
+function createDefaultApi(pc: PageContext): DefaultApi {
+    return new DefaultApi({
+        apiKey: pc.acpt,
+        basePath: '/rest'
     });
 }
 
-function createReminder(data: ReminderData, pc: PageContext): Promise<void> {
-    return fetch('/rest/reminder', {
-        method: 'PUT',
-        cache: 'no-cache',
-        body: JSON.stringify(data),
-        headers: {
-            'X-acpt': pc.acpt
-        }
-    }).then(() => undefined);
+function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
+    return createDefaultApi(pageContext).remindersGet(issueId);
+}
+
+function createReminder(data: ReminderRequest, pc: PageContext): Promise<void> {
+    return createDefaultApi(pc).reminderPut(data).then(() => undefined);
 }
 
 function randomIntegerInRange(start: number, end: number): number {
@@ -97,10 +62,10 @@ export class IssueViewComponent
 
     private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[]): ReminderView[] {
         return reminders.map(r => {
-            const expiry = moment(r.Date).tz(userDetails.timeZone);
+            const expiry = moment(r.date).tz(userDetails.timeZone);
             return {
-                id: r.ReminderId,
-                message: r.Message,
+                id: r.reminderId,
+                message: r.message,
                 expiresAt: expiry
             };
         });
@@ -142,9 +107,9 @@ export class IssueViewComponent
             <IssueView 
                 reminders={ld.reminders} 
                 onAddReminder={noOp} 
-                onTomorrow={() => this.createReminderTomorrow()} 
-                onInAWeek={noOp} 
-                onInAMonth={noOp} 
+                onTomorrow={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'days')))} 
+                onInAWeek={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'week')))}  
+                onInAMonth={() => this.createReminderTomorrow(setToMorningHour(moment().add(1, 'month')))} 
                 onReminderDeleted={noOp}
             />
         );
@@ -187,25 +152,22 @@ export class IssueViewComponent
         }
     }
 
-    private createReminderTomorrow() {
-        const haskellFormat = 'YYYY-MM-DDTHH:mm:ss.SSS';
-
+    private createReminderTomorrow(forDate: moment.Moment) {
         const ld = this.state.loadedDetails;
         if (ld && ld !== 'reminders-failed-to-load' && ld.user.emailAddress) {
             const emailAddress = ld.user.emailAddress;
 
-            const requestData: ReminderData = {
-                Issue: {
-                    Key: ld.issue.key,
-                    Id: ld.issue.id,
-                    Summary: ld.issue.summary,
-                    ReturnUrl: window.location.href
+            const requestData: ReminderRequest = {
+                issue: {
+                    key: ld.issue.key,
+                    id: ld.issue.id,
+                    summary: ld.issue.summary
                 },
-                User: {
-                    Key: ld.user.key,
-                    Email: emailAddress
+                user: {
+                    key: ld.user.key,
+                    email: emailAddress
                 },
-                ReminderDate: setToMorningHour(moment().add(1, 'days')).format(haskellFormat) + 'Z'
+                reminderDate: forDate.toDate()
             };
 
             createReminder(requestData, this.props.pageContext)

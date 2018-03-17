@@ -15,6 +15,7 @@
     "@atlaskit/spinner": "^4.2.1",
     "moment": "^2.21.0",
     "moment-timezone-all": "^0.5.5",
+    "portable-fetch": "^3.0.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-router-dom": "^4.2.2",
@@ -24,11 +25,13 @@
     "whatwg-fetch": "^2.0.3"
   },
   "scripts": {
+    "prestart": "npm run gen-fetch",
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "storybook": "start-storybook -p 9001 -c .storybook",
+    "gen-fetch": "swagger-codegen generate -i ../swagger.yaml -l typescript-fetch -o src/reminders-client",
     "depcheck": "depcheck ."
   },
   "devDependencies": {
