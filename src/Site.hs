@@ -133,6 +133,7 @@ staticRoutes =
   [ ("css"    , serveDirectory "frontend/build/static/css")
   , ("images" , serveDirectory "static/images")
   , ("js"     , serveDirectory "frontend/build/static/js")
+  , ("media"  , serveDirectory "frontend/build/static/media")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to
