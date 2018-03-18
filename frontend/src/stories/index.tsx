@@ -112,6 +112,21 @@ export default function stories(storyCreator: partialStoriesOf) {
     ));
 
   storyCreator('All reminders view')
+    .add('Loading view', () => (
+        <AllRemindersView 
+            hostBaseUrl="https://your-domain.atlassian.net"
+            onUpdateEmail={noOp}
+            onDelete={noOp}
+        />
+    ))
+    .add('Empty view', () => (
+        <AllRemindersView 
+            hostBaseUrl="https://your-domain.atlassian.net"
+            reminders={[]}
+            onUpdateEmail={noOp}
+            onDelete={noOp}
+        />
+    ))
     .add('Default view', () => (
         <AllRemindersView 
             hostBaseUrl="https://your-domain.atlassian.net"
@@ -122,6 +137,9 @@ export default function stories(storyCreator: partialStoriesOf) {
     ));
 
   storyCreator('Reminders List')
+    .add('Loading view', () => (
+        <RemindersList {...remindersListProps} />
+    ))
     .add('Empty view', () => (
         <RemindersList reminders={[]} {...remindersListProps} />
     )).add('One reminder', () => (

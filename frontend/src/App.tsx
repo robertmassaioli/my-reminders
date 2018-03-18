@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IssueViewContainer } from './IssueViewContainer';
-import { AllRemindersView } from './AllRemindersView';
+import { AllRemindersViewContainer } from './AllRemindersViewContainer';
 import { ReminderCreateContainer } from './ReminderCreateContainer';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { loadPageContext, PageContext } from './page-context';
@@ -60,7 +60,11 @@ class App extends React.Component<{}, AppState> {
                 path="/panel/jira/reminder/simple" 
                 render={(props) => <IssueViewContainer {...props} pageContext={pc} />} 
             />
-            <Route exact={true} path="/panel/jira/reminders/view" component={AllRemindersView} /> 
+            <Route 
+              exact={true} 
+              path="/panel/jira/reminders/view" 
+              render={(props) => <AllRemindersViewContainer {...props} pageContext={pc} />}
+            /> 
             <Route 
               exact={true} 
               path="/panel/v2/jira/reminder/create" 

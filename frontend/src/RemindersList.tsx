@@ -3,10 +3,12 @@ import DynamicTable, { DynamicTableHead, DynamicTableRow } from '@atlaskit/dynam
 import EmptyState from '@atlaskit/empty-state';
 import * as moment from 'moment';
 import { Reminder } from './Data';
+import Spinner from '@atlaskit/spinner';
+import styled from 'styled-components';
 
 export type RemindersListProps = {
     hostBaseUrl: string;
-    reminders: Reminder[];
+    reminders?: Reminder[];
     onChange: (selectedReminderIds: number[]) => void;
 };
 
@@ -15,6 +17,13 @@ export type RemindersListState = {
 };
 
 export class RemindersList extends React.PureComponent<RemindersListProps, RemindersListState> {
+    private static Center = styled.div`
+        display: flex;
+        flex-wrap: wrap;
+        text-align: center;
+        justify-content: center;
+    `;
+
     componentWillMount() {
         this.clearSelection();
     }
@@ -66,13 +75,21 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
             />
         );
 
-        return (
-            <DynamicTable 
-                head={head}
-                rows={this.rowsFromReminders()}
-                emptyView={emptyState}
-            />
-        );
+        if (typeof this.props.reminders === 'undefined') {
+            return (
+                <RemindersList.Center>
+                    <Spinner size="large" />
+                </RemindersList.Center>
+            );
+        } else {
+            return (
+                <DynamicTable 
+                    head={head}
+                    rows={this.rowsFromReminders(this.props.reminders)}
+                    emptyView={emptyState}
+                />
+            );
+        }
     }
 
     private clearSelection() {
@@ -81,19 +98,25 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
         });
     }
 
-    private triggerChange() {
-        this.props.onChange(this.state.selectedReminderIds);
+    private triggerChange(newReminderIds: number[]) {
+        this.props.onChange(newReminderIds);
     }
 
     private allAreSelected(): boolean {
+        if (typeof this.props.reminders === 'undefined') {
+            return false;
+        }
         return this.props.reminders.length > 0 && this.state.selectedReminderIds.length === this.props.reminders.length;
     }
 
     private selectAllToggle() {
-        this.setState({
-            selectedReminderIds: this.allAreSelected() ? [] : this.props.reminders.map(r => r.id)
-        });
-        this.triggerChange();
+        if (typeof this.props.reminders !== 'undefined') {
+            const ids = this.allAreSelected() ? [] : this.props.reminders.map(r => r.id);
+            this.setState({
+                selectedReminderIds: ids
+            });
+            this.triggerChange(ids);
+        }
     }
 
     private reminderChanged(reminderId: number) {
@@ -102,13 +125,13 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
             const selectedReminderIds = existing 
                 ? s.selectedReminderIds.filter(id => id !== reminderId) 
                 : [reminderId].concat(s.selectedReminderIds);
+            this.triggerChange(selectedReminderIds);
             return { selectedReminderIds };
         });
-        this.triggerChange();
     }
 
-    private rowsFromReminders(): DynamicTableRow[] {
-        return this.props.reminders.map(r => this.rowFromReminder(r));
+    private rowsFromReminders(reminders: Reminder[]): DynamicTableRow[] {
+        return reminders.map(r => this.rowFromReminder(r));
     }
 
     private rowFromReminder(reminder: Reminder): DynamicTableRow {

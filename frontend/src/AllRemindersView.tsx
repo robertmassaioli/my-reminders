@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 export type AllRemindersViewProps = {
     hostBaseUrl: string;
-    reminders: Reminder[];
+    reminders?: Reminder[];
     onUpdateEmail: (selectedReminderIds: number[]) => void;
     onDelete: (selectedReminderIds: number[]) => void;
 };
@@ -17,7 +17,10 @@ type AllRemindersViewState = {
 
 export class AllRemindersView extends React.PureComponent<AllRemindersViewProps, AllRemindersViewState> {
     private Container = styled.section`
-        margin: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        margin-left: 25px;
+        margin-right: 25px;
     `;
 
     private Actions = styled.div`

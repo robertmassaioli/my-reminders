@@ -7,7 +7,8 @@ import { ReminderView, DialogEventData } from './Data';
 import * as moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
-import { DefaultApi, ReminderResponse, ReminderRequest } from './reminders-client';
+import { ReminderResponse, ReminderRequest } from './reminders-client';
+import { createDefaultApi } from './api';
 
 type IssueViewContainerProps = {
     pageContext: PageContext;
@@ -30,13 +31,6 @@ type IssueViewContainerState = {
     state: 'loading' | 'loaded';
     loadedDetails?: LoadedDetails | 'reminders-failed-to-load';
 };
-
-function createDefaultApi(pc: PageContext): DefaultApi {
-    return new DefaultApi({
-        apiKey: pc.acpt,
-        basePath: '/rest'
-    });
-}
 
 function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
     return createDefaultApi(pageContext).remindersGet(issueId);
