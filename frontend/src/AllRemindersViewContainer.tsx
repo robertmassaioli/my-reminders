@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { AllRemindersView } from './AllRemindersView';
 import { ReminderResponseList } from './reminders-client';
@@ -10,7 +10,7 @@ export type ARVProps = {
     pageContext: PageContext;
 };
 
-type Props = ARVProps & RouteProps;
+type Props = ARVProps & RouteComponentProps<void>;
 
 type ARVState = {
     reminders?: Reminder[];

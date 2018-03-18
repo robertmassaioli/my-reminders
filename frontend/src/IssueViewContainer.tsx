@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import EmptyState from '@atlaskit/empty-state';
 import { IssueView } from './IssueView';
@@ -53,7 +53,7 @@ function setToMorningHour(date: moment.Moment): moment.Moment {
 }
 
 export class IssueViewContainer
-    extends React.PureComponent<RouteProps & IssueViewContainerProps, IssueViewContainerState> {
+    extends React.PureComponent<RouteComponentProps<void> & IssueViewContainerProps, IssueViewContainerState> {
 
     private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[]): ReminderView[] {
         return reminders.map(r => {

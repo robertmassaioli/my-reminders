@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { ReminderCreateDialog } from './ReminderCreateDialog';
 import { DialogCreateData, DialogCancelData } from './Data';
@@ -8,7 +8,7 @@ type ReminderCreateContainerProps = {
     pageContext: PageContext;
 };
 
-type Props = RouteProps & ReminderCreateContainerProps;
+type Props = RouteComponentProps<void> & ReminderCreateContainerProps;
 
 export class ReminderCreateContainer extends React.PureComponent<Props> {
     render() {
