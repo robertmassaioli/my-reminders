@@ -71,6 +71,12 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
         createDefaultApi(this.props.pageContext).refreshReminders({
             pids: selectedReminderIds
         }).then(() => {
+            AP.flag.create({
+                title: 'Updated all reminders',
+                body: 'All of the reminders have had their details synchronised.',
+                type: 'success',
+                close: 'auto'
+            });
             this.reloadReminderData();
         }).catch(() => {
             AP.flag.create({
