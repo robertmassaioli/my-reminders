@@ -54,7 +54,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private reloadReminderData() {
-        createDefaultApi(this.props.pageContext).userRemindersGet()
+        createDefaultApi(this.props.pageContext).getAllReminders()
         .then(rrl => {
             this.setState(s => {
                 return {
@@ -68,7 +68,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private onRefreshReminders(selectedReminderIds: number[]) {
-        createDefaultApi(this.props.pageContext).userRemindersPost({
+        createDefaultApi(this.props.pageContext).refreshReminders({
             pids: selectedReminderIds
         }).then(() => {
             this.reloadReminderData();
@@ -83,7 +83,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private onDeleteReminders(selectedReminderIds: number[]) {
-        createDefaultApi(this.props.pageContext).userRemindersDelete({
+        createDefaultApi(this.props.pageContext).deleteReminders({
             pids: selectedReminderIds
         }).then(() => {
             this.reloadReminderData();

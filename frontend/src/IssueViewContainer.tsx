@@ -33,11 +33,11 @@ type IssueViewContainerState = {
 };
 
 function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
-    return createDefaultApi(pageContext).remindersGet(issueId);
+    return createDefaultApi(pageContext).getRemindersForIssue(issueId);
 }
 
 function createReminder(data: ReminderRequest, pc: PageContext): Promise<void> {
-    return createDefaultApi(pc).reminderPut(data).then(() => undefined);
+    return createDefaultApi(pc).addReminder(data).then(() => undefined);
 }
 
 function randomIntegerInRange(start: number, end: number): number {
@@ -133,7 +133,7 @@ export class IssueViewContainer
     }
 
     private onDeleteReminder(reminderId: number) {
-        createDefaultApi(this.props.pageContext).reminderDelete(reminderId).then(() => {
+        createDefaultApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
             this.setState(s => {
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {
