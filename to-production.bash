@@ -9,6 +9,7 @@
 IMAGE_BUILD_NAME="$1"
 IMAGE_NAME="$2"
 DOCKER_CMD=${DOCKER_CMD:-docker}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ "x$1" == "x" ]
 then
@@ -30,10 +31,12 @@ cp -R resources "$COPY_DIR"
 cp -R migrations "$COPY_DIR"
 cp -R static "$COPY_DIR"
 
-# Bulid JS and CSS Resources
-npm run build
-cp -R static-js "$COPY_DIR"
-cp -R static-css "$COPY_DIR"
+# Bulid Frontend Resources
+cd frontend
+yarn install && yarn run get-swagger-codegen && yarn build
+mkdir -p "${COPY_DIR}/frontend/build"
+cp -R build "${COPY_DIR}/frontend/build"
+cd "$DIR"
 
 echo "## Getting the required dependencies out of the build..."
 if [ "x$CONTAINER_ID" == "x" ]

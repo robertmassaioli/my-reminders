@@ -1,5 +1,5 @@
 Name:                my-reminders
-Version:             0.12
+Version:             0.13
 Synopsis:            My reminders plugin for Atlassian Cloud
 Description:         Set issue reminders for the future!
 License:             MIT
@@ -91,6 +91,7 @@ Executable my-reminders
     , snap-server
     , snaplet-postgresql-simple >= 0.6.0.2
     , split                     == 0.2.*
+    , tagsoup                   == 0.14.*
     , text                      == 1.2.*
     , time                      == 1.6.*
     , time-units                == 1.*

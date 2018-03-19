@@ -22,6 +22,7 @@ import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
 import           Data.Text.Encoding                          (decodeUtf8)
+import qualified Data.Text.IO                                as T
 import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
 import           Healthcheck
@@ -44,35 +45,53 @@ import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
 import           WebhookHandlers
 import qualified Data.Map.Syntax        as MS
+import qualified Text.HTML.TagSoup as TS
 
 import qualified Paths_my_reminders                          as PMR
 
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
+readIndex :: IO T.Text
+readIndex = T.readFile "frontend/build/index.html"
+
 showDocPage :: SSH.HasHeist b => SS.Handler b v ()
-showDocPage = do
-   fileName <- SC.getParam "fileparam"
-   case fileName of
-      Nothing -> SH.respondNotFound
-      Just rawFileName -> SSH.heistLocal (environment . decodeUtf8 $ rawFileName) $ SSH.render "docs"
-   where
-      environment fileName = HI.bindSplices $ "fileName" MS.## HI.textSplice fileName
+showDocPage = SC.writeText =<< liftIO readIndex
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
 -- be in the database and that it is loaded once on startup and cached within the application
 -- forever more.
-createConnectPanel :: ByteString -> AppHandler ()
-createConnectPanel panelTemplate = withTokenAndTenant $ \token (tenant, userKey) -> do
+loadConnectPanel :: AppHandler ()
+loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
-  SSH.heistLocal (HI.bindSplices $ context connectData tenant token userKey) $ SSH.render panelTemplate
+  rawHtmlContent <- liftIO readIndex
+  let updatedHtmlContent = TS.renderTags . injectTags (metaTags connectData tenant token userKey) . TS.parseTags $ rawHtmlContent
+  SC.writeText updatedHtmlContent
   where
-    context connectData tenant token userKey = do
-      "productBaseUrl" MS.## HI.textSplice $ T.pack . show . AC.baseUrl $ tenant
-      "connectPageToken" MS.## HI.textSplice $ SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token)
-      -- TODO The user key must be a string, this is not valid in JIRA. JIRA probably supports more varied keys
-      "userKey" MS.## HI.textSplice $ fromMaybe T.empty userKey
+    injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
+    injectTags mts tags = preHead ++ (head : toMetaTags mts) ++ afterHead
+      where
+        (preHead, (head : afterHead)) = span (TS.isTagOpenName "head") tags
+    
+    toMetaTags :: [MetaTag] -> [TS.Tag T.Text]
+    toMetaTags = concat . map toMetaTag
+      where 
+        toMetaTag mt = 
+            [ TS.TagOpen "meta" [("name", mtName mt), ("content", mtContent mt)]
+            , TS.TagClose "meta"
+            ]
+
+    metaTags connectData tenant token userKey = 
+      [ MT "userKey" (fromMaybe T.empty userKey)
+      , MT "productBaseUrl" (T.pack . show . AC.baseUrl $ tenant)
+      , MT "acpt" (SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token))
+      ]
+
+data MetaTag = MT 
+  { mtName :: T.Text
+  , mtContent :: T.Text
+  }
 
 
 withTokenAndTenant :: (AC.PageToken -> AC.TenantWithUser -> AppHandler ()) -> AppHandler ()
@@ -90,9 +109,9 @@ applicationRoutes :: [(ByteString, SS.Handler App App ())]
 applicationRoutes =
   [ ("/"                              , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"               , showDocPage)
-  , ("/panel/v2/jira/reminder/create" , createConnectPanel "create-reminder-v2")
-  , ("/panel/jira/reminder/simple"    , createConnectPanel "view-issue-reminders")
-  , ("/panel/jira/reminders/view"     , createConnectPanel "view-jira-reminders")
+  , ("/panel/v2/jira/reminder/create" , loadConnectPanel)
+  , ("/panel/jira/reminder/simple"    , loadConnectPanel)
+  , ("/panel/jira/reminders/view"     , loadConnectPanel)
   , ("/rest/reminder"                 , handleReminder)
   , ("/rest/reminders"                , handleReminders)
   , ("/rest/user/reminders"           , handleUserReminders)
@@ -106,14 +125,15 @@ applicationRoutes =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
-  , ("/robots.txt"                    , serveFile "static/files/robots.txt")
+  , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
+  , ("/favicon.ico"                    , serveFile "frontend/build/favicon.ico")
   ]
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , serveDirectory "static-css")
-  , ("images" , serveDirectory "static/images")
-  , ("js"     , serveDirectory "static-js")
+  [ ("css"    , serveDirectory "frontend/build/static/css")
+  , ("js"     , serveDirectory "frontend/build/static/js")
+  , ("media"  , serveDirectory "frontend/build/static/media")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to

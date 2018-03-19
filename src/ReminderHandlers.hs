@@ -9,6 +9,7 @@ module ReminderHandlers
   ) where
 
 import           Application
+import           AesonHelpers                      ( stripFieldNamePrefix )
 import           Control.Monad                     (void)
 import           Data.Aeson
 import           Data.Aeson.Types                  (Options, defaultOptions,
@@ -67,18 +68,18 @@ instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
 issueDetailsOptions :: Options
-issueDetailsOptions = defaultOptions { fieldLabelModifier = drop 5 }
+issueDetailsOptions = defaultOptions { fieldLabelModifier = stripFieldNamePrefix "issue" }
 
 instance ToJSON AC.UserDetails where
    toJSON o = object
-      [ "Key" .= AC.userKey o
-      , "Email" .= (BC.unpack . AC.userEmail $ o)
+      [ "key" .= AC.userKey o
+      , "email" .= (BC.unpack . AC.userEmail $ o)
       ]
 
 instance FromJSON AC.UserDetails where
    parseJSON (Object o) = do
-      key <- o .: "Key"
-      email <- o .: "Email"
+      key <- o .: "key"
+      email <- o .: "email"
       return AC.UserDetails
          { AC.userKey = key
          , AC.userEmail = BC.pack email
@@ -92,27 +93,16 @@ instance FromJSON AC.IssueDetails where
    parseJSON = genericParseJSON issueDetailsOptions
 
 instance ToJSON ReminderRequest where
-   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
+   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
 
 instance FromJSON ReminderRequest where
-   parseJSON (Object o) = do
-      reminderDate    <- o .:  "ReminderDate"
-      issue    <- o .:  "Issue"
-      user     <- o .:  "User"
-      message  <- o .:? "Message"
-      return ReminderRequest
-         { prqReminderDate = reminderDate
-         , prqIssue = issue
-         , prqUser = user
-         , prqMessage = message
-         }
-   parseJSON _ = fail "Expect the ReminderRequest to be a JSON object but it was not."
+   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
 
 instance ToJSON ReminderResponse where
-   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = drop 3 })
+   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
 
 instance FromJSON ReminderResponse where
-   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = drop 3 })
+   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
 
 handleReminders :: AppHandler ()
 handleReminders = handleMethods
@@ -145,6 +135,7 @@ getRemindersForIssue (tenant, Just userKey) = do
          writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
+-- TODO implement clear reminders for issue, if it needs to be implemented
 clearRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 clearRemindersForIssue _ = undefined
 
@@ -166,8 +157,10 @@ bulkUpdateUserEmails (_, Nothing) = standardAuthError
 bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
   potentialUserDetails <- UD.getUserDetails tenant userKey
   case potentialUserDetails of
-    Left err -> respondWithError badRequest ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
-    Right userDetails -> void $ withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
+    Left err -> respondWithError internalServer ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
+    Right userDetails -> do 
+      withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
+      respondNoContent
   where
     userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
     userDetailsConvert uwd = AC.UserDetails
@@ -179,7 +172,7 @@ bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
 bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
    SS.with db $ withConnection (P.deleteManyRemindersForUser tenant (pids reminderIds) userKey)
-   return ()
+   respondNoContent
 
 parseReminderIdListFromRequest :: (ReminderIdList -> AppHandler ()) -> AppHandler ()
 parseReminderIdListFromRequest f = do
@@ -212,7 +205,7 @@ getReminderHandler (tenant, Just userKey) = do
 deleteReminderHandler :: AC.TenantWithUser -> AppHandler ()
 deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
 deleteReminderHandler (tenant, Just userKey) = do
-   potentialRawReminderId <- SC.getPostParam "reminderId"
+   potentialRawReminderId <- SC.getQueryParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
