@@ -5,6 +5,9 @@
 # Git Files
 .git
 
+# Executables
+bin
+
 # Cabal Built
 dist
 .cabal-sandbox
@@ -34,3 +37,8 @@ log
 
 # NPM Modules
 node_modules
+
+# Non-required frontend components
+node_modules/
+frontend/public
+frontend/src

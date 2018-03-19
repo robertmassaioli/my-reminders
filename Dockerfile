@@ -8,8 +8,7 @@
 
 # TODO replace with my own haskell platform docker creations.
 FROM haskell:8.0.2
-# FROM ubuntu:14.04
-MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
+LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
 EXPOSE 8000
