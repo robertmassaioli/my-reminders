@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { RouteComponentProps } from 'react-router';
-import * as ReactMarkdown from 'react-markdown';
+import { DocsPage } from './DocsPage';
 
 type Params = {
     page: string;
@@ -45,9 +45,7 @@ export class DocsPageContainer extends React.PureComponent<RouteComponentProps<P
 
     render() {
         return (
-            <div>
-                <ReactMarkdown source={this.state.mdContent} />
-            </div>
+            <DocsPage mdContent={this.state.mdContent} location={this.props.location.pathname} />
         );
     }
 

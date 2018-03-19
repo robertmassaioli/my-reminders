@@ -8,7 +8,7 @@ import * as moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
 import { ReminderResponse, ReminderRequest } from './reminders-client';
-import { createDefaultApi } from './api';
+import { createIndividualReminderApi, createIssueRemindersApi } from './api';
 
 type IssueViewContainerProps = {
     pageContext: PageContext;
@@ -33,11 +33,11 @@ type IssueViewContainerState = {
 };
 
 function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
-    return createDefaultApi(pageContext).getRemindersForIssue(issueId);
+    return createIssueRemindersApi(pageContext).getRemindersForIssue(issueId);
 }
 
 function createReminder(data: ReminderRequest, pc: PageContext): Promise<void> {
-    return createDefaultApi(pc).addReminder(data).then(() => undefined);
+    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined);
 }
 
 function randomIntegerInRange(start: number, end: number): number {
@@ -133,7 +133,7 @@ export class IssueViewContainer
     }
 
     private onDeleteReminder(reminderId: number) {
-        createDefaultApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
+        createIndividualReminderApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
             this.setState(s => {
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {

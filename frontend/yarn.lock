@@ -14,6 +14,30 @@
   dependencies:
     prop-types "^15.5.10"
 
+"@atlaskit/analytics@^2.4.4":
+  version "2.4.4"
+  resolved "https://registry.yarnpkg.com/@atlaskit/analytics/-/analytics-2.4.4.tgz#41115ac0b7a1d6885532bf2781a05a24032cf626"
+  dependencies:
+    prop-types "^15.5.10"
+
+"@atlaskit/avatar@^9.2.1":
+  version "9.2.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/avatar/-/avatar-9.2.1.tgz#77a2d48e5696ab2e27028d6a58e44255a662eaf9"
+  dependencies:
+    "@atlaskit/dropdown-menu" "^3.12.1"
+    "@atlaskit/item" "^5.1.1"
+    "@atlaskit/polyfills" "^1.4.3"
+    "@atlaskit/theme" "^2.4.1"
+    "@atlaskit/tooltip" "^8.4.1"
+    styled-components "1.4.6 - 3"
+
+"@atlaskit/blanket@^4.1.1":
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/blanket/-/blanket-4.1.1.tgz#73acc6ec35dce4abfffbcd5fc53837abc65cdce6"
+  dependencies:
+    "@atlaskit/theme" "^2.4.1"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/button@^6.6.1":
   version "6.6.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-6.6.1.tgz#4d74fccd0ccabd52b2c2db5cc1ff9fc151905a53"
@@ -87,6 +111,20 @@
     react-markings "^1.1.7"
     string-raw "^1.0.1"
     styled-components "1.4.6 - 3"
+
+"@atlaskit/dropdown-menu@^3.12.1":
+  version "3.12.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/dropdown-menu/-/dropdown-menu-3.12.1.tgz#1eb5699a2b4a2e9c983b989157abb367e6e7a38b"
+  dependencies:
+    "@atlaskit/button" "^6.6.2"
+    "@atlaskit/droplist" "^4.12.2"
+    "@atlaskit/icon" "^10.12.1"
+    "@atlaskit/item" "^5.1.1"
+    "@atlaskit/theme" "^2.4.1"
+    array-find "^1.0.0"
+    prop-types "^15.5.10"
+    styled-components "1.4.6 - 3"
+    uuid "^3.1.0"
 
 "@atlaskit/droplist@^4.12.2":
   version "4.12.2"
@@ -201,6 +239,42 @@
   dependencies:
     styled-components "1.4.6 - 3"
 
+"@atlaskit/navigation@^29.2.2":
+  version "29.2.2"
+  resolved "https://registry.yarnpkg.com/@atlaskit/navigation/-/navigation-29.2.2.tgz#490afc3780e6405a760f6243951e1d789a0b02fd"
+  dependencies:
+    "@atlaskit/analytics" "^2.4.4"
+    "@atlaskit/avatar" "^9.2.1"
+    "@atlaskit/blanket" "^4.1.1"
+    "@atlaskit/dropdown-menu" "^3.12.1"
+    "@atlaskit/field-base" "^8.2.1"
+    "@atlaskit/icon" "^10.12.1"
+    "@atlaskit/item" "^5.1.1"
+    "@atlaskit/polyfills" "^1.4.3"
+    "@atlaskit/size-detector" "^2.2.1"
+    "@atlaskit/theme" "^2.4.1"
+    "@atlaskit/tooltip" "^8.4.1"
+    "@atlaskit/util-common" "^1.5.2"
+    "@atlaskit/util-shared-styles" "^2.10.3"
+    babel-runtime "^6.26.0"
+    chromatism "^2.6.0"
+    es6-object-assign "^1.1.0"
+    keycode "^2.1.7"
+    lodash.clonedeep "^4.5.0"
+    memoize-one "^3.0.1"
+    prop-types "^15.5.10"
+    raf-schd "^2.1.0"
+    react-scrolllock "^2.0.1"
+    react-transition-group "^2.2.1"
+    styled-components "1.4.6 - 3"
+
+"@atlaskit/page@^5.1.2":
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/@atlaskit/page/-/page-5.1.2.tgz#d67a99a7c3145f7cdc4831a5b9200667098cdf45"
+  dependencies:
+    "@atlaskit/util-shared-styles" "^2.10.3"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/pagination@^3.7.1":
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/@atlaskit/pagination/-/pagination-3.7.1.tgz#cf07e8ed2388f73174adc8d495861db31572713d"
@@ -209,6 +283,10 @@
     "@atlaskit/docs" "^2.5.2"
     babel-runtime "^6.26.0"
     styled-components "1.4.6 - 3"
+
+"@atlaskit/polyfills@^1.4.3":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@atlaskit/polyfills/-/polyfills-1.4.3.tgz#4e955c552f9426c7654c8b81cbb8edb158f65378"
 
 "@atlaskit/select@^0.2.1":
   version "0.2.1"
@@ -219,6 +297,13 @@
     react-select "2.0.0-alpha.6"
     react-transition-group "^2.2.1"
     styled-components "1.4.6 - 3"
+
+"@atlaskit/size-detector@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/size-detector/-/size-detector-2.2.1.tgz#0574e60b2cc7fbea60ee3bf8b3bcaf56f7ca520d"
+  dependencies:
+    babel-runtime "^6.26.0"
+    raf-schd "^2.1.0"
 
 "@atlaskit/spinner@^4.2.1":
   version "4.2.1"
@@ -2386,6 +2471,10 @@ chownr@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.0.1.tgz#e2a75042a9551908bebd25b8523d5f9769d79181"
 
+chromatism@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/chromatism/-/chromatism-2.6.0.tgz#c50ba715565bc9febd87b57a351850e1e51376a4"
+
 ci-info@^1.0.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-1.1.2.tgz#03561259db48d0474c8bdc90f5b47b068b6bbfb4"
@@ -3438,6 +3527,10 @@ es6-map@^0.1.3:
     es6-symbol "~3.1.1"
     event-emitter "~0.3.5"
 
+es6-object-assign@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/es6-object-assign/-/es6-object-assign-1.1.0.tgz#c2c3582656247c39ea107cb1e6652b6f9f24523c"
+
 es6-promise@^4.0.5:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/es6-promise/-/es6-promise-4.2.4.tgz#dc4221c2b16518760bd8c39a52d8f356fc00ed29"
@@ -3587,7 +3680,7 @@ execa@^0.7.0:
     signal-exit "^3.0.0"
     strip-eof "^1.0.0"
 
-exenv@^1.2.0, exenv@^1.2.1:
+exenv@^1.2.0, exenv@^1.2.1, exenv@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/exenv/-/exenv-1.2.2.tgz#2ae78e85d9894158670b03d47bec1f03bd91bb9d"
 
@@ -5582,6 +5675,10 @@ lodash.camelcase@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz#b28aa6288a2b9fc651035c7711f65ab6190331a6"
 
+lodash.clonedeep@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
+
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
@@ -7423,6 +7520,12 @@ react-scroll-captor@^1.0.1:
   resolved "https://registry.yarnpkg.com/react-scroll-captor/-/react-scroll-captor-1.0.1.tgz#3f912df72ab8e7f46d4fa27d8707131ffe59b353"
   dependencies:
     react-node-resolver "^1.0.1"
+
+react-scrolllock@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/react-scrolllock/-/react-scrolllock-2.0.1.tgz#dd323f5da9de75f0bb64b997ee5967dd47f0a3ff"
+  dependencies:
+    exenv "^1.2.2"
 
 react-select@2.0.0-alpha.6:
   version "2.0.0-alpha.6"

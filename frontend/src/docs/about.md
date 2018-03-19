@@ -14,11 +14,13 @@ us][4].
 
 ### Developers
 
- - Robert Massaioli (rmassaioli@atlassian.com)
+ - [Robert Massaioli][5] (rmassaioli@atlassian.com)
  - Avi Knoll (aknoll@atlassian.com)
  - Eero Kaukonen (ekaukonen@atlassian.com)
 
- [1]: http://snapframework.com/
- [2]: http://mailgun.com/
- [3]: http://status.mailgun.com/
+
+ [1]: https://snapframework.com/
+ [2]: https://mailgun.com/
+ [3]: https://status.mailgun.com/
  [4]: /redirect/raise-issue
+ [5]: https://twitter.com/echo_rm

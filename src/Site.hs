@@ -125,13 +125,13 @@ applicationRoutes =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
-  , ("/robots.txt"                    , serveFile "static/files/robots.txt")
+  , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
+  , ("/favicon.ico"                    , serveFile "frontend/build/favicon.ico")
   ]
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
   [ ("css"    , serveDirectory "frontend/build/static/css")
-  , ("images" , serveDirectory "static/images")
   , ("js"     , serveDirectory "frontend/build/static/js")
   , ("media"  , serveDirectory "frontend/build/static/media")
   ]
