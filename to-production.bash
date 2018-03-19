@@ -33,7 +33,7 @@ cp -R static "$COPY_DIR"
 
 # Bulid Frontend Resources
 cd frontend
-npm install && npm run get-swagger-codegen && npm build
+yarn install && yarn run get-swagger-codegen && yarn build
 mkdir -p "${COPY_DIR}/frontend/build"
 cp -R build "${COPY_DIR}/frontend/build"
 cd "$DIR"
