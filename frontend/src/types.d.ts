@@ -269,6 +269,37 @@ declare module '@atlaskit/datetime-picker' {
     }
 
     export class DateTimePicker extends React.Component<DateTimePickerProps> {}
+
+    interface DatePickerProps {
+        // Whether or not to auto-focus the field.
+        autoFocus?: boolean;
+
+        // Default for isOpen.
+        defaultIsOpen?: boolean; 
+
+        // Default for value.
+        defaultValue?: string;
+
+        // An array of ISO dates that should be disabled on the calendar.
+        disabled?: string[];
+
+        // Whether or not the field is disabled.
+        isDisabled?: boolean;
+
+        // Whether or not the dropdown is open.
+        isOpen?: boolean;
+
+        // Called when the value changes. The only argument is an ISO time.
+        onChange?: (date: string) => void;
+
+        // The ISO time that should be used as the input value.
+        value?: string;
+
+        // The width of the field.
+        width?: number;
+    }
+
+    export class DatePicker extends React.Component<DatePickerProps> {}
 }
 
 declare module '@atlaskit/field-base' {

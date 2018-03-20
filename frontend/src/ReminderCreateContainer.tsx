@@ -14,17 +14,16 @@ export class ReminderCreateContainer extends React.PureComponent<Props> {
     render() {
         return (
             <ReminderCreateDialog 
-                onCreate={(date, time, message) => this.onCreate(date, time, message)}
+                onCreate={(isoDateTime, message) => this.onCreate(isoDateTime, message)}
                 onCancel={() => this.onCancel()}
             />
         );
     }
 
-    private onCreate(date: string, time: string, message?: string): void {
+    private onCreate(isoDateTime: string, message?: string): void {
         const data: DialogCreateData = {
             type: 'create',
-            date: date,
-            time: time,
+            isoDateTime: isoDateTime,
             message: message
         };
         AP.dialog.close(data);
