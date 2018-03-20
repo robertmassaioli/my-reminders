@@ -19,6 +19,7 @@
     "moment": "^2.21.0",
     "moment-timezone-all": "^0.5.5",
     "portable-fetch": "^3.0.0",
+    "rc-time-picker": "^3.3.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-markdown": "^3.3.0",

@@ -127,7 +127,7 @@ export class IssueViewContainer
     private onDialogClosed(data: DialogEventData): void {
         if (data.type === 'create') {
             const message = data.message && data.message.length > 0 ? data.message : undefined;
-            const time = moment(`${data.date} ${data.time}`, moment.ISO_8601);
+            const time = moment(data.isoDateTime, moment.ISO_8601);
             this.createReminder(time, message);
         }
     }
