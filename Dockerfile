@@ -7,7 +7,7 @@
 # of required dependencies.
 
 # TODO replace with my own haskell platform docker creations.
-FROM haskell:8.0.2 AS "build"
+FROM haskell:8.0.2 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
