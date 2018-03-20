@@ -13,9 +13,6 @@
     "npm": "^2.1.18",
     "mustache": "^1.0.0"
   },
-  "devDependencies": {
-    "@atlassian/micros-cli": "^5.16.5"
-  },
   "scripts": {
     "build": "cd frontend && npm run build",
     "mustang": "mustang",

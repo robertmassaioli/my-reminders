@@ -7,7 +7,7 @@
 # of required dependencies.
 
 # TODO replace with my own haskell platform docker creations.
-FROM haskell:8.0.2
+FROM haskell:8.0.2 AS "build"
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
@@ -15,12 +15,16 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq-dev pkgconf
+RUN apt-get update && apt-get install -y libpq-dev pkgconf yarn
 
 # Copy our context into the build directory and start working from there
 USER root
 ADD /   /home/haskell/build
 # RUN chown -R haskell:haskell /home/haskell/build
+
+# Build the Frontend
+WORKDIR /home/haskell/build/frontend
+RUN yarn install && yarn run get-swagger-codegen && yarn build
 
 # Setup the Haskell Envoronment
 # USER haskell
@@ -44,3 +48,35 @@ RUN cabal sandbox init && cabal update && cabal install -O2 --force-reinstalls
 
 # Setup the default command to run for the container.
 CMD ["/home/haskell/build/.cabal-sandbox/bin/my-reminders", "--access-log=-", "--error-log=stderr"]
+
+# The production docker file for the Remind Me Connect Haskell project.
+# It is designed to be minimal by requiring only the dependencies of the production executable.
+# It is also designed to be easy to maintain by being as short as possible.
+
+FROM ubuntu:16.04
+LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
+
+# Expose the default port, port 8080
+EXPOSE 8080
+
+# Install the missing packages
+USER root
+RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless libnss3 libnss-lwres libnss-mdns netbase
+
+# Copy our context into the build directory and start working from there
+USER root
+COPY --from=build /home/haskell/build/frontend/build /service/frontend/build
+COPY --from=build /home/haskell/build/snaplets /service
+COPY --from=build /home/haskell/build/resources /service
+COPY --from=build /home/haskell/build/migrations /service
+COPY --from=build /home/haskell/build/static /service
+COPY --from=build /home/haskell/build/.cabal-sandbox/bin/my-reminders /service
+
+# Setup the Haskell Envoronment
+WORKDIR /service
+# TODO is the LANG used by Snap or Haskell?
+ENV LANG en_US.UTF-8 # 
+
+# Setup the default command to run for the container.
+CMD ["/service/my-reminders", "--access-log=-", "--error-log=stderr", "--port=8080"]
+
