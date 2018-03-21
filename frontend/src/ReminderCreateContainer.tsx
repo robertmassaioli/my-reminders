@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { ReminderCreateDialog } from './ReminderCreateDialog';
 import { DialogCreateData, DialogCancelData } from './Data';
@@ -8,23 +8,22 @@ type ReminderCreateContainerProps = {
     pageContext: PageContext;
 };
 
-type Props = RouteProps & ReminderCreateContainerProps;
+type Props = RouteComponentProps<void> & ReminderCreateContainerProps;
 
 export class ReminderCreateContainer extends React.PureComponent<Props> {
     render() {
         return (
             <ReminderCreateDialog 
-                onCreate={(date, time, message) => this.onCreate(date, time, message)}
+                onCreate={(isoDateTime, message) => this.onCreate(isoDateTime, message)}
                 onCancel={() => this.onCancel()}
             />
         );
     }
 
-    private onCreate(date: string, time: string, message?: string): void {
+    private onCreate(isoDateTime: string, message?: string): void {
         const data: DialogCreateData = {
             type: 'create',
-            date: date,
-            time: time,
+            isoDateTime: isoDateTime,
             message: message
         };
         AP.dialog.close(data);

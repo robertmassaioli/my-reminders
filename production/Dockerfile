@@ -3,7 +3,7 @@
 # It is also designed to be easy to maintain by being as short as possible.
 
 FROM ubuntu:16.04
-MAINTAINER Robert Massaioli <rmassaioli@atlassian.com>
+LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8080
 EXPOSE 8080

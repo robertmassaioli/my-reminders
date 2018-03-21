@@ -1,25 +1,25 @@
 import * as React from 'react';
 import Button, { ButtonGroup } from '@atlaskit/button';
-import { DateTimePicker } from '@atlaskit/datetime-picker';
+import { DatePicker } from '@atlaskit/datetime-picker';
+import TimePicker from 'rc-time-picker';
 import { Label } from '@atlaskit/field-base';
 import FieldTextArea from '@atlaskit/field-text-area';
 import * as moment from 'moment';
 import styled from 'styled-components';
 
+import 'rc-time-picker/assets/index.css';
+
 export type ReminderCreateDialogProps = {
-    onCreate(date: string, time: string, message?: string): void;
+    onCreate(isoDateTime: string, message?: string): void;
     onCancel(): void;
 };
 
 type ReminderCreateDialogState = {
-    date: string;
-    time: string;
+    selectedTime: moment.Moment;
     message?: string;
 };
 
 export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDialogProps, ReminderCreateDialogState> {
-    private readonly times = this.generateTimes();
-
     // tslint:disable:max-line-length
     private ReminderCreateContainer = styled.div`
         padding-left: 30px;
@@ -53,22 +53,26 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
         now.add(1, 'day');
 
         this.setState({
-            date: now.format('YYYY-MM-DD'),
-            time: now.format('HH:mm')
+            selectedTime: now
         });
     }
 
     render() {
-        const defaultDate = [this.state.date, this.state.time];
         return (
             <this.ReminderCreateContainer>
                 <div>
                     <h1>New reminder</h1>
-                    <Label label="Due date" />
-                    <DateTimePicker 
-                        onChange={(date, time) => this.onDateChange(date, time)} 
-                        times={this.times} 
-                        defaultValue={defaultDate}
+                    <Label label="Date due" />
+                    <DatePicker 
+                        onChange={(date) => this.onDateChange(date)} 
+                        defaultValue={this.state.selectedTime.format('YYYY-MM-DD')}
+                    />
+                    <Label label="Time due" />
+                    <TimePicker 
+                        defaultValue={moment().minute(0)}
+                        showSecond={false}
+                        use12Hours={true} 
+                        onChange={val => this.onTimeChange(val)}
                     />
                     <FieldTextArea 
                         label="Description" 
@@ -91,12 +95,29 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
         );
     }
 
-    private onDateChange(date: string, time: string) {
+    private onDateChange(date: string) {
         this.setState(s => {
+            const changedDate = moment(date, 'YYYY-MM-DD');
+            changedDate.hour(s.selectedTime.hour());
+            changedDate.minute(s.selectedTime.minute());
             return {
                 ...s,
-                date: date,
-                time: time
+                selectedTime: changedDate
+            };
+        });
+    }
+
+    private onTimeChange(time: moment.Moment) {
+        this.setState(s => {
+            const changedDate = time.clone();
+            changedDate.set({
+                year: s.selectedTime.year(),
+                month: s.selectedTime.month(),
+                day: s.selectedTime.day()
+            });
+            return {
+                ...s,
+                selectedTime: changedDate
             };
         });
     }
@@ -113,24 +134,7 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
         }
     }
 
-    private generateTimes(): Array<string> {
-        const pad = (v: number): string => {
-            if (v < 10) {
-                return '0' + v.toString();
-            }
-            return v.toString();
-        };
-
-        let t = new Array<string>();
-        for (let hour = 0; hour < 24; hour++) {
-            for (let minute = 0; minute < 60; minute += 10) {
-                t.push(`${pad(hour)}:${pad(minute)}`);
-            }
-        }
-        return t;
-    }
-
     private clickCreate() {
-        this.props.onCreate(this.state.date, this.state.time, this.state.message);
+        this.props.onCreate(this.state.selectedTime.toISOString(), this.state.message);
     }
 }

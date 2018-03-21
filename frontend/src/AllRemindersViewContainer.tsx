@@ -1,16 +1,16 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { AllRemindersView } from './AllRemindersView';
 import { ReminderResponseList } from './reminders-client';
-import { createDefaultApi } from './api';
+import { createUserRemindersApi } from './api';
 import { Reminder } from './Data';
 
 export type ARVProps = {
     pageContext: PageContext;
 };
 
-type Props = ARVProps & RouteProps;
+type Props = ARVProps & RouteComponentProps<void>;
 
 type ARVState = {
     reminders?: Reminder[];
@@ -54,7 +54,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private reloadReminderData() {
-        createDefaultApi(this.props.pageContext).getAllReminders()
+        createUserRemindersApi(this.props.pageContext).getAllReminders()
         .then(rrl => {
             this.setState(s => {
                 return {
@@ -68,7 +68,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private onRefreshReminders(selectedReminderIds: number[]) {
-        createDefaultApi(this.props.pageContext).refreshReminders({
+        createUserRemindersApi(this.props.pageContext).refreshReminders({
             pids: selectedReminderIds
         }).then(() => {
             AP.flag.create({
@@ -89,7 +89,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
     }
 
     private onDeleteReminders(selectedReminderIds: number[]) {
-        createDefaultApi(this.props.pageContext).deleteReminders({
+        createUserRemindersApi(this.props.pageContext).deleteReminders({
             pids: selectedReminderIds
         }).then(() => {
             this.reloadReminderData();

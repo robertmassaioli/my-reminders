@@ -52,14 +52,11 @@ import qualified Paths_my_reminders                          as PMR
 sendHomePage :: SS.Handler b v ()
 sendHomePage = SC.redirect' "/docs/home" SH.temporaryRedirect
 
+readIndex :: IO T.Text
+readIndex = T.readFile "frontend/build/index.html"
+
 showDocPage :: SSH.HasHeist b => SS.Handler b v ()
-showDocPage = do
-   fileName <- SC.getParam "fileparam"
-   case fileName of
-      Nothing -> SH.respondNotFound
-      Just rawFileName -> SSH.heistLocal (environment . decodeUtf8 $ rawFileName) $ SSH.render "docs"
-   where
-      environment fileName = HI.bindSplices $ "fileName" MS.## HI.textSplice fileName
+showDocPage = SC.writeText =<< liftIO readIndex
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -72,9 +69,6 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   let updatedHtmlContent = TS.renderTags . injectTags (metaTags connectData tenant token userKey) . TS.parseTags $ rawHtmlContent
   SC.writeText updatedHtmlContent
   where
-    readIndex :: IO T.Text
-    readIndex = T.readFile "frontend/build/index.html"
-
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
     injectTags mts tags = preHead ++ (head : toMetaTags mts) ++ afterHead
       where
@@ -131,14 +125,15 @@ applicationRoutes =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
-  , ("/robots.txt"                    , serveFile "static/files/robots.txt")
+  , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
+  , ("/favicon.ico"                    , serveFile "frontend/build/favicon.ico")
   ]
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
   [ ("css"    , serveDirectory "frontend/build/static/css")
-  , ("images" , serveDirectory "static/images")
   , ("js"     , serveDirectory "frontend/build/static/js")
+  , ("media"  , serveDirectory "frontend/build/static/media")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to

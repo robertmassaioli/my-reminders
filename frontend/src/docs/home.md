@@ -1,8 +1,6 @@
 ## What can I do with My Reminders?
 
-When you are logged in you can set a reminder for yourself well into the future:
-
-<img width="800" src="/static/images/my-reminders-features.png" />
+When you are logged in you can set a reminder for yourself well into the future.
 
 ## What is My Reminders?
 

@@ -3,6 +3,9 @@
 # Generated files
 src/reminders-client/
 
+# Downloaded tools
+swagger-codegen-cli.jar
+
 # dependencies
 /node_modules
 

@@ -7,6 +7,7 @@ import { ReminderCreateDialog } from '../ReminderCreateDialog';
 import { RemindersList } from '../RemindersList';
 import { AllRemindersView } from '../AllRemindersView';
 import { IssueView } from '../IssueView';
+import { DocsPage } from '../DocsPage';
 import * as moment from 'moment';
 import styled from 'styled-components';
 
@@ -253,5 +254,28 @@ export default function stories(storyCreator: partialStoriesOf) {
                 onDelete={deleteAction}
             />
         </div>
+    ));
+
+  // tslint:disable:align
+  const simpleMdContent = `
+# Hello there
+
+This is your captain speaking. Some points:
+
+ - Nitwit
+ - Odment
+ - Blubber
+
+And some code:
+
+    1 + 2 = 3
+
+There we go.
+  `;
+  // tslint:enable:align
+
+  storyCreator('Docs page')
+    .add('Default view', () => (
+        <DocsPage mdContent={simpleMdContent} location="/docs/home" />
     ));
 }

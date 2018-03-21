@@ -5,6 +5,9 @@
 # Git Files
 .git
 
+# Executables
+bin
+
 # Cabal Built
 dist
 .cabal-sandbox
@@ -33,4 +36,8 @@ log
 .DS_store
 
 # NPM Modules
-node_modules
+node_modules/
+
+# Non-required frontend components
+/frontend/build
+/frontend/swagger-codegen-cli.jar

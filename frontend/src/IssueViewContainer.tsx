@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RouteProps } from 'react-router';
+import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import EmptyState from '@atlaskit/empty-state';
 import { IssueView } from './IssueView';
@@ -8,7 +8,7 @@ import * as moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
 import { ReminderResponse, ReminderRequest } from './reminders-client';
-import { createDefaultApi } from './api';
+import { createIndividualReminderApi, createIssueRemindersApi } from './api';
 
 type IssueViewContainerProps = {
     pageContext: PageContext;
@@ -33,11 +33,11 @@ type IssueViewContainerState = {
 };
 
 function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
-    return createDefaultApi(pageContext).getRemindersForIssue(issueId);
+    return createIssueRemindersApi(pageContext).getRemindersForIssue(issueId);
 }
 
 function createReminder(data: ReminderRequest, pc: PageContext): Promise<void> {
-    return createDefaultApi(pc).addReminder(data).then(() => undefined);
+    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined);
 }
 
 function randomIntegerInRange(start: number, end: number): number {
@@ -53,7 +53,7 @@ function setToMorningHour(date: moment.Moment): moment.Moment {
 }
 
 export class IssueViewContainer
-    extends React.PureComponent<RouteProps & IssueViewContainerProps, IssueViewContainerState> {
+    extends React.PureComponent<RouteComponentProps<void> & IssueViewContainerProps, IssueViewContainerState> {
 
     private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[]): ReminderView[] {
         return reminders.map(r => {
@@ -127,13 +127,13 @@ export class IssueViewContainer
     private onDialogClosed(data: DialogEventData): void {
         if (data.type === 'create') {
             const message = data.message && data.message.length > 0 ? data.message : undefined;
-            const time = moment(`${data.date} ${data.time}`, moment.ISO_8601);
+            const time = moment(data.isoDateTime, moment.ISO_8601);
             this.createReminder(time, message);
         }
     }
 
     private onDeleteReminder(reminderId: number) {
-        createDefaultApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
+        createIndividualReminderApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
             this.setState(s => {
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {

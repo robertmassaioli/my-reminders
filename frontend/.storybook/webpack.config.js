@@ -14,7 +14,7 @@ module.exports = {
         include: path.resolve(__dirname, '../')
       },
       {
-        test: /\.svg$/,
+        test: /\.(svg|png)$/,
         loaders: ['url-loader'],
         include: path.resolve(__dirname, '../')
       }
