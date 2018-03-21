@@ -36,9 +36,8 @@ log
 .DS_store
 
 # NPM Modules
-node_modules
+node_modules/
 
 # Non-required frontend components
-node_modules/
-frontend/public
-frontend/src
+/frontend/build
+/frontend/swagger-codegen-cli.jar

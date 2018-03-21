@@ -6,7 +6,16 @@
 # the entire Haskell platform with us into production. Just the small set
 # of required dependencies.
 
-# TODO replace with my own haskell platform docker creations.
+FROM kkarczmarczyk/node-yarn as frontend
+LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
+
+# Build the Frontend
+ADD /frontend   /home/frontend
+ADD /swagger.yaml /home
+WORKDIR /home/frontend
+RUN apt-get update && apt-get install -y openjdk-7-jre-headless
+RUN yarn install && yarn run get-swagger-codegen && yarn build
+
 FROM haskell:8.0.2 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
@@ -15,16 +24,12 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq-dev pkgconf yarn
+RUN apt-get update && apt-get install -y libpq-dev pkgconf
 
 # Copy our context into the build directory and start working from there
 USER root
 ADD /   /home/haskell/build
 # RUN chown -R haskell:haskell /home/haskell/build
-
-# Build the Frontend
-WORKDIR /home/haskell/build/frontend
-RUN yarn install && yarn run get-swagger-codegen && yarn build
 
 # Setup the Haskell Envoronment
 # USER haskell
@@ -65,7 +70,7 @@ RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless 
 
 # Copy our context into the build directory and start working from there
 USER root
-COPY --from=build /home/haskell/build/frontend/build /service/frontend/build
+COPY --from=frontend /home/frontend/build /service/frontend/build
 COPY --from=build /home/haskell/build/snaplets /service
 COPY --from=build /home/haskell/build/resources /service
 COPY --from=build /home/haskell/build/migrations /service
