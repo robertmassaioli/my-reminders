@@ -161,7 +161,11 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
                 },
                 {
                     key: 'issue',
-                    content: <a target="_top" href={`${hostBaseUrl}/browse/${reminder.key}`}>{reminder.key}: {reminder.summary}</a>
+                    content: (
+                        <a target="_top" href={`${hostBaseUrl}/browse/${reminder.key}`}>
+                            {reminder.key}: {reminder.summary}
+                        </a>
+                    )
                 },
                 {
                     key: 'message',
