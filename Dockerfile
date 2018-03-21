@@ -71,10 +71,10 @@ RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless 
 # Copy our context into the build directory and start working from there
 USER root
 COPY --from=frontend /home/frontend/build /service/frontend/build
-COPY --from=build /home/haskell/build/snaplets /service
-COPY --from=build /home/haskell/build/resources /service
-COPY --from=build /home/haskell/build/migrations /service
-COPY --from=build /home/haskell/build/static /service
+COPY --from=build /home/haskell/build/snaplets /service/snaplets
+COPY --from=build /home/haskell/build/resources /service/resources
+COPY --from=build /home/haskell/build/migrations /service/migrations
+COPY --from=build /home/haskell/build/static /service/static
 COPY --from=build /home/haskell/build/.cabal-sandbox/bin/my-reminders /service
 
 # Setup the Haskell Envoronment
