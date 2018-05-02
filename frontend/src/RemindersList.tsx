@@ -6,6 +6,9 @@ import { Reminder } from './Data';
 import Spinner from '@atlaskit/spinner';
 import styled from 'styled-components';
 
+// Imports for IE11
+import 'core-js/fn/array/find';
+
 export type RemindersListProps = {
     hostBaseUrl: string;
     reminders?: Reminder[];
