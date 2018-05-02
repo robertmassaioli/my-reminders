@@ -1,5 +1,9 @@
 import * as URI from 'urijs';
 
+// Imports for IE11
+import 'core-js/fn/array/from';
+import 'core-js/fn/array/find';
+
 export type PageContext = {
     user?: {
         id: string;

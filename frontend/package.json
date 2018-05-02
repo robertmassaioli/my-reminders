@@ -16,6 +16,7 @@
     "@atlaskit/select": "^0.2.1",
     "@atlaskit/spinner": "^4.2.1",
     "@atlaskit/tooltip": "^8.4.1",
+    "core-js": "^2.5.3",
     "moment": "^2.21.0",
     "moment-timezone-all": "^0.5.5",
     "portable-fetch": "^3.0.0",
@@ -37,6 +38,8 @@
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "storybook": "start-storybook -p 9001 -c .storybook",
+    "build-storybook": "build-storybook -c .storybook -o .storybook-static",
+    "serve-storybook": "http-server -p 9002 .storybook-static",
     "get-swagger-codegen": "curl http://central.maven.org/maven2/io/swagger/swagger-codegen-cli/2.3.1/swagger-codegen-cli-2.3.1.jar -o swagger-codegen-cli.jar",
     "gen-fetch": "java -jar swagger-codegen-cli.jar generate -i ../swagger.yaml -l typescript-fetch -o src/reminders-client",
     "depcheck": "depcheck ."
@@ -45,6 +48,7 @@
     "@atlaskit/css-reset": "^1.2.3",
     "@storybook/addon-actions": "^3.3.15",
     "@storybook/react": "^3.3.15",
+    "@types/core-js": "^0.9.46",
     "@types/jest": "^22.2.0",
     "@types/moment-timezone": "^0.5.4",
     "@types/node": "^9.4.6",
@@ -56,6 +60,7 @@
     "@types/urijs": "^1.15.36",
     "awesome-typescript-loader": "^4.0.1",
     "depcheck": "^0.6.9",
+    "http-server": "^0.11.1",
     "typed-react-markdown": "^0.1.0",
     "typescript": "^2.7.2"
   }
