@@ -113,7 +113,7 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
             changedDate.set({
                 year: s.selectedTime.year(),
                 month: s.selectedTime.month(),
-                day: s.selectedTime.day()
+                date: s.selectedTime.date()
             });
             return {
                 ...s,
