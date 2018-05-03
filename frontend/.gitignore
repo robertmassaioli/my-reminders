@@ -11,6 +11,7 @@ swagger-codegen-cli.jar
 
 # testing
 /coverage
+/.storybook-static
 
 # production
 /build
