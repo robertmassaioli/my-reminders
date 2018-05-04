@@ -77,7 +77,7 @@ addonJiraModules = emptyJIRAModules
         , jigName = simpleText "My Reminders"
         , jigContent = JIRAIssueGlanceContentLabel (simpleText "My Reminders")
         , jigIcon = IconDetails
-            { iconUrl = "my_icon.svg"
+            { iconUrl = "/static/media/logo.svg"
             , iconWidth = Just 24
             , iconHeight = Just 24
             }
