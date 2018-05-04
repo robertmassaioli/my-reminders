@@ -4,6 +4,7 @@ module StaticSnaplet
     , StaticConf
     ) where
 
+import qualified AssetManifestParser       as AMP
 import           Control.Applicative
 import           Control.Arrow             (second)
 import           Control.Lens              ((&), (.~))
@@ -14,7 +15,9 @@ import qualified Data.ByteString.Char8     as BC
 import qualified Data.CaseInsensitive      as CI
 import           Data.Maybe                (isNothing)
 import           Data.Monoid               (mempty)
+import qualified Data.Map                  as M
 import qualified Data.Text                 as T
+import qualified Data.Text.Encoding        as T
 import qualified Data.UUID.V4              as UUID
 import           Data.Version              (Version (..), showVersion)
 import qualified Heist                     as H
@@ -47,6 +50,7 @@ initStaticSnaplet version staticRoutes appHeist = SS.makeSnaplet "Static Content
 data StaticConf = StaticConf
     { scResourcesVersion :: String
     , scCacheForever     :: Bool
+    , scAssetManifest    :: AMP.AssetManifest
     } deriving (Show)
 
 spliceConfig :: StaticConf -> H.SpliceConfig (SS.Handler a a)
@@ -66,9 +70,11 @@ generateStaticConf :: Version -> IO StaticConf
 generateStaticConf version = do
    zone <- fromEnv
    versionString <- generateResourcesVersion version zone
+   assetManifest <- AMP.parseAssetManifest "frontend/build/asset-manifest.json"
    return StaticConf
       { scResourcesVersion = versionString
       , scCacheForever = not . isLocal $ zone
+      , scAssetManifest = assetManifest
       }
    where
       isLocal = isNothing
@@ -106,16 +112,20 @@ redirectStatic = do
     r <- SC.getRequest
     let cp = SC.rqContextPath r
     let pathInfo = SC.rqPathInfo r
-    SC.redirect $ cp `append` addResourcesVersion sc pathInfo
+    let lookupPathInfo = T.dropWhile (\c -> c == '/') $ T.decodeUtf8 (cp `append` pathInfo)
+    SH.logErrorS $ T.unpack lookupPathInfo
+    let assetLookup = T.stripPrefix "static/" =<< M.lookup lookupPathInfo (scAssetManifest sc)
+    let redirectPath = maybe pathInfo T.encodeUtf8 assetLookup
+    SC.redirect $ cp `append` addResourcesVersion sc redirectPath
 
 addResourcesVersion :: StaticConf -> BC.ByteString -> BC.ByteString
-addResourcesVersion (StaticConf rv _) original = BC.pack rv `append` BC.pack "/" `append` original
+addResourcesVersion (StaticConf rv _ _) original = BC.pack rv `append` BC.pack "/" `append` original
 
 unmatchedRoute :: (ByteString, SS.Handler a b ())
 unmatchedRoute = ("", SH.respondNotFound)
 
 wrapHandlerInCacheOrNotFound :: SS.Handler a StaticConf () -> SS.Handler a StaticConf ()
-wrapHandlerInCacheOrNotFound handle = wrapHandlerInCache handle <|>  SH.respondNotFound
+wrapHandlerInCacheOrNotFound handle = wrapHandlerInCache handle <|> SH.respondNotFound
 
 wrapHandlerInCache :: SS.Handler a StaticConf () -> SS.Handler a StaticConf ()
 wrapHandlerInCache handle = do

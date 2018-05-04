@@ -71,4 +71,18 @@ addonJiraModules = emptyJIRAModules
       [ Webhook { webhookEvent = JiraIssueUpdated, webhookUrl = "/rest/webhook/issue/update" }
       , Webhook { webhookEvent = JiraIssueDeleted, webhookUrl = "/rest/webhook/issue/delete" }
       ]
+    , jmJiraIssueGlances = Just
+      [ JIRAIssueGlance
+        { jigKey = "view-issue-glance-reminders"
+        , jigName = simpleText "My Reminders"
+        , jigContent = JIRAIssueGlanceContentLabel (simpleText "My Reminders")
+        , jigIcon = IconDetails
+            { iconUrl = "/static/media/logo.svg"
+            , iconWidth = Just 24
+            , iconHeight = Just 24
+            }
+        , jigTarget = JIRAIssueGlanceTargetWebPanel "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
+        , jigConditions = []
+        }
+      ]
     }
