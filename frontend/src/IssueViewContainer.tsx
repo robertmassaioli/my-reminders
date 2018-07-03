@@ -65,7 +65,7 @@ export class IssueViewContainer
             };
         });
     }
-     
+
     componentWillMount() {
         this.setState({
             state: 'loading'
@@ -95,23 +95,23 @@ export class IssueViewContainer
         const ld = this.state.loadedDetails;
         if (typeof ld !== 'undefined' && ld === 'reminders-failed-to-load') {
             return (
-                <EmptyState 
+                <EmptyState
                     header="Could not load reminders"
-                    description="We could not load the reminders for this issue. Please 
+                    description="We could not load the reminders for this issue. Please
                             try to reload the page and if problems persist then get help."
-                    size="narrow"                            
+                    size="narrow"
                     secondaryAction={<a href="/redirect/raise-issue">Get help</a>}
                 />
             );
         }
 
         return (
-            <IssueView 
-                reminders={ld ? ld.reminders : undefined} 
-                onAddReminder={() => this.onOpenAdvanced()} 
-                onTomorrow={() => this.createReminder(setToMorningHour(moment().add(1, 'days')))} 
-                onInAWeek={() => this.createReminder(setToMorningHour(moment().add(1, 'week')))}  
-                onInAMonth={() => this.createReminder(setToMorningHour(moment().add(1, 'month')))} 
+            <IssueView
+                reminders={ld ? ld.reminders : undefined}
+                onAddReminder={() => this.onOpenAdvanced()}
+                onTomorrow={() => this.createReminder(setToMorningHour(moment().add(1, 'days')))}
+                onInAWeek={() => this.createReminder(setToMorningHour(moment().add(1, 'week')))}
+                onInAMonth={() => this.createReminder(setToMorningHour(moment().add(1, 'month')))}
                 onReminderDeleted={id => this.onDeleteReminder(id)}
             />
         );
@@ -149,7 +149,7 @@ export class IssueViewContainer
             });
         }).catch(() => {
             AP.flag.create({
-                title: 'Could not delete reminder', 
+                title: 'Could not delete reminder',
                 body: `Please try again and refresh the page if the problem persists.`,
                 type: 'error',
                 close: 'auto'
@@ -176,7 +176,7 @@ export class IssueViewContainer
                             id: issue.id,
                             key: issue.key,
                             summary: issueDetails.fields.summary
-                        }, 
+                        },
                         user: {
                             key: user.key,
                             emailAddress: userDetails.emailAddress
@@ -198,7 +198,15 @@ export class IssueViewContainer
     private createReminder(forDate: moment.Moment, message?: string) {
         const ld = this.state.loadedDetails;
         if (ld && ld !== 'reminders-failed-to-load' && ld.user.emailAddress) {
-            const emailAddress = ld.user.emailAddress;
+            if (typeof ld.user.emailAddress === 'undefined') {
+                AP.flag.create({
+                    title: 'Could not access email address',
+                    body: `Please ensure that site wide Email Visibility has been set to public or "Show to logged in user only" and that your user profile has your email address set.`,
+                    type: 'error',
+                    close: 'auto'
+                });
+            } else {
+                const emailAddress = ld.user.emailAddress;
 
             const requestData: ReminderRequest = {
                 issue: {
@@ -220,7 +228,7 @@ export class IssueViewContainer
             createReminder(requestData, this.props.pageContext)
             .then(() => {
                 AP.flag.create({
-                    title: 'Reminder created', 
+                    title: 'Reminder created',
                     body: `Reminder set for ${emailAddress}`,
                     type: 'success',
                     close: 'auto'
@@ -229,12 +237,13 @@ export class IssueViewContainer
             })
             .catch(() => {
                 AP.flag.create({
-                    title: 'Could not create reminder', 
+                    title: 'Could not create reminder',
                     body: `Reminder not set for ${emailAddress}`,
                     type: 'error',
                     close: 'auto'
                 });
             });
+            }
         }
     }
 }
