@@ -197,7 +197,7 @@ export class IssueViewContainer
 
     private createReminder(forDate: moment.Moment, message?: string) {
         const ld = this.state.loadedDetails;
-        if (ld && ld !== 'reminders-failed-to-load' && ld.user.emailAddress) {
+        if (ld && ld !== 'reminders-failed-to-load') {
             if (typeof ld.user.emailAddress === 'undefined') {
                 AP.flag.create({
                     title: 'Could not access email address',
