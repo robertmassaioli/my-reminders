@@ -11,7 +11,7 @@ export interface UserDetails {
 }
 
 export function requestUserDetails(userKey: string): Promise<UserDetails> {
-    const url = URI('/rest/api/latest/user').addSearch('key', userKey);
+    const url = URI('/rest/api/2/user').addSearch('key', userKey);
     return AP.request({
         url: url.toString(),
         type: 'GET'
@@ -31,7 +31,7 @@ interface IssueFieldDetails {
 
 export function requestIssueDetails(issueKey: string): Promise<IssueDetails> {
     return AP.request({
-        url: `/rest/api/latest/issue/${issueKey}`,
+        url: `/rest/api/2/issue/${issueKey}`,
         type: 'GET'
     }).then(rsp => {
         return JSON.parse(rsp.body) as IssueDetails;
