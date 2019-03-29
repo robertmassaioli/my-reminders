@@ -26,9 +26,10 @@ pipelines:
           - apt-get update && apt-get install -y libpq-dev pkgconf
           - cabal update
           - cabal sandbox init
-          - cabal install --only-dependencies
-          - cabal configure
+          - cabal install --verbose=2 --enable-tests --only-dependencies
+          - cabal configure --verbose=2 --enable-tests
           - cabal build
+          - cabal test
   branches:
     master:
       - step:
