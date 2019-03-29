@@ -1,14 +1,97 @@
-# This is a sample build configuration for Haskell.
-# Do not use tabs to indent your configuration
-# You can specify a custom docker image from Dockerhub# for your build environment
+# This is a sample build configuration for JavaScript.
+# Check our guides at https://confluence.atlassian.com/x/14UWN for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
 image: haskell:8.0.2
+
+options:
+  docker: true
+  size: 2x
+
+definitions:
+  services:
+    docker:
+      memory: 4096
+  caches:
+    cabal: .cabal-sandbox
+
 pipelines:
   default:
     - step:
+        name: Build and Test
+        caches:
+          - cabal
         script:
           - apt-get update && apt-get install -y libpq-dev pkgconf
           - cabal update
-          - cabal install --verbose=2 --enable-tests --only-dependencies --force-reinstalls
-          - cabal configure --verbose=2 --enable-tests
+          - cabal sandbox init
+          - cabal install --only-dependencies
+          - cabal configure
           - cabal build
-          - cabal test
+  branches:
+    master:
+      - step:
+          name: Build docker image
+          script:
+            # set up step variables and auth data
+            - export DOCKER_URL="docker-proxy.services.atlassian.com"
+            - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
+            # build base image (node@alpine + python dependencies + hugo)
+            - docker build --tag="${DOCKER_URL}/sox/atlassian/my-reminders:${BITBUCKET_BUILD_NUMBER}" .
+            - docker push "${DOCKER_URL}/sox/atlassian/my-reminders:${BITBUCKET_BUILD_NUMBER}"
+          services:
+            - docker
+          caches:
+            - docker
+      - step:
+          name: Deploy to staging
+          deployment: staging
+          image: node:latest
+          script:
+            # set up step variables and auth data
+            - export DOCKER_URL="docker-proxy.services.atlassian.com"
+            - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
+            - export MICROS_URL="wss://micros-proxy.services.atlassian.com"
+            - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
+            # download micros CLI
+            - curl -O -H "Authorization:$PIPELINES_JWT_TOKEN" https://micros-proxy.services.atlassian.com/micros-stable/micros.tar.gz
+            - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
+            - chmod +x micros-cli
+            # generate the service descriptor
+            - echo "RELEASE_VERSION" > "template-vars.csv"
+            - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
+            - npm install mustang
+            - $(npm bin)/mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            # micros deploy the service
+            - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e ddev
+          services:
+            - docker
+          caches:
+            - docker
+      - step:
+          name: Deploy to prod
+          deployment: production
+          trigger: manual
+          image: node:latest
+          script:
+            # set up step variables and auth data
+            - export DOCKER_URL="docker-proxy.services.atlassian.com"
+            - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
+            - export MICROS_URL="wss://micros-proxy.services.atlassian.com"
+            - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
+            # download micros CLI
+            - curl -O -H "Authorization:$PIPELINES_JWT_TOKEN" https://micros-proxy.services.atlassian.com/micros-stable/micros.tar.gz
+            - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
+            - chmod +x micros-cli
+            # generate the service descriptor
+            - echo "RELEASE_VERSION" > "template-vars.csv"
+            - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
+            - npm install mustang
+            - $(npm bin)/mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            # micros deploy the service
+            - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e prod-east
+          services:
+            - docker
+          caches:
+            - docker
