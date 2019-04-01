@@ -24,7 +24,7 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq-dev pkgconf
+RUN apt-get update; apt-get install -y libpq-dev pkgconf
 
 # Copy our context into the build directory and start working from there
 USER root
@@ -80,7 +80,7 @@ COPY --from=build /home/haskell/build/.cabal-sandbox/bin/my-reminders /service
 # Setup the Haskell Envoronment
 WORKDIR /service
 # TODO is the LANG used by Snap or Haskell?
-ENV LANG en_US.UTF-8 # 
+ENV LANG en_US.UTF-8 #
 
 # Setup the default command to run for the container.
 CMD ["/service/my-reminders", "--access-log=-", "--error-log=stderr", "--port=8080"]
