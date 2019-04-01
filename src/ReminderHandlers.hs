@@ -131,7 +131,7 @@ getRemindersForIssue (tenant, Just userKey) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe AC.IssueId)
    case potentialIssueId of
       Just issueId -> do
-         issueReminders <- SS.with db $ withConnection (\connection -> P.getLiveRemindersForIssueByUser connection tenant userKey issueId)
+         issueReminders <- P.getLiveRemindersForIssueByUser tenant userKey issueId
          writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
@@ -149,7 +149,7 @@ handleUserReminders = handleMethods
 getUserReminders :: AC.TenantWithUser -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
-   userReminders <- SS.with db $ withConnection (P.getLiveRemindersByUser tenant userKey)
+   userReminders <- P.getLiveRemindersByUser tenant userKey
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
 
 bulkUpdateUserEmails :: AC.TenantWithUser -> AppHandler ()
@@ -158,8 +158,8 @@ bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \
   potentialUserDetails <- UD.getUserDetails tenant userKey
   case potentialUserDetails of
     Left err -> respondWithError internalServer ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
-    Right userDetails -> do 
-      withConnection (P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds))
+    Right userDetails -> do
+      P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds)
       respondNoContent
   where
     userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
@@ -171,7 +171,7 @@ bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \
 bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
 bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
-   SS.with db $ withConnection (P.deleteManyRemindersForUser tenant (pids reminderIds) userKey)
+   P.deleteManyRemindersForUser tenant (pids reminderIds) userKey
    respondNoContent
 
 parseReminderIdListFromRequest :: (ReminderIdList -> AppHandler ()) -> AppHandler ()
@@ -196,7 +196,7 @@ getReminderHandler (tenant, Just userKey) = do
    let potentialReminderId = fmap (read . BC.unpack) rawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
-         potentialReminder <- SS.with db $ withConnection (P.getReminderByUser tenant userKey reminderId)
+         potentialReminder <- P.getReminderByUser tenant userKey reminderId
          case potentialReminder of
             Nothing -> respondNotFound
             Just reminder -> writeJson (toReminderResponse reminder)
@@ -209,7 +209,7 @@ deleteReminderHandler (tenant, Just userKey) = do
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
-         deletedReminders <- SS.with db $ withConnection (P.deleteReminderForUser tenant userKey reminderId)
+         deletedReminders <- P.deleteReminderForUser tenant userKey reminderId
          case deletedReminders of
             1 -> respondNoContent
             0 -> respondNotFound
@@ -230,7 +230,7 @@ addReminder (tenant, Just userKey) reminderRequest
     | userKey /= requestUK = respondWithError badRequest userMismatchError
     | isNotValid emailAddress = respondWithError badRequest emailMismatchError
     | otherwise =
-        SS.with db $ withConnection (addReminderFromRequest reminderRequest tenant (prqUser reminderRequest)) >>=
+        addReminderFromRequest reminderRequest tenant (prqUser reminderRequest) >>=
           maybe (respondWithError internalServer insertFailedError)
                 (const respondNoContent)
   where
@@ -242,9 +242,9 @@ addReminder (tenant, Just userKey) reminderRequest
     emailMismatchError = "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
     insertFailedError = "Failed to insert new reminder: " ++ show userKey
 
-addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> Connection -> IO (Maybe Integer)
-addReminderFromRequest reminderRequest tenant userDetails conn =
-  P.addReminder conn date' tenantId' iDetails userDetails message'
+addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> AppHandler (Maybe Integer)
+addReminderFromRequest reminderRequest tenant userDetails =
+  P.addReminder date' tenantId' iDetails userDetails message'
   where
     date' = prqReminderDate reminderRequest
     tenantId' = AC.tenantId tenant
