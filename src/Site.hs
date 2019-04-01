@@ -70,25 +70,25 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   SC.writeText updatedHtmlContent
   where
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
-    injectTags mts tags = preHead ++ (head : toMetaTags mts) ++ afterHead
+    injectTags mts tags = preHead ++ (headTag : toMetaTags mts) ++ afterHead
       where
-        (preHead, (head : afterHead)) = span (TS.isTagOpenName "head") tags
-    
+        (preHead, (headTag : afterHead)) = span (TS.isTagOpenName "head") tags
+
     toMetaTags :: [MetaTag] -> [TS.Tag T.Text]
     toMetaTags = concat . map toMetaTag
-      where 
-        toMetaTag mt = 
+      where
+        toMetaTag mt =
             [ TS.TagOpen "meta" [("name", mtName mt), ("content", mtContent mt)]
             , TS.TagClose "meta"
             ]
 
-    metaTags connectData tenant token userKey = 
+    metaTags connectData tenant token userKey =
       [ MT "userKey" (fromMaybe T.empty userKey)
       , MT "productBaseUrl" (T.pack . show . AC.baseUrl $ tenant)
       , MT "acpt" (SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token))
       ]
 
-data MetaTag = MT 
+data MetaTag = MT
   { mtName :: T.Text
   , mtContent :: T.Text
   }
