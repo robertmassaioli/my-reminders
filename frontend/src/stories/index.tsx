@@ -145,7 +145,6 @@ export default function stories(storyCreator: partialStoriesOf) {
             reminders={[{
                 id: 12345,
                 key: 'DAC-123',
-                email: 'example@test.test',
                 summary: 'An issue to behold',
                 expiresAt: new Date(new Date().getTime() + msPerDay * 4),
                 message: 'Don\'t forget to deal with this issue later!'

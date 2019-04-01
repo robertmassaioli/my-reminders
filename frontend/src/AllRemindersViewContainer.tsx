@@ -23,7 +23,6 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
                 id: r.reminderId,
                 key: r.issueKey,
                 summary: r.issueSummary,
-                email: r.userEmail,
                 message: r.message,
                 expiresAt: r.date
             };

@@ -4,7 +4,6 @@ export type Reminder = {
     id: number;
     key: string;
     summary: string;
-    email: string;
     message?: string;
     expiresAt: Date;
 };
@@ -17,7 +16,7 @@ export type ReminderView = {
 
 export type DialogCancelData = {
     type: 'cancel';
-};  
+};
 
 export type DialogCreateData = {
     type: 'create';
