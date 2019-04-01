@@ -1,0 +1,44 @@
+{{#.}}
+{
+   "description": "My reminders allows you to set reminders on issues.",
+   "name": "My Reminders",
+   "organization": "RD:Customer Purchasing Platform",
+   "network": {
+      "ingress": "external",
+      "egress":  "internet-only"
+   },
+   "resources": [{
+      "type": "postgres-db",
+      "name": "my-reminders"
+   }],
+   "links": {
+      "binary": {
+         "name": "docker.atl-paas.net/sox/atlassian/my-reminders",
+         "type": "docker",
+         "tag": "{{RELEASE_VERSION}}"
+      },
+      "healthcheck": {
+         "uri": "rest/heartbeat"
+      },
+      "source": {
+         "url": "https://bitbucket.org/atlassianlabs/my-reminders"
+      }
+   },
+   "owners": [
+      "rmassaioli@atlassian.com",
+      "ekaukonen@atlassian.com"
+   ],
+   "notifications": {
+      "pagerduty": {
+         "cloudwatch": "https://events.pagerduty.com/adapter/cloudwatch_sns/v1/124e0f010f214a9b9f30b768e7b18e69",
+         "apiKey": "5d11612f25b840faaf77422edeff9c76"
+      },
+      "email": "rmassaioli@atlassian.com"
+   },
+   "scaling": {
+      "min": 2
+   },
+   "downstreamServices": [],
+   "cleanup": false
+}
+{{/.}}
