@@ -7,7 +7,6 @@ import qualified Data.Text.Encoding as TE
 import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Calendar (fromGregorian)
 import Data.Maybe (fromJust)
-import Mail.Hailgun
 import Network.URI (parseURI)
 import EmailContext
 import Test.Framework
