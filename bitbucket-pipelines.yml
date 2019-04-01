@@ -23,7 +23,7 @@ pipelines:
         caches:
           - cabal
         script:
-          - apt-get update; apt-get install -y libpq-dev pkgconf
+          - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
           - cabal update
           - cabal sandbox init
           - cabal install --verbose=2 --enable-tests --only-dependencies

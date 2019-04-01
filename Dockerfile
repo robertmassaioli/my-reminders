@@ -24,7 +24,7 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN apt-get update; apt-get install -y libpq-dev pkgconf
+RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf
 
 # Copy our context into the build directory and start working from there
 USER root
