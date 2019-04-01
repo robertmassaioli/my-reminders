@@ -6,7 +6,6 @@ import qualified Snap.AtlassianConnect as AC
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.CaseInsensitive as DC
 import qualified Data.Time.Clock as DTC
-import qualified Persistence.PostgreSQL as PP
 import qualified Persistence.Tenant as TN
 import qualified Snap.Core as SC
 import qualified SnapHelpers as SH
@@ -43,8 +42,7 @@ tenantFromToken tenantApply = do
 
 lookupTenantWithPageToken :: AC.PageToken -> AppHandler (Maybe AC.TenantWithUser)
 lookupTenantWithPageToken pageToken =
-  PP.withConnection $ \conn ->
-    fmap (flip (,) (AC.pageTokenUser pageToken)) <$> TN.lookupTenant conn (AC.pageTokenHost pageToken)
+    fmap (flip (,) (AC.pageTokenUser pageToken)) <$> TN.lookupTenant (AC.pageTokenHost pageToken)
 
 inSecond :: b -> a -> (a, b)
 inSecond x y = (y, x)

@@ -33,7 +33,6 @@ import           GHC.Generics
 import           GHC.Int
 import           Network.URI                        (URI)
 import           Persistence.Instances              ()
-import           Persistence.PostgreSQL
 import qualified Snap.AtlassianConnect              as AC
 import           Snap.Snaplet.PostgresqlSimple
 

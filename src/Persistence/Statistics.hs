@@ -6,12 +6,13 @@ module Persistence.Statistics
     , getStatistics
     ) where
 
+import           Application
 import           Control.Applicative                ((<$>), (<*>))
 import           Data.Aeson
-import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
+import           Snap.Snaplet.PostgresqlSimple
 
 data Statistics = Statistics
     { liveTenants               :: Integer
@@ -32,9 +33,9 @@ instance FromRow Statistics where
 
 instance ToJSON Statistics
 
-getStatistics :: Connection -> IO Statistics
-getStatistics conn = do
-    [result] <- query_ conn
+getStatistics :: AppHandler Statistics
+getStatistics = do
+    [result] <- query_
         [sql|
             select
             	(select count(*) from tenant where sleep_date is null) as live_tenants,

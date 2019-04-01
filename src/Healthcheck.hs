@@ -23,7 +23,6 @@ import qualified Data.Time.Units        as DTU
 import           Data.TimeUnitUTC
 import           GHC.Generics
 import           Mail.Hailgun           (Page (..), getDomains, herMessage)
-import           Persistence.PostgreSQL (withConnection)
 import           Persistence.Reminder   (getExpiredReminders)
 import           Persistence.Tenant     (getTenantCount)
 import qualified Snap.Core              as SC
@@ -66,7 +65,7 @@ simpleCatch = EL.tryJust exceptionFilter
 databaseHealthCheck :: Healthcheck
 databaseHealthCheck = do
    currentTime <- liftIO getCurrentTime
-   result <- simpleCatch (withConnection getTenantCount)
+   result <- simpleCatch getTenantCount
    return $ status (either Just (const Nothing) result) currentTime
    where
       status :: E.Exception e => Maybe e -> UTCTime -> HealthStatus
