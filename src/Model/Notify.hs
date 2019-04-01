@@ -75,7 +75,7 @@ sendIssueReminder tenant emailContext reminder = do
     notifyUrl = B.concat ["/rest/api/3/issue/", bIssueId, "/notify"]
 
     bIssueId :: B.ByteString
-    bIssueId = BC.pack . show . reminderReminderId $ reminder
+    bIssueId = BC.pack . show . reminderIssueId $ reminder
 
     createNotification :: UD.UserWithDetails -> IO Notification
     createNotification userDetails = do

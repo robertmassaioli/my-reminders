@@ -22,7 +22,7 @@ addonDescriptor =
         , disabled = Nothing
         }
     , modules = Just $ Modules addonJiraModules emptyConfluenceModules
-    , scopes = Just [Read]
+    , scopes = Just [Read, Write]
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     }
   where
