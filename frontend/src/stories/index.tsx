@@ -39,29 +39,29 @@ export default function stories(storyCreator: partialStoriesOf) {
   };
 
   const manyReminders = [{
-        id: 12345, 
-        key: 'DAC-123', 
-        email: 'example@test.test', 
+        id: 12345,
+        key: 'DAC-123',
+        email: 'example@test.test',
         summary: 'An issue to behold',
         expiresAt: new Date(new Date().getTime() + msPerHour * 4),
         message: 'Don\'t forget to deal with this issue later!'
     }, {
-        id: 12346, 
-        key: 'MR-983482', 
-        email: 'example@test.test', 
+        id: 12346,
+        key: 'MR-983482',
+        email: 'example@test.test',
         summary: 'The second best issue you have ever seen.',
         expiresAt: new Date(new Date().getTime() + msPerDay * 4),
     }, {
-        id: 12347, 
-        key: 'SHPXXXVI-1234', 
-        email: 'example@test.test', 
+        id: 12347,
+        key: 'SHPXXXVI-1234',
+        email: 'example@test.test',
         summary: 'The mightiest issue in the world',
         expiresAt: new Date(new Date().getTime() + msPerDay * 8),
         message: 'There is something strange, in your neighbourhood.'
     }, {
-        id: 12348, 
-        key: 'DAC-10', 
-        email: 'example@test.test', 
+        id: 12348,
+        key: 'DAC-10',
+        email: 'example@test.test',
         summary: 'A strange issue to behold',
         expiresAt: new Date(new Date().getTime() + msPerDay * 12),
         message: `A really ${'super '.repeat(20)} long message!`
@@ -82,7 +82,7 @@ export default function stories(storyCreator: partialStoriesOf) {
         <IssueView reminders={[]} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
     ))
     .add('One reminder', () => (
-        <IssueView 
+        <IssueView
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
@@ -93,7 +93,7 @@ export default function stories(storyCreator: partialStoriesOf) {
         />
     ))
     .add('Multiple reminders', () => (
-        <IssueView 
+        <IssueView
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
@@ -114,25 +114,22 @@ export default function stories(storyCreator: partialStoriesOf) {
 
   storyCreator('All reminders view')
     .add('Loading view', () => (
-        <AllRemindersView 
+        <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ))
     .add('Empty view', () => (
-        <AllRemindersView 
+        <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
             reminders={[]}
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ))
     .add('Default view', () => (
-        <AllRemindersView 
+        <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
             reminders={manyReminders}
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ));
@@ -144,11 +141,11 @@ export default function stories(storyCreator: partialStoriesOf) {
     .add('Empty view', () => (
         <RemindersList reminders={[]} {...remindersListProps} />
     )).add('One reminder', () => (
-        <RemindersList 
+        <RemindersList
             reminders={[{
-                id: 12345, 
-                key: 'DAC-123', 
-                email: 'example@test.test', 
+                id: 12345,
+                key: 'DAC-123',
+                email: 'example@test.test',
                 summary: 'An issue to behold',
                 expiresAt: new Date(new Date().getTime() + msPerDay * 4),
                 message: 'Don\'t forget to deal with this issue later!'
@@ -156,7 +153,7 @@ export default function stories(storyCreator: partialStoriesOf) {
             {...remindersListProps}
         />
     )).add('Multiple reminders', () => (
-        <RemindersList 
+        <RemindersList
             reminders={manyReminders}
             {...remindersListProps}
         />
@@ -174,15 +171,15 @@ export default function stories(storyCreator: partialStoriesOf) {
       <IssueViewActions {...issueViewActionsProps} />
     ))
     .add('Action in progress', () => (
-      <IssueViewActions 
-        statusIndicator="actionInProgress" 
+      <IssueViewActions
+        statusIndicator="actionInProgress"
         {...issueViewActionsProps}
       />
     ))
     .add('Error state', () => (
-      <IssueViewActions 
-        statusIndicator="error" 
-        {...issueViewActionsProps} 
+      <IssueViewActions
+        statusIndicator="error"
+        {...issueViewActionsProps}
       />
     ));
 
@@ -208,12 +205,12 @@ export default function stories(storyCreator: partialStoriesOf) {
                 expiresAt: moment().add(3, 'days')
             }}
             onDelete={deleteAction}
-        /> 
+        />
     ))
     .add('Multiple reminders', () => {
         const times = [
-            0, 
-            msPerMinute * 2, 
+            0,
+            msPerMinute * 2,
             msPerHour * 2,
             msPerDay * 2,
             msPerDay * 2 * 30,

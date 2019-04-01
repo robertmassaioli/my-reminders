@@ -7,7 +7,6 @@ import styled from 'styled-components';
 export type AllRemindersViewProps = {
     hostBaseUrl: string;
     reminders?: Reminder[];
-    onUpdateEmail: (selectedReminderIds: number[]) => void;
     onDelete: (selectedReminderIds: number[]) => void;
 };
 
@@ -41,14 +40,13 @@ export class AllRemindersView extends React.PureComponent<AllRemindersViewProps,
                 <p>All of your pending reminders can be viewed here. You can also perform some bulk actions on them.</p>
                 <this.Actions>
                     <ButtonGroup>
-                        <Button onClick={() => this.onUpdateClicked()}>Update email address</Button>
                         <Button onClick={() => this.onDeleteClicked()}>Delete</Button>
                     </ButtonGroup>
                 </this.Actions>
-                <RemindersList 
+                <RemindersList
                     hostBaseUrl={this.props.hostBaseUrl}
-                    reminders={this.props.reminders} 
-                    onChange={ids => this.onSelectionChanged(ids)} 
+                    reminders={this.props.reminders}
+                    onChange={ids => this.onSelectionChanged(ids)}
                 />
             </this.Container>
         );
@@ -58,10 +56,6 @@ export class AllRemindersView extends React.PureComponent<AllRemindersViewProps,
         this.setState({
             selectedReminderIds: selectedReminderIds
         });
-    }
-
-    private onUpdateClicked() {
-        this.props.onUpdateEmail(this.state.selectedReminderIds);
     }
 
     private onDeleteClicked() {

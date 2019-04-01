@@ -11,6 +11,7 @@ import           Data.Aeson
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
 import           Data.Monoid                       (mempty)
+import qualified Data.Text                         as T
 import           Data.Text.Encoding                (encodeUtf8)
 import           GHC.Generics
 import qualified Snap.AtlassianConnect             as AC
@@ -19,7 +20,7 @@ import qualified Snap.Snaplet                      as SS
 
 data UserWithDetails = UserWithDetails
    { name         :: AC.UserKey
-   , emailAddress :: String
+   , accountId    :: T.Text
    , avatarUrls   :: M.Map String String
    , displayName  :: String
    , active       :: Bool

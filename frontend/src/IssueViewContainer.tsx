@@ -22,8 +22,9 @@ type LoadedDetails = {
         summary: string;
     },
     user: {
+        displayName: string;
         key: string;
-        emailAddress?: string;
+        accountId: string;
     }
 };
 
@@ -178,8 +179,9 @@ export class IssueViewContainer
                             summary: issueDetails.fields.summary
                         },
                         user: {
+                            displayName: userDetails.displayName,
                             key: user.key,
-                            emailAddress: userDetails.emailAddress
+                            accountId: userDetails.accountId
                         }
                     }
                 });
@@ -198,53 +200,39 @@ export class IssueViewContainer
     private createReminder(forDate: moment.Moment, message?: string) {
         const ld = this.state.loadedDetails;
         if (ld && ld !== 'reminders-failed-to-load') {
-            if (typeof ld.user.emailAddress === 'undefined') {
+            const requestData: ReminderRequest = {
+                issue: {
+                    key: ld.issue.key,
+                    id: ld.issue.id,
+                    summary: ld.issue.summary
+                },
+                userKey: ld.user.key,
+                userAaid: ld.user.accountId,
+                reminderDate: forDate.toDate()
+            };
+
+            if (message) {
+                requestData.message = message;
+            }
+
+            createReminder(requestData, this.props.pageContext)
+            .then(() => {
                 AP.flag.create({
-                    title: 'Could not access email address',
-                    body: `Please ensure that site wide Email Visibility has been set to public or "Show to logged in
-                            user only" and that your user profile has your email address set.`,
+                    title: 'Reminder created',
+                    body: `Reminder set for ${ld.user.displayName}`,
+                    type: 'success',
+                    close: 'auto'
+                });
+                this.refreshRemindersList();
+            })
+            .catch(() => {
+                AP.flag.create({
+                    title: 'Could not create reminder',
+                    body: `Reminder not set for ${ld.user.displayName}`,
                     type: 'error',
                     close: 'auto'
                 });
-            } else {
-                const emailAddress = ld.user.emailAddress;
-
-                const requestData: ReminderRequest = {
-                    issue: {
-                        key: ld.issue.key,
-                        id: ld.issue.id,
-                        summary: ld.issue.summary
-                    },
-                    user: {
-                        key: ld.user.key,
-                        email: emailAddress
-                    },
-                    reminderDate: forDate.toDate()
-                };
-
-                if (message) {
-                    requestData.message = message;
-                }
-
-                createReminder(requestData, this.props.pageContext)
-                .then(() => {
-                    AP.flag.create({
-                        title: 'Reminder created',
-                        body: `Reminder set for ${emailAddress}`,
-                        type: 'success',
-                        close: 'auto'
-                    });
-                    this.refreshRemindersList();
-                })
-                .catch(() => {
-                    AP.flag.create({
-                        title: 'Could not create reminder',
-                        body: `Reminder not set for ${emailAddress}`,
-                        type: 'error',
-                        close: 'auto'
-                    });
-                });
-            }
+            });
         }
     }
 }

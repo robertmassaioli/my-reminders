@@ -47,7 +47,6 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
             <AllRemindersView
                 hostBaseUrl={this.props.pageContext.productBaseUrl}
                 reminders={this.state.reminders}
-                onUpdateEmail={ids => this.onRefreshReminders(ids)}
                 onDelete={ids => this.onDeleteReminders(ids)}
             />
         );
@@ -64,27 +63,6 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
             });
         }).catch(() => {
             // todo what is the error state for this component?
-        });
-    }
-
-    private onRefreshReminders(selectedReminderIds: number[]) {
-        createUserRemindersApi(this.props.pageContext).refreshReminders({
-            pids: selectedReminderIds
-        }).then(() => {
-            AP.flag.create({
-                title: 'Updated all reminders',
-                body: 'All of the reminders have had their details synchronised.',
-                type: 'success',
-                close: 'auto'
-            });
-            this.reloadReminderData();
-        }).catch(() => {
-            AP.flag.create({
-                title: 'Could not update reminders',
-                body: 'Please try again and contact support if the problem persists.',
-                type: 'error',
-                close: 'auto'
-            });
         });
     }
 
