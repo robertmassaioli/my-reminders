@@ -33,7 +33,7 @@ fakeTenant = AC.Tenant
   , AC.key = "unique-identifier"
   , AC.publicKey = "23823g4982384927"
   , AC.sharedSecret = "1234123412341234"
-  , AC.baseUrl = "https://your-domain.atlassian.net"
+  , AC.baseUrl = AC.CURI . fromJust $ parseURI "https://your-domain.atlassian.net"
   , AC.productType = "jira"
   }
 
