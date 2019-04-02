@@ -29,13 +29,13 @@ decode = TE.decodeUtf8
 
 fakeTenant :: AC.Tenant
 fakeTenant = AC.Tenant
-  { tenantId = 2143
-  , key = "unique-identifier"
-  , publicKey = "23823g4982384927"
-  , oauthClientId = Nothing
-  , sharedSecret = "1234123412341234"
-  , baseUrl = "https://your-domain.atlassian.net"
-  , productType = "jira"
+  { AC.tenantId = 2143
+  , AC.key = "unique-identifier"
+  , AC.publicKey = "23823g4982384927"
+  , AC.oauthClientId = Nothing
+  , AC.sharedSecret = "1234123412341234"
+  , AC.baseUrl = "https://your-domain.atlassian.net"
+  , AC.productType = "jira"
   }
 
 prop_emailMessageContentContainsMessage :: T.Text -> Property
