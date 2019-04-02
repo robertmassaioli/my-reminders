@@ -33,7 +33,7 @@ declare module '@atlaskit/droplist' {
         trigger?: JSX.Element;
         position?: string;
     }
-    
+
     export default class DropList extends React.Component<PropTypes> { }
 
     export class ItemGroup extends React.Component {}
@@ -230,40 +230,40 @@ declare module '@atlaskit/datetime-picker' {
     interface DateTimePickerProps {
         // Whether or not to auto-focus the field.
         autoFocus?: boolean;
-        
+
         // Default for focused.
         defaultFocused?: string;
-        
+
         // Default for isOpen.
         defaultIsOpen?: boolean;
-        
+
         // Default for times.
         defaultTimes?: Array<string>;
-        
+
         // Default for value.
         defaultValue?: string | string[];
-        
+
         // An array of ISO dates that should be disabled on the calendar.
         disabled?: Array<string>;
-        
+
         // Whether or not the field is disabled.
         isDisabled?: boolean;
-        
+
         // Whether or not the dropdown is open.
         isOpen?: boolean;
-        
+
         // The time in the dropdown that should be focused.
         focused?: string;
-        
+
         // Called when the value changes. The first argument is an ISO date and the second is an ISO time.
         onChange: (date: string, time: string) => void;
-        
+
         // The times to show in the dropdown.
         times?: Array<string>;
-        
+
         // The ISO time that should be used as the input value.
         value?: string;
-        
+
         // The width of the field.
         width?: number;
     }
@@ -275,7 +275,7 @@ declare module '@atlaskit/datetime-picker' {
         autoFocus?: boolean;
 
         // Default for isOpen.
-        defaultIsOpen?: boolean; 
+        defaultIsOpen?: boolean;
 
         // Default for value.
         defaultValue?: string;
@@ -332,7 +332,7 @@ declare module '@atlaskit/field-text-area' {
         minimumRows?: number;
         enableResize?: boolean;
     }
-    
+
     export default class FieldTextArea extends React.Component<FieldTextAreaProps> {}
 }
 
@@ -369,7 +369,7 @@ declare module '@atlaskit/dynamic-table' {
     export interface DynamicTableRow {
         cells: DynamicTableCell[];
         key: string;
-    }    
+    }
 
     export interface RankStart {
         index: number;
@@ -395,9 +395,9 @@ declare module '@atlaskit/dynamic-table' {
         sortOrder?: 'ASC' | 'DESC';
         isRankable?: boolean;
         isRankingDisabled?: boolean;
-        onRankStart?: (s: RankStart) => void; 
+        onRankStart?: (s: RankStart) => void;
     }
-    
+
     export default class DynamicTable extends React.Component<DynamicTableProps> {}
 }
 
@@ -658,6 +658,16 @@ declare module '@atlaskit/page' {
     export default class Page extends React.Component<PageProps> {}
 }
 
+declare module '@atlaskit/banner' {
+    type BannerProps = {
+      appearance?: 'warning' | 'error';
+      icon?: React.ReactNode;
+      isOpen?: boolean;
+    }
+
+    export default class Banner extends React.Component<BannerProps> {}
+}
+
 declare namespace AP {
     function resize(): void;
 
@@ -726,7 +736,7 @@ declare namespace AP {
             width: string;
             height: string;
         }
-          
+
         interface Dialog {
             on: (event: 'close', callbackFn: () => void) => void;
         }
