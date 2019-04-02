@@ -32,7 +32,6 @@ fakeTenant = AC.Tenant
   { AC.tenantId = 2143
   , AC.key = "unique-identifier"
   , AC.publicKey = "23823g4982384927"
-  , AC.oauthClientId = Nothing
   , AC.sharedSecret = "1234123412341234"
   , AC.baseUrl = "https://your-domain.atlassian.net"
   , AC.productType = "jira"
