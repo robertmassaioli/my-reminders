@@ -15,6 +15,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import Test.QuickCheck.Instances ()
 import Text.HTML.TagSoup.Entity (escapeXML)
+import qualified Snap.AtlassianConnect as AC
 
 import EmailContent
 import Persistence.Reminder
@@ -25,6 +26,17 @@ tests =
   ]
 
 decode = TE.decodeUtf8
+
+fakeTenant :: AC.Tenant
+fakeTenant = AC.Tenant
+  { tenantId = 2143
+  , key = "unique-identifier"
+  , publicKey = "23823g4982384927"
+  , oauthClientId = Nothing
+  , sharedSecret "1234123412341234"
+  , baseUrl = "https://your-domain.atlassian.net"
+  , productType = "jira"
+  }
 
 prop_emailMessageContentContainsMessage :: T.Text -> Property
 prop_emailMessageContentContainsMessage tIn = monadicIO $ do
@@ -48,5 +60,5 @@ prop_emailMessageContentContainsMessage tIn = monadicIO $ do
     -- This is the actual conversion and extraction:
     getMessageText :: IO T.Text
     getMessageText = do
-      messageContent <- reminderEmail emailContext reminder
+      messageContent <- reminderEmail fakeTenant emailContext reminder
       return . decode . htmlContent $ messageContent
