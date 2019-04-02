@@ -12,8 +12,9 @@ import           Data.Aeson
 import           Data.Aeson.Types
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Char8             as BC
+import qualified Data.CaseInsensitive              as CI
 import qualified Data.Map                          as M
-import           Data.Monoid                       (mempty)
+import           Data.Monoid                       (mempty, (<>))
 import qualified Data.Text                         as T
 import           Data.Text.Encoding                (encodeUtf8, decodeUtf8)
 import           EmailContext
@@ -50,26 +51,30 @@ data NotificationUser = NotificationUser
 instance ToJSON NotificationUser where
   toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "nu" })
 
-userFromName :: T.Text -> NotificationUser
-userFromName name = NotificationUser
-  { nuName = Just name
-  , nuAccountId = Nothing
-  }
-
 userFromAccountId :: T.Text -> NotificationUser
 userFromAccountId accountId = NotificationUser
   { nuName = Nothing
   , nuAccountId = Just accountId
   }
 
+getNotificationUser :: AC.Tenant -> Reminder -> AppHandler (Either AC.ProductErrorResponse NotificationUser)
+getNotificationUser tenant reminder =
+  case reminderUserAaid reminder of
+    Just aaid -> return . Right . userFromAccountId $ aaid
+    Nothing -> do
+      potentialUserDetails <- UD.getUserDetails tenant (reminderUserKey reminder)
+      case potentialUserDetails of
+        Left error -> return . Left $ error
+        Right userDetails -> return . Right . userFromAccountId . UD.accountId $ userDetails
+
 sendIssueReminder :: AC.Tenant -> EmailContext -> Reminder -> AppHandler (Either AC.ProductErrorResponse ())
 sendIssueReminder tenant emailContext reminder = do
-  potentialUserDetails <- UD.getUserDetails tenant (reminderUserKey reminder)
-  case potentialUserDetails of
+  potentialNotificationUser <- getNotificationUser tenant reminder
+  case potentialNotificationUser of
     Left error -> return . Left $ error
-    Right userDetails -> do
-      payload <- liftIO $ createNotification userDetails
-      errorOnContent <$> (SS.with connect $ AC.hostPostRequestExtended tenant notifyUrl [] (AC.setJson payload))
+    Right notificationUser -> do
+      payload <- liftIO $ createNotification notificationUser
+      errorOnContent <$> (SS.with connect $ AC.hostPostRequestExtended tenant notifyUrl [] (AC.addHeader (CI.mk "x-atlassian-force-account-id", "true") <> AC.setJson payload))
   where
     notifyUrl :: B.ByteString
     notifyUrl = B.concat ["/rest/api/3/issue/", bIssueId, "/notify"]
@@ -77,14 +82,14 @@ sendIssueReminder tenant emailContext reminder = do
     bIssueId :: B.ByteString
     bIssueId = BC.pack . show . reminderIssueId $ reminder
 
-    createNotification :: UD.UserWithDetails -> IO Notification
-    createNotification userDetails = do
+    createNotification :: NotificationUser -> IO Notification
+    createNotification notificationUser = do
       emailContent <- reminderEmail tenant emailContext reminder
       return Notification
         { nSubject = subject
         , nTextBody = decodeUtf8 . textContent $ emailContent
         , nHtmlBody = decodeUtf8 . htmlContent $ emailContent
-        , nTo = NotificationRecipients [userFromName . UD.name $ userDetails]
+        , nTo = NotificationRecipients [notificationUser]
         }
 
     subject :: T.Text
