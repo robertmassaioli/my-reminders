@@ -2,12 +2,6 @@
 # yarn lockfile v1
 
 
-"@atlaskit/analytics-next@^1.0.2":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-1.1.1.tgz#81208966f4b5294ca6faa7f73755e52b5ad51142"
-  dependencies:
-    prop-types "^15.5.10"
-
 "@atlaskit/analytics-next@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-1.1.2.tgz#f182c1b57ca9dc118bd1b0c67d5a610b60459552"
@@ -38,16 +32,7 @@
     "@atlaskit/theme" "^2.4.1"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/button@^6.6.1":
-  version "6.6.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-6.6.1.tgz#4d74fccd0ccabd52b2c2db5cc1ff9fc151905a53"
-  dependencies:
-    "@atlaskit/analytics-next" "^1.0.2"
-    "@atlaskit/theme" "^2.4.0"
-    babel-runtime "^6.26.0"
-    styled-components "1.4.6 - 3"
-
-"@atlaskit/button@^6.6.2":
+"@atlaskit/button@^6.6.1", "@atlaskit/button@^6.6.2":
   version "6.6.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-6.6.2.tgz#c8c954e03009d65320f3cc68327fadf6dfcf6951"
   dependencies:
@@ -312,13 +297,6 @@
     "@atlaskit/theme" "^2.4.1"
     babel-runtime "^6.26.0"
     react-transition-group "^2.2.1"
-    styled-components "1.4.6 - 3"
-
-"@atlaskit/theme@^2.4.0":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/theme/-/theme-2.4.0.tgz#03e34fd1424cbdadbce52ccb922b52901bc1c12c"
-  dependencies:
-    prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
 
 "@atlaskit/theme@^2.4.1":
@@ -656,17 +634,13 @@ acorn-globals@^3.1.0:
   dependencies:
     acorn "^4.0.4"
 
-acorn@>=2.5.2:
+acorn@>=2.5.2, acorn@^5.0.0:
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.5.3.tgz#f473dd47e0277a08e28e9bec5aeeb04751f0b8c9"
 
 acorn@^4.0.3, acorn@^4.0.4:
   version "4.0.13"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-4.0.13.tgz#105495ae5361d697bd195c825192e1ad7f253787"
-
-acorn@^5.0.0:
-  version "5.5.1"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.5.1.tgz#84e05a9ea0acbe131227da50301e62464dc9c1d8"
 
 add-dom-event-listener@1.x:
   version "1.0.2"
@@ -2652,11 +2626,11 @@ comma-separated-tokens@^1.0.0:
   dependencies:
     trim "0.0.1"
 
-commander@2.14.x, commander@^2.12.1, commander@~2.14.1:
+commander@2.14.x, commander@~2.14.1:
   version "2.14.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.14.1.tgz#2235123e37af8ca3c65df45b026dbd357b01b9aa"
 
-commander@^2.12.2, commander@^2.9.0:
+commander@^2.12.1, commander@^2.12.2, commander@^2.9.0:
   version "2.15.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.15.0.tgz#ad2a23a1c3b036e392469b8012cec6b33b4c1322"
 
@@ -3689,10 +3663,6 @@ event-emitter@~0.3.5:
     d "1"
     es5-ext "~0.10.14"
 
-eventemitter3@1.x.x:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-1.2.0.tgz#1c86991d816ad1e504750e73874224ecf3bec508"
-
 eventemitter3@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-3.1.0.tgz#090b4d6cdbd645ed10bf750d4b5407942d7ba163"
@@ -4683,14 +4653,7 @@ http-proxy-middleware@~0.17.4:
     lodash "^4.17.2"
     micromatch "^2.3.11"
 
-http-proxy@^1.16.2:
-  version "1.16.2"
-  resolved "https://registry.yarnpkg.com/http-proxy/-/http-proxy-1.16.2.tgz#06dff292952bf64dbe8471fa9df73066d4f37742"
-  dependencies:
-    eventemitter3 "1.x.x"
-    requires-port "1.x.x"
-
-http-proxy@^1.8.1:
+http-proxy@^1.16.2, http-proxy@^1.8.1:
   version "1.17.0"
   resolved "https://registry.yarnpkg.com/http-proxy/-/http-proxy-1.17.0.tgz#7ad38494658f84605e2f6db4436df410f4e5be9a"
   dependencies:
@@ -5882,14 +5845,7 @@ lowlight@^1.5.0, lowlight@~1.9.1:
   dependencies:
     highlight.js "~9.12.0"
 
-lru-cache@^4.0.1:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-4.1.1.tgz#622e32e82488b49279114a4f9ecf45e7cd6bba55"
-  dependencies:
-    pseudomap "^1.0.2"
-    yallist "^2.1.2"
-
-lru-cache@^4.1.1:
+lru-cache@^4.0.1, lru-cache@^4.1.1:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-4.1.2.tgz#45234b2e6e2f2b33da125624c4664929a0224c3f"
   dependencies:
@@ -6991,13 +6947,7 @@ postcss-minify-selectors@^2.0.4:
     postcss "^5.0.14"
     postcss-selector-parser "^2.0.0"
 
-postcss-modules-extract-imports@^1.0.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/postcss-modules-extract-imports/-/postcss-modules-extract-imports-1.1.0.tgz#b614c9720be6816eaee35fb3a5faa1dba6a05ddb"
-  dependencies:
-    postcss "^6.0.1"
-
-postcss-modules-extract-imports@^1.2.0:
+postcss-modules-extract-imports@^1.0.0, postcss-modules-extract-imports@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/postcss-modules-extract-imports/-/postcss-modules-extract-imports-1.2.0.tgz#66140ecece38ef06bf0d3e355d69bf59d141ea85"
   dependencies:
@@ -8079,7 +8029,7 @@ require-relative@^0.8.7:
   version "0.8.7"
   resolved "https://registry.yarnpkg.com/require-relative/-/require-relative-0.8.7.tgz#7999539fc9e047a37928fa196f8e1563dabd36de"
 
-requires-port@1.0.x, requires-port@1.x.x, requires-port@^1.0.0, requires-port@~1.0.0:
+requires-port@1.0.x, requires-port@^1.0.0, requires-port@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
 
