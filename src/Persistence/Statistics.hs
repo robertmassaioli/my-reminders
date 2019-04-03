@@ -55,6 +55,6 @@ getStatistics = do
                 (select count(*) from reminder where userAaid is not NULL) as has_aaids
             FROM
             	(select count(tenantid) as tenant_count, tenantid as tid from reminder group by tenantid) as tencount,
-            	(select count(userkey) as email_count from reminder group by userkey) as remcount;
+            	(select count(userAaid) as email_count from reminder group by userAaid) as remcount;
         |]
     return result

@@ -23,7 +23,6 @@ type LoadedDetails = {
     },
     user: {
         displayName: string;
-        key: string;
         accountId: string;
     }
 };
@@ -163,7 +162,7 @@ export class IssueViewContainer
         const user = this.props.pageContext.user;
 
         if (issue && user) {
-            const userRequest = requestUserDetails(user.key);
+            const userRequest = requestUserDetails();
             const issueRequest = requestIssueDetails(issue.key);
             const remindersRequest = fetchRemindersForIssue(issue.id, this.props.pageContext);
 
@@ -180,7 +179,6 @@ export class IssueViewContainer
                         },
                         user: {
                             displayName: userDetails.displayName,
-                            key: user.key,
                             accountId: userDetails.accountId
                         }
                     }
@@ -206,7 +204,6 @@ export class IssueViewContainer
                     id: ld.issue.id,
                     summary: ld.issue.summary
                 },
-                userKey: ld.user.key,
                 userAaid: ld.user.accountId,
                 reminderDate: forDate.toDate()
             };

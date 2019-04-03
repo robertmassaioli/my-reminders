@@ -222,9 +222,6 @@ definitions:
         format: date-time
       Issue:
         $ref: "#/definitions/IssueDetails"
-      UserKey:
-        description: The key of the user that this reminder should be created for.
-        type: string
       UserAaid:
         description: The AAID of the user that this reminder should be created for.
         type: string
@@ -282,7 +279,6 @@ definitions:
       - IssueId
       - IssueKey
       - IssueSummary
-      - UserKey
       - Date
     properties:
       ReminderId:
@@ -300,10 +296,6 @@ definitions:
       IssueSummary:
         description: The current Jira summary for this issue.
         type: string
-      UserKey:
-        description: The user key for the user that created the reminder on the Jira tenant.
-        type: string
-        minLength: 1
       Message:
         description: The message that the user set for the reminder to help jog their memory.
         type: string
