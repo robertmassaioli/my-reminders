@@ -17,13 +17,13 @@ const WarningMessage = styled.p`
 
 const UpgradeWarningBanner: React.SFC<{ isOpen: boolean }> = props => (
     <>
-        <Banner icon={Icon} isOpen={props.isOpen} appearance="warning">
+        <Banner icon={Icon} isOpen={props.isOpen} appearance="error">
             Upgrade My Reminders.
         </Banner>
         {props.isOpen && (
             <>
                 <WarningMessage>
-                    Please tell your admin that an upgrade to My Reminders is required to continue recieving reminders.
+                    Reminders will not be sent until your administrator upgrades My Reminders.
                 </WarningMessage>
                 <br />
             </>
