@@ -7,7 +7,6 @@ import qualified Data.Text.Encoding as TE
 import Data.Time.Clock (UTCTime(..), secondsToDiffTime)
 import Data.Time.Calendar (fromGregorian)
 import Data.Maybe (fromJust)
-import Mail.Hailgun
 import Network.URI (parseURI)
 import EmailContext
 import Test.Framework
@@ -16,6 +15,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import Test.QuickCheck.Instances ()
 import Text.HTML.TagSoup.Entity (escapeXML)
+import qualified Snap.AtlassianConnect as AC
 
 import EmailContent
 import Persistence.Reminder
@@ -27,6 +27,16 @@ tests =
 
 decode = TE.decodeUtf8
 
+fakeTenant :: AC.Tenant
+fakeTenant = AC.Tenant
+  { AC.tenantId = 2143
+  , AC.key = "unique-identifier"
+  , AC.publicKey = "23823g4982384927"
+  , AC.sharedSecret = "1234123412341234"
+  , AC.baseUrl = AC.CURI . fromJust $ parseURI "https://your-domain.atlassian.net"
+  , AC.productType = "jira"
+  }
+
 prop_emailMessageContentContainsMessage :: T.Text -> Property
 prop_emailMessageContentContainsMessage tIn = monadicIO $ do
   messageText <- run getMessageText
@@ -37,8 +47,7 @@ prop_emailMessageContentContainsMessage tIn = monadicIO $ do
     tNormalised = decode . TE.encodeUtf8 $ tIn
     tNormalisedEscaped = T.pack . escapeXML . T.unpack $ tNormalised
     time = UTCTime (fromGregorian 2000 1 2) (secondsToDiffTime 30)
-    uri = fromJust $ parseURI "http://test.com"
-    reminder = EmailReminder 1 2 "key" "key2" "stuff" "other stuff" "userkey" "email@address" (Just tNormalised) time uri
+    reminder = Reminder 1 2 12345 "originalKey" "newKey" "stuff" "other stuff" "userkey" "user@email" (Just tNormalised) time
     emailContext = EmailContext
        { ecConnectConf = undefined
        , ecAppConf = undefined
@@ -49,5 +58,5 @@ prop_emailMessageContentContainsMessage tIn = monadicIO $ do
     -- This is the actual conversion and extraction:
     getMessageText :: IO T.Text
     getMessageText = do
-      messageContent <- reminderEmail emailContext reminder
+      messageContent <- reminderEmail fakeTenant emailContext reminder
       return . decode . htmlContent $ messageContent

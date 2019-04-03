@@ -42,7 +42,7 @@ webhookDataFromRequest = eitherDecode <$> SC.readRequestBody dataLimitBytes
 
 handleUpdate :: AC.Tenant -> IssueUpdate -> AppHandler (Maybe a)
 handleUpdate tenant issueUpdate = do
-  when (reminderUpdateRequired issueUpdate) $ DB.withConnection (handleWebhookUpdate tenant issueUpdate)
+  when (reminderUpdateRequired issueUpdate) $ handleWebhookUpdate tenant issueUpdate
   return Nothing
 
 -- Issues will be updated many times and the connect webhooks cannot be easily restricted to certain
@@ -54,10 +54,10 @@ handleUpdate tenant issueUpdate = do
 reminderUpdateRequired :: IssueUpdate -> Bool
 reminderUpdateRequired iu = any isJust $ [iuNewKey, iuNewSummary] <*> pure iu
 
-handleWebhookUpdate :: AC.Tenant -> IssueUpdate -> Connection -> IO ()
-handleWebhookUpdate tenant issueUpdate conn = do
-   maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey conn) (iuNewKey issueUpdate)
-   maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary conn) (iuNewSummary issueUpdate)
+handleWebhookUpdate :: AC.Tenant -> IssueUpdate -> AppHandler ()
+handleWebhookUpdate tenant issueUpdate = do
+   maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey) (iuNewKey issueUpdate)
+   maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary) (iuNewSummary issueUpdate)
    return ()
 
 webhookDataToIssueUpdate :: WebhookData -> IssueUpdate
@@ -122,4 +122,4 @@ handleIssueDeleteWebhook = SH.handleMethods [(SC.POST, void $ WT.withTenant (han
 -- Since deletes are will probably be infrequent just delete all reminders for the deleted issue
 -- against that tenant in the database.
 handleDelete :: AC.Tenant -> IssueUpdate -> AppHandler (Maybe a)
-handleDelete tenant issueUpdate = DB.withConnection (P.deleteRemindersForIssue tenant (iuId issueUpdate)) >> return Nothing
+handleDelete tenant issueUpdate = P.deleteRemindersForIssue tenant (iuId issueUpdate) >> return Nothing

@@ -115,7 +115,7 @@ expiryHealthcheck = do
    currentTime <- liftIO getCurrentTime
    expiryWindowMaxMinutes <- fmap CONF.rmMaxExpiryWindowMinutes CONF.getAppConf
    let expireTime = addUTCTime (negate $ timeUnitToDiffTime expiryWindowMaxMinutes) currentTime
-   result <- simpleCatch (withConnection $ getExpiredReminders expireTime)
+   result <- simpleCatch (getExpiredReminders expireTime)
    return $ case result of
       Left e -> status (Just . show $ e) currentTime expiryWindowMaxMinutes
       Right reminders ->
