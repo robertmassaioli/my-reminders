@@ -18,6 +18,8 @@ module Persistence.Reminder
    , deleteRemindersForIssue
    , deleteManyReminders
    , deleteManyRemindersForUser
+   , setReminderAccountId
+   , getRemindersMissingAaids
    ) where
 
 import           Application
@@ -113,9 +115,28 @@ getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
-   SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType FROM reminder p, tenant t WHERE p.tenantId = t.id AND p.date < ?
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      FROM reminder p, tenant t
+      WHERE p.tenantId = t.id AND p.date < ?
     |]
     (Only expireTime)
+   return (results :: [(Reminder, AC.Tenant)])
+
+setReminderAccountId :: Reminder -> UserAaid -> AppHandler Int64
+setReminderAccountId reminder userAaid = execute
+   [sql|
+      UPDATE reminder SET userAaid = ? WHERE id = ?
+   |]
+   (userAaid, reminderReminderId reminder)
+
+getRemindersMissingAaids :: AppHandler [(Reminder, AC.Tenant)]
+getRemindersMissingAaids = do
+   results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query_
+    [sql|
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      FROM reminder p, tenant t
+      WHERE p.tenantId = t.id AND p.userAaid is NULL
+    |]
    return (results :: [(Reminder, AC.Tenant)])
 
 deleteReminder :: ReminderId -> AppHandler Int64

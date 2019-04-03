@@ -10,6 +10,7 @@ module Site
   ( app
   ) where
 
+import           AaidSlurpHandlers
 import           AdminHandlers
 import qualified AppConfig                                   as CONF
 import           Application
@@ -123,6 +124,7 @@ applicationRoutes =
   , ("/rest/heartbeat"                , heartbeatRequest)
   , ("/rest/migration"                , migrationRequest)
   , ("/rest/statistics"               , handleStatistics)
+  , ("/rest/aaid-slurp"               , handleAaidSlurp)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
