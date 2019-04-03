@@ -1,0 +1,1 @@
+ALTER TABLE reminder ADD COLUMN userAaid varchar(300);
