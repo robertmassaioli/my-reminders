@@ -76,13 +76,32 @@ export default function stories(storyCreator: partialStoriesOf) {
 
   storyCreator('Issue view')
     .add('Loading view', () => (
-        <IssueView reminders={undefined} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
+        <IssueView
+            showUpgradeWarning={false}
+            reminders={undefined}
+            onReminderDeleted={deleteAction}
+            {...issueViewActionsProps}
+        />
     ))
     .add('Empty view', () => (
-        <IssueView reminders={[]} onReminderDeleted={deleteAction} {...issueViewActionsProps} />
+        <IssueView
+            showUpgradeWarning={false}
+            reminders={[]}
+            onReminderDeleted={deleteAction}
+            {...issueViewActionsProps}
+        />
+    ))
+    .add('Empty view with upgrade warning', () => (
+        <IssueView
+            showUpgradeWarning={true}
+            reminders={[]}
+            onReminderDeleted={deleteAction}
+            {...issueViewActionsProps}
+        />
     ))
     .add('One reminder', () => (
         <IssueView
+            showUpgradeWarning={false}
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',
@@ -94,6 +113,7 @@ export default function stories(storyCreator: partialStoriesOf) {
     ))
     .add('Multiple reminders', () => (
         <IssueView
+            showUpgradeWarning={false}
             reminders={[{
                 id: 1234,
                 message: 'A simple reminder, with a simple message.',

@@ -30,6 +30,7 @@ type LoadedDetails = {
 
 type IssueViewContainerState = {
     state: 'loading' | 'loaded';
+    showVersionWarning: boolean;
     loadedDetails?: LoadedDetails | 'reminders-failed-to-load';
 };
 
@@ -53,6 +54,31 @@ function setToMorningHour(date: moment.Moment): moment.Moment {
     return date;
 }
 
+function getAppKey(): Promise<string> {
+    return fetch('/atlassian-connect.json')
+        .then(resp => resp.json())
+        .then(data => {
+            return data.key;
+        });
+}
+
+function shouldRequestVersionUpgrade(): Promise<boolean> {
+    return getAppKey().then(async appKey => {
+        const appDetails = await AP.request({
+            type: 'GET',
+            url: `/rest/atlassian-connect/1/addons/${appKey}`
+        });
+
+        const response = JSON.parse(appDetails.body);
+        if (typeof response === 'object' && typeof response.version === 'string') {
+            const version: string = response.version;
+            return version.startsWith('1.0');
+        } else {
+            return false;
+        }
+    });
+}
+
 export class IssueViewContainer
     extends React.PureComponent<RouteComponentProps<void> & IssueViewContainerProps, IssueViewContainerState> {
 
@@ -69,7 +95,14 @@ export class IssueViewContainer
 
     componentWillMount() {
         this.setState({
-            state: 'loading'
+            state: 'loading',
+            showVersionWarning: false
+        });
+
+        shouldRequestVersionUpgrade().then(showVersionWarning => {
+            this.setState({
+                showVersionWarning
+            });
         });
 
         // Handle dialog close events
@@ -108,6 +141,7 @@ export class IssueViewContainer
 
         return (
             <IssueView
+                showUpgradeWarning={this.state.showVersionWarning}
                 reminders={ld ? ld.reminders : undefined}
                 onAddReminder={() => this.onOpenAdvanced()}
                 onTomorrow={() => this.createReminder(setToMorningHour(moment().add(1, 'days')))}
@@ -139,6 +173,7 @@ export class IssueViewContainer
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {
                         state: s.state,
+                        showVersionWarning: s.showVersionWarning,
                         loadedDetails: {
                             ...s.loadedDetails,
                             reminders: s.loadedDetails.reminders.filter(r => r.id !== reminderId)
