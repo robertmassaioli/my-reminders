@@ -21,12 +21,10 @@ import           EmailContent
 import           EmailContext
 import           Finder
 import           Mail.Hailgun
-import           Persistence.PostgreSQL              (withConnection)
 import           Persistence.Reminder
 import qualified Snap.AtlassianConnect               as AC
 import qualified Snap.AtlassianConnect.HostRequest   as AC
 import qualified Snap.Core                           as SC
-import qualified Snap.Snaplet                        as SS
 import           SnapHelpers
 import           System.FilePath                     ((</>))
 

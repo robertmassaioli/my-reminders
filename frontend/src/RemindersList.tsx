@@ -38,9 +38,9 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
                 {
                     key: 'operations',
                     content: (
-                        <input 
-                            type="checkbox" 
-                            checked={this.allAreSelected()} 
+                        <input
+                            type="checkbox"
+                            checked={this.allAreSelected()}
                             onChange={() => this.selectAllToggle()}
                         />
                     ),
@@ -49,11 +49,6 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
                 {
                     key: 'date',
                     content: <span>Date</span>,
-                    isSortable: true
-                },
-                {
-                    key: 'email',
-                    content: <span>Receiver</span>,
                     isSortable: true
                 },
                 {
@@ -70,10 +65,10 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
         };
 
         const emptyState: JSX.Element = (
-            <EmptyState 
-                header="No reminders" 
-                description="You have no reminders that are waiting 
-                to be sent. Browse your issues and 
+            <EmptyState
+                header="No reminders"
+                description="You have no reminders that are waiting
+                to be sent. Browse your issues and
                 add reminders to those issues."
             />
         );
@@ -86,7 +81,7 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
             );
         } else {
             return (
-                <DynamicTable 
+                <DynamicTable
                     head={head}
                     rows={this.rowsFromReminders(this.props.reminders)}
                     emptyView={emptyState}
@@ -125,8 +120,8 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
     private reminderChanged(reminderId: number) {
         this.setState(s => {
             const existing = !!s.selectedReminderIds.find(id => id === reminderId);
-            const selectedReminderIds = existing 
-                ? s.selectedReminderIds.filter(id => id !== reminderId) 
+            const selectedReminderIds = existing
+                ? s.selectedReminderIds.filter(id => id !== reminderId)
                 : [reminderId].concat(s.selectedReminderIds);
             this.triggerChange(selectedReminderIds);
             return { selectedReminderIds };
@@ -147,20 +142,16 @@ export class RemindersList extends React.PureComponent<RemindersListProps, Remin
                 {
                     key: 'operation',
                     content: (
-                        <input 
+                        <input
                             type="checkbox"
-                            checked={isSelected} 
-                            onChange={(e) => this.reminderChanged(reminder.id)} 
+                            checked={isSelected}
+                            onChange={(e) => this.reminderChanged(reminder.id)}
                         />
                     )
                 },
                 {
                     key: 'date',
                     content: <span>{reminderDate}</span>
-                },
-                {
-                    key: 'email',
-                    content: <span>{reminder.email}</span>
                 },
                 {
                     key: 'issue',

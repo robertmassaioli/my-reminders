@@ -36,7 +36,7 @@ addonJiraModules = emptyJIRAModules
          { wpKey = "view-issue-reminders"
          , wpName = simpleText "My reminders"
          , wpTooltip = Just . simpleText $ "Your reminders for this issue."
-         , wpUrl = "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
+         , wpUrl = "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}&accountId={profileUser.accountId}"
          , wpLocation = "atl.jira.view.issue.right.context"
          , wpConditions = [staticJiraCondition UserIsLoggedInJiraCondition]
          , wpWeight = Nothing

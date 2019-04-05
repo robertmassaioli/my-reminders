@@ -2,7 +2,6 @@ import * as URI from 'urijs';
 
 export interface UserDetails {
     timeZone: string;
-    emailAddress?: string;
     displayName: string;
     name: string;
     key: string;

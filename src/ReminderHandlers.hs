@@ -42,7 +42,8 @@ data TimeUnit
 data ReminderRequest = ReminderRequest
   { prqReminderDate :: UTCTime
   , prqIssue        :: AC.IssueDetails
-  , prqUser         :: AC.UserDetails
+  , prqUserKey      :: Maybe T.Text
+  , prqUserAaid     :: Maybe T.Text
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
@@ -52,7 +53,6 @@ data ReminderResponse = ReminderResponse
    , prsIssueKey     :: AC.IssueKey
    , prsIssueSummary :: AC.IssueSummary
    , prsUserKey      :: AC.UserKey
-   , prsUserEmail    :: String
    , prsMessage      :: Maybe T.Text
    , prsDate         :: UTCTime
    } deriving (Eq, Show, Generic)
@@ -117,7 +117,6 @@ toReminderResponse reminder = ReminderResponse
    , prsIssueKey       = P.reminderIssueKey reminder
    , prsIssueSummary   = P.reminderIssueSummary reminder
    , prsUserKey        = P.reminderUserKey reminder
-   , prsUserEmail      = BC.unpack . P.reminderUserEmail $ reminder
    , prsMessage        = P.reminderMessage reminder
    , prsDate           = P.reminderDate reminder
    }
@@ -142,7 +141,6 @@ clearRemindersForIssue _ = undefined
 handleUserReminders :: AppHandler ()
 handleUserReminders = handleMethods
    [ (SC.GET, WT.tenantFromToken getUserReminders)
-   , (SC.POST, WT.tenantFromToken bulkUpdateUserEmails)
    , (SC.DELETE, WT.tenantFromToken bulkDeleteEmails)
    ]
 
@@ -151,22 +149,6 @@ getUserReminders (_, Nothing) = standardAuthError
 getUserReminders (tenant, Just userKey) = do
    userReminders <- P.getLiveRemindersByUser tenant userKey
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
-
-bulkUpdateUserEmails :: AC.TenantWithUser -> AppHandler ()
-bulkUpdateUserEmails (_, Nothing) = standardAuthError
-bulkUpdateUserEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
-  potentialUserDetails <- UD.getUserDetails tenant userKey
-  case potentialUserDetails of
-    Left err -> respondWithError internalServer ("Could not communicate with the host product to get user details: " ++ (T.unpack . AC.perMessage) err)
-    Right userDetails -> do
-      P.updateEmailForUser tenant (userDetailsConvert userDetails) (pids reminderIds)
-      respondNoContent
-  where
-    userDetailsConvert :: UD.UserWithDetails -> AC.UserDetails
-    userDetailsConvert uwd = AC.UserDetails
-      { AC.userKey = UD.name uwd
-      , AC.userEmail = BC.pack $ UD.emailAddress uwd
-      }
 
 bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
@@ -227,24 +209,22 @@ addReminderHandler connectTenant = do
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
 addReminder (tenant, Just userKey) reminderRequest
-    | userKey /= requestUK = respondWithError badRequest userMismatchError
-    | isNotValid emailAddress = respondWithError badRequest emailMismatchError
-    | otherwise =
-        addReminderFromRequest reminderRequest tenant (prqUser reminderRequest) >>=
-          maybe (respondWithError internalServer insertFailedError)
-                (const respondNoContent)
+    | Just userKey /= requestUK = respondWithError badRequest userMismatchError
+    | otherwise = case requestUK of
+         Nothing -> respondWithError badRequest "Missing a userKey on the request"
+         Just rUserKey -> addReminderFromRequest reminderRequest tenant rUserKey >>=
+            maybe (respondWithError internalServer insertFailedError)
+                  (const respondNoContent)
   where
     isNotValid = not . EV.isValid
-    requestUK = AC.userKey $ prqUser reminderRequest
-    emailAddress = AC.userEmail $ prqUser reminderRequest
+    requestUK = prqUserKey reminderRequest
     -- Error strings
     userMismatchError = "Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey
-    emailMismatchError = "Oops, your email address " ++ show emailAddress ++ " is not valid. Please change it in your profile settings."
     insertFailedError = "Failed to insert new reminder: " ++ show userKey
 
-addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserDetails -> AppHandler (Maybe Integer)
-addReminderFromRequest reminderRequest tenant userDetails =
-  P.addReminder date' tenantId' iDetails userDetails message'
+addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserKey -> AppHandler (Maybe Integer)
+addReminderFromRequest reminderRequest tenant userKey =
+  P.addReminder date' tenantId' iDetails userKey message'
   where
     date' = prqReminderDate reminderRequest
     tenantId' = AC.tenantId tenant

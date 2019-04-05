@@ -136,7 +136,6 @@ export default function stories(storyCreator: partialStoriesOf) {
     .add('Loading view', () => (
         <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ))
@@ -144,7 +143,6 @@ export default function stories(storyCreator: partialStoriesOf) {
         <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
             reminders={[]}
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ))
@@ -152,7 +150,6 @@ export default function stories(storyCreator: partialStoriesOf) {
         <AllRemindersView
             hostBaseUrl="https://your-domain.atlassian.net"
             reminders={manyReminders}
-            onUpdateEmail={noOp}
             onDelete={noOp}
         />
     ));
@@ -168,7 +165,6 @@ export default function stories(storyCreator: partialStoriesOf) {
             reminders={[{
                 id: 12345,
                 key: 'DAC-123',
-                email: 'example@test.test',
                 summary: 'An issue to behold',
                 expiresAt: new Date(new Date().getTime() + msPerDay * 4),
                 message: 'Don\'t forget to deal with this issue later!'
