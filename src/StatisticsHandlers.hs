@@ -3,7 +3,6 @@ module StatisticsHandlers (handleStatistics) where
 import qualified AppConfig              as CONF
 import           AppHelpers
 import           Application
-import           Persistence.PostgreSQL
 import           Persistence.Statistics
 import qualified Snap.Core              as SC
 import           SnapHelpers
@@ -16,7 +15,7 @@ handleStatistics = handleMethods
 handleGetStatistics :: AppHandler ()
 handleGetStatistics = getKeyAndConfirm CONF.rmStatisticsKey $ do
     SC.setTimeout 60 -- The statistics job may take a long time
-    statistics <- withConnection getStatistics
+    statistics <- getStatistics
     writeJson statistics
     respondWith ok
 

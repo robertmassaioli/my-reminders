@@ -16,7 +16,6 @@ import           Data.Maybe                 (isJust)
 import qualified Data.Text                  as T
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
-import qualified Persistence.PostgreSQL     as DB
 import qualified Persistence.Reminder       as P
 import qualified Snap.AtlassianConnect      as AC
 import qualified Snap.Core                  as SC

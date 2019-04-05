@@ -11,7 +11,6 @@ import qualified Data.ByteString.Char8  as B
 import qualified Data.CaseInsensitive   as DC
 import           Data.Maybe             (isJust)
 import qualified Data.Text              as T
-import qualified Persistence.PostgreSQL as PP
 import qualified Persistence.Tenant     as PT
 import qualified Snap.AtlassianConnect  as AC
 import qualified Snap.Core              as SC
@@ -24,7 +23,7 @@ import qualified Web.JWT                as J
 
 type UnverifiedJWT = J.JWT J.UnverifiedJWT
 
-withTenant :: AC.HasConnect (SS.Handler b App) => (AC.TenantWithUser -> SS.Handler b App (Maybe a)) -> SS.Handler b App (Maybe a)
+withTenant :: (AC.TenantWithUser -> AppHandler (Maybe a)) -> AppHandler (Maybe a)
 withTenant tennantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
@@ -35,7 +34,7 @@ withTenant tennantApply = do
         Left result -> SH.respondPlainWithError SH.badRequest result >> return Nothing
         Right tenant -> tennantApply tenant
 
-withMaybeTenant :: AC.HasConnect (SS.Handler b App) => (Maybe AC.TenantWithUser -> SS.Handler b App (Maybe a)) -> SS.Handler b App (Maybe a)
+withMaybeTenant :: (Maybe AC.TenantWithUser -> AppHandler (Maybe a)) -> AppHandler (Maybe a)
 withMaybeTenant tenantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
@@ -82,21 +81,20 @@ flipEither :: Either a b -> Either b a
 flipEither (Left x)  = Right x
 flipEither (Right x) = Left x
 
-getTenant :: UnverifiedJWT -> SS.Handler b App (Either String AC.TenantWithUser)
+getTenant :: UnverifiedJWT -> AppHandler (Either String AC.TenantWithUser)
 getTenant unverifiedJwt = do
   let potentialKey = getClientKey unverifiedJwt
   -- TODO collapse these cases
   case potentialKey of
     Nothing -> retError "Could not parse the JWT message."
-    Just key ->
-      PP.withConnection $ \conn -> do
-        potentialTenant <- PT.lookupTenant conn normalisedClientKey
-        case potentialTenant of
-          Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
-          Just unverifiedTenant ->
-            case verifyTenant unverifiedTenant unverifiedJwt of
-              Nothing -> retError "Invalid signature for request. Danger! Request ignored."
-              Just verifiedTenant -> ret (verifiedTenant, getUserKey unverifiedJwt)
+    Just key -> do
+      potentialTenant <- PT.lookupTenant normalisedClientKey
+      case potentialTenant of
+        Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
+        Just unverifiedTenant ->
+          case verifyTenant unverifiedTenant unverifiedJwt of
+            Nothing -> retError "Invalid signature for request. Danger! Request ignored."
+            Just verifiedTenant -> ret (verifiedTenant, getUserKey unverifiedJwt)
       where
         sClientKey          = show key
         normalisedClientKey = T.pack sClientKey

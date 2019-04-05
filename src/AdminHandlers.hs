@@ -17,7 +17,6 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
 import           GHC.Generics
 import qualified Network.URI            as NU
-import           Persistence.PostgreSQL
 import           Persistence.Tenant
 import qualified Snap.AtlassianConnect  as AC
 import qualified Snap.Core              as SC
@@ -60,7 +59,7 @@ performTenantSearch :: AppHandler ()
 performTenantSearch = do
     potentialBaseUrl <- SC.getParam "base_url"
     let searchUrl = fromMaybe "" potentialBaseUrl
-    tenants <- withConnection (findTenantsByBaseUrl (T.decodeUtf8 searchUrl))
+    tenants <- findTenantsByBaseUrl (T.decodeUtf8 searchUrl)
     writeJson . toSafeTenants $ tenants
 
 adminTenant :: AppHandler ()
@@ -73,4 +72,4 @@ deleteTenant = do
     potentialTenantKey <- SC.getParam "tenant_key"
     case potentialTenantKey of
         Nothing -> respondWithError badRequest "You need to provide a tenant_key to specify the tenant to delete."
-        Just tenantKey -> void $ withConnection (`removeTenantInformation` T.decodeUtf8 tenantKey)
+        Just tenantKey -> void $ removeTenantInformation (T.decodeUtf8 tenantKey)

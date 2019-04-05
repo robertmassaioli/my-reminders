@@ -20,7 +20,6 @@ import           Data.Time.Clock
 import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import qualified Model.UserDetails                 as UD
-import           Persistence.PostgreSQL
 import qualified Persistence.Reminder              as P
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC

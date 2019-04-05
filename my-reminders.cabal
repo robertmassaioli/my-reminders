@@ -25,11 +25,11 @@ Executable my-reminders
                  , Data.Padding
                  , Data.Padding.PKCS
                  , Data.Padding.Util
+                 , Model.Notify
                  , Model.UserDetails
                  , Paths_my_reminders
                  , Persistence.Instances
                  , Persistence.Reminder
-                 , Persistence.PostgreSQL
                  , Persistence.Tenant
                  , Persistence.Statistics
                  , ConfigurationHelpers
