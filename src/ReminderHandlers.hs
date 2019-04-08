@@ -42,7 +42,7 @@ data ReminderRequest = ReminderRequest
   { prqReminderDate :: UTCTime
   , prqIssue        :: AC.IssueDetails
   , prqUserKey      :: Maybe T.Text
-  , prqUserAaid     :: Maybe T.Text
+  , prqUserAaid     :: T.Text
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
@@ -210,20 +210,21 @@ addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logge
 addReminder (tenant, Just userKey) reminderRequest
     | Just userKey /= requestUK = respondWithError badRequest userMismatchError
     | otherwise = case requestUK of
-         Nothing -> respondWithError badRequest "Missing a userKey on the request"
-         Just rUserKey -> addReminderFromRequest reminderRequest tenant rUserKey >>=
+         Just rUserKey -> addReminderFromRequest reminderRequest tenant rUserKey requestAaid >>=
             maybe (respondWithError internalServer insertFailedError)
                   (const respondNoContent)
+         _ -> respondWithError badRequest "Missing a userKey on the request"
   where
     isNotValid = not . EV.isValid
     requestUK = prqUserKey reminderRequest
+    requestAaid = prqUserAaid reminderRequest
     -- Error strings
     userMismatchError = "Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey
     insertFailedError = "Failed to insert new reminder: " ++ show userKey
 
-addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserKey -> AppHandler (Maybe Integer)
-addReminderFromRequest reminderRequest tenant userKey =
-  P.addReminder date' tenantId' iDetails userKey message'
+addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserKey -> P.UserAaid -> AppHandler (Maybe Integer)
+addReminderFromRequest reminderRequest tenant userKey userAaid =
+  P.addReminder date' tenantId' iDetails userKey userAaid message'
   where
     date' = prqReminderDate reminderRequest
     tenantId' = AC.tenantId tenant

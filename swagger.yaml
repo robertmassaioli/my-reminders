@@ -213,6 +213,7 @@ definitions:
     required:
       - ReminderDate
       - Issue
+      - UserAaid
     properties:
       ReminderDate:
         description: |-

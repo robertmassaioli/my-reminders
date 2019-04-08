@@ -26,10 +26,12 @@ data Statistics = Statistics
     , averageRemindersPerTenant :: Maybe Double
     , stddevRemindersPerTenant  :: Maybe Double
     , maxRemindersPerTenant     :: Maybe Integer
+    , missingAaids              :: Integer
+    , hasAaids              :: Integer
     } deriving (Show, Generic)
 
 instance FromRow Statistics where
-  fromRow = Statistics <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Statistics <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 instance ToJSON Statistics
 
@@ -48,9 +50,11 @@ getStatistics = do
             	min(tencount.tenant_count) as min_reminders_per_tenant,
             	(avg(tencount.tenant_count) :: double precision) as avg_reminders_per_tenant,
             	(stddev_pop(tencount.tenant_count) :: double precision) as stddev_reminders_per_tenant,
-            	max(tencount.tenant_count) as max_reminders_per_tenant
+                max(tencount.tenant_count) as max_reminders_per_tenant,
+                (select count(*) from reminder where userAaid is NULL) as missing_aaids,
+                (select count(*) from reminder where userAaid is not NULL) as has_aaids
             FROM
             	(select count(tenantid) as tenant_count, tenantid as tid from reminder group by tenantid) as tencount,
-            	(select count(useremail) as email_count from reminder group by useremail) as remcount;
+            	(select count(userkey) as email_count from reminder group by userkey) as remcount;
         |]
     return result
