@@ -37,7 +37,7 @@ handleAaidSlurpRun :: AppHandler ()
 handleAaidSlurpRun = do
   reminders <- R.getRemindersMissingAaids
   -- TODO only take the first ten reminders
-  let (toProcess, remainder) = splitAt 10 reminders
+  let (toProcess, remainder) = splitAt 50 reminders
   responses <- sequence . fmap updateReminder $ toProcess
   let errors = fmap (AC.perMessage) . lefts $ responses
   let results = SlurpRunResult errors (length toProcess) (length remainder)
