@@ -71,7 +71,7 @@ Executable my-reminders
     , hastache                  == 0.6.*
     , heist                     == 1.0.*
     , hostname                  == 1.0
-    , http-client               == 0.4.*
+    , http-client               == 0.6.*
     , http-types                == 0.8.*
     , jwt                       == 0.7.*
     , lens                      == 4.*
