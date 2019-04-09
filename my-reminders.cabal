@@ -54,7 +54,7 @@ Executable my-reminders
   Build-depends:
       base                      >= 4.6     && < 5
     , aeson                     >= 0.8
-    , atlassian-connect-core    >= 0.6     && < 0.7.1
+    , atlassian-connect-core    >= 0.6     && < 0.7.2
     , atlassian-connect-descriptor >= 0.4.7
     , base64-bytestring         == 1.0.*
     , boxes                     == 0.1.*
@@ -71,7 +71,7 @@ Executable my-reminders
     , hastache                  == 0.6.*
     , heist                     == 1.0.*
     , hostname                  == 1.0
-    , http-client               == 0.6.*
+    , http-client               == 0.5.*
     , http-types                == 0.8.*
     , jwt                       == 0.7.*
     , lens                      == 4.*
@@ -79,7 +79,7 @@ Executable my-reminders
     , map-syntax                == 0.2.*
     , mtl                       == 2.*
     , network                   == 2.6.*
-    , network-api-support       == 0.2.2
+    , network-api-support       == 0.3.*
     , network-uri               == 2.6.*
     , parallel-io               == 0.3.*
     , postgresql-simple         >= 0.4
@@ -88,14 +88,16 @@ Executable my-reminders
     , snap                      == 1.0.*
     , snap-core                 == 1.0.*
     , snap-loader-static
-    , snap-server
+    , snap-server               == 1.0.*
     , snaplet-postgresql-simple >= 0.6.0.2
     , split                     == 0.2.*
+    , stm                       == 2.4.*
     , tagsoup                   == 0.14.*
     , text                      == 1.2.*
     , time                      == 1.6.*
     , time-units                == 1.*
     , transformers              >= 0.4
+    , tls                       >= 1.4.0
     , utf8-string               >= 0.3.8
     , uuid                      == 1.3.*
     , xmlhtml                   == 0.2.*
