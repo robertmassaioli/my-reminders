@@ -1,16 +1,22 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric             #-}
 module TenantJWT (
   withTenant,
   withMaybeTenant
   ) where
 
 import           Application
+import           AesonHelpers           ( baseOptions, stripFieldNamePrefix )
 import           Control.Applicative
-import           Control.Monad          (guard, join)
+import           Control.Monad          (guard, join, (<=<))
+import           Data.Aeson
+import           Data.Aeson.Types       (Options, defaultOptions, fieldLabelModifier)
 import qualified Data.ByteString.Char8  as B
 import qualified Data.CaseInsensitive   as DC
-import           Data.Maybe             (isJust)
+import           Data.Maybe             (isJust, listToMaybe, catMaybes)
+import qualified Data.Map.Strict        as Map
 import qualified Data.Text              as T
+import           GHC.Generics
 import qualified Persistence.Tenant     as PT
 import qualified Snap.AtlassianConnect  as AC
 import qualified Snap.Core              as SC
@@ -94,7 +100,7 @@ getTenant unverifiedJwt = do
         Just unverifiedTenant ->
           case verifyTenant unverifiedTenant unverifiedJwt of
             Nothing -> retError "Invalid signature for request. Danger! Request ignored."
-            Just verifiedTenant -> ret (verifiedTenant, getUserKey unverifiedJwt)
+            Just verifiedTenant -> ret (verifiedTenant, getAccountId unverifiedJwt)
       where
         sClientKey          = show key
         normalisedClientKey = T.pack sClientKey
@@ -116,8 +122,43 @@ verifyTenant tenant unverifiedJwt = do
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt
 
+getFirstJust :: [Maybe a] -> Maybe a
+getFirstJust = listToMaybe . catMaybes
+
 -- TODO this T.pack is stupid. I think it should be J.TextOrURI. Fix Haskell JWT.
-getUserKey :: J.JWT a -> Maybe T.Text
-getUserKey jwt = fmap (T.pack . show) (getSub jwt)
+getAccountId :: J.JWT a -> Maybe T.Text
+getAccountId jwt = getFirstJust $ fmap (\f -> f jwt) aaidExtractors
    where
-      getSub = J.sub . J.claims
+      aaidExtractors :: [J.JWT a -> Maybe T.Text]
+      aaidExtractors = [ getAaidFromContext, getSub ]
+
+      -- After the migration to GDPR is activated, getAaidFromContext can be deleted
+      getAaidFromContext :: J.JWT a -> Maybe T.Text
+      getAaidFromContext = fmap (cmuAccountId . cmUser) . getContext
+
+      getSub :: J.JWT a -> Maybe T.Text
+      getSub = fmap (T.pack . show) . J.sub . J.claims
+
+      getContext :: J.JWT a -> Maybe ContextMap
+      getContext = resultToMaybe . fromJSON <=< Map.lookup (T.pack "context") . J.unregisteredClaims . J.claims
+
+      resultToMaybe :: Result a -> Maybe a
+      resultToMaybe (Success x) = Just x
+      resultToMaybe _ = Nothing
+
+data ContextMap = ContextMap
+  { cmUser :: ContextMapUser
+  } deriving (Show, Generic)
+
+instance FromJSON ContextMap where
+  parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "cm" })
+
+data ContextMapUser = ContextMapUser
+  { cmuAccountId :: T.Text
+  , cmuUserKey :: T.Text
+  , cmuUsername :: T.Text
+  , cmuDisplayName :: T.Text
+  } deriving (Show, Generic)
+
+instance FromJSON ContextMapUser where
+  parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "cmu" })
