@@ -126,13 +126,7 @@ sendReminder context rt@(reminder, tenant) = do
       Left errorMessage -> do
          liftIO . putStrLn $ "Error sending email: " ++ (T.unpack . AC.perMessage $ errorMessage)
          return (rt, False)
-      Right _ -> do
-         removeSentReminder (rt, True)
-         return (rt, True)
-
-removeSentReminder :: ((Reminder, AC.Tenant), Bool) -> AppHandler Bool
-removeSentReminder (sent, True) = removeSentReminders [sent]
-removeSentReminder (_, False) = return False
+      Right _ -> return (rt, True)
 
 removeSentReminders :: [(Reminder, AC.Tenant)] -> AppHandler Bool
 removeSentReminders sent = do
