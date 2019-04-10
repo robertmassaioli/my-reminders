@@ -100,7 +100,7 @@ loadAttachment filepath = do
 sendReminders :: EmailContext -> [(Reminder, AC.Tenant)] -> AppHandler [(Reminder, AC.Tenant)]
 sendReminders context reminders =
    -- fmap fst <$> filter snd <$> withPool 10 (`parallel` fmap send reminders)
-   fmap fst <$> filter snd <$> sequence (fmap send (take 20 reminders))
+   fmap fst <$> filter snd <$> sequence (fmap send (take 30 reminders))
    where
       send = safeSendReminder context
 
@@ -126,7 +126,13 @@ sendReminder context rt@(reminder, tenant) = do
       Left errorMessage -> do
          liftIO . putStrLn $ "Error sending email: " ++ (T.unpack . AC.perMessage $ errorMessage)
          return (rt, False)
-      Right _ -> return (rt, True)
+      Right _ -> do
+         removeSentReminder (rt, True)
+         return (rt, True)
+
+removeSentReminder :: ((Reminder, AC.Tenant), Bool) -> AppHandler Bool
+removeSentReminder (sent, True) = removeSentReminders [sent]
+removeSentReminder (_, False) = return False
 
 removeSentReminders :: [(Reminder, AC.Tenant)] -> AppHandler Bool
 removeSentReminders sent = do
