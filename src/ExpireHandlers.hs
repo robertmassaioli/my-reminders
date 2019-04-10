@@ -100,7 +100,22 @@ sendReminders context reminders =
    -- fmap fst <$> filter snd <$> withPool 10 (`parallel` fmap send reminders)
    fmap fst <$> filter snd <$> sequence (fmap send reminders)
    where
-      send = sendReminder context
+      send = safeSendReminder context
+
+-- TODO: For now we just catch everything but in the future we might choose to be more
+-- selective...maybe.
+exceptionFilter :: E.SomeException -> Maybe E.SomeException
+exceptionFilter = Just
+
+simpleCatch :: AppHandler a -> AppHandler (Either E.SomeException a)
+simpleCatch = EL.tryJust exceptionFilter
+
+safeSendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ((Reminder, AC.Tenant), Bool)
+safeSendReminder content rt = do
+   result <- simpleCatch $ sendReminder content rt
+   case result of
+      Left _ -> return (rt, False)
+      Right result -> return result
 
 sendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ((Reminder, AC.Tenant), Bool)
 sendReminder context rt@(reminder, tenant) = do
