@@ -6,8 +6,7 @@ import 'core-js/fn/array/find';
 
 export type PageContext = {
     user?: {
-        id: string;
-        key: string;
+        accountId: string;
     },
     project?: {
         id: number;
@@ -54,19 +53,22 @@ export function loadPageContext(): PageContext | undefined {
     var queryParams = URI(window.location.href).query(true);
 
     const pAcpt = fromMeta('acpt');
+    const pAaid = fromMeta('userAccountId');
     const pProductBaseUrl = fromMeta('productBaseUrl');
-    if (!pProductBaseUrl || !pAcpt) {
+    if (!pProductBaseUrl || !pAcpt || !pAaid) {
         return undefined;
     }
 
     let pageContext: PageContext = {
         productBaseUrl: pProductBaseUrl,
-        acpt: pAcpt
+        acpt: pAcpt,
+        user: {
+            accountId: pAaid
+        }
     };
 
     /* tslint:disable:no-string-literal */
-    const pUserId = es(queryParams['user_id']);
-    const pUserKey = es(queryParams['user_key']);
+
     const pProjectId = numberFromAny(queryParams['project_id']);
     const pProjectKey = es(queryParams['project_key']);
     const pIssueId = numberFromAny(queryParams['issue_id']);
@@ -75,13 +77,6 @@ export function loadPageContext(): PageContext | undefined {
     const pProfileUserKey = es(queryParams['profile_user_key']);
     const pProfileUserName = es(queryParams['profile_user_name']);
     /* tslint:enable:no-string-literal */
-
-    if (pUserId && pUserKey) {
-        pageContext.user = {
-            id: pUserId,
-            key: pUserKey
-        };
-    }
 
     if (pProjectId && pProjectKey) {
         pageContext.project = {

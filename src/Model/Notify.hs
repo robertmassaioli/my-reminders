@@ -58,14 +58,7 @@ userFromAccountId accountId = NotificationUser
   }
 
 getNotificationUser :: AC.Tenant -> Reminder -> AppHandler (Either AC.ProductErrorResponse NotificationUser)
-getNotificationUser tenant reminder =
-  case reminderUserAaid reminder of
-    Just aaid -> return . Right . userFromAccountId $ aaid
-    Nothing -> do
-      potentialUserDetails <- UD.getUserDetails tenant (reminderUserKey reminder)
-      case potentialUserDetails of
-        Left error -> return . Left $ error
-        Right userDetails -> return . Right . userFromAccountId . UD.accountId $ userDetails
+getNotificationUser tenant reminder = return . Right . userFromAccountId . reminderUserAaid $ reminder
 
 sendIssueReminder :: AC.Tenant -> EmailContext -> Reminder -> AppHandler (Either AC.ProductErrorResponse ())
 sendIssueReminder tenant emailContext reminder = do

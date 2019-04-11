@@ -24,6 +24,9 @@ addonDescriptor =
     , modules = Just $ Modules addonJiraModules emptyConfluenceModules
     , scopes = Just [Read, Write]
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
+    , apiMigrations = Just ApiMigrations
+      { migrationGdpr = True
+      }
     }
   where
     basePlugin = pluginDescriptor (PluginKey "com.atlassian.myreminders") nullURI jwtAuthentication

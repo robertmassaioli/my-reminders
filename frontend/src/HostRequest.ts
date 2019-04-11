@@ -9,8 +9,8 @@ export interface UserDetails {
     active: boolean;
 }
 
-export function requestUserDetails(userKey: string): Promise<UserDetails> {
-    const url = URI('/rest/api/2/user').addSearch('key', userKey);
+export function requestUserDetails(): Promise<UserDetails> {
+    const url = URI('/rest/api/3/myself');
     return AP.request({
         url: url.toString(),
         type: 'GET'

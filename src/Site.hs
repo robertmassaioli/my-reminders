@@ -10,7 +10,6 @@ module Site
   ( app
   ) where
 
-import           AaidSlurpHandlers
 import           AdminHandlers
 import qualified AppConfig                                   as CONF
 import           Application
@@ -84,7 +83,7 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
             ]
 
     metaTags connectData tenant token userKey =
-      [ MT "userKey" (fromMaybe T.empty userKey)
+      [ MT "userAccountId" (fromMaybe T.empty userKey)
       , MT "productBaseUrl" (T.pack . show . AC.baseUrl $ tenant)
       , MT "acpt" (SH.byteStringToText (AC.encryptPageToken (AC.connectAES connectData) token))
       ]
@@ -124,7 +123,6 @@ applicationRoutes =
   , ("/rest/heartbeat"                , heartbeatRequest)
   , ("/rest/migration"                , migrationRequest)
   , ("/rest/statistics"               , handleStatistics)
-  , ("/rest/aaid-slurp"               , handleAaidSlurp)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")

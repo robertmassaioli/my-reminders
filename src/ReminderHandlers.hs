@@ -41,7 +41,6 @@ data TimeUnit
 data ReminderRequest = ReminderRequest
   { prqReminderDate :: UTCTime
   , prqIssue        :: AC.IssueDetails
-  , prqUserKey      :: Maybe T.Text
   , prqUserAaid     :: T.Text
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
@@ -51,7 +50,6 @@ data ReminderResponse = ReminderResponse
    , prsIssueId      :: AC.IssueId
    , prsIssueKey     :: AC.IssueKey
    , prsIssueSummary :: AC.IssueSummary
-   , prsUserKey      :: AC.UserKey
    , prsMessage      :: Maybe T.Text
    , prsDate         :: UTCTime
    } deriving (Eq, Show, Generic)
@@ -115,7 +113,6 @@ toReminderResponse reminder = ReminderResponse
    , prsIssueId        = P.reminderIssueId reminder
    , prsIssueKey       = P.reminderIssueKey reminder
    , prsIssueSummary   = P.reminderIssueSummary reminder
-   , prsUserKey        = P.reminderUserKey reminder
    , prsMessage        = P.reminderMessage reminder
    , prsDate           = P.reminderDate reminder
    }
@@ -125,11 +122,11 @@ standardAuthError = respondWithError unauthorised "You need to login before you 
 
 getRemindersForIssue :: AC.TenantWithUser -> AppHandler ()
 getRemindersForIssue (_, Nothing) = standardAuthError
-getRemindersForIssue (tenant, Just userKey) = do
+getRemindersForIssue (tenant, Just userAaid) = do
    potentialIssueId <- fmap (fmap (read . BC.unpack)) (SC.getQueryParam "issueId") :: AppHandler (Maybe AC.IssueId)
    case potentialIssueId of
       Just issueId -> do
-         issueReminders <- P.getLiveRemindersForIssueByUser tenant userKey issueId
+         issueReminders <- P.getLiveRemindersForIssueByUser tenant userAaid issueId
          writeJson (fmap toReminderResponse issueReminders)
       Nothing -> respondWithError badRequest "No issueId is passed into the get call."
 
@@ -145,14 +142,14 @@ handleUserReminders = handleMethods
 
 getUserReminders :: AC.TenantWithUser -> AppHandler ()
 getUserReminders (_, Nothing) = standardAuthError
-getUserReminders (tenant, Just userKey) = do
-   userReminders <- P.getLiveRemindersByUser tenant userKey
+getUserReminders (tenant, Just userAaid) = do
+   userReminders <- P.getLiveRemindersByUser tenant userAaid
    SC.writeLBS . encode . fmap toReminderResponse $ userReminders
 
 bulkDeleteEmails :: AC.TenantWithUser -> AppHandler ()
 bulkDeleteEmails (_, Nothing) = standardAuthError
-bulkDeleteEmails (tenant, Just userKey) = parseReminderIdListFromRequest $ \reminderIds -> do
-   P.deleteManyRemindersForUser tenant (pids reminderIds) userKey
+bulkDeleteEmails (tenant, Just userAaid) = parseReminderIdListFromRequest $ \reminderIds -> do
+   P.deleteManyRemindersForUser tenant (pids reminderIds) userAaid
    respondNoContent
 
 parseReminderIdListFromRequest :: (ReminderIdList -> AppHandler ()) -> AppHandler ()
@@ -172,12 +169,12 @@ handleReminder = handleMethods
 
 getReminderHandler :: AC.TenantWithUser -> AppHandler ()
 getReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
-getReminderHandler (tenant, Just userKey) = do
+getReminderHandler (tenant, Just userAaid) = do
    rawReminderId <- SC.getQueryParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) rawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
-         potentialReminder <- P.getReminderByUser tenant userKey reminderId
+         potentialReminder <- P.getReminderByUser tenant userAaid reminderId
          case potentialReminder of
             Nothing -> respondNotFound
             Just reminder -> writeJson (toReminderResponse reminder)
@@ -185,12 +182,12 @@ getReminderHandler (tenant, Just userKey) = do
 
 deleteReminderHandler :: AC.TenantWithUser -> AppHandler ()
 deleteReminderHandler (_, Nothing) = respondWithError unauthorised "You need to be logged in before making a request for reminders."
-deleteReminderHandler (tenant, Just userKey) = do
+deleteReminderHandler (tenant, Just userAaid) = do
    potentialRawReminderId <- SC.getQueryParam "reminderId"
    let potentialReminderId = fmap (read . BC.unpack) potentialRawReminderId :: Maybe Integer
    case potentialReminderId of
       Just reminderId -> do
-         deletedReminders <- P.deleteReminderForUser tenant userKey reminderId
+         deletedReminders <- P.deleteReminderForUser tenant userAaid reminderId
          case deletedReminders of
             1 -> respondNoContent
             0 -> respondNotFound
@@ -205,26 +202,25 @@ addReminderHandler connectTenant = do
   let errorOrReminder = eitherDecode request :: Either String ReminderRequest
   either (respondWithError badRequest) (addReminder connectTenant) errorOrReminder
 
+-- TODO Just use the aaid we get from the JWT here
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addReminder (tenant, Just userKey) reminderRequest
-    | Just userKey /= requestUK = respondWithError badRequest userMismatchError
-    | otherwise = case requestUK of
-         Just rUserKey -> addReminderFromRequest reminderRequest tenant rUserKey requestAaid >>=
+addReminder (tenant, Just userAaid) reminderRequest
+    | userAaid /= requestAaid = respondWithError badRequest userMismatchError
+    | otherwise =
+         addReminderFromRequest reminderRequest tenant requestAaid >>=
             maybe (respondWithError internalServer insertFailedError)
                   (const respondNoContent)
-         _ -> respondWithError badRequest "Missing a userKey on the request"
   where
     isNotValid = not . EV.isValid
-    requestUK = prqUserKey reminderRequest
     requestAaid = prqUserAaid reminderRequest
     -- Error strings
-    userMismatchError = "Given the details for user " ++ show requestUK ++ " however Atlassian Connect thinks you are " ++ show userKey
-    insertFailedError = "Failed to insert new reminder: " ++ show userKey
+    userMismatchError = "Given the details for user " ++ show requestAaid ++ " however Atlassian Connect thinks you are " ++ show userAaid
+    insertFailedError = "Failed to insert new reminder: " ++ show userAaid
 
-addReminderFromRequest :: ReminderRequest -> AC.Tenant -> AC.UserKey -> P.UserAaid -> AppHandler (Maybe Integer)
-addReminderFromRequest reminderRequest tenant userKey userAaid =
-  P.addReminder date' tenantId' iDetails userKey userAaid message'
+addReminderFromRequest :: ReminderRequest -> AC.Tenant -> P.UserAaid -> AppHandler (Maybe Integer)
+addReminderFromRequest reminderRequest tenant userAaid =
+  P.addReminder date' tenantId' iDetails userAaid message'
   where
     date' = prqReminderDate reminderRequest
     tenantId' = AC.tenantId tenant

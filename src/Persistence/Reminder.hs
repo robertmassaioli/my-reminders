@@ -18,8 +18,6 @@ module Persistence.Reminder
    , deleteRemindersForIssue
    , deleteManyReminders
    , deleteManyRemindersForUser
-   , setReminderAccountId
-   , getRemindersMissingAaids
    ) where
 
 import           Application
@@ -51,51 +49,56 @@ data Reminder = Reminder
    , reminderIssueKey             :: AC.IssueKey
    , reminderOriginalIssueSummary :: AC.IssueSummary
    , reminderIssueSummary         :: AC.IssueSummary
-   , reminderUserKey              :: AC.UserKey
-   , reminderUserAaid             :: Maybe UserAaid
+   , reminderUserAaid             :: UserAaid
    , reminderMessage              :: Maybe T.Text
    , reminderDate                 :: UTCTime
    } deriving (Eq,Show,Generic)
 
 instance FromRow Reminder where
-  fromRow = Reminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Reminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
-addReminder :: UTCTime -> Integer -> AC.IssueDetails -> AC.UserKey -> UserAaid -> Maybe T.Text -> AppHandler (Maybe Integer)
-addReminder date tenantId issueDetails ukey aaid message =
+addReminder :: UTCTime -> Integer -> AC.IssueDetails -> UserAaid -> Maybe T.Text -> AppHandler (Maybe Integer)
+addReminder date tenantId issueDetails aaid message =
   listToMaybe . join <$> returning
     [sql|
-      INSERT INTO reminder (tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userAaid, message, date)
-      VALUES (?,?,?,?,?,?,?,?,?,?) RETURNING id
-    |] [(tenantId, iid, ikey, ikey, isum, isum, ukey, aaid, message, date)]
+      INSERT INTO reminder (tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date)
+      VALUES (?,?,?,?,?,?,?,?,?) RETURNING id
+    |] [(tenantId, iid, ikey, ikey, isum, isum, aaid, message, date)]
   where
     iid = AC.issueId issueDetails
     ikey = AC.issueKey issueDetails
     isum = AC.issueSummary issueDetails
 
-getReminderByUser :: AC.Tenant -> AC.UserKey -> ReminderId -> AppHandler (Maybe Reminder)
-getReminderByUser tenant userKey pid =
+getReminderByUser :: AC.Tenant -> UserAaid -> ReminderId -> AppHandler (Maybe Reminder)
+getReminderByUser tenant userAaid pid =
    listToMaybe <$> query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userAaid, message, date FROM reminder WHERE id = ? AND tenantId = ? AND userKey = ?
-      |] (pid, AC.tenantId tenant, T.encodeUtf8 userKey)
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         FROM reminder
+         WHERE id = ? AND tenantId = ? AND userAaid = ?
+      |] (pid, AC.tenantId tenant, T.encodeUtf8 userAaid)
 
-getLiveRemindersByUser :: AC.Tenant -> AC.UserKey -> AppHandler [Reminder]
-getLiveRemindersByUser tenant userKey = do
+getLiveRemindersByUser :: AC.Tenant -> UserAaid -> AppHandler [Reminder]
+getLiveRemindersByUser tenant userAaid = do
    now <- liftIO getCurrentTime
    query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userAaid, message, date FROM reminder WHERE tenantId = ? AND userKey = ? AND date > ? ORDER BY date ASC
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         FROM reminder
+         WHERE tenantId = ? AND userAaid = ? AND date > ? ORDER BY date ASC
       |]
-      (AC.tenantId tenant, T.encodeUtf8 userKey, now)
+      (AC.tenantId tenant, T.encodeUtf8 userAaid, now)
 
-getLiveRemindersForIssueByUser :: AC.Tenant -> AC.UserKey -> AC.IssueId -> AppHandler [Reminder]
-getLiveRemindersForIssueByUser tenant userKey issueId = do
+getLiveRemindersForIssueByUser :: AC.Tenant -> UserAaid -> AC.IssueId -> AppHandler [Reminder]
+getLiveRemindersForIssueByUser tenant userAaid issueId = do
    now <- liftIO getCurrentTime
    query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userKey, userAaid, message, date FROM reminder WHERE tenantId = ? AND issueId = ? AND userKey = ? AND date > ?
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         FROM reminder
+         WHERE tenantId = ? AND issueId = ? AND userAaid = ? AND date > ?
       |]
-      (AC.tenantId tenant, issueId, T.encodeUtf8 userKey, now)
+      (AC.tenantId tenant, issueId, T.encodeUtf8 userAaid, now)
 
 updateKeysForReminders :: AC.Tenant -> AC.IssueId -> AC.IssueKey -> AppHandler Int64
 updateKeysForReminders tenant issueId newIssueKey = execute
@@ -115,29 +118,12 @@ getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ?
       ORDER BY random()
     |]
     (Only expireTime)
-   return (results :: [(Reminder, AC.Tenant)])
-
-setReminderAccountId :: Reminder -> UserAaid -> AppHandler Int64
-setReminderAccountId reminder userAaid = execute
-   [sql|
-      UPDATE reminder SET userAaid = ? WHERE id = ?
-   |]
-   (userAaid, reminderReminderId reminder)
-
-getRemindersMissingAaids :: AppHandler [(Reminder, AC.Tenant)]
-getRemindersMissingAaids = do
-   results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query_
-    [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
-      FROM reminder p, tenant t
-      WHERE p.tenantId = t.id AND p.userAaid is NULL
-    |]
    return (results :: [(Reminder, AC.Tenant)])
 
 deleteReminder :: ReminderId -> AppHandler Int64
@@ -152,11 +138,11 @@ deleteManyReminders reminderIds = execute
       DELETE from reminder WHERE id in ?
    |] (Only . In $ reminderIds)
 
-deleteReminderForUser :: AC.Tenant -> AC.UserKey -> ReminderId -> AppHandler Int64
-deleteReminderForUser tenant userKey reminderId = execute
+deleteReminderForUser :: AC.Tenant -> UserAaid -> ReminderId -> AppHandler Int64
+deleteReminderForUser tenant userAaid reminderId = execute
    [sql|
-      DELETE from reminder WHERE id = ? AND tenantId = ? AND userKey = ?
-   |] (reminderId, AC.tenantId tenant, T.encodeUtf8 userKey)
+      DELETE from reminder WHERE id = ? AND tenantId = ? AND userAaid = ?
+   |] (reminderId, AC.tenantId tenant, T.encodeUtf8 userAaid)
 
 deleteRemindersForIssue :: AC.Tenant -> AC.IssueId -> AppHandler Int64
 deleteRemindersForIssue tenant issueId = execute
@@ -164,8 +150,8 @@ deleteRemindersForIssue tenant issueId = execute
       DELETE from reminder WHERE tenantId = ? AND issueId = ?
    |] (AC.tenantId tenant, issueId)
 
-deleteManyRemindersForUser :: AC.Tenant -> [ReminderId] -> AC.UserKey -> AppHandler Int64
-deleteManyRemindersForUser tenant reminderIds userKey = execute
+deleteManyRemindersForUser :: AC.Tenant -> [ReminderId] -> UserAaid -> AppHandler Int64
+deleteManyRemindersForUser tenant reminderIds userAaid = execute
    [sql|
-      DELETE from reminder WHERE tenantId = ? AND userKey = ? AND id in ?
-   |] (AC.tenantId tenant, userKey, In reminderIds)
+      DELETE from reminder WHERE tenantId = ? AND userAaid = ? AND id in ?
+   |] (AC.tenantId tenant, userAaid, In reminderIds)
