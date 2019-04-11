@@ -100,7 +100,7 @@ loadAttachment filepath = do
 sendReminders :: EmailContext -> [(Reminder, AC.Tenant)] -> AppHandler [(Reminder, AC.Tenant)]
 sendReminders context reminders =
    -- fmap fst <$> filter snd <$> withPool 10 (`parallel` fmap send reminders)
-   fmap fst <$> filter snd <$> sequence (fmap send (take 20 reminders))
+   fmap fst <$> filter snd <$> sequence (fmap send (take 30 reminders))
    where
       send = safeSendReminder context
 

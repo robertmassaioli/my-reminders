@@ -118,6 +118,7 @@ getExpiredReminders expireTime = do
       SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userKey, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ?
+      ORDER BY random()
     |]
     (Only expireTime)
    return (results :: [(Reminder, AC.Tenant)])
