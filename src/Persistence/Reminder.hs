@@ -124,6 +124,7 @@ getExpiredReminders expireTime = do
       SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts < 2
+      ORDER BY random()
     |]
     (Only expireTime)
    return (results :: [(Reminder, AC.Tenant)])
@@ -135,6 +136,7 @@ getExpiredFailingReminders expireTime = do
       SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts >= 2
+      ORDER BY random()
       |]
       (Only expireTime)
    return (results :: [(Reminder, AC.Tenant)])
