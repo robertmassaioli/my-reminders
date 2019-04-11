@@ -9,6 +9,8 @@ module Persistence.Reminder
    , addReminder
    , getReminderByUser
    , getExpiredReminders
+   , getExpiredFailingReminders
+   , incrementSendAttempts
    , getLiveRemindersByUser
    , updateKeysForReminders
    , updateSummariesForReminders
@@ -52,10 +54,11 @@ data Reminder = Reminder
    , reminderUserAaid             :: UserAaid
    , reminderMessage              :: Maybe T.Text
    , reminderDate                 :: UTCTime
+   , reminderSendAttempts         :: Integer
    } deriving (Eq,Show,Generic)
 
 instance FromRow Reminder where
-  fromRow = Reminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Reminder <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 addReminder :: UTCTime -> Integer -> AC.IssueDetails -> UserAaid -> Maybe T.Text -> AppHandler (Maybe Integer)
 addReminder date tenantId issueDetails aaid message =
@@ -73,7 +76,7 @@ getReminderByUser :: AC.Tenant -> UserAaid -> ReminderId -> AppHandler (Maybe Re
 getReminderByUser tenant userAaid pid =
    listToMaybe <$> query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date, sendAttempts
          FROM reminder
          WHERE id = ? AND tenantId = ? AND userAaid = ?
       |] (pid, AC.tenantId tenant, T.encodeUtf8 userAaid)
@@ -83,7 +86,7 @@ getLiveRemindersByUser tenant userAaid = do
    now <- liftIO getCurrentTime
    query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date, sendAttempts
          FROM reminder
          WHERE tenantId = ? AND userAaid = ? AND date > ? ORDER BY date ASC
       |]
@@ -94,7 +97,7 @@ getLiveRemindersForIssueByUser tenant userAaid issueId = do
    now <- liftIO getCurrentTime
    query
       [sql|
-         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date
+         SELECT id, tenantId, issueId, originalIssueKey, issueKey, originalIssueSummary, issueSummary, userAaid, message, date, sendAttempts
          FROM reminder
          WHERE tenantId = ? AND issueId = ? AND userAaid = ? AND date > ?
       |]
@@ -118,12 +121,30 @@ getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
-      WHERE p.tenantId = t.id AND p.date < ?
+      WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts < 2
     |]
     (Only expireTime)
    return (results :: [(Reminder, AC.Tenant)])
+
+getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
+getExpiredFailingReminders expireTime = do
+   results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
+      [sql|
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      FROM reminder p, tenant t
+      WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts >= 2
+      |]
+      (Only expireTime)
+   return (results :: [(Reminder, AC.Tenant)])
+
+incrementSendAttempts :: (Reminder, AC.Tenant) -> AppHandler Int64
+incrementSendAttempts (reminder, tenant) = execute
+   [sql|
+      UPDATE reminder SET sendAttempts = sendAttempts + 1 WHERE tenantId = ? AND id = ?
+   |]
+   (AC.tenantId tenant, reminderReminderId reminder)
 
 deleteReminder :: ReminderId -> AppHandler Int64
 deleteReminder reminderId = execute

@@ -50,7 +50,6 @@ prop_emailMessageContentContainsMessage tIn = monadicIO $ do
     reminder = Reminder 1 2 12345 "originalKey" "newKey" "stuff" "other stuff" "useraaid" (Just tNormalised) time
     emailContext = EmailContext
        { ecConnectConf = undefined
-       , ecAppConf = undefined
        , ecPlainEmailTemplate = T.pack "{{reminderMessage}}"
        , ecHtmlEmailTemplate = T.pack "{{reminderMessage}}"
        , ecAttachments = []

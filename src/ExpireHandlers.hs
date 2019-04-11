@@ -2,6 +2,7 @@
 
 module ExpireHandlers
    ( handleExpireRequest
+   , handleExpireFailingRequest
    ) where
 
 import qualified AppConfig                           as CONF
@@ -35,6 +36,11 @@ handleExpireRequest = handleMethods
    [ (SC.POST, expireForTimestamp)
    ]
 
+handleExpireFailingRequest :: AppHandler ()
+handleExpireFailingRequest = handleMethods
+   [ (SC.POST, expireFailingForTimestamp)
+   ]
+
 -- We expect that we will be given a timestamp by a trusted source; if that is no longer true then
 -- this code needs to be changed.
 -- TODO extra: we should check to make sure that the timestamp given is reasonably close to the
@@ -49,28 +55,50 @@ expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
 
 expireUsingTimestamp :: UTCTime -> CONF.AppConf -> AC.Connect -> AppHandler ()
 expireUsingTimestamp timestamp rmConf connectConf = do
+   potentialEmailContext <- loadEmailContext connectConf
+   case potentialEmailContext of
+      Nothing -> error "Could not find the directory that contains the email templates!"
+      Just context -> do
+         expiredReminders <- getExpiredReminders timestamp
+         liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
+         sendReminders context expiredReminders
+         return ()
+
+expireFailingForTimestamp :: AppHandler ()
+expireFailingForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
+   currentTime <- getTimestampOrCurrentTime
+   rmConf <- CONF.getAppConf
+   connectConf <- AC.getConnect
+   expireFailingUsingTimestamp currentTime rmConf connectConf
+
+expireFailingUsingTimestamp :: UTCTime -> CONF.AppConf -> AC.Connect -> AppHandler ()
+expireFailingUsingTimestamp timestamp rmConf connectConf = do
+   potentialEmailContext <- loadEmailContext connectConf
+   case potentialEmailContext of
+      Nothing -> error "Could not find the directory that contains the email templates!"
+      Just context -> do
+         expiredReminders <- getExpiredFailingReminders timestamp
+         liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
+         sendReminders context expiredReminders
+         return ()
+
+loadEmailContext :: AC.Connect -> AppHandler (Maybe EmailContext)
+loadEmailContext connectConf = do
    potentialEmailDirectory <- liftIO $ findDirectory addEmailDirectory
    case potentialEmailDirectory of
-      Nothing -> error "Could not find the directory that contains the email templates!"
+      Nothing -> return Nothing
       Just emailDirectory -> do
-         expiredReminders <- getExpiredReminders timestamp
          -- Load the templates from the filesystem
          plainTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.txt")
          htmlTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.html")
          -- load the required attachments for every single email
          attachments <- liftIO $ loadAttachments [emailDirectory </> "ios7-stopwatch-outline.png"]
-         liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
-         let context = EmailContext
-                           { ecConnectConf = connectConf
-                           , ecAppConf = rmConf
-                           , ecPlainEmailTemplate = plainTemplate
-                           , ecHtmlEmailTemplate = htmlTemplate
-                           , ecAttachments = attachments
-                           }
-         sentReminders <- sendReminders context expiredReminders
-         liftIO . putStrLn $ "Sent reminders: " ++ showLength sentReminders
-         removeSentReminders sentReminders
-         return ()
+         return . Just $ EmailContext
+            { ecConnectConf = connectConf
+            , ecPlainEmailTemplate = plainTemplate
+            , ecHtmlEmailTemplate = htmlTemplate
+            , ecAttachments = attachments
+            }
 
 showLength :: [a] -> String
 showLength = show . length
@@ -97,10 +125,11 @@ loadAttachment filepath = do
 -- 2. We would be in Mailgun's upper tier at ~ 16 million reminders a month.
 -- I don't think this will happen instantly so this performs well enough for now and we can monitor
 -- it going into the future.
-sendReminders :: EmailContext -> [(Reminder, AC.Tenant)] -> AppHandler [(Reminder, AC.Tenant)]
-sendReminders context reminders =
+sendReminders :: EmailContext -> [(Reminder, AC.Tenant)] -> AppHandler ()
+sendReminders context reminders = do
    -- fmap fst <$> filter snd <$> withPool 10 (`parallel` fmap send reminders)
-   fmap fst <$> filter snd <$> sequence (fmap send (take 20 reminders))
+   sequence (fmap send (take 30 reminders))
+   return ()
    where
       send = safeSendReminder context
 
@@ -112,21 +141,21 @@ exceptionFilter = Just
 simpleCatch :: AppHandler a -> AppHandler (Either E.SomeException a)
 simpleCatch = EL.tryJust exceptionFilter
 
-safeSendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ((Reminder, AC.Tenant), Bool)
+safeSendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ()
 safeSendReminder content rt = do
-   result <- simpleCatch $ sendReminder content rt
-   case result of
-      Left _ -> return (rt, False)
-      Right result -> return result
+   simpleCatch $ sendReminder content rt
+   return ()
 
-sendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ((Reminder, AC.Tenant), Bool)
+sendReminder :: EmailContext -> (Reminder, AC.Tenant) -> AppHandler ()
 sendReminder context rt@(reminder, tenant) = do
-   emailResponse <- N.sendIssueReminder tenant context reminder
-   case emailResponse of
-      Left errorMessage -> do
-         liftIO . putStrLn $ "Error sending email: " ++ (T.unpack . AC.perMessage $ errorMessage)
-         return (rt, False)
-      Right _ -> return (rt, True)
+   emailResponse <- simpleCatch $ N.sendIssueReminder tenant context reminder
+   if isSuccess emailResponse || reminderSendAttempts reminder >= 10
+      then removeSentReminders [rt] >> return ()
+      else incrementSendAttempts rt >> return ()
+
+isSuccess :: Either a (Either b c) -> Bool
+isSuccess (Right (Right _)) = True
+isSuccess _ = False
 
 removeSentReminders :: [(Reminder, AC.Tenant)] -> AppHandler Bool
 removeSentReminders sent = do
