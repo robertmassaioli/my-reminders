@@ -56,7 +56,6 @@ expireUsingTimestamp timestamp rmConf connectConf = do
          -- Load the templates from the filesystem
          plainTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.txt")
          htmlTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.html")
-         -- load the required attachments for every single email
          liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
          let context = EmailContext
                            { ecConnectConf = connectConf
@@ -74,17 +73,6 @@ showLength = show . length
 
 addEmailDirectory :: FilePath -> FilePath
 addEmailDirectory f = f </> "static" </> "email"
-
-loadAttachments :: [FilePath] -> IO [Attachment]
-loadAttachments = mapM loadAttachment
-
-loadAttachment :: FilePath -> IO Attachment
-loadAttachment filepath = do
-   fileContents <- B.readFile filepath
-   return Attachment
-      { attachmentFilePath = filepath
-      , attachmentBody = AttachmentBS fileContents
-      }
 
 -- With my current testing, we can send approximately 30 reminders in 10-12s. We need to make sure
 -- that the rate of processing is fast enough to handle the email load.
