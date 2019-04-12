@@ -58,7 +58,6 @@ We feel the need to tell you about our external dependencies because, if they we
 will fail:
 
  - Our service runs on [AWS][5].
- - We send mail using [Mailgun][2]. (You can check [their status page][3] for service avilability) 
  - We have scheduled tasks (like sending your reminders) that are triggered by the [EazyCron service][4].
 
 If any of these services should fail then our functionality would be degraded in some manner.
@@ -66,7 +65,5 @@ However we are monitoring those services closely and will know immediately if th
 that if there is a problem that we will be the first to know and be looking to fix it immediately.
 
  [1]: /redirect/raise-issue
- [2]: http://www.mailgun.com/
- [3]: http://status.mailgun.com/
  [4]: http://www.easycron.com/
  [5]: http://aws.amazon.com/

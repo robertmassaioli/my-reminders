@@ -146,8 +146,6 @@ variables:
  - PG\_MY\_REMINDERS\_PASSWORD: The password of the role.
  - CONNECT\_BASE\_URL: The base url that should appear in your Atlassian Connect Descriptor.
  - CONNECT\_SECRET\_KEY: The secret key that Atlassian Connect will use for page tokens.
- - MAILGUN\_DOMAIN: The domain of your mailgun account.
- - MAILGUN\_API\_KEY: The api key of your mailgun account.
  - EXPIRE\_KEY: The key to pass to the service to give access to the expire handler.
  - PURGE\_KEY: The key to pass to the service to give access to the purge handler.
  - MIGRATION\_KEY: The key to pass to the service to give access to the migration handler.
