@@ -30,7 +30,7 @@ interface IssueFieldDetails {
 
 export function requestIssueDetails(issueKey: string): Promise<IssueDetails> {
     return AP.request({
-        url: `/rest/api/2/issue/${issueKey}`,
+        url: `/rest/api/2/issue/${issueKey}?fields=summary`,
         type: 'GET'
     }).then(rsp => {
         return JSON.parse(rsp.body) as IssueDetails;
