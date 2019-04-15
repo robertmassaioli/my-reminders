@@ -116,6 +116,7 @@ applicationRoutes =
   , ("/rest/reminders"                , handleReminders)
   , ("/rest/user/reminders"           , handleUserReminders)
   , ("/rest/expire"                   , handleExpireRequest)
+  , ("/rest/expire/failing"           , handleExpireFailingRequest)
   , ("/rest/purge"                    , handlePurgeRequest)
   , ("/rest/webhook/issue/update"     , handleIssueUpdateWebhook)
   , ("/rest/webhook/issue/delete"     , handleIssueDeleteWebhook)
