@@ -41,7 +41,7 @@
     "storybook": "start-storybook -p 9001 -c .storybook",
     "build-storybook": "build-storybook -c .storybook -o .storybook-static",
     "serve-storybook": "http-server -p 9002 .storybook-static",
-    "get-swagger-codegen": "curl http://central.maven.org/maven2/io/swagger/swagger-codegen-cli/2.3.1/swagger-codegen-cli-2.3.1.jar -o swagger-codegen-cli.jar",
+    "get-swagger-codegen": "curl https://repo1.maven.org/maven2/io/swagger/swagger-codegen-cli/2.3.1/swagger-codegen-cli-2.3.1.jar -o swagger-codegen-cli.jar",
     "gen-fetch": "java -jar swagger-codegen-cli.jar generate -i ../swagger.yaml -l typescript-fetch -o src/reminders-client",
     "depcheck": "depcheck ."
   },
