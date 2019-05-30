@@ -14,7 +14,7 @@ import           System.Environment            (getEnv)
 import           Text.PrettyPrint.Boxes
 
 pgMyRemindersPre :: String -> String
-pgMyRemindersPre = (++) "PG_MY_REMINDERS_"
+pgMyRemindersPre = (++) "PG_ENCRYPTED_MY_REMINDERS_"
 
 pgPoolPre :: String -> String
 pgPoolPre = (++) "PG_POOL_"
