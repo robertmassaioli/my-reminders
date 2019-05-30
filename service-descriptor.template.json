@@ -10,6 +10,12 @@
    "resources": [{
       "type": "postgres-db",
       "name": "my-reminders"
+   }, {
+      "type": "postgres-db",
+      "name": "encrypted-my-reminders",
+      "attributes": {
+         "credentials_from_resource": "db"
+      }
    }],
    "links": {
       "binary": {
