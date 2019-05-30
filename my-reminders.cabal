@@ -1,5 +1,5 @@
 Name:                my-reminders
-Version:             0.23
+Version:             0.24
 Synopsis:            My reminders plugin for Atlassian Cloud
 Description:         Set issue reminders for the future!
 License:             MIT
@@ -67,7 +67,6 @@ Executable my-reminders
     , directory                 >= 1.1     && < 1.4
     , email-validate            == 2.*
     , filepath                  == 1.4.*
-    , hailgun                   == 0.4.*
     , hastache                  == 0.6.*
     , heist                     == 1.0.*
     , hostname                  == 1.0
@@ -141,7 +140,6 @@ test-suite my-reminders-props
     , directory
     , email-validate
     , filepath
-    , hailgun
     , hastache
     , heist
     , hostname

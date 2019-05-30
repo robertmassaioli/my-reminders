@@ -20,7 +20,6 @@ import           Data.List                  (find)
 import           Data.Maybe                 (fromMaybe, isJust)
 import           Data.Text.Encoding         (encodeUtf8)
 import qualified Data.Time.Units            as DTU
-import           Mail.Hailgun
 import qualified MicrosZone                 as MZ
 import           Network.HTTP.Client        (Proxy (..))
 import qualified Network.URI                as NU
@@ -31,8 +30,6 @@ import           Text.PrettyPrint.Boxes
 
 data AppConf = AppConf
    { rmExpireKey              :: D.Key BSC.ByteString AppConf
-   , rmHailgunContext         :: HailgunContext
-   , rmFromUser               :: String
    , rmMaxExpiryWindowMinutes :: DTU.Minute
    , rmPurgeKey               :: D.Key BSC.ByteString AppConf
    , rmPurgeRetention         :: DTU.Day
@@ -56,8 +53,6 @@ data EnvConf = EnvConf
    , ecMigrationKey    :: Maybe String
    , ecStatisticsKey   :: Maybe String
    , ecAdminKey        :: Maybe String
-   , ecMailgunDomain   :: Maybe String
-   , ecMailgunApiKey   :: Maybe String
    , ecHttpProxy       :: Maybe String
    , ecHttpSecureProxy :: Maybe String
    , ecZone            :: MZ.Zone
@@ -73,8 +68,6 @@ loadConfFromEnvironment = do
       , ecMigrationKey     = get "MIGRATION_KEY"
       , ecStatisticsKey    = get "STATISTICS_KEY"
       , ecAdminKey         = get "ADMIN_KEY"
-      , ecMailgunDomain    = get "MAILGUN_DOMAIN"
-      , ecMailgunApiKey    = get "MAILGUN_API_KEY"
       , ecHttpProxy        = get "http_proxy"
       , ecHttpSecureProxy  = get "https_proxy"
       , ecZone             = fromMaybe MZ.Dev $ MZ.zoneFromString =<< get "ZONE"
@@ -88,7 +81,7 @@ guardConfig ec = when (isDogOrProd ec && not allKeysPresent) $ do
    putStrLn $ "[Fatal Error] All of the environmental configuration is required in: " ++ (show . ecZone $ ec)
    exitWith (ExitFailure 10)
    where
-      allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey, ecMailgunDomain, ecMailgunApiKey] <*> pure ec
+      allKeysPresent = all isJust $ [ecExpireKey, ecPurgeKey, ecMigrationKey] <*> pure ec
 
 instance DCT.Configured (D.Key BSC.ByteString a) where
   convert (DCT.String s) = Just (D.Key (encodeUtf8 s))
@@ -104,9 +97,6 @@ loadAppConfOrExit config = do
    statisticsKey <- require config "statistics-key" "Missing 'statistics-key': for getting statistics data."
    migrationKey <- require config "migration-key" "Missing 'migration-key': for trigerring migrations."
    expiryKey <- require config "expiry-key" "Missing 'expiry-key': for triggering the reminders."
-   mailgunDomain <- require config "mailgun-domain" "Missing 'mailgun-domain': required to send emails."
-   mailgunApiKey <- require config "mailgun-api-key" "Missing 'mailgun-api-key': required to send emails."
-   fromUser <- require config "reminder-from-user" "Missing 'reminder-from-user': required for the inboxes of our customers to know who the reminder came from."
    maxExpiryWindowMinutes <- require config "expiry-window-max-minutes" "Missing 'expiry-window-max-minutes': it tracks how many minutes after expiry we should wait till we fail a healthcheck."
    purgeKey <- require config "purge-key" "Missing 'purge-key': for triggering customer data cleanups."
    purgeRetentionDays <- require config "purge-retention-days" "Missing 'purge-retention-days': the length of time that uninstalled customer data should remain before we delete it."
@@ -116,12 +106,6 @@ loadAppConfOrExit config = do
    let fromConf = envOrDefault environmentConf
    return AppConf
       { rmExpireKey = fromConf (fmap packInKey . ecExpireKey) expiryKey
-      , rmHailgunContext = HailgunContext
-         { hailgunDomain = fromConf ecMailgunDomain mailgunDomain
-         , hailgunApiKey = fromConf ecMailgunApiKey mailgunApiKey
-         , hailgunProxy  = Nothing
-         }
-      , rmFromUser = fromUser
       , rmMaxExpiryWindowMinutes = maxExpiryWindowMinutes
       , rmPurgeKey = fromConf (fmap packInKey . ecPurgeKey) purgeKey
       , rmPurgeRetention = fromInteger purgeRetentionDays
@@ -148,8 +132,6 @@ boxEnvironmentConf c =
       [ text " - Expire Key:"
       , text " - Purge Key:"
       , text " - Statistics Key:"
-      , text " - Mailgun Domain:"
-      , text " - Mailgun Api Key:"
       , text " - HTTP Proxy:"
       , text " - HTTP Secure Proxy:"
       ]
@@ -157,8 +139,6 @@ boxEnvironmentConf c =
       [ text . DE.showMaybe . ecExpireKey $ c
       , text . DE.showMaybe . ecPurgeKey $ c
       , text . DE.showMaybe . ecStatisticsKey $ c
-      , text . DE.showMaybe . ecMailgunDomain $ c
-      , text . DE.showMaybe . ecMailgunApiKey $ c
       , text . DE.showMaybe . ecHttpProxy $ c
       , text . DE.showMaybe . ecHttpSecureProxy $ c
       ]

@@ -10,7 +10,6 @@ module ReminderHandlers
 
 import           Application
 import           AesonHelpers                      ( stripFieldNamePrefix )
-import           Control.Monad                     (void)
 import           Data.Aeson
 import           Data.Aeson.Types                  (Options, defaultOptions,
                                                     fieldLabelModifier)

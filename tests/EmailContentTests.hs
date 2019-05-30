@@ -52,7 +52,6 @@ prop_emailMessageContentContainsMessage tIn = monadicIO $ do
        { ecConnectConf = undefined
        , ecPlainEmailTemplate = T.pack "{{reminderMessage}}"
        , ecHtmlEmailTemplate = T.pack "{{reminderMessage}}"
-       , ecAttachments = []
        }
     -- This is the actual conversion and extraction:
     getMessageText :: IO T.Text
