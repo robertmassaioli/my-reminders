@@ -14,7 +14,7 @@
       "type": "postgres-db",
       "name": "encrypted-my-reminders",
       "attributes": {
-         "credentials_from_resource": "db"
+         "credentials_from_resource": "my-reminders"
       }
    }],
    "links": {
