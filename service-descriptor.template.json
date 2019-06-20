@@ -35,6 +35,25 @@
       },
       "email": "rmassaioli@atlassian.com"
    },
+   "alarms": {
+      "overrides": {
+        "WebServerDiskSpaceUtilizationAlarmHigh": {
+          "Priority": "Low"
+        },
+        "WebServerInstanceVolumeSpaceUtilizationAlarmHigh": {
+          "Priority": "Low"
+        },
+        "HighSeverityAlarmWhenTooManyBackend5xxErrors": {
+          "Priority": "Low"
+        },
+        "HighSeverityAlarmWhenTooManyELB5xxErrors": {
+          "Priority": "Low"
+        },
+        "HealthyHostCount": {
+          "Priority": "Low"
+        }
+      }
+    },
    "scaling": {
       "min": 2
    },
