@@ -40,9 +40,6 @@
         "WebServerDiskSpaceUtilizationAlarmHigh": {
           "Priority": "Low"
         },
-        "WebServerInstanceVolumeSpaceUtilizationAlarmHigh": {
-          "Priority": "Low"
-        },
         "HighSeverityAlarmWhenTooManyBackend5xxErrors": {
           "Priority": "Low"
         },
