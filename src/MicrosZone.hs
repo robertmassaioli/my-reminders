@@ -16,22 +16,15 @@ data Zone = Dev | Dog | Prod
    deriving(Eq, Show, Ord)
 
 zoneFromString :: String -> Maybe Zone
-zoneFromString "domain.dev.atlassian.io" = Just Dev
-zoneFromString "application.dev.atlassian.io" = Just Dev
-zoneFromString "platform.dev.atlassian.io" = Just Dev
-zoneFromString "useast.staging.atlassian.io" = Just Dog
-zoneFromString "uswest.staging.atlassian.io"  = Just Dog
-zoneFromString "useast.atlassian.io" = Just Prod
-zoneFromString "uswest.atlassian.io"  = Just Prod
-zoneFromString "dev.public.atl-paas.net" = Just Dev
-zoneFromString "staging.public.atl-paas.net" = Just Dog
-zoneFromString "prod.public.atl-paas.net" = Just Prod
+zoneFromString "dev" = Just Dev
+zoneFromString "staging" = Just Dog
+zoneFromString "prod" = Just Prod
 zoneFromString _        = Nothing
 
 fromEnv :: IO (Maybe Zone)
 fromEnv = do
-   envStr <- DE.getEnv "ZONE"
-   return . join $ fmap zoneFromString envStr
+    envStr <- DE.getEnv "MICROS_ENVTYPE"
+    return . join $ fmap zoneFromString envStr
 
 fromEnvDefaultDev :: IO Zone
 fromEnvDefaultDev = fmap (fromMaybe Dev) fromEnv
