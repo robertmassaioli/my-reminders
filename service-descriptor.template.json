@@ -10,6 +10,9 @@
    "resources": [{
       "type": "postgres-db",
       "name": "encrypted-my-reminders"
+   }, {
+      "type": "globaledge",
+      "name": "ingress"
    }],
    "links": {
       "binary": {
