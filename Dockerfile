@@ -40,7 +40,7 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # Get the Haskell Dependencies
 # TODO Do we require the Haskell Platform [http://packages.ubuntu.com/trusty/haskell-platform] or GHC [http://packages.ubuntu.com/trusty/ghc6]?
 # RUN apt-get update && apt-get install -y haskell-platform && cabal update && cabal install cabal-install
-RUN cabal update && cabal install cabal-install
+RUN cabal update && cabal install cabal-install==2.4.1.0
 
 # Initiate the build environment and build the executable (assumes that the
 # atlassian-connect-haskell source can be found in the vendor/atlassian-connect directory AND that
