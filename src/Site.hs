@@ -18,6 +18,7 @@ import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
+import qualified Data.CaseInsensitive                        as CI
 import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
