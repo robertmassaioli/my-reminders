@@ -18,6 +18,7 @@ import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
+import qualified Data.CaseInsensitive                        as CI
 import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
@@ -56,7 +57,9 @@ readIndex :: IO T.Text
 readIndex = T.readFile "frontend/build/index.html"
 
 showDocPage :: SSH.HasHeist b => SS.Handler b v ()
-showDocPage = SC.writeText =<< liftIO readIndex
+showDocPage = do
+  SC.modifyResponse (SC.setHeader (CI.mk "Content-Type") "text/html; charset=utf-8")
+  SC.writeText =<< liftIO readIndex
 
 -- TODO needs the standard page context with the base url. How do you do configuration
 -- settings with the Snap framework? I think that the configuration settings should all
@@ -67,6 +70,7 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   connectData <- AC.getConnect
   rawHtmlContent <- liftIO readIndex
   let updatedHtmlContent = TS.renderTags . injectTags (metaTags connectData tenant token userKey) . TS.parseTags $ rawHtmlContent
+  SC.modifyResponse (SC.setHeader (CI.mk "Content-Type") "text/html; charset=utf-8")
   SC.writeText updatedHtmlContent
   where
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]

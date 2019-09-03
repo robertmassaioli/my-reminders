@@ -14,6 +14,22 @@
       "type": "globaledge",
       "name": "ingress"
    }],
+   "environmentOverrides": {
+      "dev": {
+         "config": {
+            "environmentVariables": {
+               "CONNECT_BASE_URL": "https://my-reminders.dev.services.atlassian.com"
+            }
+         }
+      },
+      "prod": {
+         "config": {
+            "environmentVariables": {
+               "CONNECT_BASE_URL": "https://my-reminders.services.atlassian.com"
+            }
+         }
+      }
+   },
    "links": {
       "binary": {
          "name": "docker.atl-paas.net/sox/atlassian/my-reminders",
