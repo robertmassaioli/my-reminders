@@ -4,7 +4,6 @@
    "name": "My Reminders",
    "organization": "RD:Customer Purchasing Platform",
    "network": {
-      "ingress": "external",
       "egress":  "internet-only"
    },
    "resources": [{
