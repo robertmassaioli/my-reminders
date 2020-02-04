@@ -22,8 +22,8 @@ export class ConnectPanel extends React.PureComponent<{}, ConnectPanelState> {
 
     if (pc) {
       const script = document.createElement('script');
-      script.src = `${pc.productBaseUrl}/atlassian-connect/all.js`;
-      
+      script.src = `https://connect-cdn.atl-paas.net/all.js`;
+
       script.onload = () => {
         this.setState(s => {
           return {
@@ -53,19 +53,19 @@ export class ConnectPanel extends React.PureComponent<{}, ConnectPanelState> {
 
     return (
         <Switch>
-        <Route 
-            exact={true} 
-            path="/panel/jira/reminder/simple" 
-            render={(props) => <IssueViewContainer {...props} pageContext={pc} />} 
+        <Route
+            exact={true}
+            path="/panel/jira/reminder/simple"
+            render={(props) => <IssueViewContainer {...props} pageContext={pc} />}
         />
-        <Route 
-            exact={true} 
-            path="/panel/jira/reminders/view" 
+        <Route
+            exact={true}
+            path="/panel/jira/reminders/view"
             render={(props) => <AllRemindersViewContainer {...props} pageContext={pc} />}
-        /> 
-        <Route 
-            exact={true} 
-            path="/panel/v2/jira/reminder/create" 
+        />
+        <Route
+            exact={true}
+            path="/panel/v2/jira/reminder/create"
             render={(props) => <ReminderCreateContainer {...props} pageContext={pc} />}
         />
         </Switch>
