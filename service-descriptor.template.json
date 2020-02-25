@@ -15,6 +15,11 @@
    }],
    "environmentOverrides": {
       "dev": {
+         "scaling": {
+            "autoHibernation": {
+               "enabled": false
+            }
+         },
          "config": {
             "environmentVariables": {
                "CONNECT_BASE_URL": "https://my-reminders.dev.services.atlassian.com"
