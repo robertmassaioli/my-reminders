@@ -3,12 +3,28 @@
    "description": "My reminders allows you to set reminders on issues.",
    "name": "My Reminders",
    "organization": "RD:Customer Purchasing Platform",
+   "computeClassification": {
+      "dataType": [
+         "UGC/PrimaryIdentifier",
+         "UGC/Primary",
+         "PII/DirectRestrictedIdentifier",
+         "Security/Credential"
+      ]
+   },
    "network": {
       "egress":  "internet-only"
    },
    "resources": [{
       "type": "postgres-db",
-      "name": "encrypted-my-reminders"
+      "name": "encrypted-my-reminders",
+      "attributes": {
+         "dataType": [
+            "UGC/PrimaryIdentifier",
+            "UGC/Primary",
+            "PII/DirectRestrictedIdentifier",
+            "Security/Credential"
+         ]
+      }
    }, {
       "type": "globaledge",
       "name": "ingress"
