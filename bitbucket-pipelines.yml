@@ -96,3 +96,10 @@ pipelines:
             - docker
           caches:
             - docker
+  custom:
+    renovate:
+      - step:
+          name: Deploy to staging
+          image: renovate/renovate
+          script:
+            - renovate --platform=bitbucket --username=rennovate-my-reminders atlassianlabs/my-reminders
