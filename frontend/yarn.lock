@@ -25,13 +25,13 @@
     "@atlaskit/tooltip" "^8.4.1"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/banner@^5.0.0":
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/@atlaskit/banner/-/banner-5.0.3.tgz#4706f1e8b6713f5cb0564bd66ebc750f3177e605"
+"@atlaskit/banner@^10.0.0":
+  version "10.1.10"
+  resolved "https://registry.yarnpkg.com/@atlaskit/banner/-/banner-10.1.10.tgz#f6ce66f27921672503aeb8015b564605d8ca6413"
+  integrity sha512-43iT77on+oJNmKWChN5FM8b/sgs3lWR7VWhG63PMxW6WxVZHJRdKFiaZh7xtRLRETw377g9MMUx2nx9fsAg4eA==
   dependencies:
-    "@atlaskit/theme" "^3.2.2"
-    babel-runtime "^6.26.0"
-    styled-components "1.4.6 - 3"
+    "@atlaskit/theme" "^9.5.1"
+    tslib "^1.9.3"
 
 "@atlaskit/blanket@^4.1.1":
   version "4.1.1"
@@ -314,12 +314,14 @@
     prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/theme@^3.2.2":
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/@atlaskit/theme/-/theme-3.2.2.tgz#14e55188a6561e34fa697445ec5582ef0c733942"
+"@atlaskit/theme@^9.5.1":
+  version "9.5.4"
+  resolved "https://registry.yarnpkg.com/@atlaskit/theme/-/theme-9.5.4.tgz#8dabf31235e199df0184b5fe51b4100966fc307f"
+  integrity sha512-ytWcPrvNGWUtuDSQuQbtAYa5Pj+yaRAUGk9wIeebZUGz+ynT9xrIZ9KIuxSSkueEtPpKxOA+hdxBb07CoK4a/Q==
   dependencies:
+    exenv "^1.2.2"
     prop-types "^15.5.10"
-    styled-components "1.4.6 - 3"
+    tslib "^1.9.3"
 
 "@atlaskit/tooltip@^8.4.1":
   version "8.4.1"
@@ -9058,6 +9060,11 @@ tsconfig-paths@^3.1.1:
 tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.0.tgz#e37a86fda8cbbaf23a057f473c9f4dc64e5fc2e8"
+
+tslib@^1.9.3:
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.13.0.tgz#c881e13cc7015894ed914862d276436fa9a47043"
+  integrity sha512-i/6DQjL8Xf3be4K/E6Wgpekn5Qasl1usyw++dAA35Ue5orEn65VIxOA+YvNNl9HV3qv70T7CNwjODHZrLwvd1Q==
 
 tslint-react@^3.2.0:
   version "3.5.1"
