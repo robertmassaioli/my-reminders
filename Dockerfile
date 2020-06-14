@@ -13,7 +13,7 @@ LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 ADD /frontend   /home/frontend
 ADD /openapi.yaml /home
 WORKDIR /home/frontend
-RUN apt-get update && apt-get install -y openjdk-7-jre-headless
+RUN apt-get update && apt-get install -y openjdk-8-jre-headless
 RUN yarn install && yarn build
 
 FROM haskell:8.0.2 AS build

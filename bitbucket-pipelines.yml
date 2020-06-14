@@ -37,7 +37,7 @@ pipelines:
             - node
           image: node:12
           script:
-            - apt-get update && apt-get install -y openjdk-7-jre-headless
+            - apt-get update && apt-get install -y openjdk-8-jre-headless
             - cd frontend
             - yarn && yarn build
   branches:
@@ -109,7 +109,7 @@ pipelines:
   custom:
     renovate:
       - step:
-          name: Deploy to staging
+          name: Run rennovate bot
           image: renovate/renovate
           script:
             - renovate --platform=bitbucket --username=robertmassaioli atlassianlabs/my-reminders
