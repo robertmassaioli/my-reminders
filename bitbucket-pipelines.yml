@@ -37,6 +37,7 @@ pipelines:
             - node
           image: node:12
           script:
+            - apt-get update && apt-get install -y openjdk-7-jre-headless
             - cd frontend
             - yarn && yarn build
   branches:
