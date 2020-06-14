@@ -1,10 +1,10 @@
-import * as React from 'react';
+import React from 'react';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import { DatePicker } from '@atlaskit/datetime-picker';
 import TimePicker from 'rc-time-picker';
 import { Label } from '@atlaskit/field-base';
 import FieldTextArea from '@atlaskit/field-text-area';
-import * as moment from 'moment';
+import moment from 'moment';
 import styled from 'styled-components';
 
 import 'rc-time-picker/assets/index.css';
@@ -63,25 +63,25 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
                 <div>
                     <h1>New reminder</h1>
                     <Label label="Date due" />
-                    <DatePicker 
-                        onChange={(date) => this.onDateChange(date)} 
+                    <DatePicker
+                        onChange={(date) => this.onDateChange(date)}
                         defaultValue={this.state.selectedTime.format('YYYY-MM-DD')}
                     />
                     <Label label="Time due" />
-                    <TimePicker 
+                    <TimePicker
                         defaultValue={moment().minute(0)}
                         showSecond={false}
-                        use12Hours={true} 
+                        use12Hours={true}
                         onChange={val => this.onTimeChange(val)}
                     />
-                    <FieldTextArea 
-                        label="Description" 
+                    <FieldTextArea
+                        label="Description"
                         isSpellCheckEnabled={true}
                         shouldFitContainer={true}
                         enableResize={true}
-                        minimumRows={4} 
+                        minimumRows={4}
                         maxLength={2000}
-                        onChange={(e) => this.onMessageChanged(e)}
+                        onChange={(e: React.SyntheticEvent<HTMLTextAreaElement>) => this.onMessageChanged(e)}
                     />
                     <this.Subtle>What do you want to be reminded about?</this.Subtle>
                 </div>

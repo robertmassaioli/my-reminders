@@ -18,18 +18,28 @@ definitions:
 
 pipelines:
   default:
-    - step:
-        name: Build and Test
-        caches:
-          - cabal
-        script:
-          - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
-          - cabal update
-          - cabal sandbox init
-          - cabal install --verbose=2 --enable-tests --only-dependencies
-          - cabal configure --verbose=2 --enable-tests
-          - cabal build
-          - cabal test
+    - parallel:
+      - step:
+          name: Backend Build and Test
+          caches:
+            - cabal
+          script:
+            - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
+            - cabal update
+            - cabal sandbox init
+            - cabal install --verbose=2 --enable-tests --only-dependencies
+            - cabal configure --verbose=2 --enable-tests
+            - cabal build
+            - cabal test
+      - step:
+          name: Frontend Build and Test
+          caches:
+            - node
+          image: node:12
+          script:
+            - apt-get update && apt-get install -y openjdk-8-jre-headless
+            - cd frontend
+            - yarn && yarn build
   branches:
     master:
       - step:
@@ -99,7 +109,7 @@ pipelines:
   custom:
     renovate:
       - step:
-          name: Deploy to staging
+          name: Run rennovate bot
           image: renovate/renovate
           script:
             - renovate --platform=bitbucket --username=robertmassaioli atlassianlabs/my-reminders

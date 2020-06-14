@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import DropList, { Item } from '@atlaskit/droplist';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
@@ -54,8 +54,8 @@ export class IssueViewActions extends React.PureComponent<IssueViewActionsProps,
                     <Item onActivate={this.props.onTomorrow} isDisabled={this.actionInProgress()}>Tomorrow</Item>
                     <Item onActivate={this.props.onInAWeek} isDisabled={this.actionInProgress()}>In a week</Item>
                     <Item onActivate={this.props.onInAMonth} isDisabled={this.actionInProgress()}>In a month</Item>
-                    <Item 
-                        onActivate={this.props.onAddReminder} 
+                    <Item
+                        onActivate={this.props.onAddReminder}
                         isDisabled={this.actionInProgress()}
                     >
                         Select a time...
@@ -63,13 +63,13 @@ export class IssueViewActions extends React.PureComponent<IssueViewActionsProps,
                 </DropList>
             </ButtonGroup>
             <this.StatusIndicator>
-                {this.actionInProgress() && <Spinner />} 
+                {this.actionInProgress() && <Spinner />}
                 {this.inError() && <WarningIcon label="error"/>}
             </this.StatusIndicator>
           </this.IssueViewActionsContainer>
       );
     }
-    
+
     private actionInProgress(): boolean {
         return this.props.statusIndicator === 'actionInProgress';
     }
@@ -79,7 +79,7 @@ export class IssueViewActions extends React.PureComponent<IssueViewActionsProps,
     }
 
     private toggleOpen() {
-        this.setState(s => { 
+        this.setState(s => {
             return {
                 optionsOpen: !s.optionsOpen
             };

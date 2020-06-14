@@ -1,13 +1,13 @@
-import * as React from 'react';
+import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import EmptyState from '@atlaskit/empty-state';
 import { IssueView } from './IssueView';
 import { ReminderView, DialogEventData } from './Data';
-import * as moment from 'moment';
+import moment from 'moment';
 import 'whatwg-fetch';
 import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
-import { ReminderResponse, ReminderRequest } from './reminders-client';
+import { ReminderResponse, AddReminderRequest, ReminderRequest } from './reminders-client';
 import { createIndividualReminderApi, createIssueRemindersApi } from './api';
 
 type IssueViewContainerProps = {
@@ -34,10 +34,10 @@ type IssueViewContainerState = {
 };
 
 function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Promise<ReminderResponse[]> {
-    return createIssueRemindersApi(pageContext).getRemindersForIssue(issueId);
+    return createIssueRemindersApi(pageContext).getRemindersForIssue({ issueId });
 }
 
-function createReminder(data: ReminderRequest, pc: PageContext): Promise<void> {
+function createReminder(data: AddReminderRequest, pc: PageContext): Promise<void> {
     return createIndividualReminderApi(pc).addReminder(data).then(() => undefined);
 }
 
@@ -167,7 +167,7 @@ export class IssueViewContainer
     }
 
     private onDeleteReminder(reminderId: number) {
-        createIndividualReminderApi(this.props.pageContext).deleteReminder(reminderId).then(() => {
+        createIndividualReminderApi(this.props.pageContext).deleteReminder({ reminderId }).then(() => {
             this.setState(s => {
                 if (s.loadedDetails && s.loadedDetails !== 'reminders-failed-to-load') {
                     return {
@@ -233,7 +233,7 @@ export class IssueViewContainer
     private createReminder(forDate: moment.Moment, message?: string) {
         const ld = this.state.loadedDetails;
         if (ld && ld !== 'reminders-failed-to-load') {
-            const requestData: ReminderRequest = {
+            const reminderRequest: ReminderRequest = {
                 issue: {
                     key: ld.issue.key,
                     id: ld.issue.id,
@@ -244,10 +244,10 @@ export class IssueViewContainer
             };
 
             if (message) {
-                requestData.message = message;
+                reminderRequest.message = message;
             }
 
-            createReminder(requestData, this.props.pageContext)
+            createReminder({ reminderRequest }, this.props.pageContext)
             .then(() => {
                 AP.flag.create({
                     title: 'Reminder created',

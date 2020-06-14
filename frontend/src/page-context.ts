@@ -1,8 +1,4 @@
-import * as URI from 'urijs';
-
-// Imports for IE11
-import 'core-js/fn/array/from';
-import 'core-js/fn/array/find';
+import URI from 'urijs';
 
 export type PageContext = {
     user?: {
@@ -50,7 +46,7 @@ function fromMeta(name: string): string | undefined {
 }
 
 export function loadPageContext(): PageContext | undefined {
-    var queryParams = URI(window.location.href).query(true);
+    var queryParams = URI(window.location.href).query(true) as { [key: string]: string };
 
     const pAcpt = fromMeta('acpt');
     const pAaid = fromMeta('userAccountId');

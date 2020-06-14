@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { DocsPage } from './DocsPage';
 
@@ -11,7 +11,7 @@ type DocsPageContainerState = {
 };
 
 export class DocsPageContainer extends React.PureComponent<RouteComponentProps<Params>, DocsPageContainerState> {
-    private static pages = {
+    private static pages: { [pageId: string]: () => string } = {
         'home': () => require('./docs/home.md'),
         'faq': () => require('./docs/faq.md'),
         'about': () => require('./docs/about.md')

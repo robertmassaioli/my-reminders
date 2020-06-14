@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { ReminderCreateDialog } from './ReminderCreateDialog';
@@ -13,7 +13,7 @@ type Props = RouteComponentProps<void> & ReminderCreateContainerProps;
 export class ReminderCreateContainer extends React.PureComponent<Props> {
     render() {
         return (
-            <ReminderCreateDialog 
+            <ReminderCreateDialog
                 onCreate={(isoDateTime, message) => this.onCreate(isoDateTime, message)}
                 onCancel={() => this.onCancel()}
             />

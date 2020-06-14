@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { Route, Switch } from 'react-router-dom';
 import { loadPageContext, PageContext } from './page-context';
 import Spinner from '@atlaskit/spinner';

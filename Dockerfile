@@ -6,15 +6,15 @@
 # the entire Haskell platform with us into production. Just the small set
 # of required dependencies.
 
-FROM kkarczmarczyk/node-yarn as frontend
+FROM node:12 as frontend
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Build the Frontend
 ADD /frontend   /home/frontend
-ADD /swagger.yaml /home
+ADD /openapi.yaml /home
 WORKDIR /home/frontend
-RUN apt-get update && apt-get install -y openjdk-7-jre-headless
-RUN yarn install && yarn run get-swagger-codegen && yarn build
+RUN apt-get update && apt-get install -y openjdk-8-jre-headless
+RUN yarn install && yarn build
 
 FROM haskell:8.0.2 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"

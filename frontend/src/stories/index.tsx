@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { storiesOf, Story } from '@storybook/react';
+import React from 'react';
+import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { Reminder } from '../Reminder';
 import { IssueViewActions, IssueViewActionsProps } from '../IssueViewActions';
@@ -8,10 +8,11 @@ import { RemindersList } from '../RemindersList';
 import { AllRemindersView } from '../AllRemindersView';
 import { IssueView } from '../IssueView';
 import { DocsPage } from '../DocsPage';
-import * as moment from 'moment';
+import moment from 'moment';
 import styled from 'styled-components';
+import { StoryApi } from '@storybook/addons';
 
-type partialStoriesOf = (name: string) => Story;
+type partialStoriesOf = (name: string) => StoryApi<React.ReactElement<unknown>>;
 
 export function compileStories() {
   const localStoryCreator: partialStoriesOf = (name: string) => storiesOf(name, module);
@@ -237,7 +238,7 @@ export default function stories(storyCreator: partialStoriesOf) {
             msPerDay * 365 * 20
 
         ];
-        return times.map(time => {
+        const reminders = times.map(time => {
             return (
                 <Reminder
                     key={time}
@@ -250,6 +251,8 @@ export default function stories(storyCreator: partialStoriesOf) {
                 />
             );
         });
+
+        return <>{reminders}</>;
     })
     .add('Different timezones', () => (
         <div>
