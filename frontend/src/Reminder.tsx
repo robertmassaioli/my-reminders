@@ -37,6 +37,10 @@ export class Reminder extends React.PureComponent<ReminderProps> {
         return r.expiresAt.fromNow().replace(/^in/, 'In');
     }
 
+    private static renderExactTime(r: ReminderView): string {
+        return r.expiresAt.format("DD MMM YYYY h:mmA");
+    }
+
     render() {
         const r = this.props.reminder;
 
@@ -45,7 +49,7 @@ export class Reminder extends React.PureComponent<ReminderProps> {
             <this.Container>
                 <div className="content">
                     <this.Title>{message}</this.Title>
-                    <this.SubInfo>{Reminder.renderExpiry(r)}</this.SubInfo>
+                    <this.SubInfo>{Reminder.renderExpiry(r)}  ({Reminder.renderExactTime(r)})</this.SubInfo>
                 </div>
                 <div className="operations">
                     <Button
