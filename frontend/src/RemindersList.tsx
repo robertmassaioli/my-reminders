@@ -1,13 +1,10 @@
-import * as React from 'react';
+import React from 'react';
 import DynamicTable, { DynamicTableHead, DynamicTableRow } from '@atlaskit/dynamic-table';
 import EmptyState from '@atlaskit/empty-state';
-import * as moment from 'moment';
+import moment from 'moment';
 import { Reminder } from './Data';
 import Spinner from '@atlaskit/spinner';
 import styled from 'styled-components';
-
-// Imports for IE11
-import 'core-js/fn/array/find';
 
 export type RemindersListProps = {
     hostBaseUrl: string;

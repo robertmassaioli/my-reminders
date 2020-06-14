@@ -18,18 +18,27 @@ definitions:
 
 pipelines:
   default:
-    - step:
-        name: Build and Test
-        caches:
-          - cabal
-        script:
-          - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
-          - cabal update
-          - cabal sandbox init
-          - cabal install --verbose=2 --enable-tests --only-dependencies
-          - cabal configure --verbose=2 --enable-tests
-          - cabal build
-          - cabal test
+    - parallel:
+      - step:
+          name: Backend Build and Test
+          caches:
+            - cabal
+          script:
+            - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
+            - cabal update
+            - cabal sandbox init
+            - cabal install --verbose=2 --enable-tests --only-dependencies
+            - cabal configure --verbose=2 --enable-tests
+            - cabal build
+            - cabal test
+      - step:
+          name: Frontend Build and Test
+          caches:
+            - node
+          image: node:12
+          script:
+            - cd frontend
+            - yarn && yarn build
   branches:
     master:
       - step:

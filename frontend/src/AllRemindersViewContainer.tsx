@@ -1,8 +1,8 @@
-import * as React from 'react';
+import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { PageContext } from './page-context';
 import { AllRemindersView } from './AllRemindersView';
-import { ReminderResponseList } from './reminders-client';
+import { ReminderResponse } from './reminders-client';
 import { createUserRemindersApi } from './api';
 import { Reminder } from './Data';
 
@@ -17,7 +17,7 @@ type ARVState = {
 };
 
 export class AllRemindersViewContainer extends React.PureComponent<Props, ARVState> {
-    private static rrlToReminders(rrl: ReminderResponseList): Reminder[] {
+    private static rrlToReminders(rrl: ReminderResponse[]): Reminder[] {
         return rrl.map(r => {
             return {
                 id: r.reminderId,
@@ -67,7 +67,7 @@ export class AllRemindersViewContainer extends React.PureComponent<Props, ARVSta
 
     private onDeleteReminders(selectedReminderIds: number[]) {
         createUserRemindersApi(this.props.pageContext).deleteReminders({
-            pids: selectedReminderIds
+            reminderIdList: { pids: selectedReminderIds }
         }).then(() => {
             this.reloadReminderData();
         }).catch(() => {

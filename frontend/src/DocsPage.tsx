@@ -1,10 +1,10 @@
-import * as React from 'react';
-import * as ReactMarkdown from 'react-markdown';
-import Navigation, { 
-    AkGlobalItem, 
-    AkNavigationItemGroup, 
-    AkNavigationItem, 
-    AkContainerTitle 
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import Navigation, {
+    AkGlobalItem,
+    AkNavigationItemGroup,
+    AkNavigationItem,
+    AkContainerTitle
 } from '@atlaskit/navigation';
 import Page from '@atlaskit/page';
 import Tooltip from '@atlaskit/tooltip';
@@ -16,7 +16,7 @@ import styled from 'styled-components';
 import logo from './images/logo.svg';
 
 export type DocsPageProps = {
-    mdContent: string;  
+    mdContent: string;
     location: string;
 };
 
@@ -33,7 +33,7 @@ export class DocsPage extends React.Component<DocsPageProps> {
         return (
             <Page
                 navigation={
-                    <Navigation 
+                    <Navigation
                         isCollapsible={false}
                         globalPrimaryIcon={<img src={logo} width={24} height={24} />}
                         globalPrimaryIconAppearance="square"
@@ -66,17 +66,17 @@ export class DocsPage extends React.Component<DocsPageProps> {
                         )}
                     >
                         <AkNavigationItemGroup>
-                            <AkNavigationItem 
+                            <AkNavigationItem
                                 text="Home"
                                 isSelected={isCurrentLocation('/docs/home')}
                                 href="/docs/home"
                             />
-                            <AkNavigationItem 
+                            <AkNavigationItem
                                 text="FAQ"
                                 isSelected={isCurrentLocation('/docs/faq')}
                                 href="/docs/faq"
                             />
-                            <AkNavigationItem 
+                            <AkNavigationItem
                                 text="About"
                                 isSelected={isCurrentLocation('/docs/about')}
                                 href="/docs/about"

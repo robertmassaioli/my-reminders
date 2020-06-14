@@ -1,6 +1,6 @@
 declare module 'rc-time-picker' {
-    import * as moment from 'moment';
-    
+    import moment from 'moment';
+
     interface TimepickerProps {
         prefixCls?: string; //	String	'rc-time-picker'	prefixCls of this component
         clearText?: string; //	String	'clear'	clear tooltip of icon
@@ -25,7 +25,7 @@ declare module 'rc-time-picker' {
         onChange?: (value: moment.Moment) => void; //	Function	null	called when select a different value
         // addon	Function	-	called from timepicker panel to render some addon to its bottom, like an OK button. Receives panel instance as parameter, to be able to close it like panel.close().
         placement?: 'left' | 'right' | 'top' | 'bottom' | 'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight';
-        transitionName?: string; //	String	''	
+        transitionName?: string; //	String	''
         name?: string; //	String	-	sets the name of the generated input
         // onOpen	Function({ open })		when TimePicker panel is opened
         // onClose	Function({ open })		when TimePicker panel is opened

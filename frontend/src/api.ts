@@ -2,10 +2,10 @@ import { PageContext } from './page-context';
 import * as rc from './reminders-client';
 
 export function createConfiguration(pc: PageContext): rc.Configuration {
-    return {
+    return new rc.Configuration({
         apiKey: pc.acpt,
         basePath: '/rest'
-    };
+    });
 }
 
 export function createUserRemindersApi(pc: PageContext): rc.UserRemindersApi {
