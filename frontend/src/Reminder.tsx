@@ -38,7 +38,7 @@ export class Reminder extends React.PureComponent<ReminderProps> {
     }
 
     private static renderExactTime(r: ReminderView): string {
-        return r.expiresAt.format("DD MMM YYYY h:mmA");
+        return r.expiresAt.format('DD MMM YYYY h:mmA');
     }
 
     render() {
