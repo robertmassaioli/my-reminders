@@ -247,21 +247,21 @@ components:
       type: object
       additionalProperties: false
       required:
-        - ReminderDate
-        - Issue
-        - UserAaid
+        - reminderDate
+        - issue
+        - userAaid
       properties:
-        ReminderDate:
+        reminderDate:
           description: The expiry date for the reminder. The date and time that it will be
             sent.
           type: string
           format: date-time
-        Issue:
+        issue:
           $ref: "#/components/schemas/IssueDetails"
-        UserAaid:
+        userAaid:
           description: The AAID of the user that this reminder should be created for.
           type: string
-        Message:
+        message:
           description: |-
             The optional message for this reminder, to be sent with the reminder
             itself.
@@ -273,32 +273,21 @@ components:
       type: object
       additionalProperties: false
       required:
-        - Id
-        - Key
-        - Summary
+        - id
+        - key
+        - summary
       properties:
-        Id:
+        id:
           description: The id of the issue.
           type: number
           minimum: 0
-        Key:
+        key:
           description: The Key of the issue.
           type: string
           minLength: 1
-        Summary:
+        summary:
           description: The summary on the issue.
           type: string
-    UserDetails:
-      title: User Details
-      type: object
-      additionalProperties: false
-      required:
-        - Key
-      properties:
-        Key:
-          description: The unique key of the given user.
-          type: string
-          minLength: 1
     ReminderResponseList:
       title: List of Reminders
       description: A list of reminders.
@@ -311,33 +300,33 @@ components:
       type: object
       additionalProperties: false
       required:
-        - ReminderId
-        - IssueId
-        - IssueKey
-        - IssueSummary
-        - Date
+        - reminderId
+        - issueId
+        - issueKey
+        - issueSummary
+        - date
       properties:
-        ReminderId:
+        reminderId:
           description: The unique identifier for this reminder.
           type: number
           minimum: 0
-        IssueId:
+        issueId:
           description: The identifier of the Jira issue that this reminder is for.
           type: number
           minimum: 0
-        IssueKey:
+        issueKey:
           description: The Jira issue key that this reminder is for.
           type: string
           minLength: 1
-        IssueSummary:
+        issueSummary:
           description: The current Jira summary for this issue.
           type: string
-        Message:
+        message:
           description: The message that the user set for the reminder to help jog their
             memory.
           type: string
           minLength: 1
-        Date:
+        date:
           description: The exact date-time that the reminder will expire.
           type: string
           format: date-time
