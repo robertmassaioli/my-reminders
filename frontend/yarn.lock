@@ -348,10 +348,19 @@
     react-transition-group "^2.2.1"
     tslib "^1.9.3"
 
-"@atlaskit/spinner@^13.0.0", "@atlaskit/spinner@^13.0.1":
+"@atlaskit/spinner@^13.0.0":
   version "13.0.1"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@atlaskit/spinner/-/spinner-13.0.1.tgz#fdac3a4abb840a5e10c5629ed476186e23c9be3d"
   integrity sha1-/aw6SruECl4QxWKe1HYYbiPJvj0=
+  dependencies:
+    "@atlaskit/theme" "^9.5.1"
+    "@emotion/core" "^10.0.9"
+    tslib "^1.9.3"
+
+"@atlaskit/spinner@^14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/spinner/-/spinner-14.0.0.tgz#becc06d7042f50b37636e1fc6468544d262a8883"
+  integrity sha512-jc7MwAVDNe/dZ49ErwLxvmnpL83EPMl3/hRQTnkHf85wtlKSA+yU0mkoI9FeEhdgqhQ8kWQSrkEExa7BhRzB3A==
   dependencies:
     "@atlaskit/theme" "^9.5.1"
     "@emotion/core" "^10.0.9"

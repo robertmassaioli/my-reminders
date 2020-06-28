@@ -15,7 +15,7 @@
     "@atlaskit/navigation": "^36.0.7",
     "@atlaskit/page": "^11.0.14",
     "@atlaskit/select": "11.0.11",
-    "@atlaskit/spinner": "^13.0.1",
+    "@atlaskit/spinner": "^14.0.0",
     "@atlaskit/tooltip": "^15.2.9",
     "moment": "2.21.0",
     "moment-timezone-all": "^0.5.5",
