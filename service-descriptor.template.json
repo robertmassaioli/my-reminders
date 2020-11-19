@@ -40,8 +40,7 @@
                "expression": "PT3M",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/expire",
-               "payload": "key:c1de7ddc-3a91-11e7-85fb-3c15c2bd8cac"
+               "notificationUrl": "/rest/expire?key=c1de7ddc-3a91-11e7-85fb-3c15c2bd8cac"
             }
          }, {
             "type": "cronman",
@@ -52,8 +51,7 @@
                "expression": "PT1H",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/expire/failing",
-               "payload": "key:c1de7ddc-3a91-11e7-85fb-3c15c2bd8cac"
+               "notificationUrl": "/rest/expire/failing?key=c1de7ddc-3a91-11e7-85fb-3c15c2bd8cac"
             }
          }, {
             "type": "cronman",
@@ -64,8 +62,7 @@
                "expression": "P1D",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/purge",
-               "payload": "key:957784e5-b6d8-4a96-bdc3-7a62826aa67f"
+               "notificationUrl": "/rest/purge?key=957784e5-b6d8-4a96-bdc3-7a62826aa67f"
             }
          }],
          "scaling": {
@@ -89,8 +86,7 @@
                "expression": "PT3M",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/expire",
-               "payload": "key:64d8d3d8-6fb6-11e4-b54d-3c15c2bd8cac"
+               "notificationUrl": "/rest/expire?key=64d8d3d8-6fb6-11e4-b54d-3c15c2bd8cac"
             }
          }, {
             "type": "cronman",
@@ -101,8 +97,7 @@
                "expression": "PT1H",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/expire/failing",
-               "payload": "key:64d8d3d8-6fb6-11e4-b54d-3c15c2bd8cac"
+               "notificationUrl": "/rest/expire/failing?key=64d8d3d8-6fb6-11e4-b54d-3c15c2bd8cac"
             }
          }, {
             "type": "cronman",
@@ -113,8 +108,7 @@
                "expression": "P1D",
                "timezone": "UTC",
                "notificationMethod": "http_post",
-               "notificationUrl": "/rest/purge",
-               "payload": "key:6b518e30-6fb6-11e4-8091-3c15c2bd8cac"
+               "notificationUrl": "/rest/purge?key=6b518e30-6fb6-11e4-8091-3c15c2bd8cac"
             }
          }],
          "config": {
