@@ -3,7 +3,7 @@
 # Only use spaces to indent your .yml configuration.
 # -----
 # You can specify a custom docker image from Docker Hub as your build environment.
-image: haskell:8.0.2
+image: haskell:8.6.5
 
 options:
   docker: true
@@ -25,12 +25,10 @@ pipelines:
             - cabal
           script:
             - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
-            - cabal update
-            - cabal sandbox init
-            - cabal install --verbose=2 --enable-tests --only-dependencies
-            - cabal configure --verbose=2 --enable-tests
-            - cabal build
-            - cabal test
+            - cabal new-update
+            - cabal new-configure --enable-tests
+            - cabal new-build
+            - cabal new-test
       - step:
           name: Frontend Build and Test
           caches:

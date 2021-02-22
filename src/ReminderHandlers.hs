@@ -21,7 +21,6 @@ import           GHC.Generics
 import qualified Model.UserDetails                 as UD
 import qualified Persistence.Reminder              as P
 import qualified Snap.AtlassianConnect             as AC
-import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Core                         as SC
 import qualified Snap.Snaplet                      as SS
 import           SnapHelpers
@@ -211,7 +210,6 @@ addReminder (tenant, Just userAaid) reminderRequest
             maybe (respondWithError internalServer insertFailedError)
                   (const respondNoContent)
   where
-    isNotValid = not . EV.isValid
     requestAaid = prqUserAaid reminderRequest
     -- Error strings
     userMismatchError = "Given the details for user " ++ show requestAaid ++ " however Atlassian Connect thinks you are " ++ show userAaid

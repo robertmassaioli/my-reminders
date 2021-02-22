@@ -22,7 +22,6 @@ import qualified Data.CaseInsensitive                        as CI
 import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
 import qualified Data.Text                                   as T
-import           Data.Text.Encoding                          (decodeUtf8)
 import qualified Data.Text.IO                                as T
 import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
