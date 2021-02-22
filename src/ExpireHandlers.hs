@@ -29,6 +29,7 @@ import qualified Snap.AtlassianConnect.HostRequest   as AC
 import qualified Snap.Core                           as SC
 import           SnapHelpers
 import           System.FilePath                     ((</>))
+import qualified Text.Mustache                       as M
 
 handleExpireRequest :: AppHandler ()
 handleExpireRequest = handleMethods
@@ -88,13 +89,16 @@ loadEmailContext connectConf = do
       Nothing -> return Nothing
       Just emailDirectory -> do
          -- Load the templates from the filesystem
-         plainTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.txt")
-         htmlTemplate <- liftIO $ T.readFile (emailDirectory </> "reminder-email.html")
-         return . Just $ EmailContext
-            { ecConnectConf = connectConf
-            , ecPlainEmailTemplate = plainTemplate
-            , ecHtmlEmailTemplate = htmlTemplate
-            }
+         plainTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> "reminder-email.txt")
+         htmlTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> "reminder-email.html")
+         case (plainTemplateResult, htmlTemplateResult) of
+            (Right plainTemplate, Right htmlTemplate) -> do
+               return . Just $ EmailContext
+                  { ecConnectConf = connectConf
+                  , ecPlainEmailTemplate = plainTemplate
+                  , ecHtmlEmailTemplate = htmlTemplate
+                  }
+            _ -> return Nothing
 
 showLength :: [a] -> String
 showLength = show . length

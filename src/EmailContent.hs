@@ -6,40 +6,51 @@ module EmailContent
    ) where
 
 import qualified Data.ByteString as B
-import           Data.ByteString.Lazy    (toStrict)
 import           Data.Connect.Descriptor (PluginKey (..), pluginKey)
-import           Data.Text.Lazy.Encoding (encodeUtf8)
+import           Data.Text.Encoding (encodeUtf8)
 import           EmailContext
 import           Persistence.Reminder
-import           Snap.AtlassianConnect   (connectPlugin, Tenant(..))
-import           Text.Hastache
-import           Text.Hastache.Context
+import qualified Snap.AtlassianConnect as AC
+import qualified Text.Mustache as M
 
 data MessageContent = TextAndHTML
   { textContent :: B.ByteString
   , htmlContent :: B.ByteString
   }
 
-reminderEmail :: Tenant -> EmailContext -> Reminder -> IO MessageContent
-reminderEmail tenant emailContext reminder = do
-   plainEmail <- hastacheStr defaultConfig (ecPlainEmailTemplate emailContext) (mkStrContext context)
-   htmlEmail <- hastacheStr defaultConfig (ecHtmlEmailTemplate emailContext) (mkStrContext context)
-   return TextAndHTML
-      { textContent = toStrict . encodeUtf8 $ plainEmail
-      , htmlContent = toStrict . encodeUtf8 $ htmlEmail
+data Context = Context
+   { cTenant :: AC.Tenant
+   , cReminder :: Reminder
+   , cEmailContext :: EmailContext
+   }
+
+instance M.ToMustache Context where
+   toMustache context = M.object
+      [ "baseUrl" M.~> (show . AC.baseUrl . cTenant $ context)
+      , "issueKey" M.~> reminderIssueKey reminder
+      , "issueSummary" M.~> reminderIssueSummary reminder
+      , "reminderMessage" M.~> reminderMessage reminder
+      , "originalIssueKey" M.~> reminderOriginalIssueKey reminder
+      , "originalIssueSummary" M.~> reminderOriginalIssueSummary reminder
+      , "pluginKey" M.~> (fromPluginKey . pluginKey . AC.connectPlugin . ecConnectConf . cEmailContext $ context)
+      , "showOriginal" M.~> originalIsDifferent
+      ]
+      where
+         reminder = cReminder context
+         originalIsDifferent = reminderOriginalIssueKey reminder /= reminderIssueKey reminder || reminderOriginalIssueSummary reminder /= reminderIssueSummary reminder
+         fromPluginKey (PluginKey textKey) = textKey
+
+
+reminderEmail :: AC.Tenant -> EmailContext -> Reminder -> MessageContent
+reminderEmail tenant emailContext reminder =
+   TextAndHTML
+      { textContent = encodeUtf8 $ M.substitute (ecPlainEmailTemplate emailContext) context
+      , htmlContent = encodeUtf8 $ M.substitute (ecHtmlEmailTemplate emailContext) context
       }
    where
-      context :: String -> MuType m
-      context "baseUrl" = MuVariable . show . baseUrl $ tenant
-      context "issueKey" = MuVariable . reminderIssueKey $ reminder
-      context "issueSummary" = MuVariable . reminderIssueSummary $ reminder
-      context "reminderMessage" = MuVariable . reminderMessage $ reminder
-      context "originalIssueKey" = MuVariable . reminderOriginalIssueKey $ reminder
-      context "originalIssueSummary" = MuVariable . reminderOriginalIssueSummary $ reminder
-      context "pluginKey" = MuVariable . fromPluginKey . pluginKey . connectPlugin . ecConnectConf $ emailContext
-      context "showOriginal" = MuBool originalIsDifferent
-      context _ = MuNothing
-
-      originalIsDifferent = reminderOriginalIssueKey reminder /= reminderIssueKey reminder || reminderOriginalIssueSummary reminder /= reminderIssueSummary reminder
-
-      fromPluginKey (PluginKey textKey) = textKey
+      context :: Context
+      context = Context
+         { cTenant = tenant
+         , cReminder = reminder
+         , cEmailContext = emailContext
+         }

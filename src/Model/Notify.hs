@@ -13,10 +13,9 @@ import           Data.Aeson.Types
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Char8             as BC
 import qualified Data.CaseInsensitive              as CI
-import qualified Data.Map                          as M
-import           Data.Monoid                       (mempty, (<>))
+import           Data.Monoid                       ((<>))
 import qualified Data.Text                         as T
-import           Data.Text.Encoding                (encodeUtf8, decodeUtf8)
+import           Data.Text.Encoding                (decodeUtf8)
 import           EmailContext
 import qualified Model.UserDetails                 as UD
 import           EmailContent                      (reminderEmail, MessageContent(..))
@@ -57,14 +56,14 @@ userFromAccountId accountId = NotificationUser
   , nuAccountId = Just accountId
   }
 
-getNotificationUser :: AC.Tenant -> Reminder -> AppHandler (Either AC.ProductErrorResponse NotificationUser)
-getNotificationUser tenant reminder = return . Right . userFromAccountId . reminderUserAaid $ reminder
+getNotificationUser :: Reminder -> AppHandler (Either AC.ProductErrorResponse NotificationUser)
+getNotificationUser reminder = return . Right . userFromAccountId . reminderUserAaid $ reminder
 
 sendIssueReminder :: AC.Tenant -> EmailContext -> Reminder -> AppHandler (Either AC.ProductErrorResponse ())
 sendIssueReminder tenant emailContext reminder = do
-  potentialNotificationUser <- getNotificationUser tenant reminder
+  potentialNotificationUser <- getNotificationUser reminder
   case potentialNotificationUser of
-    Left error -> return . Left $ error
+    Left e -> return . Left $ e
     Right notificationUser -> do
       payload <- liftIO $ createNotification notificationUser
       errorOnContent <$> (SS.with connect $ AC.hostPostRequestExtended tenant notifyUrl [] (AC.addHeader (CI.mk "x-atlassian-force-account-id", "true") <> AC.setJson payload))
@@ -77,7 +76,7 @@ sendIssueReminder tenant emailContext reminder = do
 
     createNotification :: NotificationUser -> IO Notification
     createNotification notificationUser = do
-      emailContent <- reminderEmail tenant emailContext reminder
+      let emailContent = reminderEmail tenant emailContext reminder
       return Notification
         { nSubject = subject
         , nTextBody = decodeUtf8 . textContent $ emailContent

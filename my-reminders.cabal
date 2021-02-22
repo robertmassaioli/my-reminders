@@ -49,6 +49,17 @@ Executable my-reminders
                  , MigrationHandler
                  , Finder
                  , StatisticsHandlers
+                 , AdminHandlers
+                 , AesonHelpers
+                 , AppHelpers
+                 , Application
+                 , AssetManifestParser
+                 , Data.TimeUnitUTC
+                 , LifecycleHandlers
+                 , MicrosZone
+                 , PurgeHandlers
+                 , StaticSnaplet
+                 , WebhookHandlers
 
   default-language: Haskell2010
   Build-depends:
@@ -63,37 +74,37 @@ Executable my-reminders
     -- TODO swap over to using http://hackage.haskell.org/package/cryptonite
     , cipher-aes                == 0.2.*
     , configurator              == 0.3.*
-    , containers                == 0.5.*
+    , containers                >= 0.5 && < 0.7
     , directory                 >= 1.1     && < 1.4
     , email-validate            == 2.*
     , filepath                  == 1.4.*
-    , hastache                  == 0.6.*
-    , heist                     == 1.0.*
+    , mustache                  == 2.3.*
+    , heist                     >= 1.0 && < 1.2
     , hostname                  == 1.0
     , http-client               == 0.5.*
     , http-types                == 0.8.*
     , jwt                       == 0.7.*
     , lens                      == 4.*
     , lifted-base               == 0.2.*
-    , map-syntax                == 0.2.*
+    , map-syntax                >= 0.2 && < 0.4
     , mtl                       == 2.*
     , network                   == 2.6.*
     , network-api-support       == 0.3.*
     , network-uri               == 2.6.*
     , parallel-io               == 0.3.*
     , postgresql-simple         >= 0.4
-    , process                   == 1.4.*
+    , process                   >= 1.4 && < 1.7
     , resource-pool             == 0.2.*
-    , snap                      == 1.0.*
+    , snap                      >= 1.0 && < 1.2
     , snap-core                 == 1.0.*
     , snap-loader-static
-    , snap-server               == 1.0.*
+    , snap-server               == 1.1.*
     , snaplet-postgresql-simple >= 0.6.0.2
     , split                     == 0.2.*
-    , stm                       == 2.4.*
+    , stm                       >= 2.4 && < 3
     , tagsoup                   == 0.14.*
     , text                      == 1.2.*
-    , time                      == 1.6.*
+    , time                      >= 1.6  && <= 1.11
     , time-units                == 1.*
     , transformers              >= 0.4
     , tls                       >= 1.4.0
@@ -140,7 +151,7 @@ test-suite my-reminders-props
     , directory
     , email-validate
     , filepath
-    , hastache
+    , mustache
     , heist
     , hostname
     , http-client
