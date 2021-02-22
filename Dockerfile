@@ -49,7 +49,7 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # IMPORTANT: This must produce a statically-compiled binary (with respect to
 # Cabal dependencies) that does not depend on a local cabal installation. The
 # production Docker image will not run a cabal install.
-RUN cabal new-update && cabal new-configure && mkdir output && cabal new-install -O2 --force-reinstalls --install-method=copy --installdir=output
+RUN cabal new-update && cabal new-configure && mkdir -p output && cabal new-install -O2 --force-reinstalls --install-method=copy --installdir=output
 
 # Setup the default command to run for the container.
 CMD ["/home/haskell/build/output/my-reminders", "--access-log=-", "--error-log=stderr"]
