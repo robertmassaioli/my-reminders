@@ -40,7 +40,7 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # Get the Haskell Dependencies
 # TODO Do we require the Haskell Platform [http://packages.ubuntu.com/trusty/haskell-platform] or GHC [http://packages.ubuntu.com/trusty/ghc6]?
 # RUN apt-get update && apt-get install -y haskell-platform && cabal update && cabal install cabal-install
-RUN cabal update && cabal install cabal-install==3.2.0.0
+# RUN cabal update && cabal install cabal-install==3.2.0.0
 
 # Initiate the build environment and build the executable (assumes that the
 # atlassian-connect-haskell source can be found in the vendor/atlassian-connect directory AND that
@@ -49,10 +49,10 @@ RUN cabal update && cabal install cabal-install==3.2.0.0
 # IMPORTANT: This must produce a statically-compiled binary (with respect to
 # Cabal dependencies) that does not depend on a local cabal installation. The
 # production Docker image will not run a cabal install.
-RUN cabal new-update && cabal new-configure && cabal new-install -O2 --force-reinstalls
+RUN cabal new-update && cabal new-configure && mkdir output && cabal new-install -O2 --force-reinstalls --install-method=copy --installdir=output
 
 # Setup the default command to run for the container.
-CMD ["/home/haskell/build/.cabal-sandbox/bin/my-reminders", "--access-log=-", "--error-log=stderr"]
+CMD ["/home/haskell/build/output/my-reminders", "--access-log=-", "--error-log=stderr"]
 
 # The production docker file for the Remind Me Connect Haskell project.
 # It is designed to be minimal by requiring only the dependencies of the production executable.
@@ -75,7 +75,7 @@ COPY --from=build /home/haskell/build/snaplets /service/snaplets
 COPY --from=build /home/haskell/build/resources /service/resources
 COPY --from=build /home/haskell/build/migrations /service/migrations
 COPY --from=build /home/haskell/build/static /service/static
-COPY --from=build /home/haskell/build/.cabal-sandbox/bin/my-reminders /service
+COPY --from=build /home/haskell/build/output/my-reminders /service
 
 # Setup the Haskell Envoronment
 WORKDIR /service
