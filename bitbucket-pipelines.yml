@@ -26,10 +26,8 @@ pipelines:
           script:
             - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
             - cabal update
-            - cabal sandbox init
-            - cabal install --verbose=2 --enable-tests --only-dependencies
-            - cabal configure --verbose=2 --enable-tests
-            - cabal build
+            - cabal new-configure
+            - cabal new-build
             - cabal test
       - step:
           name: Frontend Build and Test
