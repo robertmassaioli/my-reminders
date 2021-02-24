@@ -30,7 +30,7 @@ pipelines:
             - cabal new-build
             - cabal new-test
       - step:
-          name: Frontend Build and Test
+          name: Frontend Build
           caches:
             - node
           image: node:12
