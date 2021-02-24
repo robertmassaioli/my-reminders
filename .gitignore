@@ -5,13 +5,17 @@
 
 # Cabal Built
 /dist
+/dist-newstyle
 /.cabal-sandbox
 cabal.sandbox.config
 site_key.txt
 tags
+cabal.project.local
+/.ghc*
 
 # Snap generated files
 snaplets/Remind\ Me\ Configuration/
+snaplets/Application\ Configuration/
 
 # Atlassian Plugin SDK
 /amps-standalone
@@ -44,6 +48,7 @@ snaplets/Remind\ Me\ Configuration/
 
 # Bin dir
 /bin
+/output
 
 # Private files
 set-dev-env.bash
