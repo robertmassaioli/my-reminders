@@ -24,7 +24,7 @@ const Template: Story<ReminderCreateDialogProps> = (args) => (
    <BlackBack>
       <ReminderCreateDialog {...args} />
    </BlackBack>
-)
+);
 
 export const DefaultView = Template.bind({});
 DefaultView.args = {

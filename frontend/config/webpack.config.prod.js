@@ -368,6 +368,7 @@ module.exports = {
     // Perform type checking and linting in a separate process to speed up compilation
     new ForkTsCheckerWebpackPlugin({
       async: false,
+
       tsconfig: paths.appTsProdConfig,
       tslint: paths.appTsLint,
     }),

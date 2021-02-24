@@ -1,4 +1,4 @@
-import moment from "moment";
+import moment from 'moment';
 
 const msPerMinute = 60 * 1000;
 const msPerHour = msPerMinute * 60;

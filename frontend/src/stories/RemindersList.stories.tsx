@@ -6,8 +6,8 @@ import { RemindersList, RemindersListProps } from '../RemindersList';
 import { manyReminders, noOp } from './data';
 
 export default {
-  title: 'Reminders List',
-  component: RemindersList,
+   title: 'Reminders List',
+   component: RemindersList,
 } as Meta;
 
 const Template: Story<RemindersListProps> = (args) => <RemindersList {...args} />;
@@ -19,7 +19,7 @@ const msPerDay = msPerHour * 24;
 const defaultProps = {
    hostBaseUrl: 'https://your-domain.atlassian.net',
    onChange: noOp
- };
+};
 
 export const LoadingView = Template.bind({});
 LoadingView.args = {
@@ -39,10 +39,10 @@ OneReminder.args = {
       summary: 'An issue to behold',
       expiresAt: new Date(new Date().getTime() + msPerDay * 4),
       message: 'Don\'t forget to deal with this issue later!'
-  }]
-}
+   }]
+};
 export const MultipleReminders = Template.bind({});
 MultipleReminders.args = {
    ...defaultProps,
    reminders: manyReminders
-}
+};

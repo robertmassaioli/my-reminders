@@ -12,7 +12,6 @@ export default {
 
 const Template: Story<DocsPageProps> = (args) => <DocsPage {...args} />;
 
-
 // tslint:disable:align
   const mdContent = `
 # Hello there
