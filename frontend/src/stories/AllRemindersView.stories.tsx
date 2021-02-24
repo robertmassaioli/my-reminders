@@ -35,31 +35,3 @@ DefaultView.args = {
     reminders: manyReminders,
     onDelete: noOp
 };
-
-/*
-
-
-  // tslint:disable:align
-  const simpleMdContent = `
-# Hello there
-
-This is your captain speaking. Some points:
-
- - Nitwit
- - Odment
- - Blubber
-
-And some code:
-
-    1 + 2 = 3
-
-There we go.
-  `;
-  // tslint:enable:align
-
-  storyCreator('Docs page')
-    .add('Default view', () => (
-        <DocsPage mdContent={simpleMdContent} location="/docs/home" />
-    ));
-}
-*/
