@@ -70,8 +70,7 @@ pipelines:
             # generate the service descriptor
             - echo "RELEASE_VERSION" > "template-vars.csv"
             - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
-            - npm install mustang
-            - $(npm bin)/mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            - npx mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
             # micros deploy the service
             - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e ddev
           services:
@@ -96,8 +95,7 @@ pipelines:
             # generate the service descriptor
             - echo "RELEASE_VERSION" > "template-vars.csv"
             - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
-            - npm install mustang
-            - $(npm bin)/mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            - npx mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
             # micros deploy the service
             - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e prod-east
           services:
