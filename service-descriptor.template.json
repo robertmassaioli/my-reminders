@@ -34,10 +34,10 @@
             "PartnerOffices",
             "AssetnoteScanner",
             "CloudNetworks",
-            "CLOUDFRONT",
-            "ROUTE53_HEALTHCHECKS",
             "IpsecPartner",
-            "ForwardProxyAtlOnly"
+            "ForwardProxyAtlOnly",
+            "OutboundProxy",
+            "WhitelistProxy"
          ]
       }
    }],
