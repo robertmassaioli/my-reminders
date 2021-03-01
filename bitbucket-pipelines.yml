@@ -14,7 +14,7 @@ definitions:
     docker:
       memory: 4096
   caches:
-    cabal: .cabal-sandbox
+    cabal: dist-newstyle
 
 pipelines:
   default:
