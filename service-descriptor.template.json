@@ -27,7 +27,19 @@
       }
    }, {
       "type": "globaledge",
-      "name": "ingress"
+      "name": "ingress",
+      "attributes": {
+         "ip_whitelist": [
+            "AtlassianOffices",
+            "PartnerOffices",
+            "AssetnoteScanner",
+            "CloudNetworks",
+            "CLOUDFRONT",
+            "ROUTE53_HEALTHCHECKS",
+            "IpsecPartner",
+            "ForwardProxyAtlOnly"
+         ]
+      }
    }],
    "environmentOverrides": {
       "dev": {
