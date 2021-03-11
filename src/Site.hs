@@ -75,7 +75,7 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
     injectTags mts tags = preHead ++ (headTag : toMetaTags mts) ++ afterHead
       where
-        (preHead, (headTag : afterHead)) = span (not . TS.isTagOpenName $ "head") tags
+        (preHead, (headTag : afterHead)) = span (not . TS.isTagOpenName "head") tags
 
     toMetaTags :: [MetaTag] -> [TS.Tag T.Text]
     toMetaTags = concat . map toMetaTag
