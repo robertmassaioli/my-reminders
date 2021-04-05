@@ -15,6 +15,7 @@ swagger-codegen-cli.jar
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
