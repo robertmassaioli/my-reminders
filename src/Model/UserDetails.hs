@@ -32,7 +32,7 @@ instance FromJSON UserWithDetails
 instance ToJSON UserWithDetails
 
 getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either AC.ProductErrorResponse UserWithDetails)
-getUserDetails tenant userKey = SS.with connect $ AC.hostGetRequest tenant usernameUrl queryParams mempty
+getUserDetails tenant userKey = SS.with connect $ AC.hostGetRequest tenant Nothing usernameUrl queryParams mempty
   where
     usernameUrl :: B.ByteString
     usernameUrl = "/rest/api/2/user"

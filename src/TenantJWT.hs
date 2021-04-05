@@ -8,14 +8,19 @@ module TenantJWT (
 import           Application
 import           AesonHelpers           ( baseOptions, stripFieldNamePrefix )
 import           Control.Applicative
-import           Control.Monad          (guard, join, (<=<))
+import           Control.Monad          (guard, when, join, (<=<))
+import           Control.Monad.IO.Class     (liftIO)
+import           Control.Monad.Trans.Class  (lift)
+import           Control.Monad.Trans.Except
 import           Data.Aeson
 import           Data.Aeson.Types       (Options, defaultOptions, fieldLabelModifier)
 import qualified Data.ByteString.Char8  as B
 import qualified Data.CaseInsensitive   as DC
 import           Data.Maybe             (isJust, listToMaybe, catMaybes)
+import           Data.MaybeUtil
 import qualified Data.Map.Strict        as Map
 import qualified Data.Text              as T
+import qualified Data.Time.Clock.POSIX  as X
 import           GHC.Generics
 import qualified Persistence.Tenant     as PT
 import qualified Snap.AtlassianConnect  as AC
@@ -88,29 +93,23 @@ flipEither (Left x)  = Right x
 flipEither (Right x) = Left x
 
 getTenant :: UnverifiedJWT -> AppHandler (Either String AC.TenantWithUser)
-getTenant unverifiedJwt = do
-  let potentialKey = getClientKey unverifiedJwt
-  -- TODO collapse these cases
-  case potentialKey of
-    Nothing -> retError "Could not parse the JWT message."
-    Just key -> do
-      potentialTenant <- PT.lookupTenant normalisedClientKey
-      case potentialTenant of
-        Nothing -> retError $ "Could not find a tenant with that id: " ++ sClientKey
-        Just unverifiedTenant ->
-          case verifyTenant unverifiedTenant unverifiedJwt of
-            Nothing -> retError "Invalid signature for request. Danger! Request ignored."
-            Just verifiedTenant -> ret (verifiedTenant, getAccountId unverifiedJwt)
-      where
-        sClientKey          = show key
-        normalisedClientKey = T.pack sClientKey
-
+getTenant unverifiedJwt = runExceptT $ do
+  currentPosixTime <- liftIO X.getPOSIXTime
+  when (J.numericDate currentPosixTime > (J.exp . J.claims $ unverifiedJwt)) (throwE tokenExpired)
+  key <- except . m2e jwtParseFail . getClientKey $ unverifiedJwt
+  unverifiedTenant <- ExceptT (m2e (noSuchTenant key) <$> PT.lookupTenant (T.pack . show $ key))
+  actualQSH <- except . m2e noQshOnRequest . getQSH $ unverifiedJwt
+  expectedQSH <- ExceptT AC.generateQSH
+  when (actualQSH /= expectedQSH) $ throwE qshNotMatch
+  verifiedTenant <- except . m2e invalidSignature $ verifyTenant unverifiedTenant unverifiedJwt
+  return (verifiedTenant, getAccountId unverifiedJwt)
   where
-    retError :: Monad m => x -> m (Either x y)
-    retError = return . Left
-
-    ret :: Monad m => y -> m (Either x y)
-    ret = return . Right
+    noQshOnRequest = "There was no QSH token on the incoming request."
+    qshNotMatch = "The incoming QSH did not match the expected QSH."
+    tokenExpired = "The JWT token in this request has expired."
+    jwtParseFail = "Could not parse the JWT message."
+    noSuchTenant key = "Could not find a tenant with that id: " ++ show key
+    invalidSignature = "Invalid signature for request. Danger! Request ignored."
 
 verifyTenant :: AC.Tenant -> UnverifiedJWT -> Maybe AC.Tenant
 verifyTenant tenant unverifiedJwt = do
@@ -121,6 +120,9 @@ verifyTenant tenant unverifiedJwt = do
 
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt
+
+getQSH :: J.JWT a -> Maybe T.Text
+getQSH = resultToMaybe . fromJSON <=< Map.lookup (T.pack "qsh") . J.unregisteredClaims . J.claims
 
 getFirstJust :: [Maybe a] -> Maybe a
 getFirstJust = listToMaybe . catMaybes
@@ -136,15 +138,15 @@ getAccountId jwt = getFirstJust $ fmap (\f -> f jwt) aaidExtractors
       getAaidFromContext :: J.JWT a -> Maybe T.Text
       getAaidFromContext = fmap (cmuAccountId . cmUser) . getContext
 
-      getSub :: J.JWT a -> Maybe T.Text
-      getSub = fmap (T.pack . show) . J.sub . J.claims
+getSub :: J.JWT a -> Maybe T.Text
+getSub = fmap (T.pack . show) . J.sub . J.claims
 
-      getContext :: J.JWT a -> Maybe ContextMap
-      getContext = resultToMaybe . fromJSON <=< Map.lookup (T.pack "context") . J.unregisteredClaims . J.claims
+getContext :: J.JWT a -> Maybe ContextMap
+getContext = resultToMaybe . fromJSON <=< Map.lookup (T.pack "context") . J.unregisteredClaims . J.claims
 
-      resultToMaybe :: Result a -> Maybe a
-      resultToMaybe (Success x) = Just x
-      resultToMaybe _ = Nothing
+resultToMaybe :: Result a -> Maybe a
+resultToMaybe (Success x) = Just x
+resultToMaybe _ = Nothing
 
 data ContextMap = ContextMap
   { cmUser :: ContextMapUser

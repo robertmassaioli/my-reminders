@@ -66,7 +66,7 @@ sendIssueReminder tenant emailContext reminder = do
     Left e -> return . Left $ e
     Right notificationUser -> do
       payload <- liftIO $ createNotification notificationUser
-      errorOnContent <$> (SS.with connect $ AC.hostPostRequestExtended tenant notifyUrl [] (AC.addHeader (CI.mk "x-atlassian-force-account-id", "true") <> AC.setJson payload))
+      errorOnContent <$> (SS.with connect $ AC.hostPostRequestExtended tenant Nothing notifyUrl [] (AC.addHeader (CI.mk "x-atlassian-force-account-id", "true") <> AC.setJson payload))
   where
     notifyUrl :: B.ByteString
     notifyUrl = B.concat ["/rest/api/3/issue/", bIssueId, "/notify"]
