@@ -36,7 +36,7 @@ lookupTenant clientKey = do
    -- TODO Can we extract these SQL statements into their own constants so that we can
    -- just re-use them elsewhere?
    tenants <- query [sql|
-      SELECT id, key, publicKey, sharedSecret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
           FROM tenant
           WHERE key = ?
       |]
