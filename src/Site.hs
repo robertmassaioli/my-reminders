@@ -135,9 +135,7 @@ applicationRoutes =
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
 staticRoutes =
-  [ ("css"    , serveDirectory "frontend/build/static/css")
-  , ("js"     , serveDirectory "frontend/build/static/js")
-  , ("media"  , serveDirectory "frontend/build/static/media")
+  [ ("frontend"     , serveDirectory "frontend/build")
   ]
 
 -- We should always redirect to external services or common operations, that way when we want to

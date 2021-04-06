@@ -112,9 +112,9 @@ redirectStatic = do
     r <- SC.getRequest
     let cp = SC.rqContextPath r
     let pathInfo = SC.rqPathInfo r
-    let lookupPathInfo = T.dropWhile (\c -> c == '/') $ T.decodeUtf8 (cp `append` pathInfo)
-    SH.logErrorS $ T.unpack lookupPathInfo
-    let assetLookup = T.stripPrefix "static/" =<< M.lookup lookupPathInfo (scAssetManifest sc)
+    let rawLookupPathInfo = T.decodeUtf8 (cp `append` pathInfo)
+    let lookupPathInfo = maybe rawLookupPathInfo id . T.stripPrefix "/static/frontend/" $ rawLookupPathInfo
+    let assetLookup = T.stripPrefix "/static/" =<< M.lookup lookupPathInfo (scAssetManifest sc)
     let redirectPath = maybe pathInfo T.encodeUtf8 assetLookup
     SC.redirect $ cp `append` addResourcesVersion sc redirectPath
 
