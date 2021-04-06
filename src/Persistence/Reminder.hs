@@ -121,7 +121,7 @@ getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts < 2
       ORDER BY random()
@@ -133,7 +133,7 @@ getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredFailingReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
       [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts >= 2
       ORDER BY random()

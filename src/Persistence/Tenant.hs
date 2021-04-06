@@ -161,7 +161,7 @@ purgeTenants beforeTime = execute [sql|
 findTenantsByBaseUrl :: T.Text -> AppHandler [AC.Tenant]
 findTenantsByBaseUrl uri =
    query [sql|
-      SELECT id, key, publicKey, sharedSecret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
       FROM tenant
       WHERE baseUrl like ?
    |] (Only . surroundLike $ uri)
