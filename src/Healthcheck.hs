@@ -15,7 +15,6 @@ import qualified Control.Exception.Lifted as EL
 --import qualified Control.Monad.Trans.Control as C
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
-import           Data.Aeson.Types
 import           Data.Maybe             (isNothing)
 import qualified Data.Text              as T
 import           Data.Time.Clock

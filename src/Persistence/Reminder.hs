@@ -13,6 +13,7 @@ module Persistence.Reminder
    , incrementSendAttempts
    , getLiveRemindersByUser
    , updateKeysForReminders
+   , getUsersWithRemindersOnIssue
    , updateSummariesForReminders
    , getLiveRemindersForIssueByUser
    , deleteReminderForUser
@@ -34,7 +35,6 @@ import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
 import           GHC.Int
-import           Network.URI                        (URI)
 import           Persistence.Instances              ()
 import qualified Snap.AtlassianConnect              as AC
 import           Snap.Snaplet.PostgresqlSimple
@@ -110,12 +110,20 @@ updateKeysForReminders tenant issueId newIssueKey = execute
    |]
    (newIssueKey, AC.tenantId tenant, issueId)
 
-updateSummariesForReminders :: AC.Tenant -> AC.IssueId -> AC.IssueSummary -> AppHandler Int64
-updateSummariesForReminders tenant issueId newIssueSummary = execute
+getUsersWithRemindersOnIssue :: AC.Tenant -> AC.IssueId -> AppHandler [AC.UserKey]
+getUsersWithRemindersOnIssue tenant issueId = fmap fromOnly <$> query
    [sql|
-      UPDATE reminder SET issueSummary = ? WHERE tenantId = ? AND issueId = ?
+      SELECT userAaid
+      FROM reminder
+      WHERE tenantId = ? AND issueId = ?
+   |] (AC.tenantId tenant, issueId)
+
+updateSummariesForReminders :: AC.Tenant -> AC.IssueId -> [AC.UserKey] -> AC.IssueSummary -> AppHandler Int64
+updateSummariesForReminders tenant issueId users newIssueSummary = execute
+   [sql|
+      UPDATE reminder SET issueSummary = ? WHERE tenantId = ? AND issueId = ? AND userAaid in ?
    |]
-   (newIssueSummary, AC.tenantId tenant, issueId)
+   (newIssueSummary, AC.tenantId tenant, issueId, In users)
 
 getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
 getExpiredReminders expireTime = do

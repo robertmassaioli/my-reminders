@@ -9,7 +9,6 @@ import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Control.Monad.IO.Class
 import           Data.Aeson
-import           Data.Aeson.Types
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Char8             as BC
 import qualified Data.CaseInsensitive              as CI
@@ -17,7 +16,6 @@ import           Data.Monoid                       ((<>))
 import qualified Data.Text                         as T
 import           Data.Text.Encoding                (decodeUtf8)
 import           EmailContext
-import qualified Model.UserDetails                 as UD
 import           EmailContent                      (reminderEmail, MessageContent(..))
 import           GHC.Generics
 import           Persistence.Reminder              (Reminder(..))

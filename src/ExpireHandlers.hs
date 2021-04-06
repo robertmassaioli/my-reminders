@@ -9,23 +9,15 @@ import qualified AppConfig                           as CONF
 import           AppHelpers
 import           Application
 import           Control.Applicative                 ((<$>))
-import           Control.Concurrent.ParallelIO.Local
 import qualified Control.Exception                   as E
 import qualified Control.Exception.Lifted            as EL
 import           Control.Monad.IO.Class
-import qualified Data.ByteString                     as B
-import qualified Data.ByteString.Char8               as BSC
-import qualified Data.Text                           as T
-import qualified Data.Text.IO                        as T
 import           Data.Time.Clock                     (UTCTime)
 import qualified Model.Notify                         as N
-import           Database.PostgreSQL.Simple
-import           EmailContent
 import           EmailContext
 import           Finder
 import           Persistence.Reminder
 import qualified Snap.AtlassianConnect               as AC
-import qualified Snap.AtlassianConnect.HostRequest   as AC
 import qualified Snap.Core                           as SC
 import           SnapHelpers
 import           System.FilePath                     ((</>))
@@ -49,12 +41,11 @@ handleExpireFailingRequest = handleMethods
 expireForTimestamp :: AppHandler ()
 expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
    currentTime <- getTimestampOrCurrentTime
-   rmConf <- CONF.getAppConf
    connectConf <- AC.getConnect
-   expireUsingTimestamp currentTime rmConf connectConf
+   expireUsingTimestamp currentTime connectConf
 
-expireUsingTimestamp :: UTCTime -> CONF.AppConf -> AC.Connect -> AppHandler ()
-expireUsingTimestamp timestamp rmConf connectConf = do
+expireUsingTimestamp :: UTCTime -> AC.Connect -> AppHandler ()
+expireUsingTimestamp timestamp connectConf = do
    potentialEmailContext <- loadEmailContext connectConf
    case potentialEmailContext of
       Nothing -> error "Could not find the directory that contains the email templates!"
@@ -67,12 +58,11 @@ expireUsingTimestamp timestamp rmConf connectConf = do
 expireFailingForTimestamp :: AppHandler ()
 expireFailingForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
    currentTime <- getTimestampOrCurrentTime
-   rmConf <- CONF.getAppConf
    connectConf <- AC.getConnect
-   expireFailingUsingTimestamp currentTime rmConf connectConf
+   expireFailingUsingTimestamp currentTime connectConf
 
-expireFailingUsingTimestamp :: UTCTime -> CONF.AppConf -> AC.Connect -> AppHandler ()
-expireFailingUsingTimestamp timestamp rmConf connectConf = do
+expireFailingUsingTimestamp :: UTCTime -> AC.Connect -> AppHandler ()
+expireFailingUsingTimestamp timestamp connectConf = do
    potentialEmailContext <- loadEmailContext connectConf
    case potentialEmailContext of
       Nothing -> error "Could not find the directory that contains the email templates!"
