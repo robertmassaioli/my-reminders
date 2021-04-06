@@ -13,6 +13,7 @@
     "mustache": "^1.0.0"
   },
   "scripts": {
+    "dev-watch": "bash scripts/dev-watch-backend.bash",
     "build": "cd frontend && npm run build",
     "ngrok": "ngrok"
   },

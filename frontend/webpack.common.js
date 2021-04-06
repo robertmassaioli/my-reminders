@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
 module.exports = {
   entry: './src/index.tsx',
@@ -40,7 +41,7 @@ module.exports = {
   output: {
     publicPath: '/static/frontend/',
     filename: 'bundle.[chunkhash].js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'build'),
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -58,6 +59,9 @@ module.exports = {
       ANALYTICS_NEXT_MODERN_CONTEXT: true,
       NODE_ENV: 'development',
       CI: false
+    }),
+    new WebpackManifestPlugin({
+      fileName: 'asset-manifest.json',
     }),
   ],
 };
