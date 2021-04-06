@@ -9,10 +9,10 @@ module Model.UserDetails
    ) where
 
 import           Application
-import           AesonHelpers                      ( stripFieldNamePrefix )
+import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
-import           Data.Aeson.Types                  (defaultOptions, fieldLabelModifier)
+import           Data.Aeson.Types                  (fieldLabelModifier)
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
 import           Data.Monoid                       (mempty)
@@ -88,7 +88,7 @@ data BulkPermissionGrants = BulkPermissionGrants
    } deriving (Eq, Show, Generic)
 
 instance FromJSON BulkPermissionGrants where
-   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "bpg" })
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "bpg" })
 
 data BulkProjectPermissionGrants = BulkProjectPermissionGrants
    { bppgPermission :: T.Text
@@ -97,7 +97,7 @@ data BulkProjectPermissionGrants = BulkProjectPermissionGrants
    } deriving (Eq, Show, Generic)
 
 instance FromJSON BulkProjectPermissionGrants where
-   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "bppg" })
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "bppg" })
 
 toRequestBody :: AC.UserKey -> AC.IssueId -> Value
 toRequestBody userKey issueId = object

@@ -77,7 +77,6 @@ Executable my-reminders
     , configurator              == 0.3.*
     , containers                >= 0.5 && < 0.7
     , directory                 >= 1.1     && < 1.4
-    , email-validate            == 2.*
     , filepath                  == 1.4.*
     , mustache                  == 2.3.*
     , heist                     >= 1.0 && < 1.2

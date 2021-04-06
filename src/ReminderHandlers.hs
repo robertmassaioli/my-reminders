@@ -8,24 +8,19 @@ module ReminderHandlers
   , handleUserReminders
   ) where
 
+import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
 import           Application
-import           AesonHelpers                      ( stripFieldNamePrefix )
 import           Data.Aeson
-import           Data.Aeson.Types                  (Options, defaultOptions,
-                                                    fieldLabelModifier)
+import           Data.Aeson.Types                  (Options, fieldLabelModifier)
+import           Data.Time.Clock
+import           GHC.Generics
+import           SnapHelpers
 import qualified Data.ByteString.Char8             as BC
 import qualified Data.Text                         as T
-import           Data.Time.Clock
-import           Database.PostgreSQL.Simple
-import           GHC.Generics
-import qualified Model.UserDetails                 as UD
 import qualified Persistence.Reminder              as P
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.Core                         as SC
-import qualified Snap.Snaplet                      as SS
-import           SnapHelpers
 import qualified WithToken                         as WT
-import qualified Text.Email.Validate as EV
 
 -- No Month time because month's are not always the same length. Approximate months as four weeks.
 data TimeUnit
@@ -63,7 +58,7 @@ instance ToJSON TimeUnit
 instance FromJSON TimeUnit
 
 issueDetailsOptions :: Options
-issueDetailsOptions = defaultOptions { fieldLabelModifier = stripFieldNamePrefix "issue" }
+issueDetailsOptions = baseOptions { fieldLabelModifier = stripFieldNamePrefix "issue" }
 
 instance ToJSON AC.UserDetails where
    toJSON o = object
@@ -88,16 +83,16 @@ instance FromJSON AC.IssueDetails where
    parseJSON = genericParseJSON issueDetailsOptions
 
 instance ToJSON ReminderRequest where
-   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
+   toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
 
 instance FromJSON ReminderRequest where
-   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "prq" })
 
 instance ToJSON ReminderResponse where
-   toJSON = genericToJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
+   toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
 
 instance FromJSON ReminderResponse where
-   parseJSON = genericParseJSON (defaultOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "prs" })
 
 handleReminders :: AppHandler ()
 handleReminders = handleMethods
