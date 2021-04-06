@@ -20,46 +20,47 @@ Executable my-reminders
   main-is: Main.hs
 
   other-modules:   AtlassianConnect
+                 , AdminHandlers
+                 , AesonHelpers
+                 , AppConfig
+                 , AppHelpers
+                 , Application
+                 , AssetManifestParser
+                 , ConfigurationHelpers
+                 , CustomSplices
                  , Data.ConfiguratorTimeUnits
                  , Data.EnvironmentHelpers
+                 , Data.MaybeUtil
                  , Data.Padding
                  , Data.Padding.PKCS
                  , Data.Padding.Util
+                 , Data.TimeUnitUTC
+                 , DatabaseSnaplet
+                 , EmailContent
+                 , EmailContext
+                 , ExpireHandlers
+                 , Finder
+                 , Healthcheck
+                 , Heartbeat
+                 , LifecycleHandlers
+                 , MicrosZone
+                 , MigrationHandler
                  , Model.Notify
                  , Model.UserDetails
                  , Paths_my_reminders
                  , Persistence.Instances
                  , Persistence.Reminder
-                 , Persistence.Tenant
                  , Persistence.Statistics
-                 , ConfigurationHelpers
-                 , AppConfig
+                 , Persistence.Tenant
+                 , PurgeHandlers
                  , ReminderHandlers
-                 , ExpireHandlers
-                 , CustomSplices
                  , Site
                  , SnapHelpers
-                 , TenantJWT
-                 , WithToken
-                 , EmailContext
-                 , EmailContent
-                 , Healthcheck
-                 , DatabaseSnaplet
-                 , Heartbeat
-                 , MigrationHandler
-                 , Finder
-                 , StatisticsHandlers
-                 , AdminHandlers
-                 , AesonHelpers
-                 , AppHelpers
-                 , Application
-                 , AssetManifestParser
-                 , Data.TimeUnitUTC
-                 , LifecycleHandlers
-                 , MicrosZone
-                 , PurgeHandlers
                  , StaticSnaplet
+                 , StatisticsHandlers
+                 , TenantJWT
                  , WebhookHandlers
+                 , WithToken
 
   default-language: Haskell2010
   Build-depends:
@@ -131,6 +132,52 @@ test-suite my-reminders-props
   default-language:         Haskell2010
   hs-source-dirs:           tests, src
   main-is:                  TestRunner.hs
+
+  other-modules: AdminHandlers
+                , AesonHelpers
+                , AppConfig
+                , AppHelpers
+                , Application
+                , AssetManifestParser
+                , AtlassianConnect
+                , ConfigurationHelpers
+                , Connect.RoutesTests
+                , CustomSplices
+                , Data.ConfiguratorTimeUnits
+                , Data.EnvironmentHelpers
+                , Data.MaybeUtil
+                , Data.TimeUnitUTC
+                , DatabaseSnaplet
+                , EmailContent
+                , EmailContentTests
+                , EmailContext
+                , ExpireHandlers
+                , Finder
+                , Healthcheck
+                , Heartbeat
+                , LifecycleHandlers
+                , MicrosZone
+                , MigrationHandler
+                , Model.Notify
+                , Model.UserDetails
+                , Paths_my_reminders
+                , Persistence.Instances
+                , Persistence.Reminder
+                , Persistence.Statistics
+                , Persistence.Tenant
+                , PurgeHandlers
+                , ReminderHandlers
+                , ReminderHandlersTests
+                , Site
+                , SnapHelpers
+                , StaticSnaplet
+                , StatisticsHandlers
+                , TenantJWT
+                , TestHelpers
+                , WebhookHandlers
+                , WithToken
+
+
   build-depends:
       base
     , QuickCheck                 == 2.7.*
