@@ -46,7 +46,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "serve-storybook": "npx http-server-spa .storybook-static index.html 9002",
-    "gen-fetch": "openapi-generator generate -i ../openapi.yaml -g typescript-fetch -o src/reminders-client",
+    "gen-fetch": "openapi-generator-cli generate -i ../openapi.yaml -g typescript-fetch -o src/reminders-client",
     "depcheck": "depcheck ."
   },
   "devDependencies": {
