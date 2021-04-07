@@ -1,13 +1,18 @@
+
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Model.UserDetails
    ( getUserDetails
    , UserWithDetails(..)
+   , canViewIssue
    ) where
 
 import           Application
+import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
+import           Control.Monad.Trans.Except
 import           Data.Aeson
+import           Data.Aeson.Types                  (fieldLabelModifier)
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
 import           Data.Monoid                       (mempty)
@@ -33,9 +38,74 @@ instance ToJSON UserWithDetails
 
 getUserDetails :: AC.Tenant -> AC.UserKey -> AppHandler (Either AC.ProductErrorResponse UserWithDetails)
 getUserDetails tenant userKey = SS.with connect $ AC.hostGetRequest tenant Nothing usernameUrl queryParams mempty
-  where
-    usernameUrl :: B.ByteString
-    usernameUrl = "/rest/api/2/user"
+   where
+      usernameUrl :: B.ByteString
+      usernameUrl = "/rest/api/2/user"
 
-    queryParams :: [(B.ByteString, Maybe B.ByteString)]
-    queryParams = [("key", Just . encodeUtf8 $ userKey)]
+      queryParams :: [(B.ByteString, Maybe B.ByteString)]
+      queryParams = [("key", Just . encodeUtf8 $ userKey)]
+
+canViewIssue :: AC.Tenant -> AC.UserKey -> AC.IssueId -> AppHandler (Either AC.ProductErrorResponse Bool)
+canViewIssue tenant userKey issueId = runExceptT $ do
+   response <- ExceptT . SS.with connect $ AC.hostPostRequest tenant Nothing permissionsCheckUrl [] (body)
+   case (bpgProjectPermissions response) of
+      [bppg] -> case (bppgIssues bppg) of
+         [returnedIssueId] -> return . all id $
+            [ returnedIssueId == issueId
+            , "EDIT_ISSUES" == bppgPermission bppg
+            ]
+         _ -> return False
+      _ -> return False
+   where
+      permissionsCheckUrl :: B.ByteString
+      permissionsCheckUrl = "/rest/api/3/permissions/check"
+
+      body = AC.setJson $ toRequestBody userKey issueId
+
+{-
+{
+  "accountId": "5b10a2844c20165700ede21g",
+  "projectPermissions": [
+    {
+      "permissions": [
+        "EDIT_ISSUES"
+      ],
+      "issues": [
+        10010,
+        10011,
+        10012,
+        10013,
+        10014
+      ]
+    }
+  ]
+}
+-}
+
+data BulkPermissionGrants = BulkPermissionGrants
+   { bpgProjectPermissions :: [BulkProjectPermissionGrants]
+   , bpgGlobalPermissions :: [T.Text]
+   } deriving (Eq, Show, Generic)
+
+instance FromJSON BulkPermissionGrants where
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "bpg" })
+
+data BulkProjectPermissionGrants = BulkProjectPermissionGrants
+   { bppgPermission :: T.Text
+   , bppgIssues :: [Integer]
+   , bppgProjects :: [Integer]
+   } deriving (Eq, Show, Generic)
+
+instance FromJSON BulkProjectPermissionGrants where
+   parseJSON = genericParseJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "bppg" })
+
+toRequestBody :: AC.UserKey -> AC.IssueId -> Value
+toRequestBody userKey issueId = object
+   [ "accountId" .= userKey
+   , "projectPermissions" .=
+      [ object
+         [ "permissions" .= ["EDIT_ISSUES" :: T.Text]
+         , "issues" .= [issueId]
+         ]
+      ]
+   ]

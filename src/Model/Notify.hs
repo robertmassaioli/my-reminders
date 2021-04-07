@@ -5,22 +5,21 @@ module Model.Notify
    ( sendIssueReminder
    ) where
 
-import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
+import           AesonHelpers                     (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Control.Monad.IO.Class
 import           Data.Aeson
-import           Data.Aeson.Types
+import           Data.Aeson.Types                  (fieldLabelModifier)
+import           Data.Monoid                       ((<>))
+import           Data.Text.Encoding                (decodeUtf8)
+import           EmailContent                      (reminderEmail, MessageContent(..))
+import           EmailContext
+import           GHC.Generics
+import           Persistence.Reminder              (Reminder(..))
 import qualified Data.ByteString                   as B
 import qualified Data.ByteString.Char8             as BC
 import qualified Data.CaseInsensitive              as CI
-import           Data.Monoid                       ((<>))
 import qualified Data.Text                         as T
-import           Data.Text.Encoding                (decodeUtf8)
-import           EmailContext
-import qualified Model.UserDetails                 as UD
-import           EmailContent                      (reminderEmail, MessageContent(..))
-import           GHC.Generics
-import           Persistence.Reminder              (Reminder(..))
 import qualified Snap.AtlassianConnect             as AC
 import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Snaplet                      as SS

@@ -11,41 +11,39 @@ module Site
   ) where
 
 import           AdminHandlers
-import qualified AppConfig                                   as CONF
 import           Application
-import qualified AtlassianConnect                            as AC
-import qualified Control.Monad                               as CM
 import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
-import qualified Data.CaseInsensitive                        as CI
-import qualified Data.EnvironmentHelpers                     as DE
 import           Data.Maybe                                  (fromMaybe)
-import qualified Data.Text                                   as T
-import qualified Data.Text.IO                                as T
-import qualified DatabaseSnaplet                             as DS
 import           ExpireHandlers
 import           Healthcheck
 import           Heartbeat
-import qualified Heist.Interpreted                           as HI
-import qualified LifecycleHandlers                           as LH
-import qualified MicrosZone                                  as MZ
 import           MigrationHandler
 import           PurgeHandlers
 import           ReminderHandlers
+import           Snap.Snaplet.Session.Backends.CookieSession
+import           Snap.Util.FileServe
+import           StaticSnaplet
+import           StatisticsHandlers
+import           WebhookHandlers
+import qualified AppConfig                                   as CONF
+import qualified AtlassianConnect                            as AC
+import qualified Control.Monad                               as CM
+import qualified Data.CaseInsensitive                        as CI
+import qualified Data.EnvironmentHelpers                     as DE
+import qualified Data.Text                                   as T
+import qualified Data.Text.IO                                as T
+import qualified DatabaseSnaplet                             as DS
+import qualified LifecycleHandlers                           as LH
+import qualified MicrosZone                                  as MZ
 import qualified Snap.AtlassianConnect                       as AC
 import qualified Snap.Core                                   as SC
 import qualified Snap.Snaplet                                as SS
 import qualified Snap.Snaplet.Heist                          as SSH
-import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Util.FileServe
 import qualified SnapHelpers                                 as SH
-import           StaticSnaplet
-import           StatisticsHandlers
 import qualified TenantJWT                                   as TJ
-import           WebhookHandlers
-import qualified Data.Map.Syntax        as MS
-import qualified Text.HTML.TagSoup as TS
+import qualified Text.HTML.TagSoup                           as TS
 
 import qualified Paths_my_reminders                          as PMR
 

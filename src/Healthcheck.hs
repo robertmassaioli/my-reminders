@@ -5,17 +5,14 @@ module Healthcheck
    ) where
 
 import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
+import           Data.Aeson.Types       (fieldLabelModifier)
 import qualified AppConfig              as CONF
 import           Application
 import           Control.Applicative    ((<$>))
 import qualified Control.Exception      as E
 import qualified Control.Exception.Lifted as EL
--- import qualified Control.Monad.Catch    as MC
--- import           Control.Monad.CatchIO  (MonadCatchIO (..), tryJust)
---import qualified Control.Monad.Trans.Control as C
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
-import           Data.Aeson.Types
 import           Data.Maybe             (isNothing)
 import qualified Data.Text              as T
 import           Data.Time.Clock

@@ -5,29 +5,28 @@ module TenantJWT (
   withMaybeTenant
   ) where
 
+import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
-import           AesonHelpers           ( baseOptions, stripFieldNamePrefix )
 import           Control.Applicative
-import           Control.Monad          (guard, when, join, (<=<))
+import           Control.Monad              (guard, when, join, (<=<))
 import           Control.Monad.IO.Class     (liftIO)
-import           Control.Monad.Trans.Class  (lift)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
-import           Data.Aeson.Types       (Options, defaultOptions, fieldLabelModifier)
-import qualified Data.ByteString.Char8  as B
-import qualified Data.CaseInsensitive   as DC
-import           Data.Maybe             (isJust, listToMaybe, catMaybes)
+import           Data.Aeson.Types           (fieldLabelModifier)
+import           Data.Maybe                 (isJust, listToMaybe, catMaybes)
 import           Data.MaybeUtil
-import qualified Data.Map.Strict        as Map
-import qualified Data.Text              as T
-import qualified Data.Time.Clock.POSIX  as X
 import           GHC.Generics
-import qualified Persistence.Tenant     as PT
-import qualified Snap.AtlassianConnect  as AC
-import qualified Snap.Core              as SC
-import qualified Snap.Snaplet           as SS
-import qualified SnapHelpers            as SH
-import qualified Web.JWT                as J
+import qualified Data.ByteString.Char8      as B
+import qualified Data.CaseInsensitive       as DC
+import qualified Data.Map.Strict            as Map
+import qualified Data.Text                  as T
+import qualified Data.Time.Clock.POSIX      as X
+import qualified Persistence.Tenant         as PT
+import qualified Snap.AtlassianConnect      as AC
+import qualified Snap.Core                  as SC
+import qualified Snap.Snaplet               as SS
+import qualified SnapHelpers                as SH
+import qualified Web.JWT                    as J
 
 -- TODO Should this be moved into the Atlassian connect code? Or does the app handler code make it too specific?
 -- TODO Can we make it not wrap the request but instead run inside the request? That will let it be moved out.

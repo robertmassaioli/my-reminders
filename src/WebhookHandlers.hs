@@ -7,10 +7,10 @@ module WebhookHandlers
 import           AesonHelpers
 import           Application
 import           Control.Applicative        (pure, (<$>), (<*>))
-import           Control.Monad              (void, when)
+import           Control.Monad              (void, when, filterM)
 import           Data.Aeson
-import           Data.Aeson.Types           (Options, defaultOptions,
-                                             fieldLabelModifier)
+import           Data.Aeson.Types           (Options, defaultOptions, fieldLabelModifier)
+import           Data.Either                (fromRight)
 import           Data.List                  as DL
 import           Data.Maybe                 (isJust)
 import qualified Data.Text                  as T
@@ -21,6 +21,8 @@ import qualified Snap.AtlassianConnect      as AC
 import qualified Snap.Core                  as SC
 import qualified SnapHelpers                as SH
 import qualified TenantJWT                  as WT
+import qualified Model.UserDetails          as HU
+import           GHC.Int                    (Int64)
 
 handleIssueUpdateWebhook :: AppHandler ()
 handleIssueUpdateWebhook = SH.handleMethods [(SC.POST, void $ WT.withTenant (handleWebhook handleUpdate))]
@@ -56,8 +58,17 @@ reminderUpdateRequired iu = any isJust $ [iuNewKey, iuNewSummary] <*> pure iu
 handleWebhookUpdate :: AC.Tenant -> IssueUpdate -> AppHandler ()
 handleWebhookUpdate tenant issueUpdate = do
    maybe (return 0) (\newKey -> P.updateKeysForReminders tenant (iuId issueUpdate) newKey) (iuNewKey issueUpdate)
-   maybe (return 0) (\newSummary -> P.updateSummariesForReminders tenant (iuId issueUpdate) newSummary) (iuNewSummary issueUpdate)
+   maybe (return 0) (updateSummaries tenant (iuId issueUpdate)) (iuNewSummary issueUpdate)
    return ()
+
+updateSummaries :: AC.Tenant -> AC.IssueId -> T.Text -> AppHandler Int64
+updateSummaries tenant issueId newSummary = do
+   applicableUsers <- P.getUsersWithRemindersOnIssue tenant issueId
+   usersWithPermission <- filterM (\userAaid -> fromRight False <$> HU.canViewIssue tenant userAaid issueId) applicableUsers
+   if (0 < length usersWithPermission)
+      then P.updateSummariesForReminders tenant issueId usersWithPermission newSummary
+      else return 0
+
 
 webhookDataToIssueUpdate :: WebhookData -> IssueUpdate
 webhookDataToIssueUpdate webhookData = IssueUpdate
