@@ -9,7 +9,7 @@ import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Control.Applicative
 import           Control.Monad              (guard, when, join, (<=<))
-import           Control.Monad.IO.Class     (liftIO)git st
+import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
 import           Data.Aeson.Types           (fieldLabelModifier)
