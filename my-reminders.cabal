@@ -1,192 +1,189 @@
-Name:                my-reminders
-Version:             0.28
-Synopsis:            My reminders plugin for Atlassian Cloud
-Description:         Set issue reminders for the future!
-License:             MIT
-Author:              Robert Massaioli, Eero Kaukonen, Sidney Shek, Avi Knoll
-Maintainer:          ekaukonen@atlassian.com
-Stability:           Experimental
-Category:            Web
-Build-type:          Simple
-Cabal-version:       >= 1.20
+cabal-version: 1.12
 
-Flag development
-  Description: Whether to build the server in development (interpreted) mode
-  Default: False
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
 
-Executable my-reminders
-  hs-source-dirs: src
+name:           my-reminders
+version:        0.28
+synopsis:       My reminders plugin for Atlassian Cloud
+description:    Set issue reminders for the future!
+category:       Web
+stability:      Experimental
+author:         Robert Massaioli, Eero Kaukonen, Sidney Shek, Avi Knoll
+maintainer:     ekaukonen@atlassian.com
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
 
+flag development
+  description: Whether to build the server in development (interpreted) mode
+  manual: False
+  default: False
+
+executable my-reminders
   main-is: Main.hs
-
-  other-modules:   AtlassianConnect
-                 , AdminHandlers
-                 , AesonHelpers
-                 , AppConfig
-                 , AppHelpers
-                 , Application
-                 , AssetManifestParser
-                 , ConfigurationHelpers
-                 , CustomSplices
-                 , Data.ConfiguratorTimeUnits
-                 , Data.EnvironmentHelpers
-                 , Data.MaybeUtil
-                 , Data.Padding
-                 , Data.Padding.PKCS
-                 , Data.Padding.Util
-                 , Data.TimeUnitUTC
-                 , DatabaseSnaplet
-                 , EmailContent
-                 , EmailContext
-                 , ExpireHandlers
-                 , Finder
-                 , Healthcheck
-                 , Heartbeat
-                 , LifecycleHandlers
-                 , MicrosZone
-                 , MigrationHandler
-                 , Model.Notify
-                 , Model.UserDetails
-                 , Paths_my_reminders
-                 , Persistence.Instances
-                 , Persistence.Reminder
-                 , Persistence.Statistics
-                 , Persistence.Tenant
-                 , PurgeHandlers
-                 , ReminderHandlers
-                 , Site
-                 , SnapHelpers
-                 , StaticSnaplet
-                 , StatisticsHandlers
-                 , TenantJWT
-                 , WebhookHandlers
-                 , WithToken
-
-  default-language: Haskell2010
-  Build-depends:
-      base                      >= 4.6     && < 5
-    , aeson                     >= 0.8
-    , atlassian-connect-core    >= 0.8.1.0     && < 0.9
-    , atlassian-connect-descriptor >= 0.4.8
-    , base64-bytestring         == 1.0.*
-    , boxes                     == 0.1.*
-    , bytestring                >= 0.9.1   && < 0.11
-    , case-insensitive          == 1.*
-    -- TODO swap over to using http://hackage.haskell.org/package/cryptonite
-    , cipher-aes                == 0.2.*
-    , configurator              == 0.3.*
-    , containers                >= 0.5 && < 0.7
-    , directory                 >= 1.1     && < 1.4
-    , filepath                  == 1.4.*
-    , mustache                  == 2.3.*
-    , heist                     >= 1.0 && < 1.2
-    , hostname                  == 1.0
-    , http-client               == 0.5.*
-    , http-types                == 0.8.*
-    , jwt                       == 0.7.*
-    , lens                      == 4.*
-    , lifted-base               == 0.2.*
-    , map-syntax                >= 0.2 && < 0.4
-    , mtl                       == 2.*
-    , network                   == 2.6.*
-    , network-api-support       == 0.3.*
-    , network-uri               == 2.6.*
-    , parallel-io               == 0.3.*
-    , postgresql-simple         >= 0.4
-    , process                   >= 1.4 && < 1.7
-    , resource-pool             == 0.2.*
-    , snap                      >= 1.0 && < 1.2
-    , snap-core                 == 1.0.*
+  other-modules:
+      AdminHandlers
+      AesonHelpers
+      AppConfig
+      AppHelpers
+      Application
+      AssetManifestParser
+      AtlassianConnect
+      ConfigurationHelpers
+      CustomSplices
+      Data.ConfiguratorTimeUnits
+      Data.EnvironmentHelpers
+      Data.MaybeUtil
+      Data.Padding
+      Data.Padding.PKCS
+      Data.Padding.Util
+      Data.TimeUnitUTC
+      DatabaseSnaplet
+      EmailContent
+      EmailContext
+      ExpireHandlers
+      Finder
+      Healthcheck
+      Heartbeat
+      LifecycleHandlers
+      MicrosZone
+      MigrationHandler
+      Model.Notify
+      Model.UserDetails
+      Persistence.Instances
+      Persistence.Reminder
+      Persistence.Statistics
+      Persistence.Tenant
+      PurgeHandlers
+      ReminderHandlers
+      Site
+      SnapHelpers
+      StaticSnaplet
+      StatisticsHandlers
+      TenantJWT
+      WebhookHandlers
+      WithToken
+      Paths_my_reminders
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson >=0.8
+    , atlassian-connect-core >=0.8.1.0 && <0.9
+    , atlassian-connect-descriptor >=0.4.8
+    , base >=4.6 && <5
+    , base64-bytestring ==1.*
+    , boxes ==0.1.*
+    , bytestring >=0.9.1 && <0.11
+    , case-insensitive ==1.*
+    , cipher-aes ==0.2.*
+    , configurator ==0.3.*
+    , containers >=0.5 && <0.7
+    , directory >=1.1 && <1.4
+    , filepath ==1.4.*
+    , heist >=1.0 && <1.2
+    , hostname ==1.0
+    , http-client >=0.5 && <0.7
+    , http-types >=0.8
+    , jwt ==0.7.*
+    , lens ==4.*
+    , lifted-base ==0.2.*
+    , map-syntax >=0.2 && <0.4
+    , mtl ==2.*
+    , mustache ==2.3.*
+    , network >=2.6
+    , network-api-support ==0.3.*
+    , network-uri >=2.6
+    , parallel-io ==0.3.*
+    , postgresql-simple >=0.4
+    , process >=1.4 && <1.7
+    , resource-pool ==0.2.*
+    , snap
+    , snap-core ==1.0.*
     , snap-loader-static
-    , snap-server               == 1.1.*
-    , snaplet-postgresql-simple >= 0.6.0.2
-    , split                     == 0.2.*
-    , stm                       >= 2.4 && < 3
-    , tagsoup                   == 0.14.*
-    , text                      == 1.2.*
-    , time                      >= 1.6  && <= 1.11
-    , time-units                == 1.*
-    , transformers              >= 0.4
-    , tls                       >= 1.4.0
-    , utf8-string               >= 0.3.8
-    , uuid                      == 1.3.*
-    , xmlhtml                   == 0.2.*
-
+    , snap-server
+    , snaplet-postgresql-simple >=0.6.0.2
+    , split ==0.2.*
+    , stm >=2.4 && <3
+    , tagsoup ==0.14.*
+    , text ==1.2.*
+    , time >=1.6 && <=1.11
+    , time-units ==1.*
+    , tls >=1.4.0
+    , transformers >=0.4
+    , utf8-string >=0.3.8
+    , uuid ==1.3.*
+    , xmlhtml ==0.2.*
   if flag(development)
-    build-depends:
-      snap-loader-dynamic
-    cpp-options: -DDEVELOPMENT
-    -- In development mode, speed is already going to suffer, so skip
-    -- the fancy optimization flags. Additionally, disable all
-    -- warnings.  The hint library doesn't give an option to execute
-    -- compiled code when there were also warnings, so disabling
-    -- warnings allows quicker workflow.
     ghc-options: -threaded -w
+    cpp-options: -DDEVELOPMENT
+    build-depends:
+        snap-loader-dynamic
   else
-    ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans -fno-warn-unused-do-bind
+    ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2 -fno-warn-orphans -fno-warn-unused-do-bind
+  default-language: Haskell2010
 
 test-suite my-reminders-props
-  type:                     exitcode-stdio-1.0
-  default-language:         Haskell2010
-  hs-source-dirs:           tests, src
-  main-is:                  TestRunner.hs
-
-  other-modules: AdminHandlers
-                , AesonHelpers
-                , AppConfig
-                , AppHelpers
-                , Application
-                , AssetManifestParser
-                , AtlassianConnect
-                , ConfigurationHelpers
-                , Connect.RoutesTests
-                , CustomSplices
-                , Data.ConfiguratorTimeUnits
-                , Data.EnvironmentHelpers
-                , Data.MaybeUtil
-                , Data.TimeUnitUTC
-                , DatabaseSnaplet
-                , EmailContent
-                , EmailContentTests
-                , EmailContext
-                , ExpireHandlers
-                , Finder
-                , Healthcheck
-                , Heartbeat
-                , LifecycleHandlers
-                , MicrosZone
-                , MigrationHandler
-                , Model.Notify
-                , Model.UserDetails
-                , Paths_my_reminders
-                , Persistence.Instances
-                , Persistence.Reminder
-                , Persistence.Statistics
-                , Persistence.Tenant
-                , PurgeHandlers
-                , ReminderHandlers
-                , ReminderHandlersTests
-                , Site
-                , SnapHelpers
-                , StaticSnaplet
-                , StatisticsHandlers
-                , TenantJWT
-                , TestHelpers
-                , WebhookHandlers
-                , WithToken
-
-
+  type: exitcode-stdio-1.0
+  main-is: TestRunner.hs
+  other-modules:
+      Connect.RoutesTests
+      EmailContentTests
+      ReminderHandlersTests
+      TestHelpers
+      AdminHandlers
+      AesonHelpers
+      AppConfig
+      AppHelpers
+      Application
+      AssetManifestParser
+      AtlassianConnect
+      ConfigurationHelpers
+      CustomSplices
+      Data.ConfiguratorTimeUnits
+      Data.EnvironmentHelpers
+      Data.MaybeUtil
+      Data.Padding
+      Data.Padding.PKCS
+      Data.Padding.Util
+      Data.TimeUnitUTC
+      DatabaseSnaplet
+      EmailContent
+      EmailContext
+      ExpireHandlers
+      Finder
+      Healthcheck
+      Heartbeat
+      LifecycleHandlers
+      Main
+      MicrosZone
+      MigrationHandler
+      Model.Notify
+      Model.UserDetails
+      Persistence.Instances
+      Persistence.Reminder
+      Persistence.Statistics
+      Persistence.Tenant
+      PurgeHandlers
+      ReminderHandlers
+      Site
+      SnapHelpers
+      StaticSnaplet
+      StatisticsHandlers
+      TenantJWT
+      WebhookHandlers
+      WithToken
+      Paths_my_reminders
+  hs-source-dirs:
+      tests
+      src
   build-depends:
-      base
-    , QuickCheck                 == 2.7.*
-    , quickcheck-instances       == 0.3.*
-    , test-framework             == 0.8.*
-    , test-framework-quickcheck2 == 0.3.*
-
+      QuickCheck ==2.7.*
     , aeson
     , atlassian-connect-core
     , atlassian-connect-descriptor
+    , base
     , base64-bytestring
     , boxes
     , bytestring
@@ -197,7 +194,6 @@ test-suite my-reminders-props
     , directory
     , email-validate
     , filepath
-    , mustache
     , heist
     , hostname
     , http-client
@@ -208,12 +204,14 @@ test-suite my-reminders-props
     , lifted-base
     , map-syntax
     , mtl
+    , mustache
     , network
     , network-api-support
     , network-uri
     , parallel-io
     , postgresql-simple
     , process
+    , quickcheck-instances ==0.3.*
     , resource-pool
     , snap
     , snap-core
@@ -222,6 +220,8 @@ test-suite my-reminders-props
     , snaplet-postgresql-simple
     , split
     , tagsoup
+    , test-framework ==0.8.*
+    , test-framework-quickcheck2 ==0.3.*
     , text
     , time
     , time-units
@@ -229,7 +229,7 @@ test-suite my-reminders-props
     , utf8-string
     , uuid
     , xmlhtml
-
- if impl(ghc < 7.10.1)
+  if impl(ghc <7.10.1)
     build-depends:
-      Cabal
+        Cabal
+  default-language: Haskell2010

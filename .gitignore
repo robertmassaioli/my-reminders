@@ -12,6 +12,8 @@ site_key.txt
 tags
 cabal.project.local
 /.ghc*
+/.stack-work
+/my-reminders.cabal
 
 # Snap generated files
 snaplets/Remind\ Me\ Configuration/

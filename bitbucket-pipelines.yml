@@ -6,7 +6,6 @@
 image: haskell:8.6.5
 
 options:
-  docker: true
   size: 2x
 
 definitions:
@@ -14,26 +13,24 @@ definitions:
     docker:
       memory: 4096
   caches:
-    cabal: dist-newstyle
+    stack-home: ~/.stack
 
 pipelines:
   default:
     - parallel:
       - step:
           name: Backend Build and Test
+          image: haskell:8.10.4
           caches:
-            - cabal
+            - stack-home
           script:
             - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
-            - cabal new-update
-            - cabal new-configure --enable-tests
-            - cabal new-build
-            - cabal new-test
+            - stack build -j2 --test
       - step:
           name: Frontend Build
           caches:
             - node
-          image: node:12
+          image: node:14
           script:
             - apt-get update && apt-get install -y openjdk-8-jre-headless
             - cd frontend

@@ -16,7 +16,7 @@ WORKDIR /home/frontend
 RUN apt-get update && apt-get install -y openjdk-8-jre-headless
 RUN yarn install && yarn build
 
-FROM haskell:8.6.5 AS build
+FROM haskell:8.10.4 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
@@ -25,17 +25,16 @@ EXPOSE 8000
 # Install the missing packages
 USER root
 RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf cabal-install-3.2
+ENV LANG en_US.UTF-8 # See: https://github.com/haskell/cabal/issues/1883#issuecomment-44150139
 ENV PATH /opt/cabal/3.2/bin:$PATH
 
 # Copy our context into the build directory and start working from there
-USER root
 ADD /   /home/haskell/build
 # RUN chown -R haskell:haskell /home/haskell/build
 
 # Setup the Haskell Envoronment
 # USER haskell
 WORKDIR /home/haskell/build
-ENV LANG en_US.UTF-8 # See: https://github.com/haskell/cabal/issues/1883#issuecomment-44150139
 ENV PATH /home/haskell/.cabal/bin:$PATH
 
 # Initiate the build environment and build the executable (assumes that the
@@ -45,16 +44,16 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # IMPORTANT: This must produce a statically-compiled binary (with respect to
 # Cabal dependencies) that does not depend on a local cabal installation. The
 # production Docker image will not run a cabal install.
-RUN cabal new-update && cabal new-configure && mkdir -p output && cabal new-install -O2 --force-reinstalls --install-method=copy --installdir=output --overwrite-policy=always
+RUN stack build && stack install my-reminders
 
 # Setup the default command to run for the container.
-CMD ["/home/haskell/build/output/my-reminders", "--access-log=-", "--error-log=stderr"]
+CMD ["/root/.local/bin/my-reminders", "--access-log=-", "--error-log=stderr"]
 
 # The production docker file for the Remind Me Connect Haskell project.
 # It is designed to be minimal by requiring only the dependencies of the production executable.
 # It is also designed to be easy to maintain by being as short as possible.
 
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8080
@@ -71,7 +70,7 @@ COPY --from=build /home/haskell/build/snaplets /service/snaplets
 COPY --from=build /home/haskell/build/resources /service/resources
 COPY --from=build /home/haskell/build/migrations /service/migrations
 COPY --from=build /home/haskell/build/static /service/static
-COPY --from=build /home/haskell/build/output/my-reminders /service
+COPY --from=build /root/.local/bin/my-reminders /service
 
 # Setup the Haskell Envoronment
 WORKDIR /service
