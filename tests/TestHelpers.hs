@@ -12,10 +12,15 @@ import Test.Framework (TestOptions)
 import SnapHelpers
 import WithToken
 
+import Debug.Trace (trace)
+
+testTrace :: Show a => String -> a -> a
+testTrace input x = trace (input ++ ": " ++ show x) x
+
 responseCodeIs :: Int -> Either Text Response -> Property
 responseCodeIs code errorOrRsp = either
   (\t -> counterexample (T.unpack t) False)
-  (property . (== code) . rspStatus)
+  (property . (== code) . testTrace "Response Status" . rspStatus)
   errorOrRsp
 
 emptyPath :: C.ByteString

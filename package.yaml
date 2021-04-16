@@ -84,10 +84,10 @@ tests:
     - src
     dependencies:
     - base
-    - QuickCheck ==2.7.*
-    - quickcheck-instances ==0.3.*
+    - QuickCheck >=2.7
+    - quickcheck-instances >=0.3
     - test-framework ==0.8.*
-    - test-framework-quickcheck2 ==0.3.*
+    - test-framework-quickcheck2 >=0.3
     - aeson
     - atlassian-connect-core
     - atlassian-connect-descriptor

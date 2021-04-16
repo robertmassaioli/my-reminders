@@ -179,7 +179,7 @@ test-suite my-reminders-props
       tests
       src
   build-depends:
-      QuickCheck ==2.7.*
+      QuickCheck >=2.7
     , aeson
     , atlassian-connect-core
     , atlassian-connect-descriptor
@@ -211,7 +211,7 @@ test-suite my-reminders-props
     , parallel-io
     , postgresql-simple
     , process
-    , quickcheck-instances ==0.3.*
+    , quickcheck-instances >=0.3
     , resource-pool
     , snap
     , snap-core
@@ -221,7 +221,7 @@ test-suite my-reminders-props
     , split
     , tagsoup
     , test-framework ==0.8.*
-    , test-framework-quickcheck2 ==0.3.*
+    , test-framework-quickcheck2 >=0.3
     , text
     , time
     , time-units

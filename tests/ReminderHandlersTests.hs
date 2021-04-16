@@ -34,22 +34,28 @@ prop_postFails path contentType body = monadicIO $ do
   return $ responseCodeIs notFound errorOrResponse
 
 prop_unauthorisedGetFails :: Params -> Property
-prop_unauthorisedGetFails params = requestIsUnauthorised (do
+prop_unauthorisedGetFails params = requestIsBad $ do
   get emptyPath params
-  uncurry setHeader emptyPageTokenHeader)
+  uncurry setHeader emptyPageTokenHeader
 
 prop_unauthorisedPutFails :: C.ByteString -> C.ByteString -> Property
-prop_unauthorisedPutFails ct body = requestIsUnauthorised (do
+prop_unauthorisedPutFails ct body = requestIsBad $ do
   put emptyPath ct body
-  uncurry setHeader emptyPageTokenHeader)
+  uncurry setHeader emptyPageTokenHeader
 
 prop_unauthorisedDeleteFails :: Params -> Property
-prop_unauthorisedDeleteFails params = requestIsUnauthorised (do
+prop_unauthorisedDeleteFails params = requestIsBad $ do
   delete emptyPath params
-  uncurry setHeader emptyPageTokenHeader)
+  uncurry setHeader emptyPageTokenHeader
+
+requestIs :: Int -> RequestBuilder (PropertyM IO) () -> Property
+requestIs responseCode req = monadicIO $ do
+  errorOrResponse <- runHandler Nothing req handleReminder app
+  return $ responseCodeIs responseCode (testTrace "Response" errorOrResponse)
 
 requestIsUnauthorised :: RequestBuilder (PropertyM IO) () -> Property
-requestIsUnauthorised req = monadicIO $ do
-  errorOrResponse <- runHandler Nothing req handleReminder app
-  return $ responseCodeIs unauthorised errorOrResponse
+requestIsUnauthorised = requestIs unauthorised
+
+requestIsBad :: RequestBuilder (PropertyM IO) () -> Property
+requestIsBad = requestIs badRequest
 

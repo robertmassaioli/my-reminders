@@ -38,37 +38,37 @@ the current user has permission to create databases.
 
 ### Running the plugin
 
-When developing this application you will need to have both the Addon and Atlassian Product running.
-To set up the My Reminders addon:
+First setup a nix-shell environment with the haskell stack command:
 
- 1. Execute `make`.
- 1. Run the application: .cabal-sandbox/bin/my-reminders
-    (by default compiled in development mode, which will disable warnings)
- 1. Make changes to the application files as you develop.
- 1. Reload in the browser, updated files will be compiled automatically.
+``` shell
+nix-shell -p postgresql zlib jdk stack libiconv
+```
 
-You can test that the plugin is running by hitting: http://localhost:8000/atlassian-connect.json
+Then use the stack command to build the service:
 
-However this has only setup half of the picture, to run the Addon in a product locally do the
-following:
+``` shell
+stack build
+```
 
- 1. Run the provided script: `bash run-jira.bash`
- 1. Go to http://localhost:2990/jira/plugins/servlet/upm#manage and log in as the admin user. (Credentials: admin / admin)
- 1. Click on the 'Settings' link at the bottom of the panel.
- 1. Click 'Enable private listings' and hit 'Apply'.
- 1. When the page has finished reloading hit 'Upload add-on' and use the url
-    http://localhost:8000/atlassian-connect.json to install the Atlassian Connect plugin into your
-    running version of JIRA.
+To continuously build the service while developing:
 
-Congratulations, at this point in time you should have a working development environment and you
-should be able to develop on this Atlassian Connect plugin. Woo! Good luck!
+``` shell
+stack build --file-watch
+```
 
-Note: This will have built the project in `development` mode,  which enables dynamic reloading. To
-run without dynamic reloading then just use:
+To run the tests:
 
-    make setup
+``` shell
+stack test
+```
 
-And run the service again.
+And to run the service:
+
+``` shell
+stack run my-reminders
+```
+
+You can test that the App is running by hitting: http://localhost:8000/atlassian-connect.json
 
 ## Deploying with Docker
 
