@@ -7,7 +7,6 @@ module Persistence.Statistics
     ) where
 
 import           Application
-import           Control.Applicative                ((<$>), (<*>))
 import           Data.Aeson
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ

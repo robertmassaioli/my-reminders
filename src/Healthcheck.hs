@@ -5,10 +5,8 @@ module Healthcheck
    ) where
 
 import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
-import           Data.Aeson.Types       (fieldLabelModifier)
 import qualified AppConfig              as CONF
 import           Application
-import           Control.Applicative    ((<$>))
 import qualified Control.Exception      as E
 import qualified Control.Exception.Lifted as EL
 import           Control.Monad.IO.Class (liftIO)

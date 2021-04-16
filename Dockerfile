@@ -44,7 +44,7 @@ ENV PATH /home/haskell/.cabal/bin:$PATH
 # IMPORTANT: This must produce a statically-compiled binary (with respect to
 # Cabal dependencies) that does not depend on a local cabal installation. The
 # production Docker image will not run a cabal install.
-RUN stack build && stack install my-reminders
+RUN stack build -j2 && stack install my-reminders
 
 # Setup the default command to run for the container.
 CMD ["/root/.local/bin/my-reminders", "--access-log=-", "--error-log=stderr"]

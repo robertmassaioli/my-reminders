@@ -5,7 +5,6 @@ module MigrationHandler
 import qualified AppConfig               as CONF
 import qualified AppHelpers              as AH
 import           Application
-import           Control.Applicative     ((<$>))
 import           Control.Monad.IO.Class  (liftIO)
 import qualified Data.ByteString.Char8   as BSC
 import qualified Data.EnvironmentHelpers as DE

@@ -12,10 +12,8 @@ import           Application
 import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
-import           Data.Aeson.Types                  (fieldLabelModifier)
 import qualified Data.ByteString                   as B
 import qualified Data.Map                          as M
-import           Data.Monoid                       (mempty)
 import qualified Data.Text                         as T
 import           Data.Text.Encoding                (encodeUtf8)
 import           GHC.Generics

@@ -6,15 +6,12 @@ module WebhookHandlers
 
 import           AesonHelpers
 import           Application
-import           Control.Applicative        (pure, (<$>), (<*>))
 import           Control.Monad              (void, when, filterM)
 import           Data.Aeson
-import           Data.Aeson.Types           (Options, defaultOptions, fieldLabelModifier)
 import           Data.Either                (fromRight)
 import           Data.List                  as DL
 import           Data.Maybe                 (isJust)
 import qualified Data.Text                  as T
-import           Database.PostgreSQL.Simple
 import           GHC.Generics
 import qualified Persistence.Reminder       as P
 import qualified Snap.AtlassianConnect      as AC

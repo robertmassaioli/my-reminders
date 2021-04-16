@@ -1,7 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 module Persistence.Instances where
 
-import           Control.Applicative                  (pure, (<$>), (<*>))
 import qualified Data.ByteString.Char8                as BSC
 import           Data.Maybe                           (fromMaybe)
 import           Database.PostgreSQL.Simple.FromField

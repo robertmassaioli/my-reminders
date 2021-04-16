@@ -7,12 +7,10 @@ module TenantJWT (
 
 import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
-import           Control.Applicative
 import           Control.Monad              (guard, when, join, (<=<))
 import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
-import           Data.Aeson.Types           (fieldLabelModifier)
 import           Data.Maybe                 (isJust, listToMaybe, catMaybes)
 import           Data.MaybeUtil
 import           GHC.Generics

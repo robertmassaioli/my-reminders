@@ -11,8 +11,6 @@ import           AppHelpers
 import           Application
 import           Control.Monad          (void)
 import           Data.Aeson
-import           Data.Aeson.Types       (fieldLabelModifier)
-import           Data.Aeson.TH
 import           Data.Maybe             (fromMaybe)
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T

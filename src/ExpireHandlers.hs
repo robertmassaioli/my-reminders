@@ -8,7 +8,6 @@ module ExpireHandlers
 import qualified AppConfig                           as CONF
 import           AppHelpers
 import           Application
-import           Control.Applicative                 ((<$>))
 import qualified Control.Exception                   as E
 import qualified Control.Exception.Lifted            as EL
 import           Control.Monad.IO.Class
