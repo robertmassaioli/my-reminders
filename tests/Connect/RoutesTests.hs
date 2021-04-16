@@ -38,5 +38,6 @@ getLifecycleResponse hostname =
                                  lrBaseUrl = CURI . fromJust . parseURI $ "http://" ++ hostname ++ "/plugin",
                                  lrProductType = Nothing,
                                  lrDescription = Nothing,
-                                 lrEventType = Nothing
+                                 lrEventType = Nothing,
+                                 lrOauthClientId = Nothing
                                }

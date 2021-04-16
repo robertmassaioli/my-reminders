@@ -11,7 +11,6 @@ module ReminderHandlers
 import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Data.Aeson
-import           Data.Aeson.Types                  (Options, fieldLabelModifier)
 import           Data.Time.Clock
 import           GHC.Generics
 import           SnapHelpers

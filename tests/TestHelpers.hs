@@ -2,7 +2,6 @@ module TestHelpers where
 
 import Data.ByteString.Char8 as C
 import Data.CaseInsensitive (CI)
-import Data.Monoid (mempty)
 import Data.Text as T
 import Network.URI
 import Snap.Core

@@ -9,8 +9,6 @@ import           AesonHelpers                     (baseOptions, stripFieldNamePr
 import           Application
 import           Control.Monad.IO.Class
 import           Data.Aeson
-import           Data.Aeson.Types                  (fieldLabelModifier)
-import           Data.Monoid                       ((<>))
 import           Data.Text.Encoding                (decodeUtf8)
 import           EmailContent                      (reminderEmail, MessageContent(..))
 import           EmailContext

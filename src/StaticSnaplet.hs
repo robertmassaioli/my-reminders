@@ -14,7 +14,6 @@ import           Data.ByteString           (ByteString, append)
 import qualified Data.ByteString.Char8     as BC
 import qualified Data.CaseInsensitive      as CI
 import           Data.Maybe                (isNothing)
-import           Data.Monoid               (mempty)
 import qualified Data.Map                  as M
 import qualified Data.Text                 as T
 import qualified Data.Text.Encoding        as T
