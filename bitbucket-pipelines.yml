@@ -25,6 +25,7 @@ pipelines:
             - stack-home
           script:
             - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
+            - mkdir -p frontend/build && echo "{}" > frontend/build/asset-manifest.json
             - stack build -j2 --test
       - step:
           name: Frontend Build
