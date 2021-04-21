@@ -66,9 +66,7 @@ pipelines:
             - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
             - chmod +x micros-cli
             # generate the service descriptor
-            - echo "RELEASE_VERSION" > "template-vars.csv"
-            - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
-            - npx mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            - yarn install && yarn gen-sd
             # micros deploy the service
             - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e ddev
           services:
@@ -91,9 +89,7 @@ pipelines:
             - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
             - chmod +x micros-cli
             # generate the service descriptor
-            - echo "RELEASE_VERSION" > "template-vars.csv"
-            - echo "${BITBUCKET_BUILD_NUMBER}" >> "template-vars.csv"
-            - npx mustang -t "service-descriptor.template.json" -i "template-vars.csv" > "service-descriptor.json"
+            - yarn install && yarn gen-sd
             # micros deploy the service
             - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e prod-east
           services:
