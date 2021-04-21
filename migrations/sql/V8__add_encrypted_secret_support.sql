@@ -1,0 +1,1 @@
+ALTER TABLE tenant ADD COLUMN encrypted_shared_secret TEXT DEFAULT NULL;

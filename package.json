@@ -6,7 +6,7 @@
     "test": "tests"
   },
   "scripts": {
-    "dev-watch": "bash scripts/dev-watch-backend.bash",
+    "dev-watch": "ts-node --project ./tsconfig.json scripts/dev-watch-backend.ts",
     "build": "cd frontend && npm run build",
     "run-psql": "PGPASSWORD='myreminders' psql -h localhost -U myreminders",
     "gen-sd": "ts-node --project ./tsconfig.json scripts/generate-service-descriptor.ts"
@@ -23,6 +23,7 @@
   "homepage": "https://bitbucket.org/atlassianlabs/my-reminders#readme",
   "devDependencies": {
     "@types/node": "^14.14.41",
+    "chalk": "^4.1.1",
     "husky": "^6.0.0",
     "jira-prepare-commit-msg": "^1.5.2",
     "ts-node": "^9.1.1",
