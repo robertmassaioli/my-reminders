@@ -44,6 +44,7 @@ curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks =
    [ databaseHealthCheck
    , expiryHealthcheck
+   , cryptorHealthcheck
    --, failCheck
    ]
 

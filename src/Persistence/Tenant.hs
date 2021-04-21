@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE DeriveGeneric     #-}
 
 module Persistence.Tenant (
     lookupTenant
@@ -12,6 +13,8 @@ module Persistence.Tenant (
   , markPurgedTenants
   , purgeTenants
   , findTenantsByBaseUrl
+  , encryptMoreSharedSecrets
+  , EncryptResult(..)
 ) where
 
 import           Application
@@ -20,13 +23,57 @@ import           Control.Monad.IO.Class
 import           Data.Function                    (on)
 import           Data.Int
 import           Data.Maybe
-import qualified Data.Text                        as T
 import           Data.Time.Clock                  (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Network.URI                      hiding (query)
 import           Persistence.Instances            ()
 import qualified Snap.AtlassianConnect            as AC
 import           Snap.Snaplet.PostgresqlSimple
+import qualified Network.Cryptor                  as NC
+import qualified Data.Map                         as M
+import qualified Data.Text                        as T
+import           GHC.Generics
+import           Data.Aeson
+import           AesonHelpers
+
+data EncryptResult = EncryptResult
+   { erErrors :: [T.Text]
+   , erUpdated :: Int
+   } deriving (Show, Generic)
+
+instance ToJSON EncryptResult where
+   toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "er" })
+
+encryptMoreSharedSecrets :: AppHandler EncryptResult
+encryptMoreSharedSecrets = withTransaction $ do
+   unencryptedTenants <- query_
+      [sql|
+      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
+      FROM tenant
+      WHERE encrypted_shared_secret IS NULL
+      LIMIT 30
+      |]
+   tenantsWithEncryption <- forM unencryptedTenants $ \ut -> do
+      result <- NC.encrypt (NC.PlainText . AC.sharedSecret $ ut) M.empty
+      return (ut, result)
+   let (errors, converts) = partitionEithers tenantsWithEncryption
+   forM converts $ \(ut, cipherText) -> do
+      execute
+         [sql|
+         UPDATE tenant SET encrypted_shared_secret = ?
+         WHERE id = ?
+         |] (cipherText, AC.tenantId ut)
+   return $ EncryptResult
+      { erErrors = fmap snd errors
+      , erUpdated = length converts
+      }
+
+partitionEithers :: [(a, Either b c)] -> ([(a, b)], [(a, c)])
+partitionEithers = foldl update ([], [])
+
+update :: ([(a, b)], [(a, c)]) -> (a, Either b c) -> ([(a, b)], [(a, c)])
+update (xx, yy) (x, Left l) = ((x, l):xx, yy)
+update (xx, yy) (x, Right r) = (xx, (x, r):yy)
 
 lookupTenant
    :: AC.ClientKey
