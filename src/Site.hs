@@ -131,7 +131,7 @@ applicationRoutes =
   , ("/rest/admin/tenant"             , adminTenant)
   , ("/rest/encrypt-shared-secrets"   , handleEncryptSharedSecrets)
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
-  , ("/favicon.ico"                    , serveFile "frontend/build/favicon.ico")
+  , ("/favicon.ico"                   , serveFile "frontend/build/favicon.ico")
   ]
 
 staticRoutes :: [(ByteString, SS.Handler a StaticConf ())]
