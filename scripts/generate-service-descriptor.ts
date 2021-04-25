@@ -17,7 +17,7 @@ async function main(): Promise<void> {
             ports: ["8080:8080"],
             links: ["cryptor-sidecar"]
          },
-         cryptorSidecar: {
+         "cryptor-sidecar": {
             image: "docker.atl-paas.net/sox/cryptor-sidecar-application",
             tag: "1.1-stable-release"
          }
