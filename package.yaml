@@ -84,14 +84,10 @@ tests:
     - tests
     - src
     dependencies:
-    - base
-    - QuickCheck >=2.7
-    - quickcheck-instances >=0.3
-    - test-framework ==0.8.*
-    - test-framework-quickcheck2 >=0.3
     - aeson
     - atlassian-connect-core
     - atlassian-connect-descriptor
+    - base
     - base64-bytestring
     - boxes
     - bytestring
@@ -100,9 +96,8 @@ tests:
     - configurator
     - containers
     - directory
-    - email-validate
+    - either >= 5
     - filepath
-    - mustache
     - heist
     - hostname
     - http-client
@@ -113,12 +108,15 @@ tests:
     - lifted-base
     - map-syntax
     - mtl
+    - mustache
     - network
     - network-api-support
     - network-uri
     - parallel-io
     - postgresql-simple
     - process
+    - QuickCheck >=2.7
+    - quickcheck-instances >=0.3
     - resource-pool
     - snap
     - snap-core
@@ -126,6 +124,8 @@ tests:
     - snaplet-postgresql-simple
     - split
     - tagsoup
+    - test-framework ==0.8.*
+    - test-framework-quickcheck2 >=0.3
     - text
     - time
     - time-units
