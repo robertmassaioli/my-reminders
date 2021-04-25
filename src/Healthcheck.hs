@@ -1,26 +1,27 @@
 {-# LANGUAGE DeriveGeneric #-}
-
+{-# LANGUAGE OverloadedStrings #-}
 module Healthcheck
    ( healthcheckRequest
    ) where
 
 import           AesonHelpers           (baseOptions, stripFieldNamePrefix)
-import qualified AppConfig              as CONF
 import           Application
-import qualified Control.Exception      as E
-import qualified Control.Exception.Lifted as EL
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Aeson
 import           Data.Maybe             (isNothing)
-import qualified Data.Text              as T
 import           Data.Time.Clock
-import qualified Data.Time.Units        as DTU
 import           Data.TimeUnitUTC
 import           GHC.Generics
 import           Persistence.Reminder   (getExpiredReminders)
 import           Persistence.Tenant     (getTenantCount)
-import qualified Snap.Core              as SC
 import           SnapHelpers
+import qualified AppConfig              as CONF
+import qualified Control.Exception      as E
+import qualified Control.Exception.Lifted as EL
+import qualified Data.Text              as T
+import qualified Data.Time.Units        as DTU
+import qualified Network.Cryptor        as NC
+import qualified Snap.Core              as SC
 
 healthcheckRequest :: AppHandler ()
 healthcheckRequest = handleMethods
@@ -43,6 +44,7 @@ curatedHealthchecks :: [Healthcheck]
 curatedHealthchecks =
    [ databaseHealthCheck
    , expiryHealthcheck
+   , cryptorHealthcheck
    --, failCheck
    ]
 
@@ -107,6 +109,20 @@ expiryHealthcheck = do
             ++ "After that contact the developers for further aid."
          }
 
+cryptorHealthcheck :: Healthcheck
+cryptorHealthcheck = do
+   currentTime <- liftIO getCurrentTime
+   cryptorHealthy <- NC.isHealthy
+   return $ HealthStatus
+      { hsName = "Cryptor Check"
+      , hsDescription = "Ensures that cryptor is up and healthy."
+      , hsIsHealthy = cryptorHealthy
+      , hsFailureReason = if cryptorHealthy then Nothing else Just "Cryptor is being reported as not healthy. May still be starting up."
+      , hsApplication = application
+      , hsTime = currentTime
+      , hsSeverity = CRITICAL
+      , hsDocumentation = Just "If you see this error then go/cryptor and ask the team for help. The cryptor sidecar may not be running."
+      }
 
 application :: HealthcheckApplication
 application = ConnectApplication { haName = T.pack "my-reminders" }

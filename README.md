@@ -68,6 +68,12 @@ And to run the service:
 stack run my-reminders
 ```
 
+To run the service in a development watch mode:
+
+``` shell
+CONNECT_BASE_URL=https://95e354fe3704.ngrok.io yarn dev-watch
+```
+
 You can test that the App is running by hitting: http://localhost:8000/atlassian-connect.json
 
 ## Deploying with Docker

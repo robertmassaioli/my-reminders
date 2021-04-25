@@ -24,9 +24,9 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf cabal-install-3.2
+RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf
 ENV LANG en_US.UTF-8 # See: https://github.com/haskell/cabal/issues/1883#issuecomment-44150139
-ENV PATH /opt/cabal/3.2/bin:$PATH
+ENV PATH /home/haskell/.cabal/bin:$PATH
 
 # Copy our context into the build directory and start working from there
 ADD /   /home/haskell/build
@@ -35,7 +35,6 @@ ADD /   /home/haskell/build
 # Setup the Haskell Envoronment
 # USER haskell
 WORKDIR /home/haskell/build
-ENV PATH /home/haskell/.cabal/bin:$PATH
 
 # Initiate the build environment and build the executable (assumes that the
 # atlassian-connect-haskell source can be found in the vendor/atlassian-connect directory AND that
@@ -61,7 +60,7 @@ EXPOSE 8080
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-8-jre-headless libnss3 libnss-lwres libnss-mdns netbase
+RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-14-jre-headless libnss3 libnss-mdns netbase
 
 # Copy our context into the build directory and start working from there
 USER root

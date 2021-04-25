@@ -16,6 +16,7 @@ import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
 import           Data.Maybe                                  (fromMaybe)
+import           EncryptSharedSecret
 import           ExpireHandlers
 import           Healthcheck
 import           Heartbeat
@@ -37,6 +38,7 @@ import qualified Data.Text.IO                                as T
 import qualified DatabaseSnaplet                             as DS
 import qualified LifecycleHandlers                           as LH
 import qualified MicrosZone                                  as MZ
+import qualified Network.Cryptor                             as NC
 import qualified Snap.AtlassianConnect                       as AC
 import qualified Snap.Core                                   as SC
 import qualified Snap.Snaplet                                as SS
@@ -127,6 +129,7 @@ applicationRoutes =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
+  , ("/rest/encrypt-shared-secrets"   , handleEncryptSharedSecrets)
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
   , ("/favicon.ico"                    , serveFile "frontend/build/favicon.ico")
   ]
@@ -162,8 +165,9 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   appConnect <- SS.nestSnaplet "" connect (AC.initConnectSnaplet modifiedDescriptor)
   appAppConf  <- SS.nestSnaplet "rmconf" rmconf (CONF.initAppConfOrExit configDataDir)
   appStatic <- SS.nestSnaplet "static" static (initStaticSnaplet PMR.version staticRoutes appHeist)
+  cryptorSnaplet <- SS.nestSnaplet "cryptor" cryptor (NC.initCryptorSnaplet zone)
   liftIO . putStrLn $ "## Ending Init Phase"
-  return $ App appHeist appSession appDb appConnect appAppConf appStatic
+  return $ App appHeist appSession appDb appConnect appAppConf appStatic cryptorSnaplet
 
 configDataDir :: IO String
 configDataDir = CM.liftM (++ "/resources") PMR.getDataDir
