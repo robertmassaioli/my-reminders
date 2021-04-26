@@ -1,0 +1,7 @@
+Description: Add in retry support for reminders.
+Created: 2021-04-26 04:03:11.759913 UTC
+Depends: V6__remove-user-key-aaid
+Apply: |
+  ALTER TABLE reminder ADD COLUMN sendAttempts INTEGER NOT NULL DEFAULT 0;
+Revert: |
+  ALTER TABLE reminder DROP COLUMN sendAttempts;

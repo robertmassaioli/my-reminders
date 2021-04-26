@@ -1,0 +1,7 @@
+Description: Start using AAID for GDPR reasons.
+Created: 2021-04-26 03:58:28.270256 UTC
+Depends: V4__stop-storing-user-email
+Apply: |
+  ALTER TABLE reminder ADD COLUMN userAaid varchar(300);
+Revert: |
+  ALTER TABLE reminder DROP COLUMN userAaid;

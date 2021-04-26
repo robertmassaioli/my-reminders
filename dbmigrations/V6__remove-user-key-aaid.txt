@@ -1,0 +1,11 @@
+Description: Actually removing the reminders with no AAIDs and finishing the GDPR migration.
+Created: 2021-04-26 04:00:01.974804 UTC
+Depends: V5__start-storing-atlassian-account-ids
+Apply: |
+  ALTER TABLE reminder DROP COLUMN userKey CASCADE;
+  DELETE FROM reminder WHERE userAaid IS NULL;
+  ALTER TABLE reminder ALTER COLUMN userAaid SET NOT NULL;
+Revert: |
+  ALTER TABLE reminder ALTER COLUMN userAaid DROP NOT NULL;
+  ALTER TABLE reminder ADD COLUMN userKey VARCHAR(255) NOT NULL;
+
