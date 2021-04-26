@@ -1,1 +1,0 @@
-ALTER TABLE reminder DROP COLUMN userEmail CASCADE;

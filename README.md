@@ -36,6 +36,16 @@ You'll need a postgreSQL server available, matching the access configurations in
 There is a convenience script at `schema/bootstrap.sh` to set up the database for you, assuming that
 the current user has permission to create databases.
 
+During development, if you make changes to migrations that have already run locally, you'll need to the dbmigrations `moo` tool. You can install it by running:
+
+    stack install dbmigrations-postgresql
+
+And then you can use the tool by running:
+
+    yarn moo --help
+    
+Please don't modify previous migrations, only add new ones.
+
 ### Running the plugin
 
 First setup a nix-shell environment with the haskell stack command:

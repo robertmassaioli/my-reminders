@@ -1,0 +1,7 @@
+Description: Remove user email for GDPR reasons.
+Created: 2021-04-26 03:57:07.471274 UTC
+Depends: V3__add-in-oauth-support
+Apply: |
+  ALTER TABLE reminder DROP COLUMN userEmail CASCADE;
+Revert: |
+  ALTER TABLE reminder ADD COLUMN userEmail VARCHAR(512) NOT NULL;

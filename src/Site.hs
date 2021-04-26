@@ -105,11 +105,11 @@ withTokenAndTenant processor = CM.void $ TJ.withTenant $ \ct -> do
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
-routes :: [(ByteString, SS.Handler App App ())]
-routes = LH.lifecycleRoutes ++ applicationRoutes ++ redirects
+routes :: Maybe MZ.Zone -> [(ByteString, SS.Handler App App ())]
+routes zone = LH.lifecycleRoutes ++ applicationRoutes zone ++ redirects
 
-applicationRoutes :: [(ByteString, SS.Handler App App ())]
-applicationRoutes =
+applicationRoutes :: Maybe MZ.Zone ->  [(ByteString, SS.Handler App App ())]
+applicationRoutes zone =
   [ ("/"                              , SS.with connect $ AC.homeHandler sendHomePage)
   , ("/docs/:fileparam"               , showDocPage)
   , ("/panel/v2/jira/reminder/create" , loadConnectPanel)
@@ -125,7 +125,7 @@ applicationRoutes =
   , ("/rest/webhook/issue/delete"     , handleIssueDeleteWebhook)
   , ("/rest/healthcheck"              , healthcheckRequest)
   , ("/rest/heartbeat"                , heartbeatRequest)
-  , ("/rest/migration"                , migrationRequest)
+  , ("/rest/migration"                , migrationRequest zone)
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
@@ -156,7 +156,7 @@ app = SS.makeSnaplet "my-reminders" "My Reminders" Nothing $ do
   liftIO . putStrLn $ "## Starting Init Phase"
   zone <- liftIO MZ.fromEnv
   liftIO . putStrLn $ "## Zone: " ++ DE.showMaybe zone
-  SS.addRoutes routes -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
+  SS.addRoutes $ routes zone -- Run addRoutes before heistInit: http://goo.gl/9GpeSy
   appHeist   <- SS.nestSnaplet "" heist $ SSH.heistInit "templates"
   SSH.addConfig appHeist spliceConfig
   appSession <- SS.nestSnaplet "sess" sess $ initCookieSessionManager "site_key.txt" "sess" Nothing (Just 3600)

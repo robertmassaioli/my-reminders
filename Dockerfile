@@ -60,14 +60,14 @@ EXPOSE 8080
 
 # Install the missing packages
 USER root
-RUN apt-get update && apt-get install -y libpq5 libgmp10 openjdk-14-jre-headless libnss3 libnss-mdns netbase
+RUN apt-get update && apt-get install -y libpq5 libgmp10 libnss3 libnss-mdns netbase ca-certificates
 
 # Copy our context into the build directory and start working from there
 USER root
 COPY --from=frontend /home/frontend/build /service/frontend/build
 COPY --from=build /home/haskell/build/snaplets /service/snaplets
 COPY --from=build /home/haskell/build/resources /service/resources
-COPY --from=build /home/haskell/build/migrations /service/migrations
+COPY --from=build /home/haskell/build/dbmigrations /service/dbmigrations
 COPY --from=build /home/haskell/build/static /service/static
 COPY --from=build /root/.local/bin/my-reminders /service
 
