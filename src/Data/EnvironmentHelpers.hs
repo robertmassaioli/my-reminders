@@ -2,6 +2,7 @@ module Data.EnvironmentHelpers
    ( getEnv
    , getEnvWithDefault
    , showMaybe
+   , pgEnvPre
    ) where
 
 import           Data.List (find)
@@ -19,3 +20,6 @@ getEnvWithDefault def = fmap (fromMaybe def) . getEnv
 showMaybe :: Show a => Maybe a -> String
 showMaybe Nothing  = "[Not Available]"
 showMaybe (Just x) = show x
+
+pgEnvPre :: String -> String
+pgEnvPre = (++) "PG_ENCRYPTED_MY_REMINDERS_"

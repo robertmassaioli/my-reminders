@@ -96,11 +96,11 @@ getDatabaseOptions Nothing = do
       , databasePassword = "myreminders"
       }
 getDatabaseOptions _ = do
-   pHost     <- siGetEnv  $ pgEnvPre "HOST"
-   pPort     <- (readMaybe =<<) <$> siGetEnv (pgEnvPre "PORT") :: AppHandler (Maybe Integer)
-   pSchema   <- siGetEnv  $ pgEnvPre "SCHEMA"
-   pRole     <- siGetEnv  $ pgEnvPre "ROLE"
-   pPassword <- siGetEnv  $ pgEnvPre "PASSWORD"
+   pHost     <- siGetEnv  $ DE.pgEnvPre "HOST"
+   pPort     <- (readMaybe =<<) <$> siGetEnv (DE.pgEnvPre "PORT") :: AppHandler (Maybe Integer)
+   pSchema   <- siGetEnv  $ DE.pgEnvPre "SCHEMA"
+   pRole     <- siGetEnv  $ DE.pgEnvPre "ROLE"
+   pPassword <- siGetEnv  $ DE.pgEnvPre "PASSWORD"
    case (pHost, pPort, pSchema, pRole, pPassword) of
       (Just host, Just port, Just schema, Just role, Just password) -> do
          let connectionString = "postgresql://" <> role <> ":" <> password <> "@" <> host <> ":" <> show port <> "/" <> schema
@@ -113,9 +113,6 @@ getDatabaseOptions _ = do
    where
       siGetEnv :: String -> AppHandler (Maybe String)
       siGetEnv = liftIO . DE.getEnv
-
-pgEnvPre :: String -> String
-pgEnvPre = (++) "PG_MY_REMINDERS_"
 
 optionsToConfiguration :: FilePath -> DatabaseOptions -> M.Configuration
 optionsToConfiguration migrationStorePath d = M.Configuration
