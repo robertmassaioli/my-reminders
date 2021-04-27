@@ -13,20 +13,17 @@ import           Snap.Snaplet.PostgresqlSimple
 import           System.Environment            (getEnv)
 import           Text.PrettyPrint.Boxes
 
-pgMyRemindersPre :: String -> String
-pgMyRemindersPre = (++) "PG_ENCRYPTED_MY_REMINDERS_"
-
 pgPoolPre :: String -> String
 pgPoolPre = (++) "PG_POOL_"
 
 dbInitConf :: Maybe MZ.Zone -> SS.SnapletInit b Postgres
 dbInitConf Nothing = pgsInit
 dbInitConf (Just _) = SS.makeSnaplet (T.pack "My Reminders RDS") (T.pack "Relational data store connection.") Nothing $ do
-   host     <- siGetEnv  $ pgMyRemindersPre "HOST"
-   port     <- fmap read . siGetEnv $ pgMyRemindersPre "PORT"
-   schema   <- siGetEnv  $ pgMyRemindersPre "SCHEMA"
-   role     <- siGetEnv  $ pgMyRemindersPre "ROLE"
-   password <- siGetEnv  $ pgMyRemindersPre "PASSWORD"
+   host     <- siGetEnv  $ DE.pgEnvPre "HOST"
+   port     <- fmap read . siGetEnv $ DE.pgEnvPre "PORT"
+   schema   <- siGetEnv  $ DE.pgEnvPre "SCHEMA"
+   role     <- siGetEnv  $ DE.pgEnvPre "ROLE"
+   password <- siGetEnv  $ DE.pgEnvPre "PASSWORD"
    stripes  <- fmap read . liftIO . DE.getEnvWithDefault "1"  $ pgPoolPre "NUM_STRIPES"
    idle     <- fmap read . liftIO . DE.getEnvWithDefault "5"  $ pgPoolPre "IDLE_TIME"
    maxRes   <- fmap read . liftIO . DE.getEnvWithDefault "20" $ pgPoolPre "MAX_RESOURCES_PER_STRIPE"
