@@ -5,21 +5,27 @@ module ExpireHandlers
    , handleExpireFailingRequest
    ) where
 
-import qualified AppConfig                           as CONF
 import           AppHelpers
 import           Application
-import qualified Control.Exception                   as E
-import qualified Control.Exception.Lifted            as EL
 import           Control.Monad.IO.Class
-import           Data.Time.Clock                     (UTCTime)
-import qualified Model.Notify                         as N
+import           Control.Monad.Trans.Class           (lift)
+import           Control.Monad.Trans.Except
+import           Data.MaybeUtil
 import           EmailContext
 import           Finder
+import           HandlerHelpers                      (writeError)
 import           Persistence.Reminder
-import qualified Snap.AtlassianConnect               as AC
-import qualified Snap.Core                           as SC
 import           SnapHelpers
 import           System.FilePath                     ((</>))
+import qualified AppConfig                           as CONF
+import qualified Control.Arrow                       as A
+import qualified Control.Exception                   as E
+import qualified Control.Exception.Lifted            as EL
+import qualified Model.Notify                         as N
+import qualified Persistence.Tenant                  as PT
+import qualified Snap.AtlassianConnect               as AC
+import qualified Snap.Core                           as SC
+import qualified TenantPopulator                     as TP
 import qualified Text.Mustache                       as M
 
 handleExpireRequest :: AppHandler ()
@@ -38,38 +44,39 @@ handleExpireFailingRequest = handleMethods
 -- current timestamp (within the day) and turn it of for testing.
 -- TODO Each timestamp should only be processed once. Need to ensure that this is thread safe.
 expireForTimestamp :: AppHandler ()
-expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
-   currentTime <- getTimestampOrCurrentTime
-   connectConf <- AC.getConnect
-   expireUsingTimestamp currentTime connectConf
+expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey . writeError . runExceptT $ do
+   currentTime <- lift $ getTimestampOrCurrentTime
+   connectConf <- lift $ AC.getConnect
+   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext connectConf)
+   expiredReminders <- lift $ getExpiredReminders currentTime
+   liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
+   convertedExpiredReminders <- ExceptT (A.left conversionFailure <$> convertToTenant expiredReminders)
+   lift $ sendReminders context convertedExpiredReminders
+   return ()
 
-expireUsingTimestamp :: UTCTime -> AC.Connect -> AppHandler ()
-expireUsingTimestamp timestamp connectConf = do
-   potentialEmailContext <- loadEmailContext connectConf
-   case potentialEmailContext of
-      Nothing -> error "Could not find the directory that contains the email templates!"
-      Just context -> do
-         expiredReminders <- getExpiredReminders timestamp
-         liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
-         sendReminders context expiredReminders
-         return ()
+conversionFailure :: String -> (Int, String)
+conversionFailure e = (internalServer, "Failed to convert tenants: " <> e)
+
+missingEmailTemplates :: (Int, String)
+missingEmailTemplates = (internalServer, "Could not find the directory that contains the email templates!")
 
 expireFailingForTimestamp :: AppHandler ()
-expireFailingForTimestamp = getKeyAndConfirm CONF.rmExpireKey $ do
-   currentTime <- getTimestampOrCurrentTime
-   connectConf <- AC.getConnect
-   expireFailingUsingTimestamp currentTime connectConf
+expireFailingForTimestamp = getKeyAndConfirm CONF.rmExpireKey . writeError . runExceptT $ do
+   currentTime <- lift getTimestampOrCurrentTime
+   connectConf <- lift AC.getConnect
+   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext connectConf)
+   expiredReminders <- lift $ getExpiredFailingReminders currentTime
+   liftIO . putStrLn $ "Expired failing reminders: " ++ showLength expiredReminders
+   convertedExpiredReminders <- ExceptT (A.left conversionFailure <$> convertToTenant expiredReminders)
+   lift $ sendReminders context convertedExpiredReminders
+   return ()
 
-expireFailingUsingTimestamp :: UTCTime -> AC.Connect -> AppHandler ()
-expireFailingUsingTimestamp timestamp connectConf = do
-   potentialEmailContext <- loadEmailContext connectConf
-   case potentialEmailContext of
-      Nothing -> error "Could not find the directory that contains the email templates!"
-      Just context -> do
-         expiredReminders <- getExpiredFailingReminders timestamp
-         liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
-         sendReminders context expiredReminders
-         return ()
+convertToTenant :: [(Reminder, PT.EncryptedTenant)] -> AppHandler (Either String [(Reminder, AC.Tenant)])
+convertToTenant = runExceptT . mapM convert
+   where
+      convert (reminder, eTenant) = do
+         tenant <- ExceptT $ TP.convertTenant eTenant
+         return (reminder, tenant)
 
 loadEmailContext :: AC.Connect -> AppHandler (Maybe EmailContext)
 loadEmailContext connectConf = do

@@ -27,16 +27,17 @@ import           Application
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Data.Maybe
-import qualified Data.Text                          as T
-import qualified Data.Text.Encoding                 as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
 import           GHC.Int
 import           Persistence.Instances              ()
-import qualified Snap.AtlassianConnect              as AC
 import           Snap.Snaplet.PostgresqlSimple
+import qualified Data.Text                          as T
+import qualified Data.Text.Encoding                 as T
+import qualified Persistence.Tenant                 as PT
+import qualified Snap.AtlassianConnect              as AC
 
 type ReminderId = Integer
 
@@ -124,7 +125,7 @@ updateSummariesForReminders tenant issueId users newIssueSummary = execute
    |]
    (newIssueSummary, AC.tenantId tenant, issueId, In users)
 
-getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
+getExpiredReminders :: UTCTime -> AppHandler [(Reminder, PT.EncryptedTenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
@@ -134,9 +135,9 @@ getExpiredReminders expireTime = do
       ORDER BY random()
     |]
     (Only expireTime)
-   return (results :: [(Reminder, AC.Tenant)])
+   return (results :: [(Reminder, PT.EncryptedTenant)])
 
-getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
+getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, PT.EncryptedTenant)]
 getExpiredFailingReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
       [sql|
@@ -146,7 +147,7 @@ getExpiredFailingReminders expireTime = do
       ORDER BY random()
       |]
       (Only expireTime)
-   return (results :: [(Reminder, AC.Tenant)])
+   return (results :: [(Reminder, PT.EncryptedTenant)])
 
 incrementSendAttempts :: (Reminder, AC.Tenant) -> AppHandler Int64
 incrementSendAttempts (reminder, tenant) = execute
