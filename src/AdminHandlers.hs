@@ -38,15 +38,15 @@ data SafeTenants = SafeTenants
 instance ToJSON SafeTenants where
    toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "st" })
 
-toSafeTenants :: [AC.Tenant] -> SafeTenants
+toSafeTenants :: [EncryptedTenant] -> SafeTenants
 toSafeTenants = SafeTenants . fmap toSafeTenant
 
-toSafeTenant :: AC.Tenant -> SafeTenant
+toSafeTenant :: EncryptedTenant -> SafeTenant
 toSafeTenant t = SafeTenant
-    { stKey = AC.key t
-    , stPublicKey = AC.publicKey t
-    , stBaseUrl = AC.getURI . AC.baseUrl $ t
-    , stProductType = AC.productType t
+    { stKey         = etKey t
+    , stPublicKey   = etPublicKey t
+    , stBaseUrl     = AC.getURI . etBaseUrl $ t
+    , stProductType = etProductType t
     }
 
 adminSearch :: AppHandler ()

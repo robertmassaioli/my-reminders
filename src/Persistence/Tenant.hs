@@ -15,26 +15,27 @@ module Persistence.Tenant (
   , findTenantsByBaseUrl
   , encryptMoreSharedSecrets
   , EncryptResult(..)
+  , EncryptedTenant(..)
 ) where
 
+import           AesonHelpers
 import           Application
 import           Control.Monad
 import           Control.Monad.IO.Class
-import           Data.Function                    (on)
+import           Data.Aeson
+import           Data.Either.Combinators          (rightToMaybe)
 import           Data.Int
 import           Data.Maybe
 import           Data.Time.Clock                  (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple.SqlQQ
+import           GHC.Generics
 import           Network.URI                      hiding (query)
 import           Persistence.Instances            ()
-import qualified Snap.AtlassianConnect            as AC
 import           Snap.Snaplet.PostgresqlSimple
-import qualified Network.Cryptor                  as NC
 import qualified Data.Map                         as M
 import qualified Data.Text                        as T
-import           GHC.Generics
-import           Data.Aeson
-import           AesonHelpers
+import qualified Network.Cryptor                  as NC
+import qualified Snap.AtlassianConnect            as AC
 
 data EncryptResult = EncryptResult
    { erErrors :: [T.Text]
@@ -75,23 +76,35 @@ update :: ([(a, b)], [(a, c)]) -> (a, Either b c) -> ([(a, b)], [(a, c)])
 update (xx, yy) (x, Left l) = ((x, l):xx, yy)
 update (xx, yy) (x, Right r) = (xx, (x, r):yy)
 
+data EncryptedTenant = EncryptedTenant
+   { etTenantId               :: Integer       -- ^ Your identifier for this tenant.
+   , etKey                    :: AC.TenantKey     -- ^ The unique identifier for this tenant accross Atlassian Connect.
+   , etPublicKey              :: T.Text        -- ^ The public key for this atlassian connect application.
+   , etOauthClientId          :: Maybe T.Text  -- ^ The OAuth Client Id for this tenant. If this add-on does not support user impersonation then this may not be present.
+   , etSharedSecret           :: NC.PlainText  -- ^ The decrypted shared secret for this atlassian connect application. Deprecated.
+   , etEncryptedSharedSecret  :: NC.CipherText -- ^ The encrypted shared secret for this atlassian connect application. Used for JWT token generation.
+   , etBaseUrl                :: AC.ConnectURI -- ^ The base url of the Atlassian Cloud host application (product).
+   , etProductType            :: T.Text        -- ^ The type of product you have connected to in the Atlassian Cloud. (E.g. JIRA, Confluence)
+   } deriving (Eq, Show, Generic)
+
+instance FromRow EncryptedTenant where
+   fromRow = EncryptedTenant <$> field <*> field <*> field <*> field <*> field <*> field <*> (AC.CURI <$> field) <*> field
+
 lookupTenant
    :: AC.ClientKey
-   -> AppHandler (Maybe AC.Tenant)
+   -> AppHandler (Maybe EncryptedTenant)
 lookupTenant clientKey = do
    -- TODO Can we extract these SQL statements into their own constants so that we can
    -- just re-use them elsewhere?
    tenants <- query [sql|
-      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, sharedSecret, encrypted_shared_secret, baseUrl, productType
           FROM tenant
           WHERE key = ?
       |]
       (Only clientKey)
    return $ listToMaybe tenants
 
-removeTenantInformation
-   :: AC.ClientKey
-   -> AppHandler Int64
+removeTenantInformation :: AC.ClientKey -> AppHandler Int64
 removeTenantInformation clientKey =
    execute [sql| DELETE FROM tenant WHERE key = ?  |] (Only clientKey)
 
@@ -122,40 +135,53 @@ insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
       -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
       (Nothing, Just True, _)  -> error "This is a contradiction in state, we both could and could not find clientKeys."
       -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
-      (Nothing, Nothing, _) -> listToMaybe <$> rawInsertTenantInformation lri
+      (Nothing, Nothing, _) -> rawInsertTenantInformation lri
       -- We have seen this tenant before but we may have new information for it. Update it.
-      (Just tenant, _, Just claimedTenant) | on (==) AC.key tenant claimedTenant -> do
+      (Just tenant, _, Just claimedTenant) | etKey tenant == AC.key claimedTenant -> do
+         encryptedSharedSecret <- encryptSharedSecret lri
+         let newTenant = genNewTenant encryptedSharedSecret
          updateTenantDetails newTenant
          wakeTenant newTenant
-         return . Just . AC.tenantId $ newTenant
+         return . Just . etTenantId $ newTenant
          where
             -- After much discussion it seems that the only thing that we want to update is the base
             -- url if it changes. Everything else should never change unless we delete the tenant
             -- first and then recreate it.
-            newTenant = tenant
-               { AC.baseUrl = AC.lrBaseUrl lri
-               , AC.sharedSecret = fromMaybe (AC.sharedSecret tenant) (AC.lrSharedSecret lri)
+            genNewTenant potentialEncryptedSecret = tenant
+               { etBaseUrl = AC.lrBaseUrl lri
+               , etSharedSecret = fromMaybe (etSharedSecret tenant) (fmap NC.PlainText . AC.lrSharedSecret $ lri)
+               , etEncryptedSharedSecret = fromMaybe (etEncryptedSharedSecret tenant) (rightToMaybe potentialEncryptedSecret)
                }
       -- The authorisation between tenants does not match
       (_, _, _) -> return Nothing
 
-updateTenantDetails :: AC.Tenant ->  AppHandler Int64
+updateTenantDetails :: EncryptedTenant ->  AppHandler Int64
 updateTenantDetails tenant =
    execute [sql|
       UPDATE tenant SET
          publicKey = ?,
          sharedSecret = ?,
+         encrypted_shared_secret = ?,
          baseUrl = ?,
          productType = ?
       WHERE id = ?
-   |] (AC.publicKey tenant, AC.sharedSecret tenant, AC.getURI . AC.baseUrl $ tenant, AC.productType tenant, AC.tenantId tenant)
+   |] (etPublicKey tenant, etSharedSecret tenant, etEncryptedSharedSecret tenant, AC.getURI . etBaseUrl $ tenant, etProductType tenant, etTenantId tenant)
 
-rawInsertTenantInformation :: AC.LifecycleResponse -> AppHandler [Integer]
-rawInsertTenantInformation lri@(AC.LifecycleResponseInstalled {}) =
-   fmap join $ returning [sql|
-      INSERT INTO tenant (key, publicKey, sharedSecret, baseUrl, productType)
-      VALUES (?, ?, ?, ?, ?) RETURNING id
-   |] [(AC.lrClientKey lri, AC.lrPublicKey lri, AC.lrSharedSecret lri, show $ AC.lrBaseUrl lri, AC.lrProductType lri)]
+encryptSharedSecret :: AC.LifecycleResponse -> AppHandler (Either T.Text NC.CipherText)
+encryptSharedSecret lri = case AC.lrSharedSecret lri of
+   Nothing -> return . Left $ "No shared secret found in lifecycle payload"
+   Just sharedSecret -> NC.encrypt (NC.PlainText sharedSecret) M.empty
+
+rawInsertTenantInformation :: AC.LifecycleResponse -> AppHandler (Maybe Integer)
+rawInsertTenantInformation lri@(AC.LifecycleResponseInstalled {}) = do
+   pEncryptedSharedSecret <- encryptSharedSecret lri
+   case pEncryptedSharedSecret of
+      Left _ -> return Nothing
+      Right encryptedSharedSecret -> listToMaybe . fmap fromOnly <$> query
+         [sql|
+            INSERT INTO tenant (key, publicKey, sharedSecret, encrypted_shared_secret, baseUrl, productType)
+            VALUES (?, ?, ?, ?, ?) RETURNING id
+         |] (AC.lrClientKey lri, AC.lrPublicKey lri, AC.lrSharedSecret lri, encryptedSharedSecret, show $ AC.lrBaseUrl lri, AC.lrProductType lri)
 
 getClientKeyForBaseUrl :: URI -> AppHandler (Maybe AC.ClientKey)
 getClientKeyForBaseUrl baseUrl = do
@@ -174,19 +200,19 @@ getTenantCount = do
    |]
    return . fromOnly . head $ counts
 
-hibernateTenant :: AC.Tenant -> AppHandler ()
+hibernateTenant :: EncryptedTenant -> AppHandler ()
 hibernateTenant tenant = do
    currentTime <- liftIO $ getCurrentTime
    execute [sql|
       UPDATE tenant SET sleep_date = ? WHERE id = ?
-   |] (currentTime, AC.tenantId tenant)
+   |] (currentTime, etTenantId tenant)
    return ()
 
-wakeTenant :: AC.Tenant -> AppHandler ()
+wakeTenant :: EncryptedTenant -> AppHandler ()
 wakeTenant tenant = do
    execute [sql|
       UPDATE tenant SET sleep_date = NULL WHERE id = ?
-   |] (Only . AC.tenantId $ tenant)
+   |] (Only . etTenantId $ tenant)
    return ()
 
 markPurgedTenants :: UTCTime -> AppHandler ()
@@ -204,10 +230,10 @@ purgeTenants beforeTime = execute [sql|
       DELETE FROM tenant WHERE sleep_date IS NOT NULL AND sleep_date < ?
    |] (Only beforeTime)
 
-findTenantsByBaseUrl :: T.Text -> AppHandler [AC.Tenant]
+findTenantsByBaseUrl :: T.Text -> AppHandler [EncryptedTenant]
 findTenantsByBaseUrl uri =
    query [sql|
-      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, sharedSecret, encrypted_shared_secret, baseUrl, productType
       FROM tenant
       WHERE baseUrl like ?
    |] (Only . surroundLike $ uri)

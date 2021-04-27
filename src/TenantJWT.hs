@@ -7,7 +7,7 @@ module TenantJWT (
 
 import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
-import           Control.Monad              (guard, when, join, (<=<))
+import           Control.Monad              (unless, when, join, (<=<))
 import           Control.Monad.IO.Class     (liftIO)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
@@ -25,6 +25,7 @@ import qualified Snap.Core                  as SC
 import qualified Snap.Snaplet               as SS
 import qualified SnapHelpers                as SH
 import qualified Web.JWT                    as J
+import qualified TenantPopulator            as TP
 
 -- TODO Should this be moved into the Atlassian connect code? Or does the app handler code make it too specific?
 -- TODO Can we make it not wrap the request but instead run inside the request? That will let it be moved out.
@@ -98,7 +99,7 @@ getTenant unverifiedJwt = runExceptT $ do
   actualQSH <- except . m2e noQshOnRequest . getQSH $ unverifiedJwt
   expectedQSH <- ExceptT AC.generateQSH
   when (actualQSH /= expectedQSH) $ throwE qshNotMatch
-  verifiedTenant <- except . m2e invalidSignature $ verifyTenant unverifiedTenant unverifiedJwt
+  verifiedTenant <- ExceptT $ verifyTenant unverifiedTenant unverifiedJwt
   return (verifiedTenant, getAccountId unverifiedJwt)
   where
     noQshOnRequest = "There was no QSH token on the incoming request."
@@ -106,14 +107,15 @@ getTenant unverifiedJwt = runExceptT $ do
     tokenExpired = "The JWT token in this request has expired."
     jwtParseFail = "Could not parse the JWT message."
     noSuchTenant key = "Could not find a tenant with that id: " ++ show key
-    invalidSignature = "Invalid signature for request. Danger! Request ignored."
 
-verifyTenant :: AC.Tenant -> UnverifiedJWT -> Maybe AC.Tenant
-verifyTenant tenant unverifiedJwt = do
-  guard (isJust $ J.verify tenantSecret unverifiedJwt)
+verifyTenant :: PT.EncryptedTenant -> UnverifiedJWT -> AppHandler (Either String AC.Tenant)
+verifyTenant eTenant unverifiedJwt = runExceptT $ do
+  tenant <- ExceptT . TP.convertTenant $ eTenant
+  let tenantSecret = J.secret . AC.sharedSecret $ tenant
+  unless (isJust $ J.verify tenantSecret unverifiedJwt) $ throwE invalidSignature
   pure tenant
   where
-    tenantSecret = J.secret . AC.sharedSecret $ tenant
+    invalidSignature = "Invalid signature for request. Danger! Request ignored."
 
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
 getClientKey jwt = J.iss . J.claims $ jwt

@@ -28,7 +28,7 @@ import           Network.HTTP.Types.Method  (StdMethod(GET, POST))
 import           Database.PostgreSQL.Simple.ToField
 import           Database.PostgreSQL.Simple.FromField
 
-newtype PlainText = PlainText { getPlainText :: T.Text } deriving (Eq, Show, Generic, ToJSON, FromJSON)
+newtype PlainText = PlainText { getPlainText :: T.Text } deriving (Eq, Show, Generic, ToJSON, FromJSON, ToField, FromField)
 newtype CipherText = CipherText { getCipherText :: T.Text } deriving (Eq, Show, Generic, ToJSON, FromJSON, ToField, FromField)
 
 type EncryptionContext = M.Map T.Text T.Text
