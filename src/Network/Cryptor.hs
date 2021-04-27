@@ -77,7 +77,7 @@ initCryptorSnaplet zone = SS.makeSnaplet "Cryptor" "Communicate with cryptor in 
 standardCryptor :: NS.RequestTransformer
 standardCryptor =
   NS.addHeader ("Content-Type", "application/json; charset=utf-8") <>
-  NS.addHeader ("X-Cryptor-Client", "hackathon")
+  NS.addHeader ("X-Cryptor-Client", "my-reminders")
 
 responder :: FromJSON a => Int -> BSL.ByteString -> NS.JsonResult a
 responder 200 body = NS.parseBody body
@@ -95,7 +95,7 @@ encrypt plainText context = do
         NS.ParseError x -> return . Left $ "Parse error: " <> x
         NS.DecodeError x -> return . Left $ "Decode error: " <> x
   where
-    encryptUrl = "http://cryptor-sidecar:26272/cryptor/encrypt/micros/hackathon/secret-data"
+    encryptUrl = "http://cryptor-sidecar:26272/cryptor/encrypt/micros/my-reminders/secret-data"
     requestDetails =
       standardCryptor <>
       NS.setJson payload
@@ -117,7 +117,7 @@ decrypt cipherText context = do
         NS.ParseError x -> return . Left $ "Parse error: " <> x
         NS.DecodeError x -> return . Left $ "Decode error: " <> x
   where
-    decryptUrl = "http://cryptor-sidecar:26272/cryptor/decrypt/micros/hackathon/secret-data"
+    decryptUrl = "http://cryptor-sidecar:26272/cryptor/decrypt/micros/my-reminders/secret-data"
     requestDetails =
       standardCryptor <>
       NS.setJson payload
