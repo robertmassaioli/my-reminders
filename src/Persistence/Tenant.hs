@@ -180,7 +180,7 @@ rawInsertTenantInformation lri@(AC.LifecycleResponseInstalled {}) = do
       Right encryptedSharedSecret -> listToMaybe . fmap fromOnly <$> query
          [sql|
             INSERT INTO tenant (key, publicKey, sharedSecret, encrypted_shared_secret, baseUrl, productType)
-            VALUES (?, ?, ?, ?, ?) RETURNING id
+            VALUES (?, ?, ?, ?, ?, ?) RETURNING id
          |] (AC.lrClientKey lri, AC.lrPublicKey lri, AC.lrSharedSecret lri, encryptedSharedSecret, show $ AC.lrBaseUrl lri, AC.lrProductType lri)
 
 getClientKeyForBaseUrl :: URI -> AppHandler (Maybe AC.ClientKey)
