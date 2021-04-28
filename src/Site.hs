@@ -16,7 +16,6 @@ import           Control.Monad.IO.Class                      (liftIO)
 import           CustomSplices
 import           Data.ByteString                             (ByteString)
 import           Data.Maybe                                  (fromMaybe)
-import           EncryptSharedSecret
 import           ExpireHandlers
 import           Healthcheck
 import           Heartbeat
@@ -129,7 +128,6 @@ applicationRoutes zone =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
-  , ("/rest/encrypt-shared-secrets"   , handleEncryptSharedSecrets)
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
   , ("/favicon.ico"                   , serveFile "frontend/build/favicon.ico")
   ]
