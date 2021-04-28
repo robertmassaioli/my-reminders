@@ -13,8 +13,6 @@ module Persistence.Tenant (
   , markPurgedTenants
   , purgeTenants
   , findTenantsByBaseUrl
-  , encryptMoreSharedSecrets
-  , EncryptResult(..)
   , EncryptedTenant(..)
 ) where
 
@@ -37,58 +35,18 @@ import qualified Data.Text                        as T
 import qualified Network.Cryptor                  as NC
 import qualified Snap.AtlassianConnect            as AC
 
-data EncryptResult = EncryptResult
-   { erErrors :: [T.Text]
-   , erUpdated :: Int
-   } deriving (Show, Generic)
-
-instance ToJSON EncryptResult where
-   toJSON = genericToJSON (baseOptions { fieldLabelModifier = stripFieldNamePrefix "er" })
-
-encryptMoreSharedSecrets :: AppHandler EncryptResult
-encryptMoreSharedSecrets = withTransaction $ do
-   unencryptedTenants <- query_
-      [sql|
-      SELECT id, key, publicKey, oauthClientId, sharedSecret, baseUrl, productType
-      FROM tenant
-      WHERE encrypted_shared_secret IS NULL
-      LIMIT 30
-      |]
-   tenantsWithEncryption <- forM unencryptedTenants $ \ut -> do
-      result <- NC.encrypt (NC.PlainText . AC.sharedSecret $ ut) M.empty
-      return (ut, result)
-   let (errors, converts) = partitionEithers tenantsWithEncryption
-   forM converts $ \(ut, cipherText) -> do
-      execute
-         [sql|
-         UPDATE tenant SET encrypted_shared_secret = ?
-         WHERE id = ?
-         |] (cipherText, AC.tenantId ut)
-   return $ EncryptResult
-      { erErrors = fmap snd errors
-      , erUpdated = length converts
-      }
-
-partitionEithers :: [(a, Either b c)] -> ([(a, b)], [(a, c)])
-partitionEithers = foldl update ([], [])
-
-update :: ([(a, b)], [(a, c)]) -> (a, Either b c) -> ([(a, b)], [(a, c)])
-update (xx, yy) (x, Left l) = ((x, l):xx, yy)
-update (xx, yy) (x, Right r) = (xx, (x, r):yy)
-
 data EncryptedTenant = EncryptedTenant
    { etTenantId               :: Integer       -- ^ Your identifier for this tenant.
    , etKey                    :: AC.TenantKey     -- ^ The unique identifier for this tenant accross Atlassian Connect.
    , etPublicKey              :: T.Text        -- ^ The public key for this atlassian connect application.
    , etOauthClientId          :: Maybe T.Text  -- ^ The OAuth Client Id for this tenant. If this add-on does not support user impersonation then this may not be present.
-   , etSharedSecret           :: NC.PlainText  -- ^ The decrypted shared secret for this atlassian connect application. Deprecated.
    , etEncryptedSharedSecret  :: NC.CipherText -- ^ The encrypted shared secret for this atlassian connect application. Used for JWT token generation.
    , etBaseUrl                :: AC.ConnectURI -- ^ The base url of the Atlassian Cloud host application (product).
    , etProductType            :: T.Text        -- ^ The type of product you have connected to in the Atlassian Cloud. (E.g. JIRA, Confluence)
    } deriving (Eq, Show, Generic)
 
 instance FromRow EncryptedTenant where
-   fromRow = EncryptedTenant <$> field <*> field <*> field <*> field <*> field <*> field <*> (AC.CURI <$> field) <*> field
+   fromRow = EncryptedTenant <$> field <*> field <*> field <*> field <*> field <*> (AC.CURI <$> field) <*> field
 
 lookupTenant
    :: AC.ClientKey
@@ -97,7 +55,7 @@ lookupTenant clientKey = do
    -- TODO Can we extract these SQL statements into their own constants so that we can
    -- just re-use them elsewhere?
    tenants <- query [sql|
-      SELECT id, key, publicKey, oauthClientId, sharedSecret, encrypted_shared_secret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, encrypted_shared_secret, baseUrl, productType
           FROM tenant
           WHERE key = ?
       |]
@@ -149,7 +107,6 @@ insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
             -- first and then recreate it.
             genNewTenant potentialEncryptedSecret = tenant
                { etBaseUrl = AC.lrBaseUrl lri
-               , etSharedSecret = fromMaybe (etSharedSecret tenant) (fmap NC.PlainText . AC.lrSharedSecret $ lri)
                , etEncryptedSharedSecret = fromMaybe (etEncryptedSharedSecret tenant) (rightToMaybe potentialEncryptedSecret)
                }
       -- The authorisation between tenants does not match
@@ -160,12 +117,11 @@ updateTenantDetails tenant =
    execute [sql|
       UPDATE tenant SET
          publicKey = ?,
-         sharedSecret = ?,
          encrypted_shared_secret = ?,
          baseUrl = ?,
          productType = ?
       WHERE id = ?
-   |] (etPublicKey tenant, etSharedSecret tenant, etEncryptedSharedSecret tenant, AC.getURI . etBaseUrl $ tenant, etProductType tenant, etTenantId tenant)
+   |] (etPublicKey tenant, etEncryptedSharedSecret tenant, AC.getURI . etBaseUrl $ tenant, etProductType tenant, etTenantId tenant)
 
 encryptSharedSecret :: AC.LifecycleResponse -> AppHandler (Either T.Text NC.CipherText)
 encryptSharedSecret lri = case AC.lrSharedSecret lri of
@@ -179,9 +135,9 @@ rawInsertTenantInformation lri@(AC.LifecycleResponseInstalled {}) = do
       Left _ -> return Nothing
       Right encryptedSharedSecret -> listToMaybe . fmap fromOnly <$> query
          [sql|
-            INSERT INTO tenant (key, publicKey, sharedSecret, encrypted_shared_secret, baseUrl, productType)
-            VALUES (?, ?, ?, ?, ?, ?) RETURNING id
-         |] (AC.lrClientKey lri, AC.lrPublicKey lri, AC.lrSharedSecret lri, encryptedSharedSecret, show $ AC.lrBaseUrl lri, AC.lrProductType lri)
+            INSERT INTO tenant (key, publicKey, encrypted_shared_secret, baseUrl, productType)
+            VALUES (?, ?, ?, ?, ?) RETURNING id
+         |] (AC.lrClientKey lri, AC.lrPublicKey lri, encryptedSharedSecret, show $ AC.lrBaseUrl lri, AC.lrProductType lri)
 
 getClientKeyForBaseUrl :: URI -> AppHandler (Maybe AC.ClientKey)
 getClientKeyForBaseUrl baseUrl = do
@@ -233,7 +189,7 @@ purgeTenants beforeTime = execute [sql|
 findTenantsByBaseUrl :: T.Text -> AppHandler [EncryptedTenant]
 findTenantsByBaseUrl uri =
    query [sql|
-      SELECT id, key, publicKey, oauthClientId, sharedSecret, encrypted_shared_secret, baseUrl, productType
+      SELECT id, key, publicKey, oauthClientId, encrypted_shared_secret, baseUrl, productType
       FROM tenant
       WHERE baseUrl like ?
    |] (Only . surroundLike $ uri)
