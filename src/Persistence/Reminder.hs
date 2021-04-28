@@ -27,16 +27,17 @@ import           Application
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Data.Maybe
-import qualified Data.Text                          as T
-import qualified Data.Text.Encoding                 as T
 import           Data.Time.Clock
 import           Database.PostgreSQL.Simple.FromRow
 import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
 import           GHC.Int
 import           Persistence.Instances              ()
-import qualified Snap.AtlassianConnect              as AC
 import           Snap.Snaplet.PostgresqlSimple
+import qualified Data.Text                          as T
+import qualified Data.Text.Encoding                 as T
+import qualified Persistence.Tenant                 as PT
+import qualified Snap.AtlassianConnect              as AC
 
 type ReminderId = Integer
 
@@ -124,29 +125,29 @@ updateSummariesForReminders tenant issueId users newIssueSummary = execute
    |]
    (newIssueSummary, AC.tenantId tenant, issueId, In users)
 
-getExpiredReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
+getExpiredReminders :: UTCTime -> AppHandler [(Reminder, PT.EncryptedTenant)]
 getExpiredReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
     [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.encrypted_shared_secret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts < 2
       ORDER BY random()
     |]
     (Only expireTime)
-   return (results :: [(Reminder, AC.Tenant)])
+   return (results :: [(Reminder, PT.EncryptedTenant)])
 
-getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, AC.Tenant)]
+getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, PT.EncryptedTenant)]
 getExpiredFailingReminders expireTime = do
    results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query
       [sql|
-      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.baseUrl, t.productType
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.sharedSecret, t.encrypted_shared_secret, t.baseUrl, t.productType
       FROM reminder p, tenant t
       WHERE p.tenantId = t.id AND p.date < ? and p.sendAttempts >= 2
       ORDER BY random()
       |]
       (Only expireTime)
-   return (results :: [(Reminder, AC.Tenant)])
+   return (results :: [(Reminder, PT.EncryptedTenant)])
 
 incrementSendAttempts :: (Reminder, AC.Tenant) -> AppHandler Int64
 incrementSendAttempts (reminder, tenant) = execute

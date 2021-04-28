@@ -61,21 +61,25 @@ function getAppKey(): Promise<string> {
         });
 }
 
-function shouldRequestVersionUpgrade(): Promise<boolean> {
-    return getAppKey().then(async appKey => {
-        const appDetails = await AP.request({
-            type: 'GET',
-            url: `/rest/atlassian-connect/1/addons/${appKey}`
-        });
+async function shouldRequestVersionUpgrade(): Promise<boolean> {
+    const appKey = await getAppKey();
 
-        const response = JSON.parse(appDetails.body);
-        if (typeof response === 'object' && typeof response.version === 'string') {
-            const version: string = response.version;
-            return version.startsWith('1.0');
-        } else {
-            return false;
-        }
+    if (appKey.endsWith('.local')) {
+        return false;
+    }
+
+    const appDetails = await AP.request({
+        type: 'GET',
+        url: `/rest/atlassian-connect/1/addons/${appKey}`
     });
+
+    const response = JSON.parse(appDetails.body);
+    if (typeof response === 'object' && typeof response.version === 'string') {
+        const version: string = response.version;
+        return version.startsWith('1.0');
+    } else {
+        return false;
+    }
 }
 
 export class IssueViewContainer
