@@ -49,7 +49,7 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
 
     componentWillMount() {
         const now = moment();
-        now.add((10 - now.minutes() % 10), 'minutes');
+        now.minutes(0);
         now.add(1, 'day');
 
         this.setState({
@@ -69,7 +69,7 @@ export class ReminderCreateDialog extends React.PureComponent<ReminderCreateDial
                     />
                     <Label label="Time due" />
                     <TimePicker
-                        defaultValue={moment().minute(0)}
+                        defaultValue={this.state.selectedTime}
                         showSecond={false}
                         use12Hours={true}
                         onChange={val => this.onTimeChange(val)}
