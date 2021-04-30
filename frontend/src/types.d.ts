@@ -575,4 +575,8 @@ declare namespace AP {
 
         function emitPublic(name: string, ...args: EventData[]): void;
     }
+
+    namespace user {
+        function getTimeZone(callback: (timezone: string) => void): void;
+    }
 }

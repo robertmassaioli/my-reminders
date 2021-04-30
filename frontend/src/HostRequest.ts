@@ -1,7 +1,6 @@
 import URI from 'urijs';
 
 export interface UserDetails {
-    timeZone: string;
     displayName: string;
     name: string;
     key: string;
@@ -35,4 +34,8 @@ export function requestIssueDetails(issueKey: string): Promise<IssueDetails> {
     }).then(rsp => {
         return JSON.parse(rsp.body) as IssueDetails;
     });
+}
+
+export function requestCurrentUserTimezone(): Promise<string> {
+    return new Promise((resolve) => AP.user.getTimeZone(timezone => resolve(timezone)));
 }

@@ -6,7 +6,7 @@ import { IssueView } from './IssueView';
 import { ReminderView, DialogEventData } from './Data';
 import moment from 'moment';
 import 'whatwg-fetch';
-import { requestUserDetails, UserDetails, requestIssueDetails } from './HostRequest';
+import { requestUserDetails, UserDetails, requestIssueDetails, requestCurrentUserTimezone } from './HostRequest';
 import { ReminderResponse, AddReminderRequest, ReminderRequest } from './reminders-client';
 import { createIndividualReminderApi, createIssueRemindersApi } from './api';
 
@@ -86,9 +86,9 @@ async function shouldRequestVersionUpgrade(): Promise<boolean> {
 export class IssueViewContainer
     extends React.PureComponent<RouteComponentProps<void> & IssueViewContainerProps, IssueViewContainerState> {
 
-    private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[]): ReminderView[] {
+    private static calculateReminderViews(userDetails: UserDetails, reminders: ReminderResponse[], timezone: string): ReminderView[] {
         return reminders.map(r => {
-            const expiry = moment(r.date).tz(userDetails.timeZone);
+            const expiry = moment(r.date).tz(timezone);
             return {
                 id: r.reminderId,
                 message: r.message,
@@ -211,16 +211,17 @@ export class IssueViewContainer
 
         if (issue && user) {
             const userRequest = requestUserDetails();
+            const timezoneRequest = requestCurrentUserTimezone();
             const issueRequest = requestIssueDetails(issue.key);
             const remindersRequest = fetchRemindersForIssue(issue.id, this.props.pageContext);
 
-            Promise.all([userRequest, issueRequest, remindersRequest])
-            .then(([userDetails, issueDetails, reminders]) => {
+            Promise.all([userRequest, issueRequest, remindersRequest, timezoneRequest])
+            .then(([userDetails, issueDetails, reminders, timezone]) => {
                 this.setState({
                     state: 'loaded',
                     loadedDetails: {
-                        reminders: IssueViewContainer.calculateReminderViews(userDetails, reminders),
-                        timezone: userDetails.timeZone,
+                        reminders: IssueViewContainer.calculateReminderViews(userDetails, reminders, timezone),
+                        timezone,
                         issue: {
                             id: issue.id,
                             key: issue.key,
