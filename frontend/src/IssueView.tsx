@@ -34,12 +34,21 @@ const UpgradeWarningBanner: React.SFC<{ isOpen: boolean }> = props => (
 export type IssueViewProps = {
     showUpgradeWarning: boolean;
     reminders: ReminderView[] | undefined;
+    timezone: string;
+    personalSettingsUrl: string;
     onReminderDeleted(id: number): void;
 };
 
 export class IssueView extends React.PureComponent<IssueViewProps & IssueViewActionsProps> {
     private static ReminderContainer = styled.div`
         margin-top: 10px;
+    `;
+
+    private static SubInfo = styled.p`
+        font-size: small;
+        color: #C1C7D0;
+        margin-top: 10px;
+        margin-bottom: 10px;
     `;
 
     render() {
@@ -59,7 +68,7 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
     }
 
     private ReminderView(): JSX.Element {
-        const reminders = this.props.reminders;
+        const { reminders, timezone, personalSettingsUrl } = this.props;
         if (!reminders) {
             return (
                 <Spinner size="small" />
@@ -73,7 +82,10 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
                     );
                 });
                 return (
-                    <IssueView.ReminderContainer>{rs}</IssueView.ReminderContainer>
+                    <>
+                        <IssueView.ReminderContainer>{rs}</IssueView.ReminderContainer>
+                        <IssueView.SubInfo>Your timezone: <a target="_top" referrerPolicy="noreferrer" href={personalSettingsUrl}>{timezone}</a></IssueView.SubInfo>
+                    </>
                 );
             } else {
                 return (
