@@ -148,6 +148,7 @@ export class IssueViewContainer
                 showUpgradeWarning={this.state.showVersionWarning}
                 reminders={ld ? ld.reminders : undefined}
                 timezone={ld ? ld.timezone : '<loading>'}
+                personalSettingsUrl={this.getPersonalSettingsUrl()}
                 onAddReminder={() => this.onOpenAdvanced()}
                 onTomorrow={() => this.createReminder(setToMorningHour(moment().add(1, 'days')))}
                 onInAWeek={() => this.createReminder(setToMorningHour(moment().add(1, 'week')))}
@@ -155,6 +156,12 @@ export class IssueViewContainer
                 onReminderDeleted={id => this.onDeleteReminder(id)}
             />
         );
+    }
+
+    private getPersonalSettingsUrl(): string {
+        const baseUrl = new URL(this.props.pageContext.productBaseUrl);
+        baseUrl.pathname = '/secure/ViewPersonalSettings.jspa';
+        return baseUrl.toString();
     }
 
     private onOpenAdvanced(): void {

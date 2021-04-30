@@ -35,6 +35,7 @@ export type IssueViewProps = {
     showUpgradeWarning: boolean;
     reminders: ReminderView[] | undefined;
     timezone: string;
+    personalSettingsUrl: string;
     onReminderDeleted(id: number): void;
 };
 
@@ -67,7 +68,7 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
     }
 
     private ReminderView(): JSX.Element {
-        const { reminders, timezone } = this.props;
+        const { reminders, timezone, personalSettingsUrl } = this.props;
         if (!reminders) {
             return (
                 <Spinner size="small" />
@@ -83,7 +84,7 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
                 return (
                     <>
                         <IssueView.ReminderContainer>{rs}</IssueView.ReminderContainer>
-                        <IssueView.SubInfo>Your timezone: {timezone}</IssueView.SubInfo>
+                        <IssueView.SubInfo>Your timezone: <a target="_top" referrerPolicy="noreferrer" href={personalSettingsUrl}>{timezone}</a></IssueView.SubInfo>
                     </>
                 );
             } else {
