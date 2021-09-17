@@ -5,34 +5,8 @@ import { ReminderView } from './Data';
 import { Reminder } from './Reminder';
 import EmptyState from '@atlaskit/empty-state';
 import Spinner from '@atlaskit/spinner';
-import WarningIcon from '@atlaskit/icon/glyph/warning';
-import Banner from '@atlaskit/banner';
-
-const Icon = <WarningIcon label="Warning icon" secondaryColor="inherit" />;
-
-const WarningMessage = styled.p`
-    margin-left: 10px;
-    margin-right: 10px;
-`;
-
-const UpgradeWarningBanner: React.SFC<{ isOpen: boolean }> = props => (
-    <>
-        <Banner icon={Icon} isOpen={props.isOpen} appearance="error">
-            Upgrade My Reminders.
-        </Banner>
-        {props.isOpen && (
-            <>
-                <WarningMessage>
-                    Reminders will not be sent until your administrator upgrades My Reminders.
-                </WarningMessage>
-                <br />
-            </>
-        )}
-    </>
-);
 
 export type IssueViewProps = {
-    showUpgradeWarning: boolean;
     reminders: ReminderView[] | undefined;
     timezone: string;
     personalSettingsUrl: string;
@@ -54,7 +28,6 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
     render() {
         return (
             <div>
-                <UpgradeWarningBanner isOpen={this.props.showUpgradeWarning} />
                 <IssueViewActions
                     statusIndicator={this.props.statusIndicator}
                     onAddReminder={this.props.onAddReminder}

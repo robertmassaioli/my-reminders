@@ -15,7 +15,6 @@ export default {
 const Template: Story<IssueViewProps & IssueViewActionsProps> = (args) => <IssueView {...args} />;
 
 const defaultProps: Partial<IssueViewActionsProps & IssueViewProps> = {
-   showUpgradeWarning: false,
    timezone: 'America/Chicago',
    onTomorrow: noOp,
    onInAWeek: noOp,
@@ -35,7 +34,6 @@ EmptyView.args = {
 export const UpgradeWarning = Template.bind({});
 UpgradeWarning.args = {
    ...defaultProps,
-   showUpgradeWarning: true,
    reminders: []
 };
 export const OneReminder = Template.bind({});
