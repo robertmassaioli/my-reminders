@@ -61,14 +61,13 @@ pipelines:
             - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
             - export MICROS_URL="wss://micros-proxy.services.atlassian.com"
             - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
-            # download micros CLI
-            - curl -O -H "Authorization:$PIPELINES_JWT_TOKEN" https://micros-proxy.services.atlassian.com/micros-stable/micros.tar.gz
-            - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
-            - chmod +x micros-cli
+            # download atlas command
+            - curl -fL https://statlas.prod.atl-paas.net/atlas-cli/linux/atlas-latest-linux-amd64.tar.gz | tar -xzp atlas
+            - ./atlas plugin install -n micros
             # generate the service descriptor
             - yarn install && yarn gen-sd
             # micros deploy the service
-            - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e ddev
+            - ./atlas micros service deploy --service=my-reminders --file=service-descriptor.json --env=ddev
           services:
             - docker
           caches:
@@ -84,14 +83,13 @@ pipelines:
             - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
             - export MICROS_URL="wss://micros-proxy.services.atlassian.com"
             - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
-            # download micros CLI
-            - curl -O -H "Authorization:$PIPELINES_JWT_TOKEN" https://micros-proxy.services.atlassian.com/micros-stable/micros.tar.gz
-            - tar -xvf micros.tar.gz --transform s/micros/micros-cli/
-            - chmod +x micros-cli
+            # download atlas command
+            - curl -fL https://statlas.prod.atl-paas.net/atlas-cli/linux/atlas-latest-linux-amd64.tar.gz | tar -xzp atlas
+            - ./atlas plugin install -n micros
             # generate the service descriptor
             - yarn install && yarn gen-sd
             # micros deploy the service
-            - ./micros-cli service:deploy my-reminders -f service-descriptor.json -e prod-east
+            - ./atlas micros service deploy --service=my-reminders --file=service-descriptor.json --env=prod-east
           services:
             - docker
           caches:
