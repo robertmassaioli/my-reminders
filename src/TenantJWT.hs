@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE OverloadedStrings #-}
 module TenantJWT (
   withTenant,
   withMaybeTenant
@@ -9,11 +10,16 @@ import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Control.Monad              (unless, when, join, (<=<))
 import           Control.Monad.IO.Class     (liftIO)
+import           Control.Monad.Trans.Class           (lift)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
 import           Data.Maybe                 (isJust, listToMaybe, catMaybes)
 import           Data.MaybeUtil
 import           GHC.Generics
+import           Network.Api.Support
+import           Network.HTTP.Client.TLS    (tlsManagerSettings)
+import           Network.HTTP.Types
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Char8      as B
 import qualified Data.CaseInsensitive       as DC
 import qualified Data.Map.Strict            as Map
@@ -24,8 +30,8 @@ import qualified Snap.AtlassianConnect      as AC
 import qualified Snap.Core                  as SC
 import qualified Snap.Snaplet               as SS
 import qualified SnapHelpers                as SH
-import qualified Web.JWT                    as J
 import qualified TenantPopulator            as TP
+import qualified Web.JWT                    as J
 
 -- TODO Should this be moved into the Atlassian connect code? Or does the app handler code make it too specific?
 -- TODO Can we make it not wrap the request but instead run inside the request? That will let it be moved out.
@@ -110,18 +116,47 @@ getTenant unverifiedJwt = runExceptT $ do
 
 verifyTenant :: PT.EncryptedTenant -> UnverifiedJWT -> AppHandler (Either String AC.Tenant)
 verifyTenant eTenant unverifiedJwt = runExceptT $ do
+  connectConf <- lift $ AC.getConnect
   tenant <- ExceptT . TP.convertTenant $ eTenant
-  let tenantSecret = J.secret . AC.sharedSecret $ tenant
-  unless (isJust $ J.verify tenantSecret unverifiedJwt) $ throwE invalidSignature
+  case getKeyId unverifiedJwt of
+    Nothing -> do
+      let tenantSecret = J.toVerify . J.hmacSecret . AC.sharedSecret $ tenant
+      unless (isJust $ J.verify tenantSecret unverifiedJwt) $ throwE invalidSignature
+    Just kid -> do
+      rawPublicKey <- ExceptT (m2e fetchPublicKeyFailed <$> getPublicKey kid)
+      publicKey <- ExceptT (pure . m2e readPuiblicKeyFailed $ J.readRsaPublicKey rawPublicKey)
+      let signer = J.VerifyRSAPublicKey publicKey
+      unless (isJust $ J.verify signer unverifiedJwt) $ throwE invalidSignature
+      aud <- ExceptT (pure . m2e noAudienceFound . getAUD $ unverifiedJwt)
+      let baseUrl = T.pack . show  . AC.connectBaseUrl $ connectConf
+      unless (baseUrl == aud) $ throwE audienceDidNotMatch
   pure tenant
   where
     invalidSignature = "Invalid signature for request. Danger! Request ignored."
+    fetchPublicKeyFailed = "Failed to fetch and read the public key from the key server"
+    readPuiblicKeyFailed = "Could not parse public key"
+    noAudienceFound = "There was no audience field in the JWT token"
+    audienceDidNotMatch = "The audience did not match the base url of this Atlassian Connect App"
+
+getPublicKey :: T.Text -> AppHandler (Maybe B.ByteString)
+getPublicKey kid = do
+  liftIO $ runRequest tlsManagerSettings GET ("https://connect-install-keys.atlassian.com/" <> kid) mempty (basicResponder responder)
+  where
+    responder :: Int -> BSL.ByteString -> Maybe B.ByteString
+    responder 200 body = Just . BSL.toStrict $ body
+    responder _ _ = Nothing
+
+getKeyId :: J.JWT a -> Maybe T.Text
+getKeyId = J.kid . J.header
 
 getClientKey :: J.JWT a -> Maybe J.StringOrURI
-getClientKey jwt = J.iss . J.claims $ jwt
+getClientKey = J.iss . J.claims
 
 getQSH :: J.JWT a -> Maybe T.Text
-getQSH = resultToMaybe . fromJSON <=< Map.lookup (T.pack "qsh") . J.unregisteredClaims . J.claims
+getQSH = resultToMaybe . fromJSON <=< Map.lookup (T.pack "qsh") . J.unClaimsMap . J.unregisteredClaims . J.claims
+
+getAUD :: J.JWT a -> Maybe T.Text
+getAUD = resultToMaybe . fromJSON <=< Map.lookup (T.pack "aud") . J.unClaimsMap . J.unregisteredClaims . J.claims
 
 getFirstJust :: [Maybe a] -> Maybe a
 getFirstJust = listToMaybe . catMaybes
@@ -141,7 +176,7 @@ getSub :: J.JWT a -> Maybe T.Text
 getSub = fmap (T.pack . show) . J.sub . J.claims
 
 getContext :: J.JWT a -> Maybe ContextMap
-getContext = resultToMaybe . fromJSON <=< Map.lookup (T.pack "context") . J.unregisteredClaims . J.claims
+getContext = resultToMaybe . fromJSON <=< Map.lookup (T.pack "context") . J.unClaimsMap . J.unregisteredClaims . J.claims
 
 resultToMaybe :: Result a -> Maybe a
 resultToMaybe (Success x) = Just x

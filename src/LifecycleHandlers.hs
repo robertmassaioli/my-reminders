@@ -6,10 +6,15 @@ module LifecycleHandlers
 
 import           Application
 import qualified Control.Arrow          as ARO
+import           Control.Monad          (unless)
+import           Control.Monad.Trans.Class           (lift)
+import           Control.Monad.Trans.Except
 import qualified Data.ByteString.Char8  as BC
 import           Data.List              (find)
 import           Data.Maybe             (isJust)
+import           Data.MaybeUtil
 import qualified Data.Text              as T
+import           HandlerHelpers                      (writeError)
 import qualified Network.URI            as NU
 import qualified Persistence.Tenant     as PT
 import qualified Snap.AtlassianConnect  as AC
@@ -29,14 +34,14 @@ installedHandler :: AppHandler ()
 installedHandler = maybe SH.respondBadRequest installedHandlerWithTenant =<< AC.getLifecycleResponse
 
 installedHandlerWithTenant :: AC.LifecycleResponse -> AppHandler ()
-installedHandlerWithTenant tenantInfo = do
-   validHosts <- fmap AC.connectHostWhitelist AC.getConnect
-   if validHostName validHosts tenantInfo
-      then insertTenantInfo tenantInfo >>= maybe tenantInsertionFailedResponse (const SH.respondNoContent)
-      else domainNotSupportedResponse
+installedHandlerWithTenant tenantInfo = writeError . runExceptT $ do
+   validHosts <- lift (AC.connectHostWhitelist <$> AC.getConnect)
+   unless (validHostName validHosts tenantInfo) $ throwE domainNotSupported
+   ExceptT (m2e tenantInsertionFailed <$> insertTenantInfo tenantInfo )
+   lift SH.respondNoContent
    where
-      tenantInsertionFailedResponse = SH.respondWithError SH.unauthorised "Failed to insert the new tenant. Not a valid host or the tenant information was invalid."
-      domainNotSupportedResponse = SH.respondWithError SH.unauthorised $ "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo)
+      tenantInsertionFailed = (SH.internalServer, "Failed to insert the new tenant. Not a valid host or the tenant information was invalid.")
+      domainNotSupported = (SH.unauthorised, "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo))
 
 insertTenantInfo :: AC.LifecycleResponse -> AppHandler (Maybe Integer)
 insertTenantInfo info = WT.withMaybeTenant $ \maybeTenantWithUser -> PT.insertTenantInformation (fst <$> maybeTenantWithUser) info

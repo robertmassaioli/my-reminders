@@ -44,10 +44,11 @@ extra-deps:
   # Pending merge of: https://github.com/markhibberd/network-api-support/pull/27
   - git: https://github.com/robertmassaioli/network-api-support.git
     commit: bada023fdb0f2fae69a2713cc10cef420d9b4c1f
-  - atlassian-connect-core-0.8.2.0
-  - atlassian-connect-descriptor-0.4.12.0
+  - atlassian-connect-core-0.10.0.2
+  - atlassian-connect-descriptor-0.4.13.0
   - snap-1.1.3.1
-  - jwt-0.7.2
+  - jwt-0.11.0
+  - cryptostore-0.2.1.0
   - aeson-1.4.7.1
   - heist-1.1.0.1
   - map-syntax-0.3

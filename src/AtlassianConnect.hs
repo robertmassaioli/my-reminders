@@ -26,6 +26,7 @@ addonDescriptor =
     , enableLicensing = Just False -- TODO Why is this a maybe type? What value does it add being potentially nothing?
     , apiMigrations = Just ApiMigrations
       { migrationGdpr = True
+      , migrationSignedInstall = True
       }
     }
   where
