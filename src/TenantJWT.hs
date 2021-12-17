@@ -10,6 +10,7 @@ import           AesonHelpers               (baseOptions, stripFieldNamePrefix)
 import           Application
 import           Control.Monad              (unless, when, join, (<=<))
 import           Control.Monad.IO.Class     (liftIO)
+import           Control.Monad.Trans.Class           (lift)
 import           Control.Monad.Trans.Except
 import           Data.Aeson
 import           Data.Maybe                 (isJust, listToMaybe, catMaybes)
@@ -115,6 +116,7 @@ getTenant unverifiedJwt = runExceptT $ do
 
 verifyTenant :: PT.EncryptedTenant -> UnverifiedJWT -> AppHandler (Either String AC.Tenant)
 verifyTenant eTenant unverifiedJwt = runExceptT $ do
+  connectConf <- lift $ AC.getConnect
   tenant <- ExceptT . TP.convertTenant $ eTenant
   case getKeyId unverifiedJwt of
     Nothing -> do
@@ -125,11 +127,16 @@ verifyTenant eTenant unverifiedJwt = runExceptT $ do
       publicKey <- ExceptT (pure . m2e readPuiblicKeyFailed $ J.readRsaPublicKey rawPublicKey)
       let signer = J.VerifyRSAPublicKey publicKey
       unless (isJust $ J.verify signer unverifiedJwt) $ throwE invalidSignature
+      aud <- ExceptT (pure . m2e noAudienceFound . getAUD $ unverifiedJwt)
+      let baseUrl = T.pack . show  . AC.connectBaseUrl $ connectConf
+      unless (baseUrl == aud) $ throwE audienceDidNotMatch
   pure tenant
   where
     invalidSignature = "Invalid signature for request. Danger! Request ignored."
     fetchPublicKeyFailed = "Failed to fetch and read the public key from the key server"
     readPuiblicKeyFailed = "Could not parse public key"
+    noAudienceFound = "There was no audience field in the JWT token"
+    audienceDidNotMatch = "The audience did not match the base url of this Atlassian Connect App"
 
 getPublicKey :: T.Text -> AppHandler (Maybe B.ByteString)
 getPublicKey kid = do
@@ -147,6 +154,9 @@ getClientKey = J.iss . J.claims
 
 getQSH :: J.JWT a -> Maybe T.Text
 getQSH = resultToMaybe . fromJSON <=< Map.lookup (T.pack "qsh") . J.unClaimsMap . J.unregisteredClaims . J.claims
+
+getAUD :: J.JWT a -> Maybe T.Text
+getAUD = resultToMaybe . fromJSON <=< Map.lookup (T.pack "aud") . J.unClaimsMap . J.unregisteredClaims . J.claims
 
 getFirstJust :: [Maybe a] -> Maybe a
 getFirstJust = listToMaybe . catMaybes
