@@ -38,8 +38,9 @@ installedHandlerWithTenant tenantInfo = writeError . runExceptT $ do
    validHosts <- lift (AC.connectHostWhitelist <$> AC.getConnect)
    unless (validHostName validHosts tenantInfo) $ throwE domainNotSupported
    ExceptT (m2e tenantInsertionFailed <$> insertTenantInfo tenantInfo )
+   lift SH.respondNoContent
    where
-      tenantInsertionFailed = (SH.unauthorised, "Failed to insert the new tenant. Not a valid host or the tenant information was invalid.")
+      tenantInsertionFailed = (SH.internalServer, "Failed to insert the new tenant. Not a valid host or the tenant information was invalid.")
       domainNotSupported = (SH.unauthorised, "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo))
 
 insertTenantInfo :: AC.LifecycleResponse -> AppHandler (Maybe Integer)
