@@ -15,7 +15,7 @@ executables:
     dependencies:
     - aeson >=0.8
     - atlassian-connect-core >= 0.10 && <0.11
-    - atlassian-connect-descriptor >=0.4.8
+    - atlassian-connect-descriptor >=0.4.13
     - base >=4.6 && <5
     - base64-bytestring ==1.*
     - boxes ==0.1.*
