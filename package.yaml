@@ -14,7 +14,7 @@ executables:
     source-dirs: src
     dependencies:
     - aeson >=0.8
-    - atlassian-connect-core >=0.8.1.0 && <0.9
+    - atlassian-connect-core >= 0.10 && <0.11
     - atlassian-connect-descriptor >=0.4.8
     - base >=4.6 && <5
     - base64-bytestring ==1.*
@@ -32,8 +32,9 @@ executables:
     - heist >=1.0 && <1.2
     - hostname ==1.0
     - http-client >=0.5 && <0.7
+    - http-client-tls >=0.2
     - http-types >= 0.8
-    - jwt ==0.7.*
+    - jwt ==0.11.*
     - lens ==4.*
     - lifted-base ==0.2.*
     - map-syntax >=0.2 && <0.4
@@ -106,6 +107,7 @@ tests:
     - heist
     - hostname
     - http-client
+    - http-client-tls
     - http-media
     - http-types
     - jwt
