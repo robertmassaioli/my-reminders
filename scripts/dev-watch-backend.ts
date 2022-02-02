@@ -117,6 +117,10 @@ class ExecutableWatcher {
         process.stderr.write(`${data}`);
       });
 
+      newProc.on('exit', () => {
+        process.stderr.write('Error: Parent process has finished. Maybe the port is already taken?\n');
+      });
+
       this.existingProcess = newProc;
     }
   }

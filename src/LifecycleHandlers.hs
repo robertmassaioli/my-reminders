@@ -12,7 +12,6 @@ import           Control.Monad.Trans.Except
 import qualified Data.ByteString.Char8  as BC
 import           Data.List              (find)
 import           Data.Maybe             (isJust)
-import           Data.MaybeUtil
 import qualified Data.Text              as T
 import           HandlerHelpers                      (writeError)
 import qualified Network.URI            as NU
@@ -37,13 +36,18 @@ installedHandlerWithTenant :: AC.LifecycleResponse -> AppHandler ()
 installedHandlerWithTenant tenantInfo = writeError . runExceptT $ do
    validHosts <- lift (AC.connectHostWhitelist <$> AC.getConnect)
    unless (validHostName validHosts tenantInfo) $ throwE domainNotSupported
-   ExceptT (m2e tenantInsertionFailed <$> insertTenantInfo tenantInfo )
+   insertionResult <- lift $ insertTenantInfo tenantInfo
+   let mappedResult = ARO.left tenantInsertErrorToHttpError insertionResult
+   lift $ either (\x -> SH.logErrorS . show $ x) (const $ return ()) mappedResult
+   except mappedResult
    lift SH.respondNoContent
    where
-      tenantInsertionFailed = (SH.internalServer, "Failed to insert the new tenant. Not a valid host or the tenant information was invalid.")
       domainNotSupported = (SH.unauthorised, "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo))
 
-insertTenantInfo :: AC.LifecycleResponse -> AppHandler (Maybe Integer)
+tenantInsertErrorToHttpError :: PT.TenantInsertError -> (Int, String)
+tenantInsertErrorToHttpError e = (SH.internalServer, "Failed to insert the new tenant. Not a valid host or the tenant information was invalid: " ++ show e)
+
+insertTenantInfo :: AC.LifecycleResponse -> AppHandler (Either PT.TenantInsertError Integer)
 insertTenantInfo info = WT.withMaybeTenant $ \maybeTenantWithUser -> PT.insertTenantInformation (fst <$> maybeTenantWithUser) info
 
 validHostName:: [AC.HostName] -> AC.LifecycleResponse -> Bool

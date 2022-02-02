@@ -6,6 +6,7 @@
 module Persistence.Tenant (
     lookupTenant
   , insertTenantInformation
+  , TenantInsertError(..)
   , removeTenantInformation
   , getTenantCount
   , hibernateTenant
@@ -24,6 +25,7 @@ import           Data.Aeson
 import           Data.Either.Combinators          (rightToMaybe)
 import           Data.Int
 import           Data.Maybe
+import           Data.MaybeUtil                   (m2e)
 import           Data.Time.Clock                  (UTCTime, getCurrentTime)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           GHC.Generics
@@ -77,10 +79,13 @@ removeTenantInformation clientKey =
 -- When creating a new tenant then the baseUrl cannot be the same as another one that already exists
 -- in the system
 
+data TenantInsertError = BaseUrlReuse | TenantBaseUrlLookupContradiction | TenantKeyDoesNotMatch | NewInsertFailed | TenantLookupFailed | MissingTenantFromJWT String
+   deriving (Eq, Show)
+
 insertTenantInformation
-   :: Maybe AC.Tenant
+   :: Either String AC.Tenant
    -> AC.LifecycleResponse
-   -> AppHandler (Maybe Integer)
+   -> AppHandler (Either TenantInsertError Integer)
 insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
    let newClientKey = AC.lrClientKey lri
    let newBaseUri = AC.lrBaseUrl lri
@@ -89,18 +94,21 @@ insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
    let newAndOldKeysEqual = fmap (== newClientKey) oldClientKey
    case (existingTenant, newAndOldKeysEqual, maybeTenant) of
       -- The base url is already being used by somebody else TODO should warn about this in production
-      (_, Just False, _) -> return Nothing
+      (_, Just False, _) -> return . Left $ BaseUrlReuse
       -- We could not find a tenant with the new key. But the base url found a old client key that matched the new one: error, contradiction
-      (Nothing, Just True, _)  -> error "This is a contradiction in state, we both could and could not find clientKeys."
+      (Nothing, Just True, _)  -> return . Left $ TenantBaseUrlLookupContradiction
       -- We have never seen this baseUrl and nobody is using that key: brand new tenant, insert
-      (Nothing, Nothing, _) -> rawInsertTenantInformation lri
+      (Nothing, Nothing, _) -> (m2e NewInsertFailed) <$> rawInsertTenantInformation lri
+      -- Could not match the tenant from the JWT token, so reporting an error
+      (_, _, Left missingTenantError) -> do
+         return . Left . MissingTenantFromJWT $ missingTenantError
       -- We have seen this tenant before but we may have new information for it. Update it.
-      (Just tenant, _, Just claimedTenant) | etKey tenant == AC.key claimedTenant -> do
+      (Just tenant, _, Right claimedTenant) | etKey tenant == AC.key claimedTenant -> do
          encryptedSharedSecret <- encryptSharedSecret lri
          let newTenant = genNewTenant encryptedSharedSecret
          updateTenantDetails newTenant
          wakeTenant newTenant
-         return . Just . etTenantId $ newTenant
+         return . Right . etTenantId $ newTenant
          where
             -- After much discussion it seems that the only thing that we want to update is the base
             -- url if it changes. Everything else should never change unless we delete the tenant
@@ -110,7 +118,8 @@ insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
                , etEncryptedSharedSecret = fromMaybe (etEncryptedSharedSecret tenant) (rightToMaybe potentialEncryptedSecret)
                }
       -- The authorisation between tenants does not match
-      (_, _, _) -> return Nothing
+      (_, _, _) -> do
+         return . Left $ TenantKeyDoesNotMatch
 
 updateTenantDetails :: EncryptedTenant ->  AppHandler Int64
 updateTenantDetails tenant =

@@ -49,13 +49,14 @@ withTenant tennantApply = do
         Left result -> SH.respondPlainWithError SH.badRequest result >> return Nothing
         Right tenant -> tennantApply tenant
 
-withMaybeTenant :: (Maybe AC.TenantWithUser -> AppHandler (Maybe a)) -> AppHandler (Maybe a)
+withMaybeTenant :: (Either String AC.TenantWithUser -> AppHandler a) -> AppHandler a
 withMaybeTenant tenantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
-    Left _ -> tenantApply Nothing
+    Left _ -> do
+      tenantApply (Left "Could not find a JWT token in the incoming request")
     Right unverifiedJwt -> do
-      possibleTenant <- either (const Nothing) Just <$> getTenant unverifiedJwt
+      possibleTenant <- getTenant unverifiedJwt
       tenantApply possibleTenant
 
 decodeByteString :: B.ByteString -> Maybe UnverifiedJWT
@@ -127,7 +128,7 @@ verifyTenant eTenant unverifiedJwt = runExceptT $ do
       publicKey <- ExceptT (pure . m2e readPuiblicKeyFailed $ J.readRsaPublicKey rawPublicKey)
       let signer = J.VerifyRSAPublicKey publicKey
       unless (isJust $ J.verify signer unverifiedJwt) $ throwE invalidSignature
-      aud <- ExceptT (pure . m2e noAudienceFound . getAUD $ unverifiedJwt)
+      aud <- except . m2e noAudienceFound . getAUD $ unverifiedJwt
       let baseUrl = T.pack . show  . AC.connectBaseUrl $ connectConf
       unless (baseUrl == aud) $ throwE audienceDidNotMatch
   pure tenant
@@ -156,7 +157,7 @@ getQSH :: J.JWT a -> Maybe T.Text
 getQSH = resultToMaybe . fromJSON <=< Map.lookup (T.pack "qsh") . J.unClaimsMap . J.unregisteredClaims . J.claims
 
 getAUD :: J.JWT a -> Maybe T.Text
-getAUD = resultToMaybe . fromJSON <=< Map.lookup (T.pack "aud") . J.unClaimsMap . J.unregisteredClaims . J.claims
+getAUD = listToMaybe . fmap J.stringOrURIToText . J.auds . J.claims
 
 getFirstJust :: [Maybe a] -> Maybe a
 getFirstJust = listToMaybe . catMaybes
