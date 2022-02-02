@@ -54,12 +54,9 @@ withMaybeTenant tenantApply = do
   parsed <- sequence [getJWTTokenFromParam, getJWTTokenFromAuthHeader]
   case firstRightOrLefts parsed of
     Left _ -> do
-      SH.logErrorS "Could not find JWT token."
       tenantApply (Left "Could not find a JWT token in the incoming request")
     Right unverifiedJwt -> do
       possibleTenant <- getTenant unverifiedJwt
-      SH.logErrorS . show $ unverifiedJwt
-      SH.logErrorS . show $ possibleTenant
       tenantApply possibleTenant
 
 decodeByteString :: B.ByteString -> Maybe UnverifiedJWT
