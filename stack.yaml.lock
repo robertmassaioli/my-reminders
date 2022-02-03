@@ -146,15 +146,15 @@ packages:
     commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
 - original:
     git: https://github.com/robertmassaioli/snap-server.git
-    commit: ec632f1904d596d63fb13dfcb9fe141fcf09f83a
+    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
   completed:
     pantry-tree:
-      sha256: 25fc8972c7c8016c315b61e2ff6139daf3595a160d3d5744117b733fb453e464
+      sha256: a037f9ebcd661797f84c6e6b73648aa9a6c579c706ec57b3f763a1ee224445e8
       size: 13837
     version: 1.1.2.0
     git: https://github.com/robertmassaioli/snap-server.git
     name: snap-server
-    commit: ec632f1904d596d63fb13dfcb9fe141fcf09f83a
+    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
 - original:
     hackage: directory-1.3.6.1
   completed:
