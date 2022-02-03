@@ -63,6 +63,8 @@ extra-deps:
   # Pending release of https://github.com/mightybyte/snaplet-postgresql-simple/pull/55 to Hackage
   - git: https://github.com/mightybyte/snaplet-postgresql-simple.git
     commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
+  - git: https://github.com/robertmassaioli/snap-server.git
+    commit: ec632f1904d596d63fb13dfcb9fe141fcf09f83a
   - directory-1.3.6.1
   - unix-2.7.2.2
   - process-1.6.11.0

@@ -48,7 +48,8 @@ module.exports = {
       title: 'Hackathon for Cloud',
       template: 'public/index.html',
       publicPath: '/static/frontend/',
-      filename: 'index.html'
+      filename: 'index.html',
+      favicon: './public/favicon.ico'
     }),
     new webpack.DefinePlugin({
       'process': undefined,
