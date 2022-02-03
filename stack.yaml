@@ -64,7 +64,7 @@ extra-deps:
   - git: https://github.com/mightybyte/snaplet-postgresql-simple.git
     commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
   - git: https://github.com/robertmassaioli/snap-server.git
-    commit: ec632f1904d596d63fb13dfcb9fe141fcf09f83a
+    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
   - directory-1.3.6.1
   - unix-2.7.2.2
   - process-1.6.11.0
