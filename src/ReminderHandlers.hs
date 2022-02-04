@@ -10,14 +10,20 @@ module ReminderHandlers
 
 import           AesonHelpers                      (baseOptions, stripFieldNamePrefix)
 import           Application
+import           Control.Monad                     (when, unless)
+import           Control.Monad.Trans.Except
 import           Data.Aeson
+import           Data.MaybeUtil
 import           Data.Time.Clock
 import           GHC.Generics
+import           HandlerHelpers                    (writeError)
 import           SnapHelpers
 import qualified Data.ByteString.Char8             as BC
 import qualified Data.Text                         as T
+import qualified Model.UserDetails                 as HU
 import qualified Persistence.Reminder              as P
 import qualified Snap.AtlassianConnect             as AC
+import qualified Snap.AtlassianConnect.HostRequest as AC
 import qualified Snap.Core                         as SC
 import qualified WithToken                         as WT
 
@@ -197,17 +203,18 @@ addReminderHandler connectTenant = do
 -- TODO Just use the aaid we get from the JWT here
 addReminder :: AC.TenantWithUser -> ReminderRequest -> AppHandler ()
 addReminder (_, Nothing) _ = respondWithError unauthorised "You need to be logged in so that you can create a reminder. That way the reminder is against your account."
-addReminder (tenant, Just userAaid) reminderRequest
-    | userAaid /= requestAaid = respondWithError badRequest userMismatchError
-    | otherwise =
-         addReminderFromRequest reminderRequest tenant requestAaid >>=
-            maybe (respondWithError internalServer insertFailedError)
-                  (const respondNoContent)
+addReminder (tenant, Just userAaid) reminderRequest = writeError . runExceptT $ do
+   when (userAaid /= requestAaid) $ throwE userMismatchError
+   canSeeIssue <- withExceptT cantCheckPerms . ExceptT $ HU.canViewIssue tenant userAaid (AC.issueId . prqIssue $ reminderRequest)
+   unless canSeeIssue $ throwE cantViewIssueError
+   ExceptT (m2e insertFailedError <$> addReminderFromRequest reminderRequest tenant requestAaid)
   where
     requestAaid = prqUserAaid reminderRequest
     -- Error strings
-    userMismatchError = "Given the details for user " ++ show requestAaid ++ " however Atlassian Connect thinks you are " ++ show userAaid
-    insertFailedError = "Failed to insert new reminder: " ++ show userAaid
+    userMismatchError = (badRequest, "Given the details for user " ++ show requestAaid ++ " however Atlassian Connect thinks you are " ++ show userAaid)
+    cantCheckPerms per = (internalServer, "Could not work out if you could view this issue: " ++ (T.unpack . AC.perMessage $ per))
+    cantViewIssueError = (forbidden, "You can't view this issue so you cannot create a reminder for this issue")
+    insertFailedError = (internalServer, "Failed to insert new reminder: " ++ show userAaid)
 
 addReminderFromRequest :: ReminderRequest -> AC.Tenant -> P.UserAaid -> AppHandler (Maybe Integer)
 addReminderFromRequest reminderRequest tenant userAaid =
