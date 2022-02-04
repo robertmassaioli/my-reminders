@@ -1,5 +1,5 @@
 name: my-reminders
-version: '0.32'
+version: '0.33'
 synopsis: My reminders plugin for Atlassian Cloud
 description: Set issue reminders for the future!
 category: Web

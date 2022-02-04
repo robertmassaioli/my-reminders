@@ -38,7 +38,14 @@ function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Prom
 }
 
 function createReminder(data: AddReminderRequest, pc: PageContext): Promise<void> {
-    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined);
+    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined).catch(() => {
+        AP.flag.create({
+            title: 'Could not create reminder',
+            body: 'Please try again and contact support if the problem persists',
+            type: 'error',
+            close: 'auto'
+        });
+    });
 }
 
 function randomIntegerInRange(start: number, end: number): number {
