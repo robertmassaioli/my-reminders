@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-17.9
+resolver: lts-18.28
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -55,7 +55,8 @@ extra-deps:
   - pwstore-fast-2.4.4
   - xmlhtml-0.2.5.2
   - th-abstraction-0.3.2.0
-  - bifunctors-5.5.6
+  - profunctors-5.5.2
+  - bifunctors-5.5.7
   - free-5.1.3
   - invariant-0.5.3
   - semigroupoids-5.3.4
@@ -69,10 +70,11 @@ extra-deps:
   - unix-2.7.2.2
   - process-1.6.11.0
   - Cabal-3.2.1.0
-  - dbmigrations-2.0.0
-  - yaml-light-0.1.4
-  - HsSyck-0.53
+  - dbmigrations-2.1.0
   - HDBC-postgresql-2.5.0.0
+  - dlist-0.8.0.8
+  - parallel-io-0.3.5
+  - mwc-random-0.14.0.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
