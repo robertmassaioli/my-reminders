@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Healthcheck
    ( healthcheckRequest
@@ -157,7 +157,7 @@ data HealthcheckRunResult = HealthcheckRunResult
    }
 
 instance ToJSON HealthcheckRunResult where
-   toJSON hrr@(HealthcheckRunResult {}) = object [ T.pack "status" .= hrrStatus hrr ]
+   toJSON hrr@(HealthcheckRunResult {}) = object [ "status" .= hrrStatus hrr ]
 
 data HealthStatus = HealthStatus
    { hsName          :: T.Text
