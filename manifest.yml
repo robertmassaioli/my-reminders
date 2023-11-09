@@ -1,0 +1,83 @@
+app:
+  id: ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52
+  connect:
+    key: com.not-atlassian.myreminders.local
+    remote: connect
+    authentication: jwt
+  features:
+    autoUserConsent: true
+remotes:
+  - key: connect
+    baseUrl: https://rmassaioli.public.atlastunnel.com
+connectModules:
+  jira:lifecycle:
+    - key: lifecycle-events
+      installed: /installed
+      uninstalled: /uninstalled
+  jira:webPanels:
+    - location: atl.jira.view.issue.right.context
+      url: /panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}
+      params: {}
+      key: view-issue-reminders
+      name:
+        value: My reminders
+      tooltip:
+        value: Your reminders for this issue.
+      conditions:
+        - invert: false
+          params: {}
+          condition: user_is_logged_in
+  jira:generalPages:
+    - location: system.user.options/personal
+      url: /panel/jira/reminders/view
+      params: {}
+      key: view-my-reminders
+      name:
+        value: My Reminders
+      conditions: []
+    - location: completely-invalid-location
+      url: /panel/v2/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}
+      params: {}
+      key: create-reminder-dialog
+      name:
+        value: Create reminder
+      conditions:
+        - invert: false
+          params: {}
+          condition: user_is_logged_in
+  jira:webhooks:
+    - event: jira:issue_updated
+      url: /rest/webhook/issue/update
+      key: webhook-1
+    - event: jira:issue_deleted
+      url: /rest/webhook/issue/delete
+      key: webhook-2
+  jira:jiraIssueGlances:
+    - icon:
+        height: 24
+        url: /static/frontend/logo.svg
+        width: 24
+      content:
+        type: label
+        label:
+          value: My Reminders
+      key: view-issue-glance-reminders
+      name:
+        value: My Reminders
+      conditions: []
+      target:
+        url: /panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}
+        type: web_panel
+modules:
+  jira:globalPage:
+    - key: sample-app-can-delete-hello-world
+      function: main
+      title: My Reminders General Page Example
+  function:
+    - key: main
+      handler: index.run
+permissions:
+  scopes:
+    - read:connect-jira
+    - write:connect-jira
+    - read:jira-work
