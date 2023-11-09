@@ -16,7 +16,7 @@ WORKDIR /home/frontend
 RUN apt-get update && apt-get install -y openjdk-11-jre-headless
 RUN yarn install && yarn build
 
-FROM haskell:9.8.1 AS build
+FROM haskell:9.4.7 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
