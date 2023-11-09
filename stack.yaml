@@ -17,7 +17,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-18.28
+resolver: lts-21.19
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -43,38 +43,64 @@ packages:
 extra-deps:
   # Pending merge of: https://github.com/markhibberd/network-api-support/pull/27
   - git: https://github.com/robertmassaioli/network-api-support.git
-    commit: bada023fdb0f2fae69a2713cc10cef420d9b4c1f
-  - atlassian-connect-core-0.10.0.2
-  - atlassian-connect-descriptor-0.4.13.0
-  - snap-1.1.3.1
-  - jwt-0.11.0
-  - cryptostore-0.2.1.0
-  - aeson-1.4.7.1
-  - heist-1.1.0.1
-  - map-syntax-0.3
-  - pwstore-fast-2.4.4
-  - xmlhtml-0.2.5.2
-  - th-abstraction-0.3.2.0
-  - profunctors-5.5.2
-  - bifunctors-5.5.7
-  - free-5.1.3
-  - invariant-0.5.3
-  - semigroupoids-5.3.4
-  - snap-loader-static-1.0.0.1
+    commit: 94ab82c04795f515ed72d81d59392a52db998b4d
   # Pending release of https://github.com/mightybyte/snaplet-postgresql-simple/pull/55 to Hackage
-  - git: https://github.com/mightybyte/snaplet-postgresql-simple.git
-    commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
+  - git: https://github.com/robertmassaioli/snaplet-postgresql-simple.git
+    commit: 44d27ac90d7b7928afea4c8dfaddd81913d2fbb8
   - git: https://github.com/robertmassaioli/snap-server.git
-    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
-  - directory-1.3.6.1
-  - unix-2.7.2.2
-  - process-1.6.11.0
-  - Cabal-3.2.1.0
-  - dbmigrations-2.1.0
-  - HDBC-postgresql-2.5.0.0
-  - dlist-0.8.0.8
-  - parallel-io-0.3.5
-  - mwc-random-0.14.0.0
+    commit: 2a07719b245a25abb7771b3f82ea0921d6139554
+  # my-reminders
+  - atlassian-connect-descriptor-0.4.15.0
+  - atlassian-connect-core-0.10.0.2
+  - git: https://github.com/robertmassaioli/dbmigrations.git
+    commit: 2cfdf435cb50d9c6cc80231a5f98dfdfcdeb64b6
+  - HDBC-postgresql-2.5.0.1
+  - heist-1.1.1.2
+  - snap-loader-static-1.0.0.1
+  # atlassian-connect-core
+  - snap-1.1.3.3
+  - snap-core-1.0.5.1
+
+  #- jwt-0.11.0
+  #- cryptostore-0.2.1.0
+  #- heist-1.1.1.2
+  #- http-client-0.6.4.1
+  #- http-client-tls-0.3.5.3
+  #- map-syntax-0.3
+  #- lens-4.14
+  #- pwstore-fast-2.4.4
+  ##- xmlhtml-0.2.5.2
+  #- th-abstraction-0.3.2.0
+  ##- profunctors-5.6
+  ##- bifunctors-5.5.7
+  ##- free-5.1.3
+  ##- invariant-0.5.3
+  ##- semigroupoids-5.3.4
+  #- snap-loader-static-1.0.0.1
+  ##- directory-1.3.6.1
+  ##- unix-2.7.2.2
+  ##- process-1.6.11.0
+  #- dbmigrations-2.1.0
+  #- aeson-1.4.7.1
+  #- HDBC-postgresql-2.5.0.1
+  #- dlist-0.8.0.8
+  ##- parallel-io-0.3.5
+  #- mwc-random-0.14.0.0
+  #- ghc-prim-0.6.1
+  #- template-haskell-2.16.0.0
+  #- bytestring-0.12.0.2
+  #- text-2.1
+  #- unix-2.8.3.0
+  #- directory-1.3.8.1
+  #- exceptions-0.10.7
+  #- filepath-1.4.100.4
+  #- binary-0.8.9.1
+  #- process-1.6.18.0
+  #- parsec-3.1.17.0
+  #- containers-0.5.7.1
+  #- vector-0.11.0.0
+  #- data-array-byte-0.1.0.1
+  #- Cabal-3.2.1.0 -- too low for base 4.15
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

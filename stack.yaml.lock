@@ -5,16 +5,45 @@
 
 packages:
 - completed:
-    commit: bada023fdb0f2fae69a2713cc10cef420d9b4c1f
+    commit: 94ab82c04795f515ed72d81d59392a52db998b4d
     git: https://github.com/robertmassaioli/network-api-support.git
     name: network-api-support
     pantry-tree:
-      sha256: e51d9b9c1eca8cd7299386d260e6f4aced3f699add6e353c8b031589cb2da4cc
-      size: 1419
+      sha256: 8faa5610fa77ddac5bca67f9eb54beaf85a1bbf5c991258b31913bc973559ae2
+      size: 1330
     version: 0.3.5
   original:
-    commit: bada023fdb0f2fae69a2713cc10cef420d9b4c1f
+    commit: 94ab82c04795f515ed72d81d59392a52db998b4d
     git: https://github.com/robertmassaioli/network-api-support.git
+- completed:
+    commit: 44d27ac90d7b7928afea4c8dfaddd81913d2fbb8
+    git: https://github.com/robertmassaioli/snaplet-postgresql-simple.git
+    name: snaplet-postgresql-simple
+    pantry-tree:
+      sha256: d2f60036bc3e02a7842391af832febdd60e3c7ffaba9bccc831bd0fcac260264
+      size: 913
+    version: 1.2.0.0
+  original:
+    commit: 44d27ac90d7b7928afea4c8dfaddd81913d2fbb8
+    git: https://github.com/robertmassaioli/snaplet-postgresql-simple.git
+- completed:
+    commit: 2a07719b245a25abb7771b3f82ea0921d6139554
+    git: https://github.com/robertmassaioli/snap-server.git
+    name: snap-server
+    pantry-tree:
+      sha256: e728b1c855e181ec0d13fb58921229b09f7842ec294315c9db6196de13ac17bf
+      size: 13785
+    version: 1.1.2.1
+  original:
+    commit: 2a07719b245a25abb7771b3f82ea0921d6139554
+    git: https://github.com/robertmassaioli/snap-server.git
+- completed:
+    hackage: atlassian-connect-descriptor-0.4.15.0@sha256:da30c9f5d1f325409e69bcedba916d62adcca2878bb4dc82b01241968f3ccc77,2369
+    pantry-tree:
+      sha256: 50a1e7a0dc3c3bfc1a5c991a32d79318eef74b1390639ac98329b38735f58196
+      size: 1289
+  original:
+    hackage: atlassian-connect-descriptor-0.4.15.0
 - completed:
     hackage: atlassian-connect-core-0.10.0.2@sha256:0ef0e00d92f63a4e0f8a2a81e33d6e76847aee5b0e4d9e05238f633806526c43,2823
     pantry-tree:
@@ -23,110 +52,30 @@ packages:
   original:
     hackage: atlassian-connect-core-0.10.0.2
 - completed:
-    hackage: atlassian-connect-descriptor-0.4.13.0@sha256:adce0c1fdf87fabdf897bb1f016e39f79aecbde88ca3e0ed7b852e8557e07fd8,2374
+    commit: 2cfdf435cb50d9c6cc80231a5f98dfdfcdeb64b6
+    git: https://github.com/robertmassaioli/dbmigrations.git
+    name: dbmigrations
     pantry-tree:
-      sha256: 435e44dbcf40591e74acc67370bc58611ebd7d55b4c1fb3cf0495cb6df87c979
-      size: 1289
+      sha256: 54d4125a75503fc71388090fb1244ab39ebbe09a33c4fb157b76bbf9f95a2d75
+      size: 4142
+    version: 2.1.0
   original:
-    hackage: atlassian-connect-descriptor-0.4.13.0
+    commit: 2cfdf435cb50d9c6cc80231a5f98dfdfcdeb64b6
+    git: https://github.com/robertmassaioli/dbmigrations.git
 - completed:
-    hackage: snap-1.1.3.1@sha256:ad589f2838a10bde793150e113c147996ba9dc8b522f34d1eb3297493c8d2672,8901
+    hackage: HDBC-postgresql-2.5.0.1@sha256:37bb911cd996d12c91fa711002877f32f91bcc488de76d85a05865c3af9dc580,3032
     pantry-tree:
-      sha256: f301fd1bf3e0f249892764e04f5b4db6bc39a05e2323236f0b3f1cdcf1ace053
-      size: 5743
+      sha256: bb1e349a28844e59ed36e1a3963cd6946e57f5e39244a6d36397d6291d68a138
+      size: 1611
   original:
-    hackage: snap-1.1.3.1
+    hackage: HDBC-postgresql-2.5.0.1
 - completed:
-    hackage: jwt-0.11.0@sha256:69e19a22f2f6908b798ed1c3e6152d93af168ce1257d2d92995b67dc028bbcd5,4146
+    hackage: heist-1.1.1.2@sha256:5b349daca9db76147bf7c26b0e10c6a4a5b93f8137658ae29de25d86d3de45e8,8655
     pantry-tree:
-      sha256: 3c38ba8478027ccb6d7ef2881aad2553dc8049ee4ce785126d4c440da7fd43e7
-      size: 1029
+      sha256: cb4f6e7030a1267ffbf048b32c639fe60cfd67cb6738f56b5f45015daaf3e31a
+      size: 7407
   original:
-    hackage: jwt-0.11.0
-- completed:
-    hackage: cryptostore-0.2.1.0@sha256:9896e2984f36a1c8790f057fd5ce3da4cbcaf8aa73eb2d9277916886978c5b19,3881
-    pantry-tree:
-      sha256: e392f8dded050690140636b81433fb350bd87dd21643dde9a2f0aa344cf038e5
-      size: 8596
-  original:
-    hackage: cryptostore-0.2.1.0
-- completed:
-    hackage: aeson-1.4.7.1@sha256:6d8d2fd959b7122a1df9389cf4eca30420a053d67289f92cdc0dbc0dab3530ba,7098
-    pantry-tree:
-      sha256: caa9306e519c601ab0170d113daa03c1163db53e5466be2968bbd61a771bebcb
-      size: 40133
-  original:
-    hackage: aeson-1.4.7.1
-- completed:
-    hackage: heist-1.1.0.1@sha256:121288965f6c77b0d06a09c5d8a3b80f9a083830d06857555e99f10868b18dcb,9311
-    pantry-tree:
-      sha256: 7144a2b1802790977bfbd30ea14ceca59d42107cf5d5b6f2806191e4d01edba5
-      size: 7354
-  original:
-    hackage: heist-1.1.0.1
-- completed:
-    hackage: map-syntax-0.3@sha256:9b92c51bcaf1d55f60f8aaef9a96adb29acb77112631fa4110fd5dcae54be7a6,2420
-    pantry-tree:
-      sha256: bed5e77f083feeda1c13daf961d29ca1fbe96b7a87302c416fb1122a99d779cb
-      size: 558
-  original:
-    hackage: map-syntax-0.3
-- completed:
-    hackage: pwstore-fast-2.4.4@sha256:9b6a37510d8b9f37f409a8ab3babac9181afcaaa3fce8ba1c131a7ed3de30698,1351
-    pantry-tree:
-      sha256: ff4a44ede62515efe5cd366a5803f7183c811c4a0cf56eea88da94181c4844c0
-      size: 270
-  original:
-    hackage: pwstore-fast-2.4.4
-- completed:
-    hackage: xmlhtml-0.2.5.2@sha256:3f0990f725551985d777e8edb5563fe99aee998f1fde6a7633f720f76df54701,46997
-    pantry-tree:
-      sha256: bb1bd95db3738e18d112bbc9724510ee64a51b7eda61494507f4957c5e2281f6
-      size: 61835
-  original:
-    hackage: xmlhtml-0.2.5.2
-- completed:
-    hackage: th-abstraction-0.3.2.0@sha256:9b5b4e6e2bbff9b075ad7751ee98e2107090bd17b51d5442695b8990e4db6521,1851
-    pantry-tree:
-      sha256: 21e260e558db166dc70f3002e7a0d22dd57d0b9e7842dd9de5e2f9f887e1275e
-      size: 583
-  original:
-    hackage: th-abstraction-0.3.2.0
-- completed:
-    hackage: profunctors-5.5.2@sha256:0d824ae4b7cdde33ec4c677ded9e373e057c3a8e2c6b0532c183f9413db6e32c,2176
-    pantry-tree:
-      sha256: 6c904ead0a6d963c6ac6222f9317571197e37bcef7b4471eea7f5763bdc33bce
-      size: 1639
-  original:
-    hackage: profunctors-5.5.2
-- completed:
-    hackage: bifunctors-5.5.7@sha256:19d907460f166ade334e9d85d7c0bcc58b57da5e8f802b28bba6d8d81fd3ee70,3554
-    pantry-tree:
-      sha256: 3bc25973f9af147725390318a2591a69832db833132b6479eff4d9299fcaef1a
-      size: 1755
-  original:
-    hackage: bifunctors-5.5.7
-- completed:
-    hackage: free-5.1.3@sha256:604c27b6ba0a560c8a1377ad76e5bbb8528e924d6b0590215d815faddbec0b70,4165
-    pantry-tree:
-      sha256: ceaac95eb18e8d1f232694a2f6936867bc71f8888d43b0a4d3f0649054314298
-      size: 3362
-  original:
-    hackage: free-5.1.3
-- completed:
-    hackage: invariant-0.5.3@sha256:5b74af0b909c44b17298a9c04bcd0aea030f36a869da9112b103890f3aa2516f,3323
-    pantry-tree:
-      sha256: 40f1a8e80dce0016c9373ad2e491d8c0c14f6f447ffaee7b614950c36596d403
-      size: 650
-  original:
-    hackage: invariant-0.5.3
-- completed:
-    hackage: semigroupoids-5.3.4@sha256:120873dfa8084ec92745c766336e90d648c347ab99ce55329d5af36dbd3732ba,7596
-    pantry-tree:
-      sha256: 2b3db5fbe5f68fc52532e4fa988d01d69c8845c49714c9c31a47309baa1df836
-      size: 1990
-  original:
-    hackage: semigroupoids-5.3.4
+    hackage: heist-1.1.1.2
 - completed:
     hackage: snap-loader-static-1.0.0.1@sha256:d2d333ccdde98743cfb832822563caec062bb32f0821f6773c5f790450bdb2cb,1172
     pantry-tree:
@@ -135,93 +84,22 @@ packages:
   original:
     hackage: snap-loader-static-1.0.0.1
 - completed:
-    commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
-    git: https://github.com/mightybyte/snaplet-postgresql-simple.git
-    name: snaplet-postgresql-simple
+    hackage: snap-1.1.3.3@sha256:24ba77345d3ac991e98c3d0fd66d0ee52f2f78c6041d3e3476e98ba3355f21b2,8514
     pantry-tree:
-      sha256: 2b05a68b7bcf86910096a141e6a9a57fbc648316897acd93d169dfbbe33d156d
-      size: 913
-    version: 1.2.0.0
+      sha256: 3d59117bd08a81511d997e0c89edf10a74af8b462706bcb960f9ae4e6f10d79b
+      size: 5795
   original:
-    commit: f477f1e4dffecddde2c902f1b1ace8de9adab2c3
-    git: https://github.com/mightybyte/snaplet-postgresql-simple.git
+    hackage: snap-1.1.3.3
 - completed:
-    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
-    git: https://github.com/robertmassaioli/snap-server.git
-    name: snap-server
+    hackage: snap-core-1.0.5.1@sha256:e84e14c59ef925cf83312103449e4253800489d051991675b747ee5bcc6dda4e,9502
     pantry-tree:
-      sha256: a037f9ebcd661797f84c6e6b73648aa9a6c579c706ec57b3f763a1ee224445e8
-      size: 13837
-    version: 1.1.2.0
+      sha256: 58715afcb05dfac897b3a4ab3dd8e34f99f17c65d470f589202ef62ead8453ca
+      size: 3429
   original:
-    commit: f0013a01645096c9b02e0b2f28154ae073b4fe92
-    git: https://github.com/robertmassaioli/snap-server.git
-- completed:
-    hackage: directory-1.3.6.1@sha256:8878947a9f521c0f2ed02cea7c4b3d90a1c16154e559858f8c2bb81b14ae7c92,2940
-    pantry-tree:
-      sha256: 7602bce4e5a3ed7bee77be1aeba4cdabf02d1575c6e515d383c851cd8fb7caa2
-      size: 3433
-  original:
-    hackage: directory-1.3.6.1
-- completed:
-    hackage: unix-2.7.2.2@sha256:ddb8fc5d5eede81dfad7846eceb65267fe4cf8b4f324bc74542f694a32335ef2,3496
-    pantry-tree:
-      sha256: c40c15db09b6af866110699f7aa517e98dbcbc7dc339c1443fbcfbf5c4c4b28e
-      size: 3536
-  original:
-    hackage: unix-2.7.2.2
-- completed:
-    hackage: process-1.6.11.0@sha256:472c51a8903b55b1b423e7e4050facd1dce5e323fd81e5953f02ca500bb9d58c,2819
-    pantry-tree:
-      sha256: ff658d75f142515e99bd057382204452445b8e2c1e8003acfd6a30637f42293a
-      size: 1283
-  original:
-    hackage: process-1.6.11.0
-- completed:
-    hackage: Cabal-3.2.1.0@sha256:8743076ec022296f9771d962000c9ca3a0fe02e68c37b992c63e382a675f791d,27482
-    pantry-tree:
-      sha256: 92682a2aab8d967de341acff88525376eb9a31f53f094e0878c51c2886564f3a
-      size: 41224
-  original:
-    hackage: Cabal-3.2.1.0
-- completed:
-    hackage: dbmigrations-2.1.0@sha256:a997fa29210d54367ff53188850d9ce6945376491b654d5d7a12da963e510de0,5304
-    pantry-tree:
-      sha256: 5f0f60c3a1707c395a93f093da895f815a3c072efb2a86ee6643a46400f8134e
-      size: 3929
-  original:
-    hackage: dbmigrations-2.1.0
-- completed:
-    hackage: HDBC-postgresql-2.5.0.0@sha256:10ceb4f456bbd4768a3f0ab425d9b4d40cb0e17992083b881b37fe5d91b58aba,3050
-    pantry-tree:
-      sha256: 9db472e5f433c07d097b6cdc6af354d0a40c0fd3c7205510973380ced739c764
-      size: 1611
-  original:
-    hackage: HDBC-postgresql-2.5.0.0
-- completed:
-    hackage: dlist-0.8.0.8@sha256:90ca348bffdc62d7070bcf0e97c728f8d01b24fbc7ea08d2909157d0da76534c,2066
-    pantry-tree:
-      sha256: 1b5b9142a932f15c77f758f92f90bea6c805c42d4c62f7a697e8e4f6cf1ad6e6
-      size: 426
-  original:
-    hackage: dlist-0.8.0.8
-- completed:
-    hackage: parallel-io-0.3.5@sha256:97db32eb84b3141f4957f6d208c0ef8adce647cbf68099417e93c7d9a45f9b35,3482
-    pantry-tree:
-      sha256: 9c81a6a331620aca19c7f8cfb88df2a9584346820687d75147b2a7bab87e112b
-      size: 706
-  original:
-    hackage: parallel-io-0.3.5
-- completed:
-    hackage: mwc-random-0.14.0.0@sha256:6ae33e246e91f66f621caabb2323b431c8dab57427a417a98f5cac3d82eb7b21,1810
-    pantry-tree:
-      sha256: e11223e91b7630bac2c7db96b5b8a9a950d66e4998774d39cfe22984148a810d
-      size: 550
-  original:
-    hackage: mwc-random-0.14.0.0
+    hackage: snap-core-1.0.5.1
 snapshots:
 - completed:
-    sha256: 428ec8d5ce932190d3cbe266b9eb3c175cd81e984babf876b64019e2cbe4ea68
-    size: 590100
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/28.yaml
-  original: lts-18.28
+    sha256: fb482b8e2d5d061cdda4ba1da2957c012740c893a5ee1c1b99001adae7b1fbe7
+    size: 640046
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/19.yaml
+  original: lts-21.19
