@@ -17,11 +17,8 @@ module Persistence.Tenant (
   , EncryptedTenant(..)
 ) where
 
-import           AesonHelpers
 import           Application
-import           Control.Monad
 import           Control.Monad.IO.Class
-import           Data.Aeson
 import           Data.Either.Combinators          (rightToMaybe)
 import           Data.Int
 import           Data.Maybe
