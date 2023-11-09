@@ -25,6 +25,7 @@ pipelines:
             - stack-home
           script:
             - (apt-get update || true) && apt-get install -y libpq-dev pkgconf
+            - cd remotes/connect
             - mkdir -p frontend/build && echo "{}" > frontend/build/asset-manifest.json
             - stack setup && stack build -j4 --test
       - step:
@@ -34,13 +35,14 @@ pipelines:
           image: node:14
           script:
             - apt-get update && apt-get install -y openjdk-11-jre-headless
-            - cd frontend
+            - cd remotes/connect/frontend
             - yarn && yarn build
   branches:
     master:
       - step:
-          name: Build docker image
+          name: Build Connect Remote docker image
           script:
+            - cd remotes/connect
             # set up step variables and auth data
             - export DOCKER_URL="docker-proxy.services.atlassian.com"
             - docker login -u=sox -p=$PIPELINES_JWT_TOKEN docker-proxy.services.atlassian.com
@@ -52,10 +54,11 @@ pipelines:
           caches:
             - docker
       - step:
-          name: Deploy to staging
+          name: Deploy Connect Remote to staging
           deployment: staging
           image: node:latest
           script:
+            - cd remotes/connect
             # set up step variables and auth data
             - export DOCKER_URL="docker-proxy.services.atlassian.com"
             - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
@@ -73,11 +76,12 @@ pipelines:
           caches:
             - docker
       - step:
-          name: Deploy to prod
+          name: Deploy Connect Remote to prod
           deployment: production
           trigger: manual
           image: node:latest
           script:
+            - cd remotes/connect
             # set up step variables and auth data
             - export DOCKER_URL="docker-proxy.services.atlassian.com"
             - export MICROS_TOKEN="$MICROS_TOKEN:$PIPELINES_JWT_TOKEN"
