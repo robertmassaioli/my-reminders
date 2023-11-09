@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev-watch": "ts-node --project ./tsconfig.json scripts/dev-watch-backend.ts",
+    "start-tunnel": "atlas tunnel --port 8080 --public",
     "build": "cd frontend && npm run build",
     "run-psql": "PGPASSWORD='myreminders' psql -h localhost -U myreminders",
     "moo": "DBM_DATABASE=\"postgresql://myreminders:myreminders@localhost:5432/myreminders\" DBM_MIGRATION_STORE=./dbmigrations DBM_LINEAR_MIGRATIONS=true ~/.local/bin/moo-postgresql",

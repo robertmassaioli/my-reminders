@@ -17,7 +17,6 @@ connectModules:
   jira:webPanels:
     - location: atl.jira.view.issue.right.context
       url: /panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}
-      params: {}
       key: view-issue-reminders
       name:
         value: My reminders
@@ -25,25 +24,20 @@ connectModules:
         value: Your reminders for this issue.
       conditions:
         - invert: false
-          params: {}
           condition: user_is_logged_in
   jira:generalPages:
     - location: system.user.options/personal
       url: /panel/jira/reminders/view
-      params: {}
       key: view-my-reminders
       name:
         value: My Reminders
-      conditions: []
     - location: completely-invalid-location
       url: /panel/v2/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}
-      params: {}
       key: create-reminder-dialog
       name:
         value: Create reminder
       conditions:
         - invert: false
-          params: {}
           condition: user_is_logged_in
   jira:webhooks:
     - event: jira:issue_updated
@@ -64,7 +58,6 @@ connectModules:
       key: view-issue-glance-reminders
       name:
         value: My Reminders
-      conditions: []
       target:
         url: /panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}
         type: web_panel
@@ -73,9 +66,16 @@ modules:
     - key: sample-app-can-delete-hello-world
       function: main
       title: My Reminders General Page Example
+  jira:issueContext:
+    - key: view-issue-glance-reminders-v2
+      function: viewIssueGlance
+      title: My Reminders
+      label: Create issue reminders
   function:
     - key: main
       handler: index.run
+    - key: viewIssueGlance
+      handler: index.viewIssueGlance
 permissions:
   scopes:
     - read:connect-jira

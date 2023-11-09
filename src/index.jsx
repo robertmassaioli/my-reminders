@@ -1,5 +1,5 @@
 import api, { route } from "@forge/api";
-import ForgeUI, { render, Text, Fragment, GlobalPage, useState} from '@forge/ui';
+import ForgeUI, { render, Text, Fragment, GlobalPage, useState, IssueContext} from '@forge/ui';
 
 const fetchProjects = async () => {
   const res = await api.asApp().requestJira(route`/rest/api/3/project`, {
@@ -27,4 +27,10 @@ export const run = render(
   <GlobalPage>
     <App/>
   </GlobalPage>
+);
+
+export const viewIssueGlance = render(
+  <IssueContext>
+    <Text>HelloWorld!</Text>
+  </IssueContext>
 );
