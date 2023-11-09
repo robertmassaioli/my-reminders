@@ -57,6 +57,7 @@ extra-deps:
   - HDBC-postgresql-2.5.0.1
   - heist-1.1.1.2
   - snap-loader-static-1.0.0.1
+  - resource-pool-0.2.3.2
   # atlassian-connect-core
   - snap-1.1.3.3
   - snap-core-1.0.5.1

@@ -84,6 +84,13 @@ packages:
   original:
     hackage: snap-loader-static-1.0.0.1
 - completed:
+    hackage: resource-pool-0.2.3.2@sha256:0955486bc1db37e4eb27acb964185f9e9cb8ad5ce054c85e1e6fd7562b2d7542,1375
+    pantry-tree:
+      sha256: 07d0db63c72372262b29bb9c8ba63ab6dc1c1779c519c6e65e5fdc7a245ef4eb
+      size: 267
+  original:
+    hackage: resource-pool-0.2.3.2
+- completed:
     hackage: snap-1.1.3.3@sha256:24ba77345d3ac991e98c3d0fd66d0ee52f2f78c6041d3e3476e98ba3355f21b2,8514
     pantry-tree:
       sha256: 3d59117bd08a81511d997e0c89edf10a74af8b462706bcb960f9ae4e6f10d79b
