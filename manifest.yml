@@ -6,6 +6,48 @@ app:
     authentication: jwt
   features:
     autoUserConsent: true
+  storage:
+    entities:
+      - name: reminder
+        attributes:
+          issueId:
+            type: integer
+          issueKey:
+            type: string
+          originalIssueKey:
+            type: string
+          issueSummary:
+            type: string
+          originalIssueSummary:
+            type: string
+          message:
+            type: string
+          date:
+            type: integer
+          # Timestamp of the day of (e.g. 2014-08-12)
+          day:
+            type: string
+          userAaid:
+            type: string
+          sendAttempts:
+            type: integer
+        indexes:
+          - name: expired-reminders
+            range:
+              - date
+            partition:
+              - day
+          - name: by-aaid
+            range:
+              - date
+            partition:
+              - userAaid
+          - name: by-aaid-and-issue-id
+            range:
+              - date
+            partition:
+              - userAaid
+              - issueId
 remotes:
   - key: connect
     baseUrl: https://rmassaioli.public.atlastunnel.com

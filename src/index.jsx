@@ -29,6 +29,15 @@ export const run = render(
   </GlobalPage>
 );
 
+/**
+ * In order to make the viewIssueGlance work we need to:
+ *  - Talk securely with the connect remote. Does this require CustomUI and Forge Remote?
+ *  - Can we make these reminders move to Forge Storage instead?
+ *    - Forge storage can support 240kb per key. No limits on the number of keys. I could work with this perhaps...
+ *    - Don't need the purged_tenant, tenant or installed_migrations tables
+ *  - Don't need https://developer.atlassian.com/platform/forge/manifest-reference/modules/scheduled-trigger/
+ *  - How do we send all of the reminders within the execution time limit? Need to use forge events?
+ */
 export const viewIssueGlance = render(
   <IssueContext>
     <Text>HelloWorld!</Text>

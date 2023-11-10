@@ -28,7 +28,7 @@
     "chalk": "^4.1.1",
     "husky": "^6.0.0",
     "jira-prepare-commit-msg": "^1.5.2",
-    "ts-node": "^9.1.1",
+    "ts-node": "^9.1.1",h
     "typescript": "^4.2.4"
   }
 }
