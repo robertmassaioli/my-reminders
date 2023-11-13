@@ -1,5 +1,9 @@
-import api, { route } from "@forge/api";
-import ForgeUI, { render, Text, Fragment, GlobalPage, useState, IssueContext} from '@forge/ui';
+// New logic, can just be a .js file
+export { handler } from './resolvers';
+//TODO Old file for UI Kit 1
+
+import api, { route, storage } from "@forge/api";
+import ForgeUI, { render, Text, Fragment, GlobalPage, useState, IssueContext, ButtonSet, Button, Heading, Table, Head, Row, Cell, Link, DateLozenge, ModalDialog, Tooltip, useProductContext} from '@forge/ui';
 
 const fetchProjects = async () => {
   const res = await api.asApp().requestJira(route`/rest/api/3/project`, {
@@ -29,6 +33,107 @@ export const run = render(
   </GlobalPage>
 );
 
+async function loadReminders(viewContext) {
+  const result = await storage
+    .entity('reminder')
+    .query()
+    .index("by-aaid-and-issue-id", {
+      partition: [viewContext.userAaid, viewContext.issueId]
+    })
+    .getMany();
+
+  return result.results;
+}
+
+async function createReminderForTomorrow(viewContext) {
+  const now = new Date(); // TODO Should be for the next day
+  await storage.entity('reminder').set(`${now.getTime()}`, {
+    issueId: viewContext.issueId,
+    issueKey: 'todo',
+    originalIssueKey: 'todo',
+    issueSummary: 'todo',
+    originalIssueSummary: 'todo',
+    message: undefined,
+    date: now.getTime(),
+    day: now.toDateString(),
+    userAaid: viewContext.userAaid,
+    sendAttempts: 0
+  });
+
+  return await loadReminders(viewContext);
+}
+
+
+const MyRemindersIssueView = () => {
+  const context = useProductContext();
+  const [isAddReminderOpen, setAddReminderOpen] = useState(false);
+  // TODO If there is no issue id, or account id, we should handle that
+  const viewContext = {
+    issueId: context.platformContext.issueId,
+    issueKey: context.platformContext.issueKey,
+    userAaid: context.accountId
+  };
+  console.log(`${context.issueId}, ${context.accountId}`);
+  const [reminders, setReminders] = useState(async () => await loadReminders(viewContext));
+
+  async function refreshReminders() {
+    setReminders(await loadReminders(viewContext));
+  }
+
+
+  return (
+    <Fragment>
+      <Heading size="medium">Add reminder</Heading>
+      <ButtonSet>
+        <Button text="Tomorrow" onClick={async () => setReminders(await createReminderForTomorrow(viewContext))} />
+        <Button text="In a Week" />
+        <Button text="Select a time..." onClick={() => setAddReminderOpen(true)}/>
+      </ButtonSet>
+      <Heading size="medium">Your reminders</Heading>
+      <Table>
+        <Head>
+          <Cell><Text>When</Text></Cell>
+          <Cell><Text>Message</Text></Cell>
+          <Cell><Text>Action</Text></Cell>
+        </Head>
+        <Row>
+          <Cell>
+            <Tooltip text="15 Nov 2023 at 7AM"><Text>In 5 days</Text></Tooltip>
+          </Cell>
+          <Cell>
+            <Text>Make sure that we say something meaningful here</Text>
+          </Cell>
+          <Cell><Button icon="editor-remove" /></Cell>
+        </Row>
+        <Row>
+          <Cell>
+            <Tooltip text="15 Nov 2023 at 7AM"><Text>In 5 days</Text></Tooltip>
+          </Cell>
+          <Cell>
+            <Text>(No Message)</Text>
+          </Cell>
+          <Cell><Button icon="editor-remove" /></Cell>
+        </Row>
+        <Row>
+          <Cell>
+            <Tooltip text="15 Nov 2023 at 7AM"><Text>In 5 days</Text></Tooltip>
+          </Cell>
+          <Cell>
+            <Text>Short message here</Text>
+          </Cell>
+          <Cell><Button icon="editor-remove" /></Cell>
+        </Row>
+      </Table>
+      <Text>Your timezone: <Link href="https://rmassaioli-development.atlassian.net/secure/ViewPersonalSettings.jspa">Sydney/Australia</Link></Text>
+      {isAddReminderOpen && (
+        <ModalDialog header="Add a Reminder" onClose={() => setAddReminderOpen(false)}>
+          <Text>Hello!</Text>
+        </ModalDialog>
+      )}
+    </Fragment>
+  );
+}
+
 /**
  * In order to make the viewIssueGlance work we need to:
  *  - Talk securely with the connect remote. Does this require CustomUI and Forge Remote?
@@ -40,6 +145,6 @@ export const run = render(
  */
 export const viewIssueGlance = render(
   <IssueContext>
-    <Text>HelloWorld!</Text>
+    <MyRemindersIssueView />
   </IssueContext>
 );

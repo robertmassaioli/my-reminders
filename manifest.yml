@@ -48,6 +48,12 @@ app:
             partition:
               - userAaid
               - issueId
+          - name: by-aaid-and-issue-id-v2
+            range:
+              - date
+            partition:
+              - userAaid
+              - issueId
 remotes:
   - key: connect
     baseUrl: https://rmassaioli.public.atlastunnel.com
@@ -110,16 +116,23 @@ modules:
       title: My Reminders General Page Example
   jira:issueContext:
     - key: view-issue-glance-reminders-v2
-      function: viewIssueGlance
+      resource: issueGlanceMain
+      render: native
+      resolver:
+        function: resolver
       title: My Reminders
       label: Create issue reminders
   function:
     - key: main
       handler: index.run
-    - key: viewIssueGlance
-      handler: index.viewIssueGlance
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: issueGlanceMain
+    path: src/frontend/index.jsx
 permissions:
   scopes:
+    - storage:app
     - read:connect-jira
     - write:connect-jira
     - read:jira-work
