@@ -77,10 +77,25 @@ resolver.define('getMyReminders', async (req) => {
   };
 });
 
+function blankToUndefined(inputString) {
+  if (!isPresent(inputString) || inputString.length === 0) {
+    return undefined;
+  }
+
+  return inputString;
+}
+
 resolver.define('createReminder', async (req) => {
   const viewContext = extractViewContext(req);
 
   const { timestamp, issueSummary, message } = req.payload;
+
+  const currentReminders = await getReminders(viewContext);
+  if (currentReminders.length >= 10) {
+    return {
+      errors: `You can't create more than 10 reminders on an issue. Reminder not created.`
+    };
+  }
 
   const expiryTime = moment.unix(timestamp);
 
@@ -89,10 +104,10 @@ resolver.define('createReminder', async (req) => {
     issueId: viewContext.issueId,
     issueKey: viewContext.issueKey,
     originalIssueKey: viewContext.issueKey,
-    issueSummary: issueSummary,
-    originalIssueSummary: issueSummary,
+    issueSummary: blankToUndefined(issueSummary),
+    originalIssueSummary: blankToUndefined(issueSummary),
     // TODO make sure that the message is no more than X characters long.
-    message: isPresent(message) ? message : undefined,
+    message: blankToUndefined(message),
     date: expiryTime.unix(),
     day: expiryTime.format('YYYY-MM-DD'),
     userAaid: viewContext.userAaid,
@@ -109,8 +124,6 @@ resolver.define('deleteReminder', async (req) => {
   const viewContext = extractViewContext(req);
 
   const reminder = await storage.entity('reminder').get(reminderKey);
-  console.log(JSON.stringify(reminder));
-  console.log(`ViewContext: ${JSON.stringify(viewContext)}`)
   if (isPresent(reminder)) {
     // Only if the current user owns the reminder should it be able to delete it
     if (reminder.userAaid === viewContext.userAaid) {
@@ -119,7 +132,7 @@ resolver.define('deleteReminder', async (req) => {
       console.log(`SECURITY ALERT: User ${viewContext.userAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
     }
   } else {
-    console.log(`Tried to delete a reminder that no longer exists.`)
+    console.log(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewContext.userAaid}`)
   }
 
   return {

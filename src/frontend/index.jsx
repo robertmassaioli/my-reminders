@@ -1,9 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Text, Heading, ButtonSet, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage } from '@forge/react';
+import ForgeReconciler, { Text, Heading, ButtonSet, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage, DatePicker, Select, Option, TextArea, Form } from '@forge/react';
 import { invoke, requestJira, view } from '@forge/bridge';
 import { useEffectAsync } from '../useEffectAsync';
 import moment from 'moment-timezone';
 import { isPresent } from 'ts-is-present';
+
+function generateHoursOfDay() {
+  return Array.from({ length: 24 }, (_, index) => {
+    const isAfternoon = index >= 12;
+    const lowerMeridien = isAfternoon ? 'pm' : 'am';
+    let rawHour = index >= 12? index - 12 : index;
+    const displayLowerHour = rawHour === 0 ? 12 : rawHour;
+    const displayUpperHour = rawHour + 1;
+    const upperIs12 = displayUpperHour === 12;
+    const upperMeridien = isAfternoon ? (upperIs12 ? 'am' : 'pm') : (upperIs12 ? 'PM' : 'AM');
+    return {
+      index,
+      display: `${displayLowerHour}${lowerMeridien}-${displayUpperHour}${upperMeridien}`
+    };
+  });
+}
 
 async function createReminder({ issueSummary, timestamp, message }) {
   const response = await invoke('createReminder', {
@@ -32,7 +48,8 @@ async function getUserTimezone(context) {
     }
   });
   const data = await response.json();
-  return data.timezone;
+  console.log('timezoneResponse', JSON.stringify(data));
+  return data.timeZone;
 }
 
 const App = () => {
@@ -47,8 +64,7 @@ const App = () => {
 
   useEffectAsync(async () => {
     const context = await view.getContext();
-    const data = await getUserTimezone(context);
-    setUserTimezone(data.timeZone);
+    setUserTimezone(context.timezone);
   }, userTimezone);
 
   if (isPresent(userTimezone)) {
@@ -59,8 +75,7 @@ const App = () => {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
-    // TODO Randomise between 6 and 8 am
-    const tomorrow = moment().add(1, 'day').set('hour', 7);
+    const tomorrow = moment().add(1, 'day').set('hour', 6 + Math.round(Math.random()*2));
 
     const response = await createReminder({
       issueSummary,
@@ -68,7 +83,50 @@ const App = () => {
       message: undefined
     });
 
-    setReminders(response.reminders);
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderForNextWeek() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const nextWeek = moment().add(7, 'day').set('hour', 6 + Math.round(Math.random()*2));
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: nextWeek.unix(),
+      message: undefined
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createArbitraryReminder({ expiryDate, window, message }) {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const expiry = moment(expiryDate).hour(window.value);
+    console.log(expiry.format('YYYY-MM-DD h:ma'));
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: expiry.unix(),
+      message
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
   }
 
   async function deleteReminder(reminderKey) {
@@ -83,11 +141,9 @@ const App = () => {
       <Heading size="medium">Add reminder</Heading>
       <ButtonSet>
         <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
-        <Button>In a Week</Button>
+        <Button  onClick={() => createReminderForNextWeek()}>In a Week</Button>
         <Button onClick={() => setAddReminderOpen(true)}>Select a time...</Button>
       </ButtonSet>
-      <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text>
-      {/* <Text>Issue Summary: {issueSummary}</Text> */}
       {reminders && reminders.length > 0 && (
         <>
           <Heading size="medium">Your reminders</Heading>
@@ -132,23 +188,46 @@ const App = () => {
           <Text>Loading your reminders...</Text>
         </SectionMessage>
       )}
-      <Text>Your timezone: <Link href="/secure/ViewPersonalSettings.jspa">{userTimezone || "Loading..."}</Link></Text>
+      <Text>Your timezone: <Link href="/secure/ViewPersonalSettings.jspa">{userTimezone}</Link></Text>
       {isAddReminderOpen && (
         <ModalDialog header="Add a Reminder" onClose={() => setAddReminderOpen(false)}>
-          <Text>Hello!</Text>
+          <Form
+            onSubmit={(data) => {
+              console.log(data);
+              setAddReminderOpen(false);
+              createArbitraryReminder(data);
+            }}
+          >
+            <DatePicker
+              defaultValue={moment().add(1, 'day').format('YYYY-MM-DD')}
+              name="expiryDate"
+              label='Expiry date'
+              description='Set this date to the day that you want your reminder to be sent'
+              isRequired={true}
+            />
+            <Select
+              name="window"
+              label='Hour of day'
+              description='In which hour do you want your reminder to be sent?'
+              >
+              {generateHoursOfDay().map(hourOfDay => {
+                return (
+                  <Option label={hourOfDay.display} value={hourOfDay.index} defaultSelected={hourOfDay.index === 5} />
+                );
+              })}
+            </Select>
+            <TextArea
+              label="Reminder message"
+              name="message"
+              placeholder="Optional message to go with your reminder"
+            />
+          </Form>
         </ModalDialog>
       )}
+      <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text>
+      {/* <Text>Issue Summary: {issueSummary}</Text> */}
     </>
   );
-
-  /*
-  return (
-    <>
-      <Text>Hello world!</Text>
-      <Text>{data ? data : 'Loading...'}</Text>
-    </>
-  );
-  */
 };
 
 ForgeReconciler.render(
