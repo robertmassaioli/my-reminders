@@ -42,6 +42,11 @@ app:
               - date
             partition:
               - userAaid
+          - name: by-issue-id
+            range:
+              - date
+            partition:
+              - issueId
           - name: by-aaid-and-issue-id
             range:
               - date
@@ -136,3 +141,4 @@ permissions:
     - read:connect-jira
     - write:connect-jira
     - read:jira-work
+    - read:jira-user
