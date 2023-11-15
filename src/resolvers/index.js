@@ -157,18 +157,7 @@ function generateTextBody(reminder) {
   ].join('\n');
 }
 
-/*
-notifyUrl = B.concat ["/rest/api/3/issue/", bIssueId, "/notify"]
-return Notification
-        { nSubject = subject
-        , nTextBody = decodeUtf8 . textContent $ emailContent
-        , nHtmlBody = decodeUtf8 . htmlContent $ emailContent
-        , nTo = NotificationRecipients [notificationUser]
-        }
-*/
-
-
-
+// TODO: Move this into a different resolver for observability
 resolver.define('sendExpiredReminder', async ({ payload, context }) => {
   const reminderKey = payload.key;
   const reminder = payload.value;
@@ -190,7 +179,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
       htmlBody,
       to
     };
-    console.log(JSON.stringify(jsonBody));
+    // console.log(JSON.stringify(jsonBody));
     await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
       method: 'POST',
       headers: {
