@@ -127,9 +127,27 @@ modules:
         function: resolver
       title: My Reminders
       label: Create issue reminders
+  scheduledTrigger:
+    - key: expirySchedulerJob
+      function: expiryScheduler
+      interval: hour
+  ## Added a webtrigger not only for debugging but also to let people trigger reminders at a faster cadence. Expose to admins.
+  webtrigger:
+    - key: sendExpiredReminders
+      function: expiryScheduler
+  consumer:
+    - key: expiredReminderSender
+      # Name of the queue for which this consumer will be invoked
+      queue: expiredReminders
+      resolver:
+        function: resolver
+        # resolver function to be called with payload
+        method: sendExpiredReminder
   function:
     - key: main
       handler: index.run
+    - key: expiryScheduler
+      handler: index.scheduleExpiryJobs
     - key: resolver
       handler: index.handler
 resources:
@@ -141,4 +159,5 @@ permissions:
     - read:connect-jira
     - write:connect-jira
     - read:jira-work
+    - write:jira-work
     - read:jira-user

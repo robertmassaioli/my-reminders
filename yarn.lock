@@ -89,6 +89,15 @@
   dependencies:
     minimatch "^9.0.3"
 
+"@forge/events@^0.8.22":
+  version "0.8.22"
+  resolved "https://packages.atlassian.com/api/npm/npm-remote/@forge/events/-/events-0.8.22.tgz#214585baa35faa8927e9ba3932864d0e0ecfc0d1"
+  integrity sha512-dDpQeBVu9YlC+IPzcWbQYqV/e7kSgcUOwDZ1YgH38XrT+c6IZdH7jYfvC2o/bipSQlbmqEpD2p/2Zuh5ZSkaPQ==
+  dependencies:
+    "@forge/api" "2.20.0"
+    node-fetch "2.7.0"
+    uuid "^9.0.1"
+
 "@forge/react@^8.1.7":
   version "8.1.7"
   resolved "https://packages.atlassian.com/api/npm/npm-remote/@forge/react/-/react-8.1.7.tgz#991818d64da8c2f3e0d0ac74c73dd17b832b3fe5"

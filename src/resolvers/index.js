@@ -1,8 +1,7 @@
 import Resolver from '@forge/resolver';
-import api, { storage } from "@forge/api";
+import api, { route, storage, webTrigger } from "@forge/api";
 import moment from 'moment-timezone';
 import { isPresent } from 'ts-is-present';
-import { view } from '@forge/bridge';
 
 const resolver = new Resolver();
 
@@ -12,51 +11,12 @@ resolver.define('getText', (req) => {
   return 'Hello, world!';
 });
 
-/*
-{
-  "payload": {},
-  "context": {
-    "accountId": "557057:9eb9edaf-b755-4dd1-ab28-5c3f68948790",
-    "localId": "ari:cloud:ecosystem::extension/947ac65b-ca66-412f-8e52-11e797583c52/abae6ab2-7dfe-414f-a4c3-a99c8ab53da8/static/view-issue-glance-reminders-v2",
-    "cloudId": "96fb4616-6245-4043-ba30-4adbb684d94f",
-    "moduleKey": "view-issue-glance-reminders-v2",
-    "extension": {
-      "issue": {
-        "key": "HT-12",
-        "id": "11063",
-        "type": "ShipIt Project",
-        "typeId": "10100"
-      },
-      "project": {
-        "id": "10101",
-        "key": "HT",
-        "type": "software"
-      },
-      "type": "jira:issueContext"
-    },
-    "accountType": "licensed",
-    "installContext": "ari:cloud:jira::site/96fb4616-6245-4043-ba30-4adbb684d94f"
-  }
-}
-*/
 function extractViewContext(req) {
   return {
     userAaid: req.context.accountId,
     issueId: parseInt(req.context.extension.issue.id),
     issueKey: req.context.extension.issue.key
   };
-}
-
-async function getUserTimezone(accountId) {
-  const response = await api.asUser().requestJira(route`/rest/api/3/user?accountId=${accountId}`, {
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
-
-  const data =  await response.json();
-
-  return data.timeZone;
 }
 
 async function getReminders(viewContext) {
@@ -138,6 +98,120 @@ resolver.define('deleteReminder', async (req) => {
   return {
     reminders: await getReminders(viewContext)
   }
+});
+
+// Stole from myself here: https://bitbucket.org/atlassian-developers/docs-feedback-report/src/master/src/main.ts
+export function tag(name, ...children) {
+  if (children.length === 0) {
+      return `<${name} />`;
+  }
+  return `<${name}>${children.join('')}</${name}>`;
+}
+
+export function tagWithAttributes(name, attributes, ...children) {
+  if (Object.keys(attributes).length === 0) {
+      return tag(name, ...children);
+  }
+  const prefix = `<${name} ${Object.keys(attributes).map(name => `${name}="${attributes[name]}"`).join(' ')}`;
+  if (children.length === 0) {
+      return `${prefix} />`;
+  }
+
+  return `${prefix}>${children.join('')}</${name}>`;
+}
+
+function generateHtmlBody(reminder) {
+  const showOriginal = reminder.issueKey !== reminder.originalIssueKey || reminder.issueSummary !== reminder.originalIssueSummary;
+  return tag('div',
+    ... (!reminder.message ? [] : [
+      tagWithAttributes('p', { style: 'margin: 10px 0 0 0; margin-top: 0' },
+        reminder.message
+      ),
+      tag('br')
+    ]),
+    ... (!showOriginal ? [] : [
+      tagWithAttributes('p', { style: '' },
+        `Your original reminder was called: ${reminder.originalIssueKey} - ${reminder.originalIssueSummary}`
+      ),
+      tag('br')
+    ])
+  );
+}
+
+function generateTextBody(reminder) {
+  const showOriginal = reminder.issueKey !== reminder.originalIssueKey || reminder.issueSummary !== reminder.originalIssueSummary;
+  return [
+    `Reminder for ${reminder.issueKey}: ${reminder.issueSummary}`,
+    '',
+    ...(!reminder.message ? [] : [
+      'Your message:',
+      '',
+      reminder.message,
+      ''
+    ]),
+    ...(!showOriginal ? [] : [
+      `Your original reminder was called: ${reminder.originalIssueKey} - ${reminder.originalIssueSummary}`,
+      ''
+    ]),
+    'This was created using the My Reminders add-on.'
+  ].join('\n');
+}
+
+/*
+notifyUrl = B.concat ["/rest/api/3/issue/", bIssueId, "/notify"]
+return Notification
+        { nSubject = subject
+        , nTextBody = decodeUtf8 . textContent $ emailContent
+        , nHtmlBody = decodeUtf8 . htmlContent $ emailContent
+        , nTo = NotificationRecipients [notificationUser]
+        }
+*/
+
+
+
+resolver.define('sendExpiredReminder', async ({ payload, context }) => {
+  const reminderKey = payload.key;
+  const reminder = payload.value;
+	// process the event
+  console.log(`Sending reminder: ${reminderKey}`);
+
+  try {
+    // Attempt to send the notification
+    console.log(`/rets/api/3/issue/${reminder.issueId}/notify`);
+    const subject = `Reminder: [${reminder.issueKey}] ${reminder.issueSummary}`;
+    const textBody = generateTextBody(reminder);
+    const htmlBody = generateHtmlBody(reminder);
+    const to = {
+      users: [{ accountId: reminder.userAaid }]
+    };
+    const jsonBody = {
+      subject,
+      textBody,
+      htmlBody,
+      to
+    };
+    console.log(JSON.stringify(jsonBody));
+    await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'x-atlassian-force-account-id': 'true'
+      },
+      body: JSON.stringify(jsonBody)
+    });
+    console.log(`Sent reminder: ${reminderKey}`);
+
+    // Delete the reminder from storage
+    await storage.entity('reminder').delete(reminderKey);
+    console.log(`Cleared reminder: ${reminderKey}`);
+  } catch (e) {
+    // TODO throw an error to trigger the retry logic
+    console.log(`Error sending: ${reminderKey}: ${e}`);
+  }
+});
+
+resolver.define('getExpirySchedulerWebTrigger', async () => {
+  return await webTrigger.getUrl("sendExpiredReminders");
 });
 
 export const handler = resolver.getDefinitions();

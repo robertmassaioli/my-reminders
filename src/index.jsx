@@ -2,8 +2,10 @@
 export { handler } from './resolvers';
 //TODO Old file for UI Kit 1
 
-import api, { route, storage } from "@forge/api";
+import api, { WhereConditions, route, storage } from "@forge/api";
 import ForgeUI, { render, Text, Fragment, GlobalPage, useState, IssueContext, ButtonSet, Button, Heading, Table, Head, Row, Cell, Link, DateLozenge, ModalDialog, Tooltip, useProductContext} from '@forge/ui';
+import moment from 'moment';
+import { Queue } from '@forge/events';
 
 const fetchProjects = async () => {
   const res = await api.asApp().requestJira(route`/rest/api/3/project`, {
@@ -32,3 +34,56 @@ export const run = render(
     <App/>
   </GlobalPage>
 );
+
+// Why does my webtrigger return HTTP 424: what dependency am I missing?
+export async function scheduleExpiryJobs() {
+  const endOfCurrentHour = moment().endOf('hour');
+  let expiredRemindersResult = await storage
+    .entity("reminder")
+    .query()
+    .index("expired-reminders", {
+      partition: [endOfCurrentHour.format('YYYY-MM-DD')]
+    })
+    .where(WhereConditions.isLessThan(endOfCurrentHour.unix()))
+    .getMany();
+
+  const expiredReminders = new Array();
+  expiredReminders.push(...expiredRemindersResult.results);
+
+  // Get all of the expired reminders for this workspace
+  while (expiredRemindersResult.nextCursor) {
+    expiredRemindersResult = await storage
+      .entity("reminder")
+      .query()
+      .index("expired-reminders", {
+        partition: [endOfCurrentHour.format('YYYY-MM-DD')]
+      })
+      .where(WhereConditions.isLessThan(endOfCurrentHour.unix()))
+      .cursor(expiredRemindersResult.nextCursor)
+      .getMany();
+
+      expiredReminders.push(...expiredRemindersResult.results);
+  }
+
+  // Create new events for all of the expired reminders
+  const queue = new Queue({ key: 'expiredReminders' });
+
+  // Note: If we fail to schedule the job this time round then it will still be around
+  // For next time.
+  if (expiredReminders.length > 0) {
+    const queuedJobs = await Promise.allSettled(expiredReminders.map(async expiredReminder => {
+      await queue.push(expiredReminder);
+    }));
+
+    const rejectedJobs = queuedJobs.filter(job => job.status === 'rejected');
+    if (rejectedJobs.length > 0) {
+      console.log(`Tried to schedule ${expiredReminders.length} reminders to be sent but ${rejectedJobs.length} failed to be queued.`);
+    }
+  } else {
+    console.log(`No reminders were expired.`);
+  }
+
+  return {
+    statusCode: 204
+  };
+}

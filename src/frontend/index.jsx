@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ForgeReconciler, { Text, Heading, ButtonSet, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage, DatePicker, Select, Option, TextArea, Form } from '@forge/react';
 import { invoke, requestJira, view } from '@forge/bridge';
 import { useEffectAsync } from '../useEffectAsync';
@@ -41,21 +41,15 @@ async function getIssueSummary(context) {
   return issueData.fields.summary;
 }
 
-async function getUserTimezone(context) {
-  const response = await requestJira(`/rest/api/3/user?accountId=${context.accountId}`, {
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
-  const data = await response.json();
-  console.log('timezoneResponse', JSON.stringify(data));
-  return data.timeZone;
-}
-
 const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
   const [reminders, setReminders] = useState(undefined);
   const [userTimezone, setUserTimezone] = useState(undefined);
+  const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] = useState(undefined);
+
+  useEffectAsync(async () => {
+    setExpiredRemindersWebtrigger(await invoke('getExpirySchedulerWebTrigger'));
+  }, expiredRemindersWebtrigger);
 
   useEffectAsync(async () => {
     const data = await invoke('getMyReminders');
@@ -193,7 +187,6 @@ const App = () => {
         <ModalDialog header="Add a Reminder" onClose={() => setAddReminderOpen(false)}>
           <Form
             onSubmit={(data) => {
-              console.log(data);
               setAddReminderOpen(false);
               createArbitraryReminder(data);
             }}
@@ -225,6 +218,7 @@ const App = () => {
         </ModalDialog>
       )}
       <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text>
+      <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text>
       {/* <Text>Issue Summary: {issueSummary}</Text> */}
     </>
   );
