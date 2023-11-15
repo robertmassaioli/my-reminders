@@ -160,4 +160,3 @@ permissions:
     - write:connect-jira
     - read:jira-work
     - write:jira-work
-    - read:jira-user
