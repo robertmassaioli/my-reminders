@@ -69,7 +69,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
 
   try {
     // Attempt to send the notification
-    console.log(`/rets/api/3/issue/${reminder.issueId}/notify`);
+    // console.log(`/rest/api/3/issue/${reminder.issueId}/notify`);
     const subject = `Reminder: [${reminder.issueKey}] ${reminder.issueSummary}`;
     const textBody = generateTextBody(reminder);
     const htmlBody = generateHtmlBody(reminder);
@@ -86,6 +86,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
     await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
       method: 'POST',
       headers: {
+        'Content-type': 'application/json',
         'Accept': 'application/json',
         'x-atlassian-force-account-id': 'true'
       },

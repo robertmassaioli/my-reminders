@@ -12,6 +12,7 @@ import { Queue } from '@forge/events';
 const fetchProjects = async () => {
   const res = await api.asApp().requestJira(route`/rest/api/3/project`, {
     headers: {
+      'Content-type': 'application/json',
       'Accept': 'application/json'
     }
   });

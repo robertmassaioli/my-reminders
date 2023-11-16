@@ -6,6 +6,7 @@ app:
     authentication: jwt
   features:
     autoUserConsent: true
+  # The new runtime at-least makes sendExpiredReminder fail.
   runtime:
     name: nodejs18.x
   storage:

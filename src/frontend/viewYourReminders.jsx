@@ -9,6 +9,7 @@ import { toDateOutput } from './dateHelpers';
 async function getSiteInfo() {
   const response = await requestJira(`/rest/api/3/serverInfo`, {
     headers: {
+      'Content-type': 'application/json',
       'Accept': 'application/json'
     }
   });
