@@ -217,8 +217,8 @@ const App = () => {
           </Form>
         </ModalDialog>
       )}
-      <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text>
-      <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text>
+      {/* <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text> */}
+      {/* <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text> */}
       {/* <Text>Issue Summary: {issueSummary}</Text> */}
     </>
   );

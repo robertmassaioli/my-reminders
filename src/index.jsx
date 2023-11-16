@@ -1,5 +1,6 @@
 // New logic, can just be a .js file
-export { handler } from './resolvers';
+export { issueGlanceHandler } from './resolvers/issueGlance';
+export { sendRemindersHandler } from './resolvers/sendReminders';
 //TODO Old file for UI Kit 1
 
 import api, { WhereConditions, route, storage } from "@forge/api";

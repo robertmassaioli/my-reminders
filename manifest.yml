@@ -116,15 +116,15 @@ connectModules:
         type: web_panel
 modules:
   jira:globalPage:
-    - key: sample-app-can-delete-hello-world
+    - key: view-my-reminders-v2
       function: main
-      title: My Reminders General Page Example
+      title: Your reminders
   jira:issueContext:
     - key: view-issue-glance-reminders-v2
       resource: issueGlanceMain
       render: native
       resolver:
-        function: resolver
+        function: issueGlanceResolver
       title: My Reminders
       label: Create issue reminders
   scheduledTrigger:
@@ -140,7 +140,7 @@ modules:
       # Name of the queue for which this consumer will be invoked
       queue: expiredReminders
       resolver:
-        function: resolver
+        function: sendRemindersResolver
         # resolver function to be called with payload
         method: sendExpiredReminder
   function:
@@ -148,8 +148,10 @@ modules:
       handler: index.run
     - key: expiryScheduler
       handler: index.scheduleExpiryJobs
-    - key: resolver
-      handler: index.handler
+    - key: issueGlanceResolver
+      handler: index.issueGlanceHandler
+    - key: sendRemindersResolver
+      handler: index.sendRemindersHandler
 resources:
   - key: issueGlanceMain
     path: src/frontend/index.jsx
