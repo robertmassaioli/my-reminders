@@ -11,7 +11,9 @@ function extractViewContext(req) {
 }
 
 async function getYourReminders(viewContext) {
-  const result = await storage
+  const allReminders = new Array();
+
+  let result = await storage
     .entity('reminder')
     .query()
     .index("by-aaid", {
@@ -20,7 +22,23 @@ async function getYourReminders(viewContext) {
     .sort(SortOrder.ASC)
     .getMany();
 
-  return result.results;
+  allReminders.push(...result.results);
+
+  while (result.nextCursor) {
+    result = await storage
+      .entity('reminder')
+      .query()
+      .index("by-aaid", {
+        partition: [viewContext.userAaid]
+      })
+      .sort(SortOrder.ASC)
+      .cursor(result.nextCursor)
+      .getMany();
+
+    allReminders.push(...result.results);
+  }
+
+  return allReminders;
 }
 
 resolver.define('getYourReminders', async (req) => {
