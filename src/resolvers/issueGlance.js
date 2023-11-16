@@ -2,6 +2,7 @@ import Resolver from '@forge/resolver';
 import api, { storage, webTrigger } from "@forge/api";
 import moment from 'moment-timezone';
 import { isPresent } from 'ts-is-present';
+import { deleteReminder } from './reminderPersistence';
 
 const resolver = new Resolver();
 
@@ -83,17 +84,7 @@ resolver.define('deleteReminder', async (req) => {
   const { reminderKey } = req.payload;
   const viewContext = extractViewContext(req);
 
-  const reminder = await storage.entity('reminder').get(reminderKey);
-  if (isPresent(reminder)) {
-    // Only if the current user owns the reminder should it be able to delete it
-    if (reminder.userAaid === viewContext.userAaid) {
-      await storage.entity('reminder').delete(reminderKey);
-    } else {
-      console.log(`SECURITY ALERT: User ${viewContext.userAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
-    }
-  } else {
-    console.log(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewContext.userAaid}`)
-  }
+  await deleteReminder(reminderKey, viewContext.userAaid);
 
   return {
     reminders: await getReminders(viewContext)

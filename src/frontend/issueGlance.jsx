@@ -4,6 +4,7 @@ import { invoke, requestJira, view } from '@forge/bridge';
 import { useEffectAsync } from '../useEffectAsync';
 import moment from 'moment-timezone';
 import { isPresent } from 'ts-is-present';
+import { toDateOutput } from './dateHelpers';
 
 function generateHoursOfDay() {
   return Array.from({ length: 24 }, (_, index) => {
@@ -150,13 +151,7 @@ const App = () => {
             {reminders.map(reminder => {
               const { date, message } = reminder.value;
               const expiry = moment.unix(date);
-              const dateOutput = expiry.format('D MMM YYYY');
-              const hourOutput = expiry.format('h');
-              const meridian = expiry.format('A');
-              expiry.add(1, 'hour');
-              const nextHourOutput = expiry.format('h');
-
-              const fullDateOutput = `${dateOutput} at ${hourOutput}-${nextHourOutput}${meridian}`;
+              const fullDateOutput = toDateOutput(expiry);
               return (
                 <Row>
                   <Cell>

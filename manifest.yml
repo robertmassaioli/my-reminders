@@ -6,6 +6,8 @@ app:
     authentication: jwt
   features:
     autoUserConsent: true
+  runtime:
+    name: nodejs18.x
   storage:
     entities:
       - name: reminder
@@ -117,7 +119,10 @@ connectModules:
 modules:
   jira:globalPage:
     - key: view-my-reminders-v2
-      function: main
+      resource: yourRemindersMain
+      render: native
+      resolver:
+        function: yourRemindersResolver
       title: Your reminders
   jira:issueContext:
     - key: view-issue-glance-reminders-v2
@@ -152,9 +157,13 @@ modules:
       handler: index.issueGlanceHandler
     - key: sendRemindersResolver
       handler: index.sendRemindersHandler
+    - key: yourRemindersResolver
+      handler: index.yourRemindersHandler
 resources:
   - key: issueGlanceMain
-    path: src/frontend/index.jsx
+    path: src/frontend/issueGlance.jsx
+  - key: yourRemindersMain
+    path: src/frontend/viewYourReminders.jsx
 permissions:
   scopes:
     - storage:app
