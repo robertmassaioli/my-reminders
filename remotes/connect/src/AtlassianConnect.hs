@@ -30,7 +30,7 @@ addonDescriptor =
       }
     }
   where
-    basePlugin = pluginDescriptor (PluginKey "com.atlassian.myreminders") nullURI jwtAuthentication
+    basePlugin = pluginDescriptor (PluginKey "com.not-atlassian.myreminders") nullURI jwtAuthentication
     jwtAuthentication = Authentication Jwt
 
 addonJiraModules :: JIRAModules
