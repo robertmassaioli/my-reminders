@@ -6,17 +6,17 @@
 # the entire Haskell platform with us into production. Just the small set
 # of required dependencies.
 
-FROM node:12 as frontend
+FROM node:14 as frontend
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Build the Frontend
 ADD /frontend   /home/frontend
 ADD /openapi.yaml /home
 WORKDIR /home/frontend
-RUN apt-get update && apt-get install -y openjdk-8-jre-headless
+RUN apt-get update && apt-get install -y openjdk-11-jre-headless
 RUN yarn install && yarn build
 
-FROM haskell:8.10.4 AS build
+FROM haskell:9.4.7 AS build
 LABEL maintainer="Robert Massaioli <rmassaioli@atlassian.com>"
 
 # Expose the default port, port 8000
@@ -24,7 +24,7 @@ EXPOSE 8000
 
 # Install the missing packages
 USER root
-RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf
+RUN (apt-get update || true) && apt-get install -y libpq-dev pkgconf haskell-stack build-essential
 ENV LANG en_US.UTF-8 # See: https://github.com/haskell/cabal/issues/1883#issuecomment-44150139
 ENV PATH /home/haskell/.cabal/bin:$PATH
 
