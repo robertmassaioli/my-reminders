@@ -3,3 +3,6 @@
 /.vscode/
 .idea
 .DS_Store
+
+# This file is auto-generated now
+manifest.yml
