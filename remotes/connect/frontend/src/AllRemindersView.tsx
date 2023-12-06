@@ -3,6 +3,7 @@ import Button, { ButtonGroup } from '@atlaskit/button';
 import { RemindersList } from './RemindersList';
 import { Reminder } from './Data';
 import styled from 'styled-components';
+import SectionMessage from '@atlaskit/section-message';
 
 export type AllRemindersViewProps = {
     hostBaseUrl: string;
@@ -35,20 +36,28 @@ export class AllRemindersView extends React.PureComponent<AllRemindersViewProps,
 
     render() {
         return (
-            <this.Container>
-                <h1>My reminders</h1>
-                <p>All of your pending reminders can be viewed here. You can also perform some bulk actions on them.</p>
-                <this.Actions>
-                    <ButtonGroup>
-                        <Button onClick={() => this.onDeleteClicked()}>Delete</Button>
-                    </ButtonGroup>
-                </this.Actions>
-                <RemindersList
-                    hostBaseUrl={this.props.hostBaseUrl}
-                    reminders={this.props.reminders}
-                    onChange={ids => this.onSelectionChanged(ids)}
-                />
-            </this.Container>
+            <>
+                <SectionMessage appearance='warning' title='June 2024: This screen will be retired'>
+                    In June 2024, this screen will be retired. Please upgrade to the latest version of the App before then
+                    to access the latest screens. Reminders that you can see on this screen that have not expired by June 2024
+                    will be sent early. You will be asked to re-create them using the new screens that this app provides.
+                    We apologise for the inconvenience as we continue to improve My Reminders.
+                </SectionMessage>
+                <this.Container>
+                    <h1>My reminders (legacy)</h1>
+                    <p>All of your pending reminders can be viewed here. You can also perform some bulk actions on them.</p>
+                    <this.Actions>
+                        <ButtonGroup>
+                            <Button onClick={() => this.onDeleteClicked()}>Delete</Button>
+                        </ButtonGroup>
+                    </this.Actions>
+                    <RemindersList
+                        hostBaseUrl={this.props.hostBaseUrl}
+                        reminders={this.props.reminders}
+                        onChange={ids => this.onSelectionChanged(ids)}
+                    />
+                </this.Container>
+            </>
         );
     }
 

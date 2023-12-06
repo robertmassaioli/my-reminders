@@ -5,6 +5,7 @@ import { ReminderView } from './Data';
 import { Reminder } from './Reminder';
 import EmptyState from '@atlaskit/empty-state';
 import Spinner from '@atlaskit/spinner';
+import SectionMessage from '@atlaskit/section-message';
 
 export type IssueViewProps = {
     reminders: ReminderView[] | undefined;
@@ -25,9 +26,29 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
         margin-bottom: 10px;
     `;
 
+    private static MessageContainer = styled.div`
+        padding-bottom: 8px;
+    `;
+
     render() {
         return (
             <div>
+                <IssueView.MessageContainer>
+                    <SectionMessage appearance='warning' title='June 2024: This screen will be retired'>
+                        In June 2024, this screen will be retired. Please upgrade to the latest version of the App before then
+                        to access the latest screens. Reminders that you can see on this screen that have not expired by June 2024
+                        will be sent early. You will be asked to re-create them using the new screens that this app provides.
+                        You will also be unable to create any new reminders on this screen from
+                        We apologise for the inconvenience as we continue to improve My Reminders.
+                    </SectionMessage>
+                </IssueView.MessageContainer>
+                <IssueView.MessageContainer>
+                    <SectionMessage appearance='warning' title='March 2024: No new reminders via this screen'>
+                        Please upgrade to the latest version of this App and use the new My Reminders issue screen to create
+                        your reminders. In preparation for the retirement of this current screen, you will be blocked from creating
+                        any reminders with an expiry date on, or after, March 2024.
+                    </SectionMessage>
+                </IssueView.MessageContainer>
                 <IssueViewActions
                     statusIndicator={this.props.statusIndicator}
                     onAddReminder={this.props.onAddReminder}

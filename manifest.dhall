@@ -5,7 +5,8 @@
     }
   , features.autoUserConsent = True
   , id = "ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52"
-  , runtime.name = "nodejs18.x"
+  -- Experienced an error trying to make REST calls when this was enabled: https://atlassian.slack.com/archives/C02DJFQC8G7/p1701819244863659
+  --, runtime.name = "nodejs18.x"
   , storage.entities
     =
     [ { attributes =
@@ -48,14 +49,14 @@
     [ { conditions = None (List { condition : Text, invert : Bool })
       , key = "view-my-reminders"
       , location = "system.user.options/personal"
-      , name.value = "My Reminders"
+      , name.value = "My Reminders (legacy)"
       , url = "/panel/jira/reminders/view"
       }
     , { conditions = Some
         [ { condition = "user_is_logged_in", invert = False } ]
       , key = "create-reminder-dialog"
       , location = "completely-invalid-location"
-      , name.value = "Create reminder"
+      , name.value = "Create reminder (legacy)"
       , url =
           "/panel/v2/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
       }
@@ -64,7 +65,7 @@
     [ { content = { label.value = "My Reminders", type = "label" }
       , icon = { height = 24, url = "/static/frontend/logo.svg", width = 24 }
       , key = "view-issue-glance-reminders"
-      , name.value = "My Reminders"
+      , name.value = "My Reminders (legacy)"
       , target =
         { type = "web_panel"
         , url =
@@ -82,7 +83,7 @@
     [ { conditions = [ { condition = "user_is_logged_in", invert = False } ]
       , key = "view-issue-reminders"
       , location = "atl.jira.view.issue.right.context"
-      , name.value = "My reminders"
+      , name.value = "My reminders (legacy)"
       , tooltip.value = "Your reminders for this issue."
       , url =
           "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
