@@ -25,12 +25,11 @@ data Statistics = Statistics
     , averageRemindersPerTenant :: Maybe Double
     , stddevRemindersPerTenant  :: Maybe Double
     , maxRemindersPerTenant     :: Maybe Integer
-    , missingAaids              :: Integer
-    , hasAaids              :: Integer
+    , isAfterExpiry             :: Integer
     } deriving (Show, Generic)
 
 instance FromRow Statistics where
-  fromRow = Statistics <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = Statistics <$> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field <*> field
 
 instance ToJSON Statistics
 
@@ -50,8 +49,7 @@ getStatistics = do
             	(avg(tencount.tenant_count) :: double precision) as avg_reminders_per_tenant,
             	(stddev_pop(tencount.tenant_count) :: double precision) as stddev_reminders_per_tenant,
                 max(tencount.tenant_count) as max_reminders_per_tenant,
-                (select count(*) from reminder where userAaid is NULL) as missing_aaids,
-                (select count(*) from reminder where userAaid is not NULL) as has_aaids
+                SELECT count(*) FROM reminder WHERE EXTRACT(EPOCH FROM date) > 1709251200
             FROM
             	(select count(tenantid) as tenant_count, tenantid as tid from reminder group by tenantid) as tencount,
             	(select count(userAaid) as email_count from reminder group by userAaid) as remcount;
