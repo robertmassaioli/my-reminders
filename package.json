@@ -1,33 +1,41 @@
 {
   "name": "my-reminders",
-  "version": "1.0.0",
-  "description": "The package.json for the npm build dependencies.",
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "dev-watch": "ts-node --project ./tsconfig.json scripts/dev-watch-backend.ts",
-    "build": "cd frontend && npm run build",
-    "run-psql": "PGPASSWORD='myreminders' psql -h localhost -U myreminders",
-    "moo": "DBM_DATABASE=\"postgresql://myreminders:myreminders@localhost:5432/myreminders\" DBM_MIGRATION_STORE=./dbmigrations DBM_LINEAR_MIGRATIONS=true ~/.local/bin/moo-postgresql",
-    "gen-sd": "ts-node --project ./tsconfig.json scripts/generate-service-descriptor.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@bitbucket.org/atlassianlabs/my-reminders.git"
-  },
-  "keywords": [
-    "my-reminders"
-  ],
-  "author": "Robert Massaioli",
+  "version": "1.0.11",
+  "main": "index.js",
   "license": "MIT",
-  "homepage": "https://bitbucket.org/atlassianlabs/my-reminders#readme",
+  "private": true,
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint src/**/* || npm run --silent hook-errors",
+    "hook-errors": "echo '\\x1b[31mThe build failed because a Forge UI hook is being used incorrectly. Forge UI hooks follow the same rules as React Hooks but have their own API definitions. See the Forge documentation for details on how to use Forge UI hooks.\n' && exit 1",
+    "manifest:local": "dhall-to-yaml-ng --file manifest.local.dhall --output manifest.yml",
+    "manifest:dev": "dhall-to-yaml-ng --file manifest.dev.dhall --output manifest.yml",
+    "manifest:stg": "dhall-to-yaml-ng --file manifest.stg.dhall --output manifest.yml",
+    "manifest:prod": "dhall-to-yaml-ng --file manifest.prod.dhall --output manifest.yml",
+    "deploy-only:local": "forge deploy -e local",
+    "deploy-only:dev": "forge deploy -e development",
+    "deploy-only:stg": "forge deploy -e staging",
+    "deploy-only:prod": "forge deploy -e production",
+    "deploy:local": "run-s manifest:local deploy-only:local",
+    "deploy:dev": "run-s manifest:dev deploy-only:dev",
+    "deploy:stg": "run-s manifest:stg deploy-only:stg",
+    "deploy:prod": "run-s manifest:prod deploy-only:prod",
+    "deploy": "run-s deploy:local"
+  },
   "devDependencies": {
-    "@types/node": "^14.14.41",
-    "chalk": "^4.1.1",
-    "husky": "^6.0.0",
-    "jira-prepare-commit-msg": "^1.5.2",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "eslint": "^7.32.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "npm-run-all": "^4.1.5"
+  },
+  "dependencies": {
+    "@forge/api": "^2.21.0",
+    "@forge/bridge": "^3.0.0",
+    "@forge/events": "^0.8.22",
+    "@forge/react": "^8.1.7",
+    "@forge/resolver": "^1.5.21",
+    "@forge/ui": "^1.9.10",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "react": "^18.2.0",
+    "ts-is-present": "^1.2.2"
   }
 }

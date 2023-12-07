@@ -1,0 +1,16 @@
+import { storage } from "@forge/api";
+import { isPresent } from 'ts-is-present';
+
+export async function deleteReminder(reminderKey, viewUserAaid) {
+  const reminder = await storage.entity('reminder').get(reminderKey);
+  if (isPresent(reminder)) {
+    // Only if the current user owns the reminder should it be able to delete it
+    if (reminder.userAaid === viewUserAaid) {
+      await storage.entity('reminder').delete(reminderKey);
+    } else {
+      console.log(`SECURITY ALERT: User ${viewUserAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
+    }
+  } else {
+    console.log(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewUserAaid}`)
+  }
+}

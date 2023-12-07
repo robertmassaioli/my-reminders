@@ -73,9 +73,13 @@ loadConnectPanel = withTokenAndTenant $ \token (tenant, userKey) -> do
   SC.writeText updatedHtmlContent
   where
     injectTags :: [MetaTag] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
-    injectTags mts tags = preHead ++ (headTag : toMetaTags mts) ++ afterHead
+    injectTags mts tags = preHead ++ inject postHead (toMetaTags mts)
       where
-        (preHead, (headTag : afterHead)) = span (not . TS.isTagOpenName "head") tags
+        (preHead, postHead) = span (not . TS.isTagOpenName "head") tags
+
+    inject :: [TS.Tag T.Text] -> [TS.Tag T.Text] -> [TS.Tag T.Text]
+    inject (headTag : afterHead) cmTags = (headTag : cmTags) ++ afterHead
+    inject [] cmTags = cmTags
 
     toMetaTags :: [MetaTag] -> [TS.Tag T.Text]
     toMetaTags = concat . map toMetaTag
