@@ -51,17 +51,17 @@ const App = () => {
 
   useEffectAsync(async () => {
     setExpiredRemindersWebtrigger(await invoke('getExpirySchedulerWebTrigger'));
-  }, expiredRemindersWebtrigger);
+  }, []);
 
   useEffectAsync(async () => {
     const data = await invoke('getMyReminders');
     setReminders(data.reminders);
-  }, reminders);
+  }, []);
 
   useEffectAsync(async () => {
     const context = await view.getContext();
     setUserTimezone(context.timezone);
-  }, userTimezone);
+  }, []);
 
   if (isPresent(userTimezone)) {
     moment.tz.setDefault(userTimezone);
