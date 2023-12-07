@@ -23,17 +23,17 @@ const App = () => {
 
   useEffectAsync(async () => {
     setSiteInfo(await getSiteInfo());
-  }, siteInfo);
+  }, []);
 
   useEffectAsync(async () => {
     const response = await invoke('getYourReminders');
     setAllReminders(response.reminders);
-  }, allReminders);
+  }, []);
 
   useEffectAsync(async () => {
     const context = await view.getContext();
     setUserTimezone(context.timezone);
-  }, userTimezone);
+  }, []);
 
   if (isPresent(userTimezone)) {
     moment.tz.setDefault(userTimezone);

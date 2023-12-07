@@ -25,6 +25,7 @@ import           ReminderHandlers
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 import           StaticSnaplet
+import           SnapHelpers
 import           StatisticsHandlers
 import           WebhookHandlers
 import qualified AppConfig                                   as CONF
@@ -132,6 +133,7 @@ applicationRoutes zone =
   , ("/rest/statistics"               , handleStatistics)
   , ("/rest/admin/tenant/search"      , adminSearch)
   , ("/rest/admin/tenant"             , adminTenant)
+  , ("/rest/"                         , respondWithError notFound "Unknown rest resource")
   , ("/robots.txt"                    , serveFile "frontend/build/robots.txt")
   , ("/favicon.ico"                   , serveFile "frontend/build/favicon.ico")
   ]

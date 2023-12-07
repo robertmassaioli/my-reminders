@@ -1,5 +1,5 @@
 {
-  "name": "jira-global-page-ui-kit",
+  "name": "my-reminders",
   "version": "1.0.11",
   "main": "index.js",
   "license": "MIT",
@@ -11,10 +11,11 @@
     "manifest:dev": "dhall-to-yaml-ng --file manifest.dev.dhall --output manifest.yml",
     "manifest:stg": "dhall-to-yaml-ng --file manifest.stg.dhall --output manifest.yml",
     "manifest:prod": "dhall-to-yaml-ng --file manifest.prod.dhall --output manifest.yml",
+    "deploy-only:local": "forge deploy -e local",
     "deploy-only:dev": "forge deploy -e development",
     "deploy-only:stg": "forge deploy -e staging",
     "deploy-only:prod": "forge deploy -e production",
-    "deploy:local": "run-s manifest:local deploy-only:dev",
+    "deploy:local": "run-s manifest:local deploy-only:local",
     "deploy:dev": "run-s manifest:dev deploy-only:dev",
     "deploy:stg": "run-s manifest:stg deploy-only:stg",
     "deploy:prod": "run-s manifest:prod deploy-only:prod",
@@ -26,7 +27,7 @@
     "npm-run-all": "^4.1.5"
   },
   "dependencies": {
-    "@forge/api": "^2.18.3",
+    "@forge/api": "^2.21.0",
     "@forge/bridge": "^3.0.0",
     "@forge/events": "^0.8.22",
     "@forge/react": "^8.1.7",

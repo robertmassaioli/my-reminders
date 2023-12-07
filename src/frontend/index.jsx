@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ForgeReconciler, { Text, Heading, ButtonSet, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage, DatePicker, Select, Option, TextArea, Form } from '@forge/react';
 import { invoke, requestJira, view } from '@forge/bridge';
 import { useEffectAsync } from '../useEffectAsync';
@@ -48,19 +48,21 @@ const App = () => {
   const [userTimezone, setUserTimezone] = useState(undefined);
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] = useState(undefined);
 
+  useEffect()
+
   useEffectAsync(async () => {
     setExpiredRemindersWebtrigger(await invoke('getExpirySchedulerWebTrigger'));
-  }, expiredRemindersWebtrigger);
+  }, []);
 
   useEffectAsync(async () => {
     const data = await invoke('getMyReminders');
     setReminders(data.reminders);
-  }, reminders);
+  }, []);
 
   useEffectAsync(async () => {
     const context = await view.getContext();
     setUserTimezone(context.timezone);
-  }, userTimezone);
+  }, []);
 
   if (isPresent(userTimezone)) {
     moment.tz.setDefault(userTimezone);
