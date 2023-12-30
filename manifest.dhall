@@ -109,8 +109,7 @@
       }
     ]
   , function =
-    [ { handler = "index.run", key = "main" }
-    , { handler = "index.scheduleExpiryJobs", key = "expiryScheduler" }
+    [ { handler = "index.scheduleExpiryJobs", key = "expiryScheduler" }
     , { handler = "index.issueGlanceHandler", key = "issueGlanceResolver" }
     , { handler = "index.sendRemindersHandler", key = "sendRemindersResolver" }
     , { handler = "index.yourRemindersHandler", key = "yourRemindersResolver" }
