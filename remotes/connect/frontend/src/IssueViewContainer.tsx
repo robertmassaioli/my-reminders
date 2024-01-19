@@ -38,8 +38,7 @@ function fetchRemindersForIssue(issueId: number, pageContext: PageContext): Prom
 }
 
 function createReminder(data: AddReminderRequest, pc: PageContext): Promise<void> {
-    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined).catch((e) => {
-        console.log(e);
+    return createIndividualReminderApi(pc).addReminder(data).then(() => undefined).catch(() => {
         AP.flag.create({
             title: 'Could not create reminder',
             body: 'Make sure you are not trying to create a Reminder with a from March 2024 onwards. Please try again and contact support if the problem persists',
