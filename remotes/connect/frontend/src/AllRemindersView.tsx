@@ -37,11 +37,14 @@ export class AllRemindersView extends React.PureComponent<AllRemindersViewProps,
     render() {
         return (
             <>
-                <SectionMessage appearance='warning' title='June 2024: This screen will be retired'>
-                    In June 2024, this screen will be retired. Please upgrade to the latest version of the App before then
-                    to access the latest screens. Reminders that you can see on this screen that have not expired by June 2024
-                    will be sent early. You will be asked to re-create them using the new screens that this app provides.
-                    We apologise for the inconvenience as we continue to improve My Reminders.
+                <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+                    <p>
+                        Upgrade to the latest version of the App before June 2024.
+                        <ul>
+                            <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
+                            <li>Once upgraded, you can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders).</li>
+                        </ul>
+                    </p>
                 </SectionMessage>
                 <this.Container>
                     <h1>My reminders (legacy)</h1>
