@@ -14,6 +14,7 @@
     "@atlaskit/icon": "^20.1.2",
     "@atlaskit/navigation": "^36.0.7",
     "@atlaskit/page": "^11.0.14",
+    "@atlaskit/section-message": "^6.4.16",
     "@atlaskit/select": "11.0.11",
     "@atlaskit/spinner": "^14.0.0",
     "@atlaskit/tooltip": "^15.2.9",

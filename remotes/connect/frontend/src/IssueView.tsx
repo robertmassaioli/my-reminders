@@ -5,6 +5,7 @@ import { ReminderView } from './Data';
 import { Reminder } from './Reminder';
 import EmptyState from '@atlaskit/empty-state';
 import Spinner from '@atlaskit/spinner';
+import SectionMessage from '@atlaskit/section-message';
 
 export type IssueViewProps = {
     reminders: ReminderView[] | undefined;
@@ -25,9 +26,25 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
         margin-bottom: 10px;
     `;
 
+    private static MessageContainer = styled.div`
+        padding-bottom: 8px;
+    `;
+
     render() {
         return (
             <div>
+                <IssueView.MessageContainer>
+                    <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+                        <p>
+                            Upgrade to the latest version of the App before June 2024.
+                            <ul>
+                                <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
+                                <li>You will be unable to create reminders on this panel from March 2024.</li>
+                                <li>Once upgraded, you can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders here).</li>
+                            </ul>
+                        </p>
+                    </SectionMessage>
+                </IssueView.MessageContainer>
                 <IssueViewActions
                     statusIndicator={this.props.statusIndicator}
                     onAddReminder={this.props.onAddReminder}

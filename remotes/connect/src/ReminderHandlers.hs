@@ -43,6 +43,9 @@ data ReminderRequest = ReminderRequest
   , prqMessage      :: Maybe T.Text
   } deriving (Show, Generic)
 
+newRemindersBlocked :: UTCTime
+newRemindersBlocked = integerPosixToUTCTime 1709251200
+
 data ReminderResponse = ReminderResponse
    { prsReminderId   :: Integer
    , prsIssueId      :: AC.IssueId
@@ -207,10 +210,12 @@ addReminder (tenant, Just userAaid) reminderRequest = writeError . runExceptT $ 
    when (userAaid /= requestAaid) $ throwE userMismatchError
    canSeeIssue <- withExceptT cantCheckPerms . ExceptT $ HU.canViewIssue tenant userAaid (AC.issueId . prqIssue $ reminderRequest)
    unless canSeeIssue $ throwE cantViewIssueError
+   unless (prqReminderDate reminderRequest < newRemindersBlocked) $ throwE retirementWarning
    ExceptT (m2e insertFailedError <$> addReminderFromRequest reminderRequest tenant requestAaid)
   where
     requestAaid = prqUserAaid reminderRequest
     -- Error strings
+    retirementWarning = (badRequest, "No new reminders can be created for after March 2024 using this method. Please upgrade this app and use the new screens.")
     userMismatchError = (badRequest, "Given the details for user " ++ show requestAaid ++ " however Atlassian Connect thinks you are " ++ show userAaid)
     cantCheckPerms per = (internalServer, "Could not work out if you could view this issue: " ++ (T.unpack . AC.perMessage $ per))
     cantViewIssueError = (forbidden, "You can't view this issue so you cannot create a reminder for this issue")

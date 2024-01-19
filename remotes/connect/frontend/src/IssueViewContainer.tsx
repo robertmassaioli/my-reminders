@@ -41,7 +41,7 @@ function createReminder(data: AddReminderRequest, pc: PageContext): Promise<void
     return createIndividualReminderApi(pc).addReminder(data).then(() => undefined).catch(() => {
         AP.flag.create({
             title: 'Could not create reminder',
-            body: 'Please try again and contact support if the problem persists',
+            body: 'Make sure you are not trying to create a Reminder with a due date from March 2024 onwards. Please try again and contact support if the problem persists',
             type: 'error',
             close: 'auto'
         });
