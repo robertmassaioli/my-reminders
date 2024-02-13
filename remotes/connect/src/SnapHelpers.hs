@@ -71,6 +71,11 @@ respondPlainWithError errorCode response = do
 logErrorS :: String -> SS.Handler a b ()
 logErrorS = SC.logError . BSC.pack
 
+logMessageS :: String -> SS.Handler a b ()
+logMessageS msg = do
+  liftIO $ putStrLn msg
+  return ()
+
 getTimestampOrCurrentTime :: SS.Handler a b UTCTime
 getTimestampOrCurrentTime =
   SC.getParam (BSC.pack "timestamp") >>= (\maybeRawTimestamp ->
