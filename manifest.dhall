@@ -50,7 +50,7 @@
       , key = "view-my-reminders"
       , location = "system.user.options/personal"
       , name.value = "My Reminders (legacy)"
-      , url = "/panel/jira/reminders/view"
+      , url = "/panel/jira/reminders/view?forge=true"
       }
     , { conditions = Some
         [ { condition = "user_is_logged_in", invert = False } ]
@@ -69,7 +69,7 @@
       , target =
         { type = "web_panel"
         , url =
-            "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
+            "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}&forge=true"
         }
       }
     ]
@@ -86,7 +86,7 @@
       , name.value = "My reminders (legacy)"
       , tooltip.value = "Your reminders for this issue."
       , url =
-          "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}"
+          "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}&forge=true"
       }
     ]
   , `jira:webhooks` =

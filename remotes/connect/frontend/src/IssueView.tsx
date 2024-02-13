@@ -6,6 +6,7 @@ import { Reminder } from './Reminder';
 import EmptyState from '@atlaskit/empty-state';
 import Spinner from '@atlaskit/spinner';
 import SectionMessage from '@atlaskit/section-message';
+import { isForgeConnectIframe } from './forge';
 
 export type IssueViewProps = {
     reminders: ReminderView[] | undefined;
@@ -31,19 +32,36 @@ export class IssueView extends React.PureComponent<IssueViewProps & IssueViewAct
     `;
 
     render() {
+        const isForgeMessage = (
+            <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+                <p>
+                    Please use the new Jira issue panel instead.
+                    <ul>
+                        <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
+                        <li>You will be unable to create reminders on this panel from March 2024.</li>
+                        <li>You can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders here).</li>
+                    </ul>
+                </p>
+            </SectionMessage>
+        );
+
+        const isConnectMessage = (
+            <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+                <p>
+                    Upgrade to the latest version of the App before June 2024.
+                    <ul>
+                        <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
+                        <li>You will be unable to create reminders on this panel from March 2024.</li>
+                        <li>Once upgraded, you can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders here).</li>
+                    </ul>
+                </p>
+            </SectionMessage>
+        );
+
         return (
             <div>
                 <IssueView.MessageContainer>
-                    <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
-                        <p>
-                            Upgrade to the latest version of the App before June 2024.
-                            <ul>
-                                <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
-                                <li>You will be unable to create reminders on this panel from March 2024.</li>
-                                <li>Once upgraded, you can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders here).</li>
-                            </ul>
-                        </p>
-                    </SectionMessage>
+                    {isForgeConnectIframe() ? isForgeMessage : isConnectMessage}
                 </IssueView.MessageContainer>
                 <IssueViewActions
                     statusIndicator={this.props.statusIndicator}
