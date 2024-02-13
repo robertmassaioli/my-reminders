@@ -32,14 +32,23 @@ standardHandlers =
 installedHandler :: AppHandler ()
 installedHandler = maybe SH.respondBadRequest installedHandlerWithTenant =<< AC.getLifecycleResponse
 
+writeErrorWithLogging :: AppHandler (Either (Int, String) b) -> AppHandler ()
+writeErrorWithLogging m = do
+   res <- m
+   case res of
+      Right _ -> return ()
+      Left (_, msg) -> SH.logErrorS $ "Error handing lifecycle event: " ++ msg
+   writeError m
+
 installedHandlerWithTenant :: AC.LifecycleResponse -> AppHandler ()
-installedHandlerWithTenant tenantInfo = writeError . runExceptT $ do
+installedHandlerWithTenant tenantInfo = writeErrorWithLogging . runExceptT $ do
    validHosts <- lift (AC.connectHostWhitelist <$> AC.getConnect)
    unless (validHostName validHosts tenantInfo) $ throwE domainNotSupported
    insertionResult <- lift $ insertTenantInfo tenantInfo
    let mappedResult = ARO.left tenantInsertErrorToHttpError insertionResult
    lift $ either (\x -> SH.logErrorS . show $ x) (const $ return ()) mappedResult
    except mappedResult
+   lift $ SH.logMessageS ("Installed tenant successfully: " ++ (show $ AC.lrBaseUrl tenantInfo) ++ ", " ++ (show $ AC.lrClientKey tenantInfo))
    lift SH.respondNoContent
    where
       domainNotSupported = (SH.unauthorised, "Your domain is not supported by this addon. Please contact the developers. " ++ (show . tenantAuthority $ tenantInfo))
