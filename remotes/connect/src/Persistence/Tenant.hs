@@ -18,7 +18,9 @@ module Persistence.Tenant (
 ) where
 
 import           Application
+import           Control.Monad                    (when)
 import           Control.Monad.IO.Class
+import           Data.Either                      (isLeft)
 import           Data.Either.Combinators          (rightToMaybe)
 import           Data.Int
 import           Data.Maybe
@@ -33,6 +35,7 @@ import qualified Data.Map                         as M
 import qualified Data.Text                        as T
 import qualified Network.Cryptor                  as NC
 import qualified Snap.AtlassianConnect            as AC
+import qualified SnapHelpers                      as SH
 
 data EncryptedTenant = EncryptedTenant
    { etTenantId               :: Integer       -- ^ Your identifier for this tenant.
@@ -102,6 +105,7 @@ insertTenantInformation maybeTenant lri@(AC.LifecycleResponseInstalled {}) = do
       -- We have seen this tenant before but we may have new information for it. Update it.
       (Just tenant, _, Right claimedTenant) | etKey tenant == AC.key claimedTenant -> do
          encryptedSharedSecret <- encryptSharedSecret lri
+         when (isLeft encryptedSharedSecret) $ SH.logMessageS $ "Warning: Not updating shared secret for " ++ (show $ AC.lrBaseUrl lri) ++ ": " ++ (show encryptedSharedSecret)
          let newTenant = genNewTenant encryptedSharedSecret
          updateTenantDetails newTenant
          wakeTenant newTenant
