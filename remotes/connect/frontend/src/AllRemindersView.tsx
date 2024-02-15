@@ -37,20 +37,20 @@ export class AllRemindersView extends React.PureComponent<AllRemindersViewProps,
 
     render() {
         const isForgeMessage = (
-            <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+            <SectionMessage appearance='warning' title='In June 2024, this panel will be retired. '>
                 <p>
                     To prepare:
                     <ul>
                         <li>Any legacy reminder that has not been sent by June will be sent at that time.</li>
                         <li>You can recreate your reminders using the new panel on the Jira issue (and delete your legacy reminders).</li>
-                        <li>You can view all of your new reminders in the "Apps &gt; Your Reminders" replacement screen.</li>
+                        <li>You can view all of your new reminders in the "Apps &gt; Your Reminders" replacement panel.</li>
                     </ul>
                 </p>
             </SectionMessage>
         );
 
         const isConnectMessage = (
-            <SectionMessage appearance='warning' title='In June 2024, this screen will be retired. '>
+            <SectionMessage appearance='warning' title='In June 2024, this panel will be retired. '>
                 <p>
                     Upgrade to the latest version of the App before June 2024.
                     <ul>
