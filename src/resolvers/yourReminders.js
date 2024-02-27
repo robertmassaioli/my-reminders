@@ -1,6 +1,5 @@
 import Resolver from '@forge/resolver';
-import api, { SortOrder, route, storage } from "@forge/api";
-import { deleteReminder } from './reminderPersistence';
+import { deleteReminder, getYourReminders } from './reminderPersistence';
 
 const resolver = new Resolver();
 
@@ -8,37 +7,6 @@ function extractViewContext(req) {
   return {
     userAaid: req.context.accountId,
   };
-}
-
-async function getYourReminders(viewContext) {
-  const allReminders = new Array();
-
-  let result = await storage
-    .entity('reminder')
-    .query()
-    .index("by-aaid", {
-      partition: [viewContext.userAaid]
-    })
-    .sort(SortOrder.ASC)
-    .getMany();
-
-  allReminders.push(...result.results);
-
-  while (result.nextCursor) {
-    result = await storage
-      .entity('reminder')
-      .query()
-      .index("by-aaid", {
-        partition: [viewContext.userAaid]
-      })
-      .sort(SortOrder.ASC)
-      .cursor(result.nextCursor)
-      .getMany();
-
-    allReminders.push(...result.results);
-  }
-
-  return allReminders;
 }
 
 resolver.define('getYourReminders', async (req) => {

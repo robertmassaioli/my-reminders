@@ -1,4 +1,4 @@
-import { storage } from "@forge/api";
+import { SortOrder, storage } from "@forge/api";
 import { isPresent } from 'ts-is-present';
 
 export async function deleteReminder(reminderKey, viewUserAaid) {
@@ -13,4 +13,35 @@ export async function deleteReminder(reminderKey, viewUserAaid) {
   } else {
     console.log(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewUserAaid}`)
   }
+}
+
+export async function getYourReminders(viewContext) {
+  const allReminders = new Array();
+
+  let result = await storage
+    .entity('reminder')
+    .query()
+    .index("by-aaid", {
+      partition: [viewContext.userAaid]
+    })
+    .sort(SortOrder.ASC)
+    .getMany();
+
+  allReminders.push(...result.results);
+
+  while (result.nextCursor) {
+    result = await storage
+      .entity('reminder')
+      .query()
+      .index("by-aaid", {
+        partition: [viewContext.userAaid]
+      })
+      .sort(SortOrder.ASC)
+      .cursor(result.nextCursor)
+      .getMany();
+
+    allReminders.push(...result.results);
+  }
+
+  return allReminders;
 }
