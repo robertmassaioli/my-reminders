@@ -2,6 +2,7 @@
 export { issueGlanceHandler } from './resolvers/issueGlance';
 export { sendRemindersHandler } from './resolvers/sendReminders';
 export { yourRemindersHandler } from './resolvers/yourReminders';
+export { dashboardGadgetHandler } from './resolvers/dashboardGadget';
 //TODO Old file for UI Kit 1
 
 import { WhereConditions, storage } from "@forge/api";

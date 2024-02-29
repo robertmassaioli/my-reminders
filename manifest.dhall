@@ -113,6 +113,7 @@
     , { handler = "index.issueGlanceHandler", key = "issueGlanceResolver" }
     , { handler = "index.sendRemindersHandler", key = "sendRemindersResolver" }
     , { handler = "index.yourRemindersHandler", key = "yourRemindersResolver" }
+    , { handler = "index.dashboardGadgetHandler", key = "dashboardGadgetResolver" }
     ]
   , `jira:globalPage` =
     [ { key = "view-my-reminders-v2"
@@ -129,6 +130,18 @@
       , resolver.function = "issueGlanceResolver"
       , resource = "issueGlanceMain"
       , title = "My Reminders"
+      }
+    ]
+  , `jira:dashboardGadget` =
+    [ { key = "dashboard-view-reminders"
+      , title = "Your reminders"
+      , description = "See your reminders across a number of issues. See your to-do list."
+      -- to-do: thumbnail
+      , render = "native"
+      , resource = "dashboardGadget"
+      , resolver.function = "dashboardGadgetResolver"
+      --, edit.resource = "dashboardGadget"
+      --, edit.render = "native"
       }
     ]
   , scheduledTrigger =
@@ -151,5 +164,6 @@
 , resources =
   [ { key = "issueGlanceMain", path = "src/frontend/issueGlance.jsx" }
   , { key = "yourRemindersMain", path = "src/frontend/viewYourReminders.jsx" }
+  , { key = "dashboardGadget", path = "src/frontend/dashboardGadget.jsx" }
   ]
 }
