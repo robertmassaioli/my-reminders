@@ -52,41 +52,11 @@
       , name.value = "My Reminders (legacy)"
       , url = "/panel/jira/reminders/view?forge=true"
       }
-    , { conditions = Some
-        [ { condition = "user_is_logged_in", invert = False } ]
-      , key = "create-reminder-dialog"
-      , location = "completely-invalid-location"
-      , name.value = "Create reminder (legacy)"
-      , url =
-          "/panel/v2/jira/reminder/create?issue_key={issue.key}&issue_id={issue.id}"
-      }
-    ]
-  , `jira:jiraIssueGlances` =
-    [ { content = { label.value = "My Reminders", type = "label" }
-      , icon = { height = 24, url = "/static/frontend/logo.svg", width = 24 }
-      , key = "view-issue-glance-reminders"
-      , name.value = "My Reminders (legacy)"
-      , target =
-        { type = "web_panel"
-        , url =
-            "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}&forge=true"
-        }
-      }
     ]
   , `jira:lifecycle` =
     [ { installed = "/installed"
       , key = "lifecycle-events"
       , uninstalled = "/uninstalled"
-      }
-    ]
-  , `jira:webPanels` =
-    [ { conditions = [ { condition = "user_is_logged_in", invert = False } ]
-      , key = "view-issue-reminders"
-      , location = "atl.jira.view.issue.right.context"
-      , name.value = "My reminders (legacy)"
-      , tooltip.value = "Your reminders for this issue."
-      , url =
-          "/panel/jira/reminder/simple?issue_key={issue.key}&issue_id={issue.id}&forge=true"
       }
     ]
   , `jira:webhooks` =
