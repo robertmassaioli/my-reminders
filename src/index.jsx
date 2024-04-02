@@ -59,10 +59,10 @@ export async function scheduleExpiryJobs() {
 
     const rejectedJobs = queuedJobs.filter(job => job.status === 'rejected');
     if (rejectedJobs.length > 0) {
-      console.log(`Tried to schedule ${expiredReminders.length} reminders to be sent but ${rejectedJobs.length} failed to be queued.`);
+      console.warn(`Tried to schedule ${expiredReminders.length} reminders to be sent but ${rejectedJobs.length} failed to be queued.`);
     }
   } else {
-    console.log(`No reminders were expired.`);
+    console.trace(`No reminders were expired.`);
   }
 
   return {

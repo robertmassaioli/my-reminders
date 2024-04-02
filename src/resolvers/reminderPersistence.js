@@ -8,10 +8,10 @@ export async function deleteReminder(reminderKey, viewUserAaid) {
     if (reminder.userAaid === viewUserAaid) {
       await storage.entity('reminder').delete(reminderKey);
     } else {
-      console.log(`SECURITY ALERT: User ${viewUserAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
+      console.error(`SECURITY ALERT: User ${viewUserAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
     }
   } else {
-    console.log(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewUserAaid}`)
+    console.error(`Tried to delete a reminder that no longer exists: ${reminderKey} as user ${viewUserAaid}`)
   }
 }
 

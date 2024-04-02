@@ -110,7 +110,6 @@ const App = () => {
     const issueSummary = await getIssueSummary(context);
 
     const expiry = moment(expiryDate).hour(window.value);
-    console.log(expiry.format('YYYY-MM-DD h:ma'));
 
     const response = await createReminder({
       issueSummary,
@@ -128,7 +127,6 @@ const App = () => {
   async function deleteReminder(reminderKey) {
     const data = await invoke('deleteReminder', { reminderKey });
 
-    console.log(JSON.stringify(data.reminders, null, 2));
     setReminders(data.reminders);
   }
 

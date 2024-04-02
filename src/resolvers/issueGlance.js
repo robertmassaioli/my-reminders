@@ -6,12 +6,6 @@ import { deleteReminder } from './reminderPersistence';
 
 const resolver = new Resolver();
 
-resolver.define('getText', (req) => {
-  console.log(req);
-
-  return 'Hello, world!';
-});
-
 function extractViewContext(req) {
   return {
     userAaid: req.context.accountId,
