@@ -62,7 +62,7 @@ export async function scheduleExpiryJobs() {
       console.warn(`Tried to schedule ${expiredReminders.length} reminders to be sent but ${rejectedJobs.length} failed to be queued.`);
     }
   } else {
-    console.trace(`No reminders were expired.`);
+    console.debug(`No reminders were expired.`);
   }
 
   return {
