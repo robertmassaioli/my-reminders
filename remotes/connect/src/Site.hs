@@ -124,6 +124,7 @@ applicationRoutes zone =
   , ("/rest/user/reminders"           , handleUserReminders)
   , ("/rest/expire"                   , handleExpireRequest)
   , ("/rest/expire/failing"           , handleExpireFailingRequest)
+  , ("/rest/expire/flush"             , handleExpireImmediatelyRequest)
   , ("/rest/purge"                    , handlePurgeRequest)
   , ("/rest/webhook/issue/update"     , handleIssueUpdateWebhook)
   , ("/rest/webhook/issue/delete"     , handleIssueDeleteWebhook)
