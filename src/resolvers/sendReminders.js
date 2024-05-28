@@ -83,7 +83,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
       to
     };
     // console.log(JSON.stringify(jsonBody));
-    await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
+    const notifyResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
       method: 'POST',
       headers: {
         'Content-type': 'application/json',
@@ -92,6 +92,10 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
       },
       body: JSON.stringify(jsonBody)
     });
+    if (!notifyResponse.ok()) {
+      throw new Error(`Did not send reminder: ${notifyResponse.status} - ${notifyResponse.text()}`);
+    }
+
     console.info(`Sent reminder: ${reminderKey}`);
 
     // Delete the reminder from storage
