@@ -92,7 +92,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
       },
       body: JSON.stringify(jsonBody)
     });
-    if (!notifyResponse.ok()) {
+    if (!notifyResponse.ok) {
       throw new Error(`Did not send reminder: ${notifyResponse.status} - ${notifyResponse.text()}`);
     }
 
