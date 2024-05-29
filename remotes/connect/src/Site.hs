@@ -115,6 +115,9 @@ routes zone = LH.lifecycleRoutes ++ applicationRoutes zone ++ redirects
 applicationRoutes :: Maybe MZ.Zone ->  [(ByteString, SS.Handler App App ())]
 applicationRoutes zone =
   [ ("/"                              , sendHomePage)
+  , ("/docs/home"                     , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki")
+  , ("/docs/about"                    , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki/About-My-Reminders")
+  , ("/docs/faq"                      , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki/Frequently-asked-questions")
   , ("/docs/:fileparam"               , showDocPage)
   , ("/panel/v2/jira/reminder/create" , loadConnectPanel)
   , ("/panel/jira/reminder/simple"    , loadConnectPanel)
