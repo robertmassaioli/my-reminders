@@ -65,7 +65,7 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
   const reminderKey = payload.key;
   const reminder = payload.value;
 	// process the event
-  console.log(`Sending reminder: ${reminderKey}`);
+  console.info(`Sending reminder: ${reminderKey}`);
 
   try {
     // Attempt to send the notification
@@ -92,14 +92,14 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
       },
       body: JSON.stringify(jsonBody)
     });
-    console.log(`Sent reminder: ${reminderKey}`);
+    console.info(`Sent reminder: ${reminderKey}`);
 
     // Delete the reminder from storage
     await storage.entity('reminder').delete(reminderKey);
-    console.log(`Cleared reminder: ${reminderKey}`);
+    console.info(`Cleared reminder: ${reminderKey}`);
   } catch (e) {
     // TODO throw an error to trigger the retry logic
-    console.log(`Error sending: ${reminderKey}: ${e}`);
+    console.error(`Error sending: ${reminderKey}: ${e}`);
   }
 });
 

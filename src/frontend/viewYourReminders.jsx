@@ -33,7 +33,6 @@ const App = () => {
   async function deleteReminder(reminderKey) {
     const data = await invoke('deleteReminder', { reminderKey });
 
-    console.log(JSON.stringify(data.reminders, null, 2));
     setAllReminders(data.reminders);
   }
 

@@ -9,6 +9,7 @@ module Persistence.Reminder
    , addReminder
    , getReminderByUser
    , getExpiredReminders
+   , getFlushBatch
    , getExpiredFailingReminders
    , incrementSendAttempts
    , getLiveRemindersByUser
@@ -135,6 +136,18 @@ getExpiredReminders expireTime = do
       ORDER BY random()
     |]
     (Only expireTime)
+   return (results :: [(Reminder, PT.EncryptedTenant)])
+
+getFlushBatch :: AppHandler [(Reminder, PT.EncryptedTenant)]
+getFlushBatch = do
+   results <- fmap (\(reminder :. tenant) -> (reminder, tenant)) <$> query_
+    [sql|
+      SELECT p.id, p.tenantId, p.issueId, p.originalIssueKey, p.issueKey, p.originalIssueSummary, p.issueSummary, p.userAaid, p.message, p.date, p.sendAttempts, t.id, t.key, t.publicKey, t.oauthClientId, t.encrypted_shared_secret, t.baseUrl, t.productType
+      FROM reminder p, tenant t
+      WHERE p.tenantId = t.id AND p.sendAttempts < 2
+      ORDER BY random()
+      LIMIT 20
+    |]
    return (results :: [(Reminder, PT.EncryptedTenant)])
 
 getExpiredFailingReminders :: UTCTime -> AppHandler [(Reminder, PT.EncryptedTenant)]
