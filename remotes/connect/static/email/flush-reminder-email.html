@@ -1,0 +1,20 @@
+<div>
+    <p>This reminder was sent early because it was stored on a retired component of My Reminders.</p>
+    <p>The reminder was originally supposed to be sent at: <a href="https://www.epochconverter.com/?q={{reminderDateUnix}}">{{reminderDateUnix}} unix time</a></p>
+    <p>Please ensure that My Reminders is upgraded to the latest version in your Atlassian Jira product and recreate the reminder.</p>
+    </p>
+    {{#reminderMessage}}
+    <p style="margin: 10px 0 0 0; margin-top: 0">{{reminderMessage}}</p>
+    <br/>
+    {{/reminderMessage}}
+    {{#showOriginal}}
+    <p style="margin: 10px 0 0 0; margin-top: 0">Your original reminder was called: {{originalIssueKey}} - {{originalIssueSummary}}</p>
+    <br/>
+    {{/showOriginal}}
+    <p style="margin: 10px 0 0 0; margin-top: 0">This was created using the My Reminders
+        add-on.</p>
+    <a
+        href="{{baseUrl}}/plugins/servlet/ac/{{pluginKey}}/view-my-reminders"
+        title=""
+        style="color: #3b73af; text-decoration: none">Manage your reminders</a>
+</div>

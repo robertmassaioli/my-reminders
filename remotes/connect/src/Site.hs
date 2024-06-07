@@ -115,6 +115,9 @@ routes zone = LH.lifecycleRoutes ++ applicationRoutes zone ++ redirects
 applicationRoutes :: Maybe MZ.Zone ->  [(ByteString, SS.Handler App App ())]
 applicationRoutes zone =
   [ ("/"                              , sendHomePage)
+  , ("/docs/home"                     , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki")
+  , ("/docs/about"                    , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki/About-My-Reminders")
+  , ("/docs/faq"                      , SC.redirect "https://github.com/robertmassaioli/my-reminders/wiki/Frequently-asked-questions")
   , ("/docs/:fileparam"               , showDocPage)
   , ("/panel/v2/jira/reminder/create" , loadConnectPanel)
   , ("/panel/jira/reminder/simple"    , loadConnectPanel)
@@ -124,6 +127,7 @@ applicationRoutes zone =
   , ("/rest/user/reminders"           , handleUserReminders)
   , ("/rest/expire"                   , handleExpireRequest)
   , ("/rest/expire/failing"           , handleExpireFailingRequest)
+  , ("/rest/expire/flush"             , handleExpireImmediatelyRequest)
   , ("/rest/purge"                    , handlePurgeRequest)
   , ("/rest/webhook/issue/update"     , handleIssueUpdateWebhook)
   , ("/rest/webhook/issue/delete"     , handleIssueDeleteWebhook)
@@ -148,7 +152,7 @@ staticRoutes =
 redirects :: [(ByteString, SS.Handler App App ())]
 redirects =
    -- Have to redirect right to the correct rapid board thanks to: https://jdog.jira-dev.com/browse/SW-1142
-   [ ("/redirect/raise-issue", SC.redirect "https://ecosystem.atlassian.net/secure/RapidBoard.jspa?projectKey=MR&rapidView=189")
+   [ ("/redirect/raise-issue", SC.redirect "https://github.com/robertmassaioli/my-reminders/issues")
    , ("/redirect/install", SC.redirect "https://marketplace.atlassian.com/plugins/com.atlassian.myreminders")
    , ("/redirect/help", SC.redirect "/docs/about")
    ]

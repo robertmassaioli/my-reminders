@@ -1,0 +1,24 @@
+Reminder for {{issueKey}}: {{issueSummary}}
+
+View the issue at: {{baseUrl}}/browse/{{issueKey}}
+
+This reminder was sent early because it was stored on a retired component of My Reminders.
+
+The reminder was originally supposed to be sent at: https://www.epochconverter.com/?q={{reminderDateUnix}}
+
+Please ensure that My Reminders is upgraded to the latest version in your Atlassian Jira product and recreate
+the reminder.
+
+{{#reminderMessage}}
+Your message:
+
+{{reminderMessage}}
+
+{{/reminderMessage}}
+{{#showOriginal}}
+Your original reminder was called: {{originalIssueKey}} - {{originalIssueSummary}}
+
+{{/showOriginal}}
+This was created using the My Reminders add-on.
+
+To manage your reminders visit: {{baseUrl}}/plugins/servlet/ac/{{pluginKey}}/view-my-reminders

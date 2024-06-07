@@ -3,6 +3,7 @@
 module ExpireHandlers
    ( handleExpireRequest
    , handleExpireFailingRequest
+   , handleExpireImmediatelyRequest
    ) where
 
 import           AppHelpers
@@ -38,6 +39,11 @@ handleExpireFailingRequest = handleMethods
    [ (SC.POST, expireFailingForTimestamp)
    ]
 
+handleExpireImmediatelyRequest :: AppHandler ()
+handleExpireImmediatelyRequest = handleMethods
+   [ (SC.POST, flushReminderBatch)
+   ]
+
 -- We expect that we will be given a timestamp by a trusted source; if that is no longer true then
 -- this code needs to be changed.
 -- TODO extra: we should check to make sure that the timestamp given is reasonably close to the
@@ -47,12 +53,23 @@ expireForTimestamp :: AppHandler ()
 expireForTimestamp = getKeyAndConfirm CONF.rmExpireKey . writeError . runExceptT $ do
    currentTime <- lift $ getTimestampOrCurrentTime
    connectConf <- lift $ AC.getConnect
-   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext connectConf)
+   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext "reminder-email" connectConf)
    expiredReminders <- lift $ getExpiredReminders currentTime
    liftIO . putStrLn $ "Expired reminders: " ++ showLength expiredReminders
    convertedExpiredReminders <- ExceptT (A.left conversionFailure <$> convertToTenant expiredReminders)
    lift $ sendReminders context convertedExpiredReminders
    return ()
+
+flushReminderBatch :: AppHandler ()
+flushReminderBatch = getKeyAndConfirm CONF.rmExpireKey . writeError . runExceptT $ do
+   connectConf <- lift $ AC.getConnect
+   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext "flush-reminder-email" connectConf)
+   reminderBatch <- lift $ getFlushBatch
+   liftIO . putStrLn $ "Flushing reminders: " ++ showLength reminderBatch
+   convertedReminderBatch <- ExceptT (A.left conversionFailure <$> convertToTenant reminderBatch)
+   lift $ sendReminders context convertedReminderBatch
+   return ()
+
 
 conversionFailure :: String -> (Int, String)
 conversionFailure e = (internalServer, "Failed to convert tenants: " <> e)
@@ -64,7 +81,7 @@ expireFailingForTimestamp :: AppHandler ()
 expireFailingForTimestamp = getKeyAndConfirm CONF.rmExpireKey . writeError . runExceptT $ do
    currentTime <- lift getTimestampOrCurrentTime
    connectConf <- lift AC.getConnect
-   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext connectConf)
+   context <- ExceptT (m2e missingEmailTemplates <$> loadEmailContext "reminder-email" connectConf)
    expiredReminders <- lift $ getExpiredFailingReminders currentTime
    liftIO . putStrLn $ "Expired failing reminders: " ++ showLength expiredReminders
    convertedExpiredReminders <- ExceptT (A.left conversionFailure <$> convertToTenant expiredReminders)
@@ -78,15 +95,15 @@ convertToTenant = runExceptT . mapM convert
          tenant <- ExceptT $ TP.convertTenant eTenant
          return (reminder, tenant)
 
-loadEmailContext :: AC.Connect -> AppHandler (Maybe EmailContext)
-loadEmailContext connectConf = do
+loadEmailContext :: String -> AC.Connect -> AppHandler (Maybe EmailContext)
+loadEmailContext fileNameNoSuffix connectConf = do
    potentialEmailDirectory <- liftIO $ findDirectory addEmailDirectory
    case potentialEmailDirectory of
       Nothing -> return Nothing
       Just emailDirectory -> do
          -- Load the templates from the filesystem
-         plainTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> "reminder-email.txt")
-         htmlTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> "reminder-email.html")
+         plainTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> (fileNameNoSuffix ++ ".txt"))
+         htmlTemplateResult <- liftIO $ M.localAutomaticCompile (emailDirectory </> (fileNameNoSuffix ++ ".html"))
          case (plainTemplateResult, htmlTemplateResult) of
             (Right plainTemplate, Right htmlTemplate) -> do
                return . Just $ EmailContext
