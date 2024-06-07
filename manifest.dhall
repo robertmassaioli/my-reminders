@@ -96,8 +96,6 @@
 , permissions.scopes
   =
   [ "storage:app"
-  , "read:connect-jira"
-  , "write:connect-jira"
   , "read:jira-work"
   , "write:jira-work"
   ]
