@@ -1,9 +1,5 @@
 { app =
-  { connect =
-    { authentication = "jwt"
-    , remote = "connect"
-    }
-  , features.autoUserConsent = True
+  { features.autoUserConsent = True
   , id = "ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52"
   -- Experienced an error trying to make REST calls when this was enabled: https://atlassian.slack.com/archives/C02DJFQC8G7/p1701819244863659
   , runtime.name = "nodejs18.x"
@@ -41,32 +37,6 @@
           }
         ]
       , name = "reminder"
-      }
-    ]
-  }
-, connectModules =
-  { `jira:generalPages` =
-    [ { conditions = None (List { condition : Text, invert : Bool })
-      , key = "view-my-reminders"
-      , location = "system.user.options/personal"
-      , name.value = "My Reminders (legacy)"
-      , url = "/panel/jira/reminders/view?forge=true"
-      }
-    ]
-  , `jira:lifecycle` =
-    [ { installed = "/installed"
-      , key = "lifecycle-events"
-      , uninstalled = "/uninstalled"
-      }
-    ]
-  , `jira:webhooks` =
-    [ { event = "jira:issue_updated"
-      , key = "webhook-1"
-      , url = "/rest/webhook/issue/update"
-      }
-    , { event = "jira:issue_deleted"
-      , key = "webhook-2"
-      , url = "/rest/webhook/issue/delete"
       }
     ]
   }
