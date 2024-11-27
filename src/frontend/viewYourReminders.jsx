@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import ForgeReconciler, { Text, Button, Table, Head, Cell, Row, Link } from '@forge/react';
-import { invoke, view } from '@forge/bridge';
-import { useEffectAsync } from '../useEffectAsync';
-import moment from 'moment-timezone';
-import { isPresent } from 'ts-is-present';
-import { toDateOutput } from './dateHelpers';
-import { getSiteInfo } from './siteInfo';
+import React, { useState } from "react";
+import ForgeReconciler, {
+  Text,
+  Button,
+  Link,
+  DynamicTable,
+} from "@forge/react";
+import { invoke, view } from "@forge/bridge";
+import { useEffectAsync } from "../useEffectAsync";
+import moment from "moment-timezone";
+import { isPresent } from "ts-is-present";
+import { toDateOutput } from "./dateHelpers";
+import { getSiteInfo } from "./siteInfo";
 
 const App = () => {
   const [allReminders, setAllReminders] = useState(undefined);
@@ -17,7 +22,7 @@ const App = () => {
   }, []);
 
   useEffectAsync(async () => {
-    const response = await invoke('getYourReminders');
+    const response = await invoke("getYourReminders");
     setAllReminders(response.reminders);
   }, []);
 
@@ -31,43 +36,85 @@ const App = () => {
   }
 
   async function deleteReminder(reminderKey) {
-    const data = await invoke('deleteReminder', { reminderKey });
+    const data = await invoke("deleteReminder", { reminderKey });
 
     setAllReminders(data.reminders);
   }
+  const head = {
+    cells: [
+      {
+        key: "date",
+        content: "Date",
+      },
+      {
+        key: "issue",
+        content: "Issue",
+      },
+      {
+        key: "message",
+        content: "Message",
+      },
+      {
+        key: "action",
+        content: "Action",
+      },
+    ],
+  };
+
+  const rows = allReminders.map((reminderResult) => {
+    const reminder = reminderResult.value;
+    const expiry = moment.unix(reminder.date);
+
+    return {
+      key: `row-${index}-${Date.now()}`,
+      cells: [
+        {
+          key: `expiry-${Date.now()}`,
+          content: toDateOutput(expiry),
+        },
+        {
+          key: `issueKey-${Date.now()}`,
+          content: (
+            <Link
+              href={
+                siteInfo
+                  ? `${siteInfo.displayUrl}/browse/${reminder.issueKey}`
+                  : "#"
+              }
+            >
+              {reminder.issueKey}
+            </Link>
+          ),
+        },
+        {
+          key: `message-${Date.now()}`,
+          content: reminder.message,
+        },
+        {
+          key: `remove-${Date.now()}`,
+          content: (
+            <Button
+              icon="editor-remove"
+              onClick={() => deleteReminder(reminderResult.key)}
+            />
+          ),
+        },
+      ],
+    };
+  });
 
   return (
     <>
-      <Text>All of your pending reminders can be viewed here. You can also perform some bulk actions on them.</Text>
-      {!isPresent(allReminders) && (
-        <Text>Loading your reminders...</Text>
-      )}
+      <Text>
+        All of your pending reminders can be viewed here. You can also perform
+        some bulk actions on them.
+      </Text>
+      {!isPresent(allReminders) && <Text>Loading your reminders...</Text>}
       {isPresent(allReminders) && allReminders.length === 0 && (
         <Text>You have no reminders. View some issues and create some!</Text>
       )}
       {isPresent(allReminders) && allReminders.length > 0 && (
-        <>
-          <Table>
-            <Head>
-              <Cell><Text>Date</Text></Cell>
-              <Cell><Text>Issue</Text></Cell>
-              <Cell><Text>Message</Text></Cell>
-              <Cell><Text>Action</Text></Cell>
-            </Head>
-            {allReminders.map(reminderResult => {
-              const reminder = reminderResult.value;
-              const expiry = moment.unix(reminder.date);
-              return (
-                <Row>
-                  <Cell>{toDateOutput(expiry)}</Cell>
-                  <Cell><Link href={siteInfo ? `${siteInfo.displayUrl}/browse/${reminder.issueKey}` : '#'}>{reminder.issueKey}</Link></Cell>
-                  <Cell>{reminder.message}</Cell>
-                  <Cell><Button icon="editor-remove" onClick={() => deleteReminder(reminderResult.key)} /></Cell>
-                </Row>
-              );
-            })}
-          </Table>
-        </>
+        <DynamicTable head={head} rows={rows} />
       )}
       {/* <Text>{JSON.stringify(allReminders)}</Text> */}
     </>

@@ -15,6 +15,7 @@ import ForgeReconciler, {
   Select,
   TextArea,
   Form,
+  FormFooter,
   ButtonGroup,
   DynamicTable,
   HelperMessage,
@@ -79,7 +80,7 @@ const App = () => {
   const [userTimezone, setUserTimezone] = useState(undefined);
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
     useState(undefined);
-
+  const { handleSubmit, register } = useForm();
   useEffectAsync(async () => {
     setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
   }, []);
@@ -165,10 +166,6 @@ const App = () => {
     setReminders(data.reminders);
   }
 
-  const createKey = (date) => {
-    return date;
-  };
-
   const head = {
     cells: [
       {
@@ -193,14 +190,13 @@ const App = () => {
     reminders && reminders.length > 0
       ? reminders.map((reminder, index) => {
           const { date, message } = reminder.value;
-          console.log(date);
           const expiry = moment.unix(date);
           const fullDateOutput = toDateOutput(expiry);
           return {
-            key: `row-${index}-${date}`,
+            key: `row-${index}-${Date.now()}`,
             cells: [
               {
-                key: createKey(date),
+                key: `expiry-${Date.now()}`,
                 content: (
                   <Tooltip text={fullDateOutput}>
                     <Text>{expiry.fromNow()}</Text>
@@ -208,14 +204,14 @@ const App = () => {
                 ),
               },
               {
-                key: createKey(date),
+                key: `message-${Date.now()}`,
                 content: <Text>{message || "<No Message>"}</Text>,
               },
               {
-                key: "temp",
+                key: `remove-${Date.now()}`,
                 content: (
                   <Button
-                    icon="editor-remove"
+                    iconBefore="editor-remove"
                     onClick={() => deleteReminder(reminder.key)}
                   />
                 ),
@@ -270,6 +266,7 @@ const App = () => {
           <ModalBody>
             <Form
               onSubmit={(data) => {
+                console.log("here", data);
                 setAddReminderOpen(false);
                 createArbitraryReminder(data);
               }}
@@ -301,8 +298,13 @@ const App = () => {
                 placeholder="Optional message to go with your reminder"
               />
             </Form>
+            <FormFooter>
+              <Button appearance="primary" type="submit">
+                Save
+              </Button>
+            </FormFooter>
           </ModalBody>
-          <ModalFooter></ModalFooter>
+          <ModalFooter />
         </Modal>
       )}
       {/* <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text> */}
