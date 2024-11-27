@@ -55,7 +55,7 @@ function View() {
     ],
   };
 
-  const rows = allReminders.map((reminderResult) => {
+  const rows = (allReminders || []).map((reminderResult, index) => {
     const reminder = reminderResult.value;
     const expiry = moment.unix(reminder.date);
 
