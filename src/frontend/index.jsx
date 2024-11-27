@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ForgeReconciler, { Text, Heading, ButtonSet, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage, DatePicker, Select, Option, TextArea, Form } from '@forge/react';
+import ForgeReconciler, { Text, Heading, ButtonGroup, Button, Table, Head, Cell, Row, Tooltip, Link, ModalDialog, SectionMessage, DatePicker, Select, Option, TextArea, Form } from '@forge/react';
 import { invoke, requestJira, view } from '@forge/bridge';
 import { useEffectAsync } from '../useEffectAsync';
 import moment from 'moment-timezone';
@@ -135,11 +135,11 @@ const App = () => {
   return (
     <>
       <Heading size="medium">Add reminder</Heading>
-      <ButtonSet>
+      <ButtonGroup>
         <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
         <Button  onClick={() => createReminderForNextWeek()}>In a Week</Button>
         <Button onClick={() => setAddReminderOpen(true)}>Select a time...</Button>
-      </ButtonSet>
+      </ButtonGroup>
       {reminders && reminders.length > 0 && (
         <>
           <Heading size="medium">Your reminders</Heading>
