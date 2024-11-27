@@ -21,6 +21,7 @@ import ForgeReconciler, {
   HelperMessage,
   RequiredAsterisk,
   ModalFooter,
+  useForm,
 } from "@forge/react";
 import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
@@ -227,6 +228,11 @@ const App = () => {
       value: hourOfDay.index,
     };
   });
+
+  const create = async (data) => {
+    setAddReminderOpen(false);
+    createArbitraryReminder(data);
+  };
   //TODO: Fix spacing between elements
   return (
     <>
@@ -264,21 +270,15 @@ const App = () => {
             <ModalTitle>Add a reminder</ModalTitle>
           </ModalHeader>
           <ModalBody>
-            <Form
-              onSubmit={(data) => {
-                console.log("here", data);
-                setAddReminderOpen(false);
-                createArbitraryReminder(data);
-              }}
-            >
+            <Form onSubmit={handleSubmit(create)}>
               <Label labelFor="expiryDate">Expiry date</Label>
               <RequiredAsterisk />
               <DatePicker
                 defaultValue={moment().add(1, "day").format("YYYY-MM-DD")}
                 name="expiryDate"
                 id="expiryDate"
-                isRequired={true}
                 autoFocus={false}
+                {...register("datepicker", { required: true })}
               />
               <HelperMessage>
                 Set this date to the day that you want your reminder to be sent
@@ -288,6 +288,7 @@ const App = () => {
                 name="window"
                 options={options}
                 //TODO: add defaultValue hourOfDay.index === 5
+                {...register("window")}
               />
               <HelperMessage>
                 In which hour do you want your reminder to be sent?
@@ -296,13 +297,14 @@ const App = () => {
               <TextArea
                 name="message"
                 placeholder="Optional message to go with your reminder"
+                {...register("message")}
               />
+              <FormFooter>
+                <Button appearance="primary" type="submit">
+                  Save
+                </Button>
+              </FormFooter>
             </Form>
-            <FormFooter>
-              <Button appearance="primary" type="submit">
-                Save
-              </Button>
-            </FormFooter>
           </ModalBody>
           <ModalFooter />
         </Modal>
