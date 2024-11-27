@@ -61,7 +61,7 @@ const App = () => {
     ],
   };
 
-  const rows = allReminders.map((reminderResult) => {
+  const rows = (allReminders || []).map((reminderResult, index) => {
     const reminder = reminderResult.value;
     const expiry = moment.unix(reminder.date);
 
@@ -94,9 +94,9 @@ const App = () => {
           key: `remove-${Date.now()}`,
           content: (
             <Button
-              icon="editor-remove"
+              iconBefore="editor-remove"
               onClick={() => deleteReminder(reminderResult.key)}
-            />
+            >Delete reminder</Button>
           ),
         },
       ],
@@ -114,7 +114,7 @@ const App = () => {
         <Text>You have no reminders. View some issues and create some!</Text>
       )}
       {isPresent(allReminders) && allReminders.length > 0 && (
-        <DynamicTable head={head} rows={rows} />
+        <DynamicTable isFixedSize={true} head={head} rows={rows} />
       )}
       {/* <Text>{JSON.stringify(allReminders)}</Text> */}
     </>
