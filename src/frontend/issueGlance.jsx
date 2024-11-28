@@ -22,12 +22,44 @@ import ForgeReconciler, {
   RequiredAsterisk,
   ModalFooter,
   useForm,
+  Stack,
+  Inline,
+  xcss,
+  Box,
+  Strong,
 } from "@forge/react";
 import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
 import moment from "moment-timezone";
 import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
+
+const buttonGroupBoxStyle = xcss({
+  marginTop: 'space.100'
+});
+
+const cardStyle = xcss({
+  padding: 'space.100',
+  marginRight: 'space.100',
+  borderBottomColor: 'color.border',
+  borderBottomWidth: 'border.width',
+  borderBottomStyle: 'solid',
+
+});
+
+const remindersSectionStyle = xcss({
+  marginTop: 'space.100'
+});
+
+const remindersInnerStyle = xcss({
+  borderTopColor: 'color.border',
+  borderTopWidth: 'border.width',
+  borderTopStyle: 'solid',
+});
+
+const reminderTitleStyle = xcss({
+  marginTop: 'space.100'
+});
 
 function generateHoursOfDay() {
   return Array.from({ length: 24 }, (_, index) => {
@@ -167,61 +199,6 @@ const App = () => {
     setReminders(data.reminders);
   }
 
-  const head = {
-    cells: [
-      {
-        key: "when",
-        content: "When",
-        shouldTruncate: true,
-      },
-      {
-        key: "message",
-        content: "Message",
-        shouldTruncate: true,
-      },
-      {
-        key: "action",
-        content: "Action",
-        shouldTruncate: true,
-      },
-    ],
-  };
-
-  const rows =
-    reminders && reminders.length > 0
-      ? reminders.map((reminder, index) => {
-          const { date, message } = reminder.value;
-          const expiry = moment.unix(date);
-          const fullDateOutput = toDateOutput(expiry);
-          return {
-            key: `row-${index}-${Date.now()}`,
-            cells: [
-              {
-                key: `expiry-${Date.now()}`,
-                content: (
-                  <Tooltip text={fullDateOutput}>
-                    <Text>{expiry.fromNow()}</Text>
-                  </Tooltip>
-                ),
-              },
-              {
-                key: `message-${Date.now()}`,
-                content: <Text>{message || "<No Message>"}</Text>,
-              },
-              {
-                key: `remove-${Date.now()}`,
-                content: (
-                  <Button
-                    iconBefore="editor-remove"
-                    onClick={() => deleteReminder(reminder.key)}
-                  />
-                ),
-              },
-            ],
-          };
-        })
-      : undefined;
-
   const options = generateHoursOfDay().map((hourOfDay) => {
     return {
       label: hourOfDay.display,
@@ -233,22 +210,52 @@ const App = () => {
     setAddReminderOpen(false);
     createArbitraryReminder(data);
   };
-  //TODO: Fix spacing between elements
+
   return (
     <>
       <Heading as="h3">Add reminder</Heading>
-      <ButtonGroup>
-        <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
-        <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
-        <Button onClick={() => setAddReminderOpen(true)}>
-          Select a time...
-        </Button>
-      </ButtonGroup>
+      <Box xcss={buttonGroupBoxStyle}>
+        <ButtonGroup>
+          <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
+          <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
+          <Button onClick={() => setAddReminderOpen(true)}>
+            Select a time...
+          </Button>
+        </ButtonGroup>
+      </Box>
       {reminders && reminders.length > 0 && (
-        <>
+        <Box xcss={remindersSectionStyle}>
           <Heading as="h3">Your reminders</Heading>
-          <DynamicTable head={head} rows={rows} />
-        </>
+          <Box xcss={remindersInnerStyle}>
+            <Stack grow="fill" >
+              {reminders.map(reminder => {
+                const { date, message } = reminder.value;
+                const expiry = moment.unix(date);
+                const fullDateOutput = toDateOutput(expiry);
+                return (
+                  <Box xcss={cardStyle}>
+                    <Stack>
+                      <Inline spread="space-between">
+                        <Box xcss={reminderTitleStyle}>
+                          <Tooltip content={fullDateOutput}>
+                            <Strong>{expiry.fromNow()}</Strong>
+                          </Tooltip>
+                        </Box>
+                        <Button
+                          iconBefore="editor-remove"
+                          onClick={() => deleteReminder(reminder.key)}
+                        />
+                      </Inline>
+                      {message && (
+                        <Text>{message || "<No Message>"}</Text>
+                      )}
+                    </Stack>
+                  </Box>
+                )
+              })}
+            </Stack>
+          </Box>
+        </Box>
       )}
       {reminders && reminders.length === 0 && (
         <SectionMessage>
@@ -278,7 +285,7 @@ const App = () => {
                 name="expiryDate"
                 id="expiryDate"
                 autoFocus={false}
-                {...register("datepicker", { required: true })}
+                {...register("expiryDate", { required: true })}
               />
               <HelperMessage>
                 Set this date to the day that you want your reminder to be sent
