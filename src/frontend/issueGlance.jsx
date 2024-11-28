@@ -40,7 +40,6 @@ const buttonGroupBoxStyle = xcss({
 
 const cardStyle = xcss({
   padding: 'space.100',
-  marginRight: 'space.100',
   borderBottomColor: 'color.border',
   borderBottomWidth: 'border.width',
   borderBottomStyle: 'solid',
@@ -52,9 +51,14 @@ const remindersSectionStyle = xcss({
 });
 
 const remindersInnerStyle = xcss({
+  marginTop: 'space.100',
   borderTopColor: 'color.border',
   borderTopWidth: 'border.width',
   borderTopStyle: 'solid',
+});
+
+const sectionMessageStyle = xcss({
+  marginTop: 'space.100'
 });
 
 const reminderTitleStyle = xcss({
@@ -258,14 +262,18 @@ const App = () => {
         </Box>
       )}
       {reminders && reminders.length === 0 && (
-        <SectionMessage>
-          <Text>You have no reminders on this issue. Create some!</Text>
-        </SectionMessage>
+        <Box xcss={sectionMessageStyle}>
+          <SectionMessage>
+            <Text>You have no reminders on this issue. Create some!</Text>
+          </SectionMessage>
+        </Box>
       )}
       {reminders === undefined && (
-        <SectionMessage>
-          <Text>Loading your reminders...</Text>
-        </SectionMessage>
+        <Box xcss={sectionMessageStyle}>
+          <SectionMessage>
+            <Text>Loading your reminders...</Text>
+          </SectionMessage>
+        </Box>
       )}
       <Text>
         Your timezone:{" "}

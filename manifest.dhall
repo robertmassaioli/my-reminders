@@ -1,6 +1,5 @@
 { app =
-  { features.autoUserConsent = True
-  , id = "ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52"
+  { id = "ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52"
   -- Experienced an error trying to make REST calls when this was enabled: https://atlassian.slack.com/archives/C02DJFQC8G7/p1701819244863659
   , runtime.name = "nodejs18.x"
   , storage.entities
