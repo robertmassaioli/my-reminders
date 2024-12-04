@@ -299,11 +299,13 @@ const App = () => {
                 Set this date to the day that you want your reminder to be sent
               </HelperMessage>
               <Label labelFor="window">Hour of day</Label>
+              <RequiredAsterisk />
               <Select
                 name="window"
                 options={options}
+                isRequired={true}
                 //TODO: add defaultValue hourOfDay.index === 5
-                {...register("window")}
+                {...register("window", { required: true})}
               />
               <HelperMessage>
                 In which hour do you want your reminder to be sent?
