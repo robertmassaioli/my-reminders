@@ -16,8 +16,6 @@ import ForgeReconciler, {
   TextArea,
   Form,
   FormFooter,
-  ButtonGroup,
-  DynamicTable,
   HelperMessage,
   RequiredAsterisk,
   ModalFooter,
@@ -35,34 +33,33 @@ import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
 
 const buttonGroupBoxStyle = xcss({
-  marginTop: 'space.100'
+  marginTop: "space.100",
 });
 
 const cardStyle = xcss({
-  padding: 'space.100',
-  borderBottomColor: 'color.border',
-  borderBottomWidth: 'border.width',
-  borderBottomStyle: 'solid',
-
+  padding: "space.100",
+  borderBottomColor: "color.border",
+  borderBottomWidth: "border.width",
+  borderBottomStyle: "solid",
 });
 
 const remindersSectionStyle = xcss({
-  marginTop: 'space.100'
+  marginTop: "space.100",
 });
 
 const remindersInnerStyle = xcss({
-  marginTop: 'space.100',
-  borderTopColor: 'color.border',
-  borderTopWidth: 'border.width',
-  borderTopStyle: 'solid',
+  marginTop: "space.100",
+  borderTopColor: "color.border",
+  borderTopWidth: "border.width",
+  borderTopStyle: "solid",
 });
 
 const sectionMessageStyle = xcss({
-  marginTop: 'space.100'
+  marginTop: "space.100",
 });
 
 const reminderTitleStyle = xcss({
-  marginTop: 'space.100'
+  marginTop: "space.100",
 });
 
 function generateHoursOfDay() {
@@ -219,20 +216,20 @@ const App = () => {
     <>
       <Heading as="h3">Add reminder</Heading>
       <Box xcss={buttonGroupBoxStyle}>
-        <ButtonGroup>
+        <Inline shouldWrap>
           <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
           <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
           <Button onClick={() => setAddReminderOpen(true)}>
             Select a time...
           </Button>
-        </ButtonGroup>
+        </Inline>
       </Box>
       {reminders && reminders.length > 0 && (
         <Box xcss={remindersSectionStyle}>
           <Heading as="h3">Your reminders</Heading>
           <Box xcss={remindersInnerStyle}>
-            <Stack grow="fill" >
-              {reminders.map(reminder => {
+            <Stack grow="fill">
+              {reminders.map((reminder) => {
                 const { date, message } = reminder.value;
                 const expiry = moment.unix(date);
                 const fullDateOutput = toDateOutput(expiry);
@@ -250,12 +247,10 @@ const App = () => {
                           onClick={() => deleteReminder(reminder.key)}
                         />
                       </Inline>
-                      {message && (
-                        <Text>{message || "<No Message>"}</Text>
-                      )}
+                      {message && <Text>{message || "<No Message>"}</Text>}
                     </Stack>
                   </Box>
-                )
+                );
               })}
             </Stack>
           </Box>
@@ -305,7 +300,7 @@ const App = () => {
                 options={options}
                 isRequired={true}
                 //TODO: add defaultValue hourOfDay.index === 5
-                {...register("window", { required: true})}
+                {...register("window", { required: true })}
               />
               <HelperMessage>
                 In which hour do you want your reminder to be sent?
