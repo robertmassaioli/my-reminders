@@ -85,7 +85,7 @@
     ]
   , scheduledTrigger =
     [ { function = "expiryScheduler"
-      , interval = "hour"
+      , interval = "fiveMinute"
       , key = "expirySchedulerJob"
       }
     ]
