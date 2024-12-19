@@ -216,7 +216,7 @@ const App = () => {
     <>
       <Heading as="h3">Add reminder</Heading>
       <Box xcss={buttonGroupBoxStyle}>
-        <Inline shouldWrap>
+        <Inline shouldWrap space="space.100">
           <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
           <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
           <Button onClick={() => setAddReminderOpen(true)}>
