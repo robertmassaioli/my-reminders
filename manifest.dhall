@@ -96,7 +96,7 @@
   =
   [ "storage:app"
   , "read:jira-work"
-  , "write:jira-work"
+  , "send:notification:jira"
   ]
 , resources =
   [ { key = "issueGlanceMain", path = "src/frontend/issueGlance.jsx" }
