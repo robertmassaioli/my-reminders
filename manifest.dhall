@@ -89,8 +89,6 @@
       , key = "expirySchedulerJob"
       }
     ]
-  , webtrigger =
-    [ { function = "expiryScheduler", key = "sendExpiredReminders" } ]
   }
 , permissions.scopes
   =
