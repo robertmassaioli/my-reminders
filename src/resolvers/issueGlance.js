@@ -1,6 +1,6 @@
 import Resolver from '@forge/resolver';
 import api, { storage, webTrigger } from "@forge/api";
-import moment from 'moment-timezone';
+import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from 'ts-is-present';
 import { deleteReminder } from './reminderPersistence';
 

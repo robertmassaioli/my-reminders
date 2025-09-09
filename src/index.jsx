@@ -6,7 +6,7 @@ export { dashboardGadgetHandler } from './resolvers/dashboardGadget';
 //TODO Old file for UI Kit 1
 
 import { WhereConditions, storage } from "@forge/api";
-import moment from 'moment';
+import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { Queue } from '@forge/events';
 
 // Why does my webtrigger return HTTP 424: what dependency am I missing?
