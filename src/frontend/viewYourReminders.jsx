@@ -7,7 +7,7 @@ import ForgeReconciler, {
 } from "@forge/react";
 import { invoke, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
-import moment from "moment-timezone";
+import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
 import { getSiteInfo } from "./siteInfo";

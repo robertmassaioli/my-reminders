@@ -1,7 +1,7 @@
 { app =
   { id = "ari:cloud:ecosystem::app/947ac65b-ca66-412f-8e52-11e797583c52"
   -- Experienced an error trying to make REST calls when this was enabled: https://atlassian.slack.com/archives/C02DJFQC8G7/p1701819244863659
-  , runtime.name = "nodejs18.x"
+  , runtime.name = "nodejs20.x"
   , storage.entities
     =
     [ { attributes =
@@ -75,7 +75,7 @@
     [ { key = "dashboard-view-reminders"
       , title = "Your reminders"
       , description = "See your reminders across a number of issues. See your to-do list."
-      -- to-do: thumbnail
+      , thumbnail = "https://marketplace.atlassian.com/product-listing/files/663e3103-e39b-4bca-82ae-23dc94c65b84?width=128&height=128"
       , render = "native"
       , resource = "dashboardGadget"
       , resolver.function = "dashboardGadgetResolver"

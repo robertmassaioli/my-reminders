@@ -28,7 +28,7 @@ import ForgeReconciler, {
 } from "@forge/react";
 import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
-import moment from "moment-timezone";
+import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
 
@@ -288,6 +288,8 @@ const App = () => {
                 name="expiryDate"
                 id="expiryDate"
                 autoFocus={false}
+                dateFormat="YYYY/MM/DD"
+                weekStartDay={1}
                 {...register("expiryDate", { required: true })}
               />
               <HelperMessage>
