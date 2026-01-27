@@ -289,6 +289,7 @@ const App = () => {
                 name="expiryDate"
                 id="expiryDate"
                 autoFocus={false}
+                defaultIsOpen={false}
                 dateFormat="YYYY/MM/DD"
                 weekStartDay={1}
                 {...register("expiryDate", { required: true })}
@@ -305,6 +306,7 @@ const App = () => {
                 isRequired={true}
                 timeIsEditable={true}
                 autoFocus={false}
+                defaultIsOpen={false}
                 times={generateTimeOptions(6, 20)}
                 {...register("expiryTime", { required: true })}
               />
