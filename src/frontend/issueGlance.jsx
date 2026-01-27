@@ -44,6 +44,11 @@ function generateTimeOptions(startHour, endHour) {
   return times;
 }
 
+function getRandomTimeInHour(baseHour) {
+  const randomMinute = Math.floor(Math.random() * 60);
+  return { hour: baseHour, minute: randomMinute };
+}
+
 const buttonGroupBoxStyle = xcss({
   marginTop: "space.100",
 });
@@ -128,9 +133,12 @@ const App = () => {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
     const tomorrow = moment()
       .add(1, "day")
-      .set("hour", 6 + Math.round(Math.random() * 2));
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
 
     const response = await createReminder({
       issueSummary,
@@ -149,9 +157,12 @@ const App = () => {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
     const nextWeek = moment()
       .add(7, "day")
-      .set("hour", 6 + Math.round(Math.random() * 2));
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
 
     const response = await createReminder({
       issueSummary,
