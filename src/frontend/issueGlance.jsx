@@ -12,7 +12,7 @@ import ForgeReconciler, {
   ModalTitle,
   SectionMessage,
   DatePicker,
-  Select,
+  TimePicker,
   TextArea,
   Form,
   FormFooter,
@@ -31,6 +31,18 @@ import { useEffectAsync } from "../useEffectAsync";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
+
+function generateTimeOptions(startHour, endHour) {
+  const times = [];
+  for (let hour = startHour; hour <= endHour; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    times.push(`${hourStr}:00`);
+    if (hour < endHour) { // Don't add :30 for the last hour
+      times.push(`${hourStr}:30`);
+    }
+  }
+  return times;
+}
 
 const buttonGroupBoxStyle = xcss({
   marginTop: "space.100",
@@ -62,27 +74,6 @@ const reminderTitleStyle = xcss({
   marginTop: "space.100",
 });
 
-function generateHoursOfDay() {
-  return Array.from({ length: 24 }, (_, index) => {
-    const isAfternoon = index >= 12;
-    const lowerMeridien = isAfternoon ? "pm" : "am";
-    let rawHour = index >= 12 ? index - 12 : index;
-    const displayLowerHour = rawHour === 0 ? 12 : rawHour;
-    const displayUpperHour = rawHour + 1;
-    const upperIs12 = displayUpperHour === 12;
-    const upperMeridien = isAfternoon
-      ? upperIs12
-        ? "am"
-        : "pm"
-      : upperIs12
-      ? "PM"
-      : "AM";
-    return {
-      index,
-      display: `${displayLowerHour}${lowerMeridien}-${displayUpperHour}${upperMeridien}`,
-    };
-  });
-}
 
 async function createReminder({ issueSummary, timestamp, message }) {
   const response = await invoke("createReminder", {
@@ -175,11 +166,16 @@ const App = () => {
     }
   }
 
-  async function createArbitraryReminder({ expiryDate, window, message }) {
+  async function createArbitraryReminder({ expiryDate, expiryTime, message }) {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
-    const expiry = moment(expiryDate).hour(window.value);
+    // Parse the time string (format: "HH:MM") and set it on the date
+    const [hours, minutes] = expiryTime.split(':').map(Number);
+    const expiry = moment(expiryDate)
+      .hour(hours)
+      .minute(minutes)
+      .second(0); // Keep seconds at 0 for clean timestamps
 
     const response = await createReminder({
       issueSummary,
@@ -200,12 +196,6 @@ const App = () => {
     setReminders(data.reminders);
   }
 
-  const options = generateHoursOfDay().map((hourOfDay) => {
-    return {
-      label: hourOfDay.display,
-      value: hourOfDay.index,
-    };
-  });
 
   const create = async (data) => {
     setAddReminderOpen(false);
@@ -295,17 +285,20 @@ const App = () => {
               <HelperMessage>
                 Set this date to the day that you want your reminder to be sent
               </HelperMessage>
-              <Label labelFor="window">Hour of day</Label>
+              <Label labelFor="expiryTime">Time</Label>
               <RequiredAsterisk />
-              <Select
-                name="window"
-                options={options}
+              <TimePicker
+                name="expiryTime"
+                id="expiryTime"
+                defaultValue="09:00"
                 isRequired={true}
-                //TODO: add defaultValue hourOfDay.index === 5
-                {...register("window", { required: true })}
+                timeIsEditable={true}
+                autoFocus={false}
+                times={generateTimeOptions(6, 20)}
+                {...register("expiryTime", { required: true })}
               />
               <HelperMessage>
-                In which hour do you want your reminder to be sent?
+                What time do you want your reminder to be sent?
               </HelperMessage>
               <Label labelFor="message">Reminder message</Label>
               <TextArea
