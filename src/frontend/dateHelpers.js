@@ -50,7 +50,23 @@ export function getInOneMonth() {
     .second(0);
 }
 
-export function getNextQuarter() {
+export function getFirstDayOfNextQuarter() {
+  const now = moment();
+  const currentQuarter = Math.ceil((now.month() + 1) / 3);
+  const nextQuarterMonth = (currentQuarter * 3) % 12;
+  const nextQuarterYear = nextQuarterMonth === 0 ? now.year() + 1 : now.year();
+  const randomTime = getRandomTimeInHour(6);
+  
+  return moment()
+    .year(nextQuarterYear)
+    .month(nextQuarterMonth)
+    .date(1)
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+export function getInThreeMonths() {
   const randomTime = getRandomTimeInHour(6);
   return moment()
     .add(3, 'months')

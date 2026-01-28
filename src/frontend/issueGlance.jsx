@@ -38,7 +38,8 @@ import {
   getNextMonday,
   getInSevenDays,
   getInOneMonth,
-  getNextQuarter,
+  getFirstDayOfNextQuarter,
+  getInThreeMonths,
   getInOneYear
 } from "./dateHelpers";
 
@@ -177,7 +178,8 @@ const App = () => {
       'next-monday': () => createQuickReminder(getNextMonday, 'Next Monday'),
       'in-seven-days': () => createQuickReminder(getInSevenDays, 'In Seven Days'),
       'in-month': () => createQuickReminder(getInOneMonth, 'In a Month'),
-      'next-quarter': () => createQuickReminder(getNextQuarter, 'Next Quarter'),
+      'in-three-months': () => createQuickReminder(getInThreeMonths, 'In Three Months'),
+      'next-quarter': () => createQuickReminder(getFirstDayOfNextQuarter, 'First Day Next Quarter'),
       'in-year': () => createQuickReminder(getInOneYear, 'In a Year'),
     };
     
@@ -243,7 +245,8 @@ const App = () => {
               { label: "Next Monday", value: "next-monday" },
               { label: "In seven days", value: "in-seven-days" },
               { label: "In a month", value: "in-month" },
-              { label: "Next quarter", value: "next-quarter" },
+              { label: "In three months", value: "in-three-months" },
+              { label: "First day next quarter", value: "next-quarter" },
               { label: "In a year", value: "in-year" }
             ]}
           />
