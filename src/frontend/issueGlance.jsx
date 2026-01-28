@@ -149,14 +149,14 @@ const App = () => {
   const { handleSubmit, register } = useForm();
   
   useEffectAsync(async () => {
-    // Only load webtrigger in development/testing environments
-    const isWebtriggerEnabled = process.env.webtriggerEnabled === 'true';
-    if (isWebtriggerEnabled) {
-      console.log('Webtrigger enabled - loading development webtrigger URL');
+    // Check if webtrigger exists (only in dev environment via manifest)
+    try {
+      console.log('Attempting to load webtrigger URL');
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
-    } else {
-      console.log('Webtrigger disabled - production mode or not configured');
-      setExpiredRemindersWebtrigger("Webtrigger disabled in production");
+      console.log('Webtrigger enabled - development environment');
+    } catch (error) {
+      console.log('Webtrigger not available - production environment');
+      setExpiredRemindersWebtrigger("Webtrigger not available in production");
     }
   }, []);
 
@@ -179,7 +179,7 @@ const App = () => {
   async function handleQuickSelectChange(option) {
     console.log("Quick select triggered:", option);
 
-    if (!option?.value) return;
+    if (!option || !option.value) return;
 
     const selectedValue = option.value;
     setQuickSelectValue(""); // Reset select immediately

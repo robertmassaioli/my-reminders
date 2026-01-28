@@ -90,7 +90,6 @@
       }
     ]
   }
-, environments.development.variables.webtriggerEnabled = "true"
 , permissions.scopes
   =
   [ "storage:app"
