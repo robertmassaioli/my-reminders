@@ -75,6 +75,23 @@ export function getInThreeMonths() {
     .second(0);
 }
 
+export function getEndOfDay() {
+  const randomTime = getRandomTimeInHour(16); // 4 PM hour
+  return moment()
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+export function getEndOfWeek() {
+  const randomTime = getRandomTimeInHour(16); // 4 PM hour
+  return moment()
+    .day(5) // Friday
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
 export function getInOneYear() {
   const randomTime = getRandomTimeInHour(6);
   return moment()
