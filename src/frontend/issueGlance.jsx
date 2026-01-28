@@ -31,7 +31,7 @@ import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
-import { 
+import {
   toDateOutput,
   getTomorrowMorning,
   getIn24Hours,
@@ -133,7 +133,7 @@ const App = () => {
     });
 
     console.log(`${logLabel} - Response:`, response);
-    
+
     if (isPresent(response.errors)) {
       console.error(`${logLabel} - Errors:`, response.errors);
     } else {
@@ -143,11 +143,21 @@ const App = () => {
   }
   const [reminders, setReminders] = useState(undefined);
   const [userTimezone, setUserTimezone] = useState(undefined);
+
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
-    useState(undefined);
+    useState("...");
   const { handleSubmit, register } = useForm();
+  
   useEffectAsync(async () => {
-    setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
+    // Only load webtrigger in development/testing environments
+    const isWebtriggerEnabled = process.env.webtriggerEnabled === 'true';
+    if (isWebtriggerEnabled) {
+      console.log('Webtrigger enabled - loading development webtrigger URL');
+      setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
+    } else {
+      console.log('Webtrigger disabled - production mode or not configured');
+      setExpiredRemindersWebtrigger("Webtrigger disabled in production");
+    }
   }, []);
 
   useEffectAsync(async () => {
@@ -168,12 +178,12 @@ const App = () => {
   // Handle quick select changes
   async function handleQuickSelectChange(option) {
     console.log("Quick select triggered:", option);
-    
+
     if (!option?.value) return;
-    
+
     const selectedValue = option.value;
     setQuickSelectValue(""); // Reset select immediately
-    
+
     const actions = {
       'tomorrow-morning': () => createQuickReminder(getTomorrowMorning, 'Tomorrow Morning'),
       'in-24-hours': () => createQuickReminder(getIn24Hours, 'In 24 Hours'),
@@ -186,7 +196,7 @@ const App = () => {
       'next-quarter': () => createQuickReminder(getFirstDayOfNextQuarter, 'First Day Next Quarter'),
       'in-year': () => createQuickReminder(getInOneYear, 'In a Year'),
     };
-    
+
     const action = actions[selectedValue];
     if (action) {
       await action();
@@ -364,7 +374,7 @@ const App = () => {
         </Modal>
       )}
       {/* <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text> */}
-      {/* <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text> */}
+      <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text>
       {/* <Text>Issue Summary: {issueSummary}</Text> */}
     </>
   );
