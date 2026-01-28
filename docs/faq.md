@@ -64,6 +64,10 @@ This view shows all your active reminders sorted by date, allowing you to manage
 
 Currently, My Reminders supports one-time reminders only. Each reminder fires once at the specified date and time. If you need recurring reminders, you'll need to create multiple individual reminders.
 
+#### How many reminders can I set per issue?
+
+You can set up to **10 reminders per user per issue**. This limit ensures system performance while providing flexibility for complex reminder needs. Different users can each set their own 10 reminders on the same issue.
+
 ### About Our Features
 
 #### Can I set a reminder for another person?

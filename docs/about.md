@@ -13,7 +13,9 @@ This app was developed to solve the common problem of issues being forgotten whe
 
 ### Support and Feedback
 
-If you encounter any issues or have suggestions for improvements, please reach out through your Jira administrator or the appropriate support channels.
+You can report bugs or suggest new features directly at: https://github.com/robertmassaioli/my-reminders/issues
+
+This GitHub repository is actively monitored by the development team for issue reports and feature requests.
 
 ### Technical Details
 
