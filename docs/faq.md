@@ -1,69 +1,138 @@
 ## Frequently Asked Questions
 
-### About our features
+### Getting Started
 
-These are the most common questions that we have about our features and our answers to those
-questions:
+#### How do I install and configure My Reminders?
+
+My Reminders can be installed from the Atlassian Marketplace by your Jira administrator. Once installed:
+
+1. Navigate to any Jira issue
+2. Look for the "My Reminders" section in the issue view
+3. Click "Set Reminder" to create your first reminder
+4. Choose your reminder date and add an optional custom message
+
+No additional configuration is required - the app works immediately after installation.
+
+#### What permissions does My Reminders need and why?
+
+My Reminders requires the following permissions:
+
+ - **Read access to issues**: To display issue details in reminders
+ - **Write access for notifications**: To send reminder notifications through Jira
+ - **User profile access**: To identify who should receive reminders
+
+These permissions ensure the app can function while maintaining security within your Jira instance.
+
+#### Is My Reminders available for Jira Server/Data Center or only Jira Cloud?
+
+My Reminders is currently available for **Jira Cloud only**. The app is built using Atlassian's Forge platform and runs entirely within Atlassian's infrastructure, which is specific to Cloud instances.
+
+### Using My Reminders
+
+#### How do I create or delete a reminder?
+
+**Creating a reminder:**
+1. Open any Jira issue
+2. Find the "My Reminders" section
+3. Click "Set Reminder"
+4. Select your reminder date and time
+5. Add an optional custom message
+6. Click "Save"
+
+**Deleting a reminder:**
+1. Find the reminder in the issue view
+2. Click "Delete" next to the reminder
+3. Confirm the deletion
+
+**Note:** Reminders cannot be edited once created. If you need to change a reminder's date, time, or message, you must delete the existing reminder and create a new one.
+
+#### Can I see all my active reminders in one place?
+
+Yes! Navigate to the "Your Reminders" page accessible from:
+- The Jira main menu
+- The My Reminders dashboard gadget (if added to your dashboard)
+
+This view shows all your active reminders sorted by date, allowing you to manage them in bulk.
+
+#### What happens if I delete or move an issue that has reminders?
+
+- **Deleted issues**: Reminders are automatically cancelled and removed from the system
+- **Moved issues**: Reminders remain active and will still be delivered, with links updated to the new issue location
+- **Closed issues**: Reminders continue to work normally - you may still want to be reminded about closed issues
+
+#### Can I set recurring reminders?
+
+Currently, My Reminders supports one-time reminders only. Each reminder fires once at the specified date and time. If you need recurring reminders, you'll need to create multiple individual reminders.
+
+### About Our Features
 
 #### Can I set a reminder for another person?
 
-The short answer is: no, by design. The intention is that you can only set reminders for yourself. Being able 
-to set reminders for other people opens up the potential for abusing the reminders system. 
-We wanted to prevent people from spamming their co-workers with reminders. In the spirit of 
-fostering good communication we currently do not intend to allow the creation of reminders for 
-other people.
+No, by design. You can only set reminders for yourself. This prevents potential abuse of the reminder system and unwanted notifications to colleagues.
 
-If you want to make sure that somebody else does not forget about an issue then you can
-set a reminder for yourself that says something like "Remind bob not to forget this issue".
+If you want to ensure someone else doesn't forget an issue, set a reminder for yourself with a message like "Follow up with person] about this issue."
 
-#### How far in the future can I set reminders for in this service?
+#### How far in the future can I set reminders?
 
-We will not forget about your reminders and are committed to ensuring that your reminders make it to 
-you. However, any reminder that is set for more than three years in the future is not currently
-supported. As this service matures we will be looking to extend this period of supported time.
+You can set reminders for any future date. The app provides quick options up to one year (through the "In a year" button), but you can use the custom date picker to set reminders as far into the future as needed.
 
-#### How do I tell you about a bug or a great new idea for a feature?
+#### What time zones are supported for reminders?
 
-If you have found a bug or you have a great new idea for a feature then you can [raise an issue][1]
-for us and we will get to it as soon as possible.
+Reminders use your Jira user profile's timezone setting. The app automatically converts reminder times to your local timezone for both setting and delivery.
 
-### About the Service
+#### What notification formats are available?
 
-These are the common questions that we get about the running of our service and our answers to those
-questions:
+Reminders are delivered as **Jira notifications**, which means:
+- Jira will send an email to your registered email address
+- The notification appears in your Jira notification center
+- Email format follows your Jira notification preferences
+- No external email service is used - everything stays within Atlassian's platform
 
-### What data do you store about my issues?
+### Data and Security
 
-We currently store the following data:
+#### What data do you store about my issues?
 
- - Issue Key / Id (So that we can direct you to the rigth issue)
- - Issue Summary (So that we can tell you what the issue is about)
- - Your username (So that we know who this reminder belongs to)
- - Your email address (So that we know where to send your reminder)
- - Your custom message (So that we know what to tell you to jog your memory)
- - Date to expire your reminder (So that we know when to send you the reminder)
+We store only the minimal data required for reminder functionality:
 
-We have only taken and stored the data that we strictly need to make this a fast and reliable
-service for you.
+ - Issue Key / ID (to direct you to the right issue)
+ - Issue Summary (to identify the issue in notifications)
+ - Your username (to know who owns the reminder)
+ - Your custom message (for personalized reminder content)
+ - Reminder date and time (to know when to send the reminder)
 
-### How long do you store my data for?
+All data remains within Atlassian's infrastructure and never leaves the platform.
 
-In order to remind you about anything we need to store that information until the date you should be
-reminded. We aim to delete your data within 30 days of us sending the reminder but may retain it for
-longer.
+#### How long do you store my data for?
 
-### What external services do you rely upon?
+Reminder data is stored until the reminder is delivered, then automatically deleted within 30 days. If you delete a reminder before it fires, the data is removed immediately.
 
-We feel the need to tell you about our external dependencies because, if they were to fail, then we
-will fail:
+#### Does My Reminders use any external services?
 
- - Our service runs on [AWS][5].
- - We have scheduled tasks (like sending your reminders) that are triggered by the [EazyCron service][4].
+No. My Reminders achieves the "Runs on Atlassian" badge, meaning:
+- All processing occurs within Atlassian's infrastructure
+- No data is sent to external services
+- All functionality is provided by Atlassian's platform capabilities
+- Maximum security and compliance standards are maintained
 
-If any of these services should fail then our functionality would be degraded in some manner.
-However we are monitoring those services closely and will know immediately if they do fail. Meaning
-that if there is a problem that we will be the first to know and be looking to fix it immediately.
+### Troubleshooting
 
- [1]: /redirect/raise-issue
- [4]: http://www.easycron.com/
- [5]: http://aws.amazon.com/
+#### How do I troubleshoot if reminders aren't working?
+
+If you're not receiving reminders:
+
+1. **Check your email settings**: Ensure Jira notifications are enabled in your profile
+2. **Verify reminder date**: Confirm the reminder date has passed
+3. **Check spam folder**: Jira notifications might be filtered by your email provider
+4. **Confirm issue access**: Ensure you still have permission to view the issue
+5. **Download app logs**: Administrators can go to the Connected Apps page, find "My Reminders", and click "Download logs" to see detailed information about why reminders did or did not send
+6. **Contact your administrator**: They can check app installation and permissions using the log information above
+
+#### How do I report bugs or suggest features?
+
+You can report bugs or suggest new features directly at: https://github.com/robertmassaioli/my-reminders/issues
+
+This GitHub repository is actively monitored by the development team and provides the fastest way to:
+- Report bugs with detailed information
+- Request new features
+- Track the status of your submissions
+- Participate in discussions about improvements
