@@ -13,6 +13,7 @@ import ForgeReconciler, {
   SectionMessage,
   DatePicker,
   TimePicker,
+  Select,
   TextArea,
   Form,
   FormFooter,
@@ -106,6 +107,7 @@ async function getIssueSummary(context) {
 
 const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
+  const [quickSelectValue, setQuickSelectValue] = useState("");
   const [reminders, setReminders] = useState(undefined);
   const [userTimezone, setUserTimezone] = useState(undefined);
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
@@ -177,6 +179,166 @@ const App = () => {
     }
   }
 
+  // New quick control functions
+  async function createReminderIn24Hours() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const in24Hours = moment().add(24, "hours").second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: in24Hours.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderNextMonday() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
+    const nextMonday = moment().day(1).add(1, "week")
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: nextMonday.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderInSevenDays() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const inSevenDays = moment().add(7, "days").second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: inSevenDays.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderInMonth() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
+    const inMonth = moment().add(1, "month")
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: inMonth.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderNextQuarter() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
+    const nextQuarter = moment().add(3, "months")
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: nextQuarter.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  async function createReminderInYear() {
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
+    const inYear = moment().add(1, "year")
+      .hour(randomTime.hour)
+      .minute(randomTime.minute)
+      .second(0);
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: inYear.unix(),
+      message: undefined,
+    });
+
+    if (isPresent(response.errors)) {
+      // TODO How do I flash the errors?
+    } else {
+      setReminders(response.reminders);
+    }
+  }
+
+  // Handle quick select changes
+  async function handleQuickSelectChange(value) {
+    setQuickSelectValue(""); // Reset select immediately
+    
+    switch (value) {
+      case "tomorrow-morning":
+        await createReminderForTomorrow();
+        break;
+      case "in-24-hours":
+        await createReminderIn24Hours();
+        break;
+      case "next-monday":
+        await createReminderNextMonday();
+        break;
+      case "in-seven-days":
+        await createReminderInSevenDays();
+        break;
+      case "in-month":
+        await createReminderInMonth();
+        break;
+      case "next-quarter":
+        await createReminderNextQuarter();
+        break;
+      case "in-year":
+        await createReminderInYear();
+        break;
+    }
+  }
+
   async function createArbitraryReminder({ expiryDate, expiryTime, message }) {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
@@ -218,11 +380,23 @@ const App = () => {
       <Heading as="h3">Add reminder</Heading>
       <Box xcss={buttonGroupBoxStyle}>
         <Inline shouldWrap space="space.100">
-          <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
-          <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
           <Button onClick={() => setAddReminderOpen(true)}>
             Select a time...
           </Button>
+          <Select
+            placeholder="Quick options..."
+            value={quickSelectValue}
+            onChange={handleQuickSelectChange}
+            options={[
+              { label: "Tomorrow Morning", value: "tomorrow-morning" },
+              { label: "In 24 hours", value: "in-24-hours" },
+              { label: "Next Monday", value: "next-monday" },
+              { label: "In seven days", value: "in-seven-days" },
+              { label: "In a month", value: "in-month" },
+              { label: "Next quarter", value: "next-quarter" },
+              { label: "In a year", value: "in-year" }
+            ]}
+          />
         </Inline>
       </Box>
       {reminders && reminders.length > 0 && (
