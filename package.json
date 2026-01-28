@@ -21,7 +21,8 @@
     "deploy:prod": "run-s manifest:prod deploy-only:prod",
     "deploy": "run-s deploy:local",
     "trigger:dev": "forge webtrigger cb8cd18d-1a99-4c26-af64-736c24e03e63",
-    "trigger:local": "forge webtrigger 898dba75-df2b-4bb7-85f5-50e70b6f1a9f"
+    "trigger:local": "forge webtrigger 898dba75-df2b-4bb7-85f5-50e70b6f1a9f",
+    "enable-webtrigger:dev": "forge variables set --environment development WEBTRIGGER_ENABLED true"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
