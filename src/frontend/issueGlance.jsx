@@ -116,6 +116,7 @@ async function getIssueSummary(context) {
 const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
   const [quickSelectValue, setQuickSelectValue] = useState("");
+  const [isWebtriggerEnabled, setIsWebtriggerEnabled] = useState(false);
 
   // Generic Quick Reminder Creation Function
   async function createQuickReminder(timeCalculator, logLabel) {
@@ -150,8 +151,10 @@ const App = () => {
   
   useEffectAsync(async () => {
     // Only load webtrigger when explicitly enabled via environment variable
-    const isWebtriggerEnabled = process.env.WEBTRIGGER_ENABLED === 'true';
-    if (isWebtriggerEnabled) {
+    const webtriggerEnabled = process.env.WEBTRIGGER_ENABLED === 'true';
+    setIsWebtriggerEnabled(webtriggerEnabled);
+    
+    if (webtriggerEnabled) {
       console.log('Webtrigger enabled via environment variable - loading development webtrigger URL');
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
     } else {
@@ -374,7 +377,9 @@ const App = () => {
         </Modal>
       )}
       {/* <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text> */}
-      <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text>
+      {isWebtriggerEnabled && (
+        <Text>Check for expired Reminders: {expiredRemindersWebtrigger}</Text>
+      )}
       {/* <Text>Issue Summary: {issueSummary}</Text> */}
     </>
   );
