@@ -132,6 +132,7 @@ const App = () => {
   }
 
   async function createReminderForTomorrow() {
+    console.log("createReminderForTomorrow - Starting");
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
@@ -142,15 +143,20 @@ const App = () => {
       .minute(randomTime.minute)
       .second(0);
 
+    console.log("createReminderForTomorrow - Reminder time:", tomorrow.format());
+
     const response = await createReminder({
       issueSummary,
       timestamp: tomorrow.unix(),
       message: undefined,
     });
 
+    console.log("createReminderForTomorrow - Response:", response);
+
     if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
+      console.error("createReminderForTomorrow - Errors:", response.errors);
     } else {
+      console.log("createReminderForTomorrow - Success, updating reminders");
       setReminders(response.reminders);
     }
   }
@@ -181,10 +187,12 @@ const App = () => {
 
   // New quick control functions
   async function createReminderIn24Hours() {
+    console.log("createReminderIn24Hours - Starting");
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
     const in24Hours = moment().add(24, "hours").second(0);
+    console.log("createReminderIn24Hours - Reminder time:", in24Hours.format());
 
     const response = await createReminder({
       issueSummary,
@@ -192,9 +200,12 @@ const App = () => {
       message: undefined,
     });
 
+    console.log("createReminderIn24Hours - Response:", response);
+
     if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
+      console.error("createReminderIn24Hours - Errors:", response.errors);
     } else {
+      console.log("createReminderIn24Hours - Success, updating reminders");
       setReminders(response.reminders);
     }
   }
@@ -311,31 +322,50 @@ const App = () => {
   }
 
   // Handle quick select changes
-  async function handleQuickSelectChange(value) {
+  async function handleQuickSelectChange(option) {
+    console.log("Quick select triggered:", option);
+    
+    if (!option || !option.value) {
+      console.log("No valid option selected");
+      return;
+    }
+    
+    const selectedValue = option.value;
+    console.log("Selected value:", selectedValue);
+    
     setQuickSelectValue(""); // Reset select immediately
     
-    switch (value) {
+    switch (selectedValue) {
       case "tomorrow-morning":
+        console.log("Creating reminder for tomorrow morning");
         await createReminderForTomorrow();
         break;
       case "in-24-hours":
+        console.log("Creating reminder for 24 hours");
         await createReminderIn24Hours();
         break;
       case "next-monday":
+        console.log("Creating reminder for next Monday");
         await createReminderNextMonday();
         break;
       case "in-seven-days":
+        console.log("Creating reminder for seven days");
         await createReminderInSevenDays();
         break;
       case "in-month":
+        console.log("Creating reminder for in a month");
         await createReminderInMonth();
         break;
       case "next-quarter":
+        console.log("Creating reminder for next quarter");
         await createReminderNextQuarter();
         break;
       case "in-year":
+        console.log("Creating reminder for in a year");
         await createReminderInYear();
         break;
+      default:
+        console.log("Unknown option:", selectedValue);
     }
   }
 
