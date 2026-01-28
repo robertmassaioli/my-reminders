@@ -243,6 +243,7 @@ const App = () => {
             placeholder="Quick options..."
             value={quickSelectValue}
             onChange={handleQuickSelectChange}
+            spacing="compact"
             options={[
               { label: "Tomorrow Morning", value: "tomorrow-morning" },
               { label: "In 24 hours", value: "in-24-hours" },
