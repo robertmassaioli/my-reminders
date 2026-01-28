@@ -1,23 +1,20 @@
 ## About My Reminders
 
-My Reminders was primarily written by three Atlassian developers. Here are some fun facts
-about this service:
+My Reminders is a Jira app designed to help users never forget important issues. Here are some key details about this service:
 
- - The service is written using Haskell via the [Snap Framework][1]. It is a robust service
-   as a result.
- - The service is hosted in AWS so that your data is secure, backed up and highly avaliable.
- - Reminders are sent through Jira, the app needs write access to Jira in order to send these reminders.
+ - The service is built as a modern web application with a React frontend and backend API
+ - The app integrates directly with Jira Cloud instances to provide seamless reminder functionality
+ - Reminders are delivered through Jira notifications, requiring appropriate permissions to send notifications
+ - **Data never leaves the Atlassian platform** - All reminder data is stored and processed within Atlassian's infrastructure
+ - The app achieves the **"Runs on Atlassian" badge**, ensuring maximum security and compliance
+ - The service stores minimal data required for reminder functionality while maintaining user privacy
 
-If you want to see the service improved, or you want to raise a bug, then please [raise an issue for
-us][2].
+This app was developed to solve the common problem of issues being forgotten when they don't receive regular updates, providing a proactive solution for issue management while maintaining the highest security standards.
 
-### Developers
+### Support and Feedback
 
- - [Robert Massaioli][3] (rmassaioli@atlassian.com)
- - Avi Knoll (aknoll@atlassian.com)
- - Eero Kaukonen (ekaukonen@atlassian.com)
+If you encounter any issues or have suggestions for improvements, please reach out through your Jira administrator or the appropriate support channels.
 
+### Technical Details
 
- [1]: https://snapframework.com/
- [2]: /redirect/raise-issue
- [3]: https://twitter.com/echo_rm
+The application follows modern web development practices and integrates with Jira's APIs to provide reliable reminder functionality while respecting user permissions and data security.
