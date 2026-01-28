@@ -50,6 +50,61 @@ function getRandomTimeInHour(baseHour) {
   return { hour: baseHour, minute: randomMinute };
 }
 
+// Individual Time Calculator Functions
+function getTomorrowMorning() {
+  const randomTime = getRandomTimeInHour(6);
+  return moment()
+    .add(1, 'day')
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+function getIn24Hours() {
+  return moment().add(24, 'hours').second(0);
+}
+
+function getNextMonday() {
+  const randomTime = getRandomTimeInHour(6);
+  return moment()
+    .day(1) // Monday
+    .add(1, 'week')
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+function getInSevenDays() {
+  return moment().add(7, 'days').second(0);
+}
+
+function getInOneMonth() {
+  const randomTime = getRandomTimeInHour(6);
+  return moment()
+    .add(1, 'month')
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+function getNextQuarter() {
+  const randomTime = getRandomTimeInHour(6);
+  return moment()
+    .add(3, 'months')
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
+function getInOneYear() {
+  const randomTime = getRandomTimeInHour(6);
+  return moment()
+    .add(1, 'year')
+    .hour(randomTime.hour)
+    .minute(randomTime.minute)
+    .second(0);
+}
+
 const buttonGroupBoxStyle = xcss({
   marginTop: "space.100",
 });
@@ -108,6 +163,31 @@ async function getIssueSummary(context) {
 const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
   const [quickSelectValue, setQuickSelectValue] = useState("");
+
+  // Generic Quick Reminder Creation Function
+  async function createQuickReminder(timeCalculator, logLabel) {
+    console.log(`${logLabel} - Starting`);
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const targetTime = timeCalculator();
+    console.log(`${logLabel} - Reminder time:`, targetTime.format());
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: targetTime.unix(),
+      message: undefined,
+    });
+
+    console.log(`${logLabel} - Response:`, response);
+    
+    if (isPresent(response.errors)) {
+      console.error(`${logLabel} - Errors:`, response.errors);
+    } else {
+      console.log(`${logLabel} - Success, updating reminders`);
+      setReminders(response.reminders);
+    }
+  }
   const [reminders, setReminders] = useState(undefined);
   const [userTimezone, setUserTimezone] = useState(undefined);
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
@@ -131,241 +211,31 @@ const App = () => {
     moment.tz.setDefault(userTimezone);
   }
 
-  async function createReminderForTomorrow() {
-    console.log("createReminderForTomorrow - Starting");
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const tomorrow = moment()
-      .add(1, "day")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    console.log("createReminderForTomorrow - Reminder time:", tomorrow.format());
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: tomorrow.unix(),
-      message: undefined,
-    });
-
-    console.log("createReminderForTomorrow - Response:", response);
-
-    if (isPresent(response.errors)) {
-      console.error("createReminderForTomorrow - Errors:", response.errors);
-    } else {
-      console.log("createReminderForTomorrow - Success, updating reminders");
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderForNextWeek() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const nextWeek = moment()
-      .add(7, "day")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: nextWeek.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  // New quick control functions
-  async function createReminderIn24Hours() {
-    console.log("createReminderIn24Hours - Starting");
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const in24Hours = moment().add(24, "hours").second(0);
-    console.log("createReminderIn24Hours - Reminder time:", in24Hours.format());
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: in24Hours.unix(),
-      message: undefined,
-    });
-
-    console.log("createReminderIn24Hours - Response:", response);
-
-    if (isPresent(response.errors)) {
-      console.error("createReminderIn24Hours - Errors:", response.errors);
-    } else {
-      console.log("createReminderIn24Hours - Success, updating reminders");
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderNextMonday() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const nextMonday = moment().day(1).add(1, "week")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: nextMonday.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderInSevenDays() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const inSevenDays = moment().add(7, "days").second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: inSevenDays.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderInMonth() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const inMonth = moment().add(1, "month")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: inMonth.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderNextQuarter() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const nextQuarter = moment().add(3, "months")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: nextQuarter.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createReminderInYear() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const randomTime = getRandomTimeInHour(6); // Random minute between 6:00-6:59 AM
-    const inYear = moment().add(1, "year")
-      .hour(randomTime.hour)
-      .minute(randomTime.minute)
-      .second(0);
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: inYear.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
 
   // Handle quick select changes
   async function handleQuickSelectChange(option) {
     console.log("Quick select triggered:", option);
     
-    if (!option || !option.value) {
-      console.log("No valid option selected");
-      return;
-    }
+    if (!option?.value) return;
     
     const selectedValue = option.value;
-    console.log("Selected value:", selectedValue);
-    
     setQuickSelectValue(""); // Reset select immediately
     
-    switch (selectedValue) {
-      case "tomorrow-morning":
-        console.log("Creating reminder for tomorrow morning");
-        await createReminderForTomorrow();
-        break;
-      case "in-24-hours":
-        console.log("Creating reminder for 24 hours");
-        await createReminderIn24Hours();
-        break;
-      case "next-monday":
-        console.log("Creating reminder for next Monday");
-        await createReminderNextMonday();
-        break;
-      case "in-seven-days":
-        console.log("Creating reminder for seven days");
-        await createReminderInSevenDays();
-        break;
-      case "in-month":
-        console.log("Creating reminder for in a month");
-        await createReminderInMonth();
-        break;
-      case "next-quarter":
-        console.log("Creating reminder for next quarter");
-        await createReminderNextQuarter();
-        break;
-      case "in-year":
-        console.log("Creating reminder for in a year");
-        await createReminderInYear();
-        break;
-      default:
-        console.log("Unknown option:", selectedValue);
+    const actions = {
+      'tomorrow-morning': () => createQuickReminder(getTomorrowMorning, 'Tomorrow Morning'),
+      'in-24-hours': () => createQuickReminder(getIn24Hours, 'In 24 Hours'),
+      'next-monday': () => createQuickReminder(getNextMonday, 'Next Monday'),
+      'in-seven-days': () => createQuickReminder(getInSevenDays, 'In Seven Days'),
+      'in-month': () => createQuickReminder(getInOneMonth, 'In a Month'),
+      'next-quarter': () => createQuickReminder(getNextQuarter, 'Next Quarter'),
+      'in-year': () => createQuickReminder(getInOneYear, 'In a Year'),
+    };
+    
+    const action = actions[selectedValue];
+    if (action) {
+      await action();
+    } else {
+      console.log("Unknown option:", selectedValue);
     }
   }
 
