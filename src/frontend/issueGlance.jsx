@@ -31,7 +31,16 @@ import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
-import { toDateOutput } from "./dateHelpers";
+import { 
+  toDateOutput,
+  getTomorrowMorning,
+  getIn24Hours,
+  getNextMonday,
+  getInSevenDays,
+  getInOneMonth,
+  getNextQuarter,
+  getInOneYear
+} from "./dateHelpers";
 
 function generateTimeOptions(startHour, endHour) {
   const times = [];
@@ -45,65 +54,6 @@ function generateTimeOptions(startHour, endHour) {
   return times;
 }
 
-function getRandomTimeInHour(baseHour) {
-  const randomMinute = Math.floor(Math.random() * 60);
-  return { hour: baseHour, minute: randomMinute };
-}
-
-// Individual Time Calculator Functions
-function getTomorrowMorning() {
-  const randomTime = getRandomTimeInHour(6);
-  return moment()
-    .add(1, 'day')
-    .hour(randomTime.hour)
-    .minute(randomTime.minute)
-    .second(0);
-}
-
-function getIn24Hours() {
-  return moment().add(24, 'hours').second(0);
-}
-
-function getNextMonday() {
-  const randomTime = getRandomTimeInHour(6);
-  return moment()
-    .day(1) // Monday
-    .add(1, 'week')
-    .hour(randomTime.hour)
-    .minute(randomTime.minute)
-    .second(0);
-}
-
-function getInSevenDays() {
-  return moment().add(7, 'days').second(0);
-}
-
-function getInOneMonth() {
-  const randomTime = getRandomTimeInHour(6);
-  return moment()
-    .add(1, 'month')
-    .hour(randomTime.hour)
-    .minute(randomTime.minute)
-    .second(0);
-}
-
-function getNextQuarter() {
-  const randomTime = getRandomTimeInHour(6);
-  return moment()
-    .add(3, 'months')
-    .hour(randomTime.hour)
-    .minute(randomTime.minute)
-    .second(0);
-}
-
-function getInOneYear() {
-  const randomTime = getRandomTimeInHour(6);
-  return moment()
-    .add(1, 'year')
-    .hour(randomTime.hour)
-    .minute(randomTime.minute)
-    .second(0);
-}
 
 const buttonGroupBoxStyle = xcss({
   marginTop: "space.100",
