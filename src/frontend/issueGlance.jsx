@@ -150,13 +150,13 @@ const App = () => {
   
   useEffectAsync(async () => {
     // Only load webtrigger when explicitly enabled via environment variable
-    const isWebtriggerEnabled = process.env.webtriggerEnabled === 'true';
+    const isWebtriggerEnabled = process.env.WEBTRIGGER_ENABLED === 'true';
     if (isWebtriggerEnabled) {
       console.log('Webtrigger enabled via environment variable - loading development webtrigger URL');
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
     } else {
       console.log('Webtrigger disabled - environment variable not set to true');
-      setExpiredRemindersWebtrigger("Webtrigger disabled (set webtriggerEnabled=true to enable)");
+      setExpiredRemindersWebtrigger("Webtrigger disabled (set WEBTRIGGER_ENABLED=true to enable)");
     }
   }, []);
 
