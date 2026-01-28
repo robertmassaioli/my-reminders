@@ -149,14 +149,14 @@ const App = () => {
   const { handleSubmit, register } = useForm();
   
   useEffectAsync(async () => {
-    // Check if webtrigger exists (only in dev environment via manifest)
-    try {
-      console.log('Attempting to load webtrigger URL');
+    // Only load webtrigger when explicitly enabled via environment variable
+    const isWebtriggerEnabled = process.env.webtriggerEnabled === 'true';
+    if (isWebtriggerEnabled) {
+      console.log('Webtrigger enabled via environment variable - loading development webtrigger URL');
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
-      console.log('Webtrigger enabled - development environment');
-    } catch (error) {
-      console.log('Webtrigger not available - production environment');
-      setExpiredRemindersWebtrigger("Webtrigger not available in production");
+    } else {
+      console.log('Webtrigger disabled - environment variable not set to true');
+      setExpiredRemindersWebtrigger("Webtrigger disabled (set webtriggerEnabled=true to enable)");
     }
   }, []);
 
