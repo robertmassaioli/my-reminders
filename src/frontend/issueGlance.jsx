@@ -245,15 +245,15 @@ const App = () => {
             onChange={handleQuickSelectChange}
             spacing="compact"
             options={[
-              { label: "Tomorrow Morning", value: "tomorrow-morning" },
-              { label: "In 24 hours", value: "in-24-hours" },
               { label: "End of day", value: "end-of-day" },
-              { label: "Next Monday", value: "next-monday" },
-              { label: "In seven days", value: "in-seven-days" },
+              { label: "In 24 hours", value: "in-24-hours" },
+              { label: "Tomorrow Morning", value: "tomorrow-morning" },
               { label: "End of week", value: "end-of-week" },
+              { label: "In seven days", value: "in-seven-days" },
+              { label: "Next Monday", value: "next-monday" },
               { label: "In a month", value: "in-month" },
-              { label: "Next quarter start", value: "next-quarter" },
               { label: "In three months", value: "in-three-months" },
+              { label: "Next quarter start", value: "next-quarter" },
               { label: "In a year", value: "in-year" }
             ]}
           />
