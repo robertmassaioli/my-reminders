@@ -380,7 +380,7 @@ const App = () => {
       {/* <Text>Reminder Data: {JSON.stringify(reminders, null, 2)}</Text> */}
       {isWebtriggerEnabled && (
         <Text>
-          Check for expired Reminders: 
+          Check for expired Reminders:{" "}
           <Link href={expiredRemindersWebtrigger} openNewTab>
             {expiredRemindersWebtrigger}
           </Link>
