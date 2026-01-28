@@ -246,7 +246,7 @@ const App = () => {
               { label: "In seven days", value: "in-seven-days" },
               { label: "In a month", value: "in-month" },
               { label: "In three months", value: "in-three-months" },
-              { label: "First day next quarter", value: "next-quarter" },
+              { label: "Next quarter start", value: "next-quarter" },
               { label: "In a year", value: "in-year" }
             ]}
           />
