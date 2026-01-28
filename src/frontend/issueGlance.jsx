@@ -156,11 +156,11 @@ const App = () => {
     setIsWebtriggerEnabled(webtriggerEnabled);
     
     if (webtriggerEnabled) {
-      console.log(`Webtrigger enabled for ${config.environment} environment - loading webtrigger URL`);
+      console.log('Webtrigger enabled - loading webtrigger URL');
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
     } else {
-      console.log(`Webtrigger disabled for ${config.environment} environment`);
-      setExpiredRemindersWebtrigger(`Webtrigger disabled in ${config.environment}`);
+      console.log('Webtrigger disabled');
+      setExpiredRemindersWebtrigger('Webtrigger disabled');
     }
   }, []);
 
