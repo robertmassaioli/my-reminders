@@ -7,10 +7,14 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint src/**/* || npm run --silent hook-errors",
     "hook-errors": "echo '\\x1b[31mThe build failed because a Forge UI hook is being used incorrectly. Forge UI hooks follow the same rules as React Hooks but have their own API definitions. See the Forge documentation for details on how to use Forge UI hooks.\n' && exit 1",
-    "manifest:local": "dhall-to-yaml-ng --file manifest.local.dhall --output manifest.yml",
-    "manifest:dev": "dhall-to-yaml-ng --file manifest.dev.dhall --output manifest.yml",
-    "manifest:stg": "dhall-to-yaml-ng --file manifest.stg.dhall --output manifest.yml",
-    "manifest:prod": "dhall-to-yaml-ng --file manifest.prod.dhall --output manifest.yml",
+    "prebuild:local": "dhall-to-json --file config.dev.dhall --output src/config.json",
+    "prebuild:dev": "dhall-to-json --file config.dev.dhall --output src/config.json",
+    "prebuild:stg": "dhall-to-json --file config.prod.dhall --output src/config.json",
+    "prebuild:prod": "dhall-to-json --file config.prod.dhall --output src/config.json",
+    "manifest:local": "npm run prebuild:local && dhall-to-yaml-ng --file manifest.local.dhall --output manifest.yml",
+    "manifest:dev": "npm run prebuild:dev && dhall-to-yaml-ng --file manifest.dev.dhall --output manifest.yml",
+    "manifest:stg": "npm run prebuild:stg && dhall-to-yaml-ng --file manifest.stg.dhall --output manifest.yml",
+    "manifest:prod": "npm run prebuild:prod && dhall-to-yaml-ng --file manifest.prod.dhall --output manifest.yml",
     "deploy-only:local": "forge deploy -e local",
     "deploy-only:dev": "forge deploy -e development",
     "deploy-only:stg": "forge deploy -e staging",
@@ -21,7 +25,8 @@
     "deploy:prod": "run-s manifest:prod deploy-only:prod",
     "deploy": "run-s deploy:local",
     "trigger:dev": "forge webtrigger cb8cd18d-1a99-4c26-af64-736c24e03e63",
-    "trigger:local": "forge webtrigger 898dba75-df2b-4bb7-85f5-50e70b6f1a9f"
+    "trigger:local": "forge webtrigger 898dba75-df2b-4bb7-85f5-50e70b6f1a9f",
+    "enable-webtrigger:dev": "forge variables set --environment development WEBTRIGGER_ENABLED true"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
