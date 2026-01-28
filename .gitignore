@@ -6,6 +6,7 @@
 
 # This file is auto-generated now
 manifest.yml
+src/config.json
 
 # Don't use yarn for the forge app, use npm
 /yarn.lock

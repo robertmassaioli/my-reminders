@@ -44,6 +44,7 @@ import {
   getInThreeMonths,
   getInOneYear
 } from "./dateHelpers";
+import config from "../config.json";
 
 function generateTimeOptions(startHour, endHour) {
   const times = [];
@@ -150,16 +151,16 @@ const App = () => {
   const { handleSubmit, register } = useForm();
   
   useEffectAsync(async () => {
-    // Only load webtrigger when explicitly enabled via environment variable
-    const webtriggerEnabled = process.env.WEBTRIGGER_ENABLED === 'true';
+    // Load webtrigger based on build-time configuration
+    const webtriggerEnabled = config.webtriggerEnabled;
     setIsWebtriggerEnabled(webtriggerEnabled);
     
     if (webtriggerEnabled) {
-      console.log('Webtrigger enabled via environment variable - loading development webtrigger URL');
+      console.log(`Webtrigger enabled for ${config.environment} environment - loading webtrigger URL`);
       setExpiredRemindersWebtrigger(await invoke("getExpirySchedulerWebTrigger"));
     } else {
-      console.log('Webtrigger disabled - environment variable not set to true');
-      setExpiredRemindersWebtrigger("Webtrigger disabled (set WEBTRIGGER_ENABLED=true to enable)");
+      console.log(`Webtrigger disabled for ${config.environment} environment`);
+      setExpiredRemindersWebtrigger(`Webtrigger disabled in ${config.environment}`);
     }
   }, []);
 
