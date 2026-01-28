@@ -12,6 +12,7 @@ import ForgeReconciler, {
   ModalTitle,
   SectionMessage,
   DatePicker,
+  TimePicker,
   Select,
   TextArea,
   Form,
@@ -30,7 +31,32 @@ import { invoke, requestJira, view } from "@forge/bridge";
 import { useEffectAsync } from "../useEffectAsync";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
-import { toDateOutput } from "./dateHelpers";
+import { 
+  toDateOutput,
+  getTomorrowMorning,
+  getIn24Hours,
+  getEndOfDay,
+  getNextMonday,
+  getInSevenDays,
+  getEndOfWeek,
+  getInOneMonth,
+  getFirstDayOfNextQuarter,
+  getInThreeMonths,
+  getInOneYear
+} from "./dateHelpers";
+
+function generateTimeOptions(startHour, endHour) {
+  const times = [];
+  for (let hour = startHour; hour <= endHour; hour++) {
+    const hourStr = hour.toString().padStart(2, '0');
+    times.push(`${hourStr}:00`);
+    if (hour < endHour) { // Don't add :30 for the last hour
+      times.push(`${hourStr}:30`);
+    }
+  }
+  return times;
+}
+
 
 const buttonGroupBoxStyle = xcss({
   marginTop: "space.100",
@@ -62,27 +88,6 @@ const reminderTitleStyle = xcss({
   marginTop: "space.100",
 });
 
-function generateHoursOfDay() {
-  return Array.from({ length: 24 }, (_, index) => {
-    const isAfternoon = index >= 12;
-    const lowerMeridien = isAfternoon ? "pm" : "am";
-    let rawHour = index >= 12 ? index - 12 : index;
-    const displayLowerHour = rawHour === 0 ? 12 : rawHour;
-    const displayUpperHour = rawHour + 1;
-    const upperIs12 = displayUpperHour === 12;
-    const upperMeridien = isAfternoon
-      ? upperIs12
-        ? "am"
-        : "pm"
-      : upperIs12
-      ? "PM"
-      : "AM";
-    return {
-      index,
-      display: `${displayLowerHour}${lowerMeridien}-${displayUpperHour}${upperMeridien}`,
-    };
-  });
-}
 
 async function createReminder({ issueSummary, timestamp, message }) {
   const response = await invoke("createReminder", {
@@ -110,6 +115,32 @@ async function getIssueSummary(context) {
 
 const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
+  const [quickSelectValue, setQuickSelectValue] = useState("");
+
+  // Generic Quick Reminder Creation Function
+  async function createQuickReminder(timeCalculator, logLabel) {
+    console.log(`${logLabel} - Starting`);
+    const context = await view.getContext();
+    const issueSummary = await getIssueSummary(context);
+
+    const targetTime = timeCalculator();
+    console.log(`${logLabel} - Reminder time:`, targetTime.format());
+
+    const response = await createReminder({
+      issueSummary,
+      timestamp: targetTime.unix(),
+      message: undefined,
+    });
+
+    console.log(`${logLabel} - Response:`, response);
+    
+    if (isPresent(response.errors)) {
+      console.error(`${logLabel} - Errors:`, response.errors);
+    } else {
+      console.log(`${logLabel} - Success, updating reminders`);
+      setReminders(response.reminders);
+    }
+  }
   const [reminders, setReminders] = useState(undefined);
   const [userTimezone, setUserTimezone] = useState(undefined);
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
@@ -133,53 +164,47 @@ const App = () => {
     moment.tz.setDefault(userTimezone);
   }
 
-  async function createReminderForTomorrow() {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
 
-    const tomorrow = moment()
-      .add(1, "day")
-      .set("hour", 6 + Math.round(Math.random() * 2));
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: tomorrow.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
+  // Handle quick select changes
+  async function handleQuickSelectChange(option) {
+    console.log("Quick select triggered:", option);
+    
+    if (!option?.value) return;
+    
+    const selectedValue = option.value;
+    setQuickSelectValue(""); // Reset select immediately
+    
+    const actions = {
+      'tomorrow-morning': () => createQuickReminder(getTomorrowMorning, 'Tomorrow Morning'),
+      'in-24-hours': () => createQuickReminder(getIn24Hours, 'In 24 Hours'),
+      'end-of-day': () => createQuickReminder(getEndOfDay, 'End of Day'),
+      'next-monday': () => createQuickReminder(getNextMonday, 'Next Monday'),
+      'in-seven-days': () => createQuickReminder(getInSevenDays, 'In Seven Days'),
+      'end-of-week': () => createQuickReminder(getEndOfWeek, 'End of Week'),
+      'in-month': () => createQuickReminder(getInOneMonth, 'In a Month'),
+      'in-three-months': () => createQuickReminder(getInThreeMonths, 'In Three Months'),
+      'next-quarter': () => createQuickReminder(getFirstDayOfNextQuarter, 'First Day Next Quarter'),
+      'in-year': () => createQuickReminder(getInOneYear, 'In a Year'),
+    };
+    
+    const action = actions[selectedValue];
+    if (action) {
+      await action();
     } else {
-      setReminders(response.reminders);
+      console.log("Unknown option:", selectedValue);
     }
   }
 
-  async function createReminderForNextWeek() {
+  async function createArbitraryReminder({ expiryDate, expiryTime, message }) {
     const context = await view.getContext();
     const issueSummary = await getIssueSummary(context);
 
-    const nextWeek = moment()
-      .add(7, "day")
-      .set("hour", 6 + Math.round(Math.random() * 2));
-
-    const response = await createReminder({
-      issueSummary,
-      timestamp: nextWeek.unix(),
-      message: undefined,
-    });
-
-    if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
-    } else {
-      setReminders(response.reminders);
-    }
-  }
-
-  async function createArbitraryReminder({ expiryDate, window, message }) {
-    const context = await view.getContext();
-    const issueSummary = await getIssueSummary(context);
-
-    const expiry = moment(expiryDate).hour(window.value);
+    // Parse the time string (format: "HH:MM") and set it on the date
+    const [hours, minutes] = expiryTime.split(':').map(Number);
+    const expiry = moment(expiryDate)
+      .hour(hours)
+      .minute(minutes)
+      .second(0); // Keep seconds at 0 for clean timestamps
 
     const response = await createReminder({
       issueSummary,
@@ -200,12 +225,6 @@ const App = () => {
     setReminders(data.reminders);
   }
 
-  const options = generateHoursOfDay().map((hourOfDay) => {
-    return {
-      label: hourOfDay.display,
-      value: hourOfDay.index,
-    };
-  });
 
   const create = async (data) => {
     setAddReminderOpen(false);
@@ -217,11 +236,27 @@ const App = () => {
       <Heading as="h3">Add reminder</Heading>
       <Box xcss={buttonGroupBoxStyle}>
         <Inline shouldWrap space="space.100">
-          <Button onClick={() => createReminderForTomorrow()}>Tomorrow</Button>
-          <Button onClick={() => createReminderForNextWeek()}>In a Week</Button>
           <Button onClick={() => setAddReminderOpen(true)}>
             Select a time...
           </Button>
+          <Select
+            placeholder="Quick options..."
+            value={quickSelectValue}
+            onChange={handleQuickSelectChange}
+            spacing="compact"
+            options={[
+              { label: "End of day", value: "end-of-day" },
+              { label: "Tomorrow Morning", value: "tomorrow-morning" },
+              { label: "In 24 hours", value: "in-24-hours" },
+              { label: "End of week", value: "end-of-week" },
+              { label: "Next Monday", value: "next-monday" },
+              { label: "In seven days", value: "in-seven-days" },
+              { label: "In a month", value: "in-month" },
+              { label: "Next quarter start", value: "next-quarter" },
+              { label: "In three months", value: "in-three-months" },
+              { label: "In a year", value: "in-year" }
+            ]}
+          />
         </Inline>
       </Box>
       {reminders && reminders.length > 0 && (
@@ -288,6 +323,7 @@ const App = () => {
                 name="expiryDate"
                 id="expiryDate"
                 autoFocus={false}
+                defaultIsOpen={false}
                 dateFormat="YYYY/MM/DD"
                 weekStartDay={1}
                 {...register("expiryDate", { required: true })}
@@ -295,17 +331,21 @@ const App = () => {
               <HelperMessage>
                 Set this date to the day that you want your reminder to be sent
               </HelperMessage>
-              <Label labelFor="window">Hour of day</Label>
+              <Label labelFor="expiryTime">Time</Label>
               <RequiredAsterisk />
-              <Select
-                name="window"
-                options={options}
+              <TimePicker
+                name="expiryTime"
+                id="expiryTime"
+                defaultValue="09:00"
                 isRequired={true}
-                //TODO: add defaultValue hourOfDay.index === 5
-                {...register("window", { required: true })}
+                timeIsEditable={true}
+                autoFocus={false}
+                defaultIsOpen={false}
+                times={generateTimeOptions(6, 20)}
+                {...register("expiryTime", { required: true })}
               />
               <HelperMessage>
-                In which hour do you want your reminder to be sent?
+                What time do you want your reminder to be sent?
               </HelperMessage>
               <Label labelFor="message">Reminder message</Label>
               <TextArea
