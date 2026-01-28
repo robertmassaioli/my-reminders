@@ -1,4 +1,4 @@
-import moment from "moment";
+import moment from 'moment-timezone/builds/moment-timezone-with-data';
 
 export function toDateOutput(input) {
   const expiry = input.clone();
