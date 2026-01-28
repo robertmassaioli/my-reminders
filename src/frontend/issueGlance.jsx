@@ -246,14 +246,14 @@ const App = () => {
             spacing="compact"
             options={[
               { label: "End of day", value: "end-of-day" },
-              { label: "In 24 hours", value: "in-24-hours" },
               { label: "Tomorrow Morning", value: "tomorrow-morning" },
+              { label: "In 24 hours", value: "in-24-hours" },
               { label: "End of week", value: "end-of-week" },
-              { label: "In seven days", value: "in-seven-days" },
               { label: "Next Monday", value: "next-monday" },
+              { label: "In seven days", value: "in-seven-days" },
               { label: "In a month", value: "in-month" },
-              { label: "In three months", value: "in-three-months" },
               { label: "Next quarter start", value: "next-quarter" },
+              { label: "In three months", value: "in-three-months" },
               { label: "In a year", value: "in-year" }
             ]}
           />
