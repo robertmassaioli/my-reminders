@@ -15,148 +15,61 @@ amount of time.
 
 For detailed documentation, please visit the [project wiki](https://github.com/robertmassaioli/my-reminders/wiki).
 
-## Developing the Atlassian Connect Addon
+## Development
 
-### Database setup
+This app is built using [Atlassian Forge](https://developer.atlassian.com/platform/forge/), a cloud development platform for building Atlassian Cloud apps.
 
-You'll need a postgreSQL server available, matching the access configurations in
-`snaplets/postgresql-simple/devel.cfg`.
+### Prerequisites
 
-There is a convenience script at `schema/bootstrap.sh` to set up the database for you, assuming that
-the current user has permission to create databases.
+1. **Node.js** (version 18 or later) - Check with `node --version`
+2. **Forge CLI** - Install globally with `npm install -g @forge/cli`
+3. **Atlassian account** with developer access
 
-During development, if you make changes to migrations that have already run locally, you'll need to the dbmigrations `moo` tool. You can install it by running:
+### Quick Start
 
-    stack install dbmigrations-postgresql
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-And then you can use the tool by running:
+2. **Log in to Forge:**
+   ```bash
+   forge login
+   ```
 
-    yarn moo --help
-    
-Please don't modify previous migrations, only add new ones.
+3. **Deploy to development environment:**
+   ```bash
+   npm run deploy:dev
+   ```
 
-### Running the plugin
+4. **Install the app on your Atlassian site:**
+   ```bash
+   forge install --site <your-site>.atlassian.net
+   ```
 
-First setup a nix-shell environment with the haskell stack command:
+### Development Commands
 
-``` shell
-nix-shell -p postgresql zlib jdk stack libiconv
-```
+- `npm run deploy` - Deploy to local development environment
+- `npm run deploy:dev` - Deploy to development environment  
+- `npm run deploy:stg` - Deploy to staging environment
+- `npm run deploy:prod` - Deploy to production environment
+- `npm run lint` - Run ESLint on the codebase
 
-Then use the stack command to build the service:
+### Configuration
 
-``` shell
-stack build
-```
+The app uses Dhall configuration files for different environments:
+- `config.dev.dhall` - Development configuration
+- `config.prod.dhall` - Production configuration
+- `manifest.*.dhall` - Forge manifest files for different environments
 
-To continuously build the service while developing:
+### Storage
 
-``` shell
-stack build --file-watch
-```
+This Forge app uses [Atlassian's managed storage](https://developer.atlassian.com/platform/forge/storage/) instead of external databases. Storage entities are defined in the manifest files.
 
-To run the tests:
+### Learn More
 
-``` shell
-stack test
-```
-
-And to run the service:
-
-``` shell
-stack run my-reminders
-```
-
-To run the service in a development watch mode:
-
-``` shell
-CONNECT_BASE_URL=https://95e354fe3704.ngrok.io yarn dev-watch
-```
-
-You can test that the App is running by hitting: http://localhost:8000/atlassian-connect.json
-
-## Deploying with Docker
-
-This project has opted to use Docker as the deployment mechanism. To build the development docker
-image run the following in the root directory of the project:
-
-    time docker build .
-
-Using the time command means that you can get a feel for how long the docker build will take on your
-machine. Once you have the docker build you can make the production docker image by:
-
-    CONTAINER_ID=XXXX bash to-production.bash
-
-Which will copy the build image from the build container and pass it through to the production
-container. It will also pull through all of the required resources. This production image should be
-possible to deploy independently of everything else. The reason that we have this separation is that
-you require > 2GB of image size to create the build docker container and only ~270MB of image size
-to create the production container. This allows us to have much more efficient production
-deployments.
-
-### Local testing with Docker
-
-The addon will reject installation requests from hosts that aren't whitelisted. If your JIRA
-installation has a base URL with a hostname other than "localhost", the hostname of the docker image,
-or one of the Atlassian OnDemand public domains, you will need to modify the whitelist (found in
-`src/Connect/Connect.hs`).
-
-You will also need to modify `snaplets/postgresql-simple/devel.cfg` to point to your database from
-the Docker container, as the database will not be running in the addon's Docker image.
-
-## Dependencies
-
-My Reminders is built against the Haskell Platform, currently version `2013.2.0.0`.
-The latest version of Cabal is always recommended, we have tested with at least
-`cabal-install version 1.20.0.2`.
-
-Additional dependencies required on `PATH` include:
-
-- `pg_config` (e.g. `apt-get install libpq-dev` on Debian/Ubuntu)
-
-## Running the Code
-
-There is a useful trick where you can hit /admin/reload on localhost and refresh the entire service
-without having to restart the process. This is excellent for rapid development.
-
-## Optional dependencies
-
-These are not strictly necessary but make life easier.
-
-### UPX
-
-Compresses the executable. `make dist` currently strips debug symbols _and_ compresses the executable.
-
-    » brew install upx
-    
-### cabal-constraints
-
-The `make freeze` target "freezes" the exact versions of the dependencies selected by cabal-install. The dependency list will be written to `cabal.config`.
-This requires the `cabal-constraints` executable to be available:
-
-    » cabal install cabal-constraints
-    
-## Deploying this service to production
-
-Now that you have built the docker container you are going to want to deploy this service to
-production. Just place the docker container somewhere and give it the following environment
-variables:
-
- - http\_proxy: Required if you need to route outgoing requests through a HTTP proxy.
- - https\_proxy: Required if you need to route outgoing requests through a HTTPS proxy.
- - PG\_MY\_REMINDERS\_HOST: The PostgreSQL host.
- - PG\_MY\_REMINDERS\_PORT: The PostgreSQL port.
- - PG\_MY\_REMINDERS\_SCHEMA: The PostgreSQL database name.
- - PG\_MY\_REMINDERS\_ROLE: The PostgreSQL role that has access to that database.
- - PG\_MY\_REMINDERS\_PASSWORD: The password of the role.
- - CONNECT\_BASE\_URL: The base url that should appear in your Atlassian Connect Descriptor.
- - CONNECT\_SECRET\_KEY: The secret key that Atlassian Connect will use for page tokens.
- - EXPIRE\_KEY: The key to pass to the service to give access to the expire handler.
- - PURGE\_KEY: The key to pass to the service to give access to the purge handler.
- - MIGRATION\_KEY: The key to pass to the service to give access to the migration handler.
-
-If you have properly set these environment variables then the service will be up and running in more
-time. For greater control you may want to edit the configuration properties in the resources
-directory.
+- [Forge Documentation](https://developer.atlassian.com/platform/forge/)
+- [Forge React Guide](https://developer.atlassian.com/platform/forge/custom-ui-kit-components/)
+- [Forge Storage API](https://developer.atlassian.com/platform/forge/storage/)
 
  [1]: https://github.com/robertmassaioli/my-reminders
