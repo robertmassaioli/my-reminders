@@ -3,6 +3,8 @@
 Important: This repository is in the process of [moving to Github](https://github.com/robertmassaioli/my-reminders). Until the move is finalised,
 master in Bitbucket will be synced with master in Github at a regular cadence.
 
+For detailed documentation, please visit the [project wiki](https://github.com/robertmassaioli/my-reminders/wiki).
+
 The My Reminders plugin for JIRA (and eventually the other products too) is an Atlassian Connect addon
 that has been designed to complete the notification flow that is missing in Atlassian products. You
 can be notified of changes to things that you are interested in but you don't get notifications for
