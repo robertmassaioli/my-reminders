@@ -1,5 +1,7 @@
 # My Reminders for Cloud
 
+**[📦 Get it on Atlassian Marketplace](https://marketplace.atlassian.com/apps/1212778)**
+
 The My Reminders plugin for JIRA (and eventually the other products too) is an Atlassian Connect addon
 that has been designed to complete the notification flow that is missing in Atlassian products. You
 can be notified of changes to things that you are interested in but you don't get notifications for
