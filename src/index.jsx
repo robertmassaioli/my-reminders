@@ -5,7 +5,7 @@ export { yourRemindersHandler } from './resolvers/yourReminders';
 export { dashboardGadgetHandler } from './resolvers/dashboardGadget';
 //TODO Old file for UI Kit 1
 
-import { WhereConditions, storage } from "@forge/api";
+import kvs, { WhereConditions } from "@forge/kvs";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { Queue } from '@forge/events';
 
@@ -18,26 +18,26 @@ export async function scheduleExpiryJobs() {
   let endOfCurrentHour = currentDate.clone();
   let daysBackSearch = 5;
   for (let daysBack = 0; daysBack < daysBackSearch; daysBack++) {
-    let expiredRemindersResult = await storage
+    let expiredRemindersResult = await kvs
       .entity("reminder")
       .query()
       .index("expired-reminders", {
         partition: [endOfCurrentHour.format('YYYY-MM-DD')]
       })
-      .where(WhereConditions.isLessThan(currentDate.unix()))
+      .where(WhereConditions.lessThan(currentDate.unix()))
       .getMany();
 
     expiredReminders.push(...expiredRemindersResult.results);
 
     // Get all of the expired reminders for this workspace
     while (expiredRemindersResult.nextCursor) {
-      expiredRemindersResult = await storage
+      expiredRemindersResult = await kvs
         .entity("reminder")
         .query()
         .index("expired-reminders", {
           partition: [endOfCurrentHour.format('YYYY-MM-DD')]
         })
-        .where(WhereConditions.isLessThan(currentDate.unix()))
+        .where(WhereConditions.lessThan(currentDate.unix()))
         .cursor(expiredRemindersResult.nextCursor)
         .getMany();
 

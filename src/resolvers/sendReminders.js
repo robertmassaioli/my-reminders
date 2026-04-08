@@ -1,5 +1,6 @@
 import Resolver from '@forge/resolver';
-import api, { route, storage } from "@forge/api";
+import api, { route } from "@forge/api";
+import kvs from "@forge/kvs";
 
 const resolver = new Resolver();
 
@@ -98,8 +99,8 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
 
     console.info(`Sent reminder: ${reminderKey}`);
 
-    // Delete the reminder from storage
-    await storage.entity('reminder').delete(reminderKey);
+    // Delete the reminder from KVS
+    await kvs.entity('reminder').delete(reminderKey);
     console.info(`Cleared reminder: ${reminderKey}`);
   } catch (e) {
     // TODO throw an error to trigger the retry logic
