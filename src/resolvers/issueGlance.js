@@ -1,5 +1,6 @@
 import Resolver from '@forge/resolver';
-import api, { storage, webTrigger } from "@forge/api";
+import { webTrigger } from "@forge/api";
+import kvs from "@forge/kvs";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from 'ts-is-present';
 import { deleteReminder } from './reminderPersistence';
@@ -15,7 +16,7 @@ function extractViewContext(req) {
 }
 
 async function getReminders(viewContext) {
-  const result = await storage
+  const result = await kvs
     .entity('reminder')
     .query()
     .index("by-aaid-and-issue-id", {
@@ -55,7 +56,7 @@ resolver.define('createReminder', async (req) => {
   const expiryTime = moment.unix(timestamp);
 
   const entityKey = `${viewContext.issueId}-${expiryTime.unix()}`;
-  await storage.entity('reminder').set(entityKey, {
+  await kvs.entity('reminder').set(entityKey, {
     issueId: viewContext.issueId,
     issueKey: viewContext.issueKey,
     originalIssueKey: viewContext.issueKey,

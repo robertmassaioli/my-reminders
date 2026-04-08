@@ -24,6 +24,7 @@ This app is built using [Atlassian Forge](https://developer.atlassian.com/platfo
 1. **Node.js** (version 18 or later) - Check with `node --version`
 2. **Forge CLI** - Install globally with `npm install -g @forge/cli`
 3. **Atlassian account** with developer access
+4. **dhall-to-json** - [Install](https://docs.dhall-lang.org/tutorials/Getting-started_Generate-JSON-or-YAML.html) based on your platform
 
 ### Quick Start
 

@@ -1,12 +1,12 @@
-import { SortOrder, storage } from "@forge/api";
+import kvs, { Sort } from "@forge/kvs";
 import { isPresent } from 'ts-is-present';
 
 export async function deleteReminder(reminderKey, viewUserAaid) {
-  const reminder = await storage.entity('reminder').get(reminderKey);
+  const reminder = await kvs.entity('reminder').get(reminderKey);
   if (isPresent(reminder)) {
     // Only if the current user owns the reminder should it be able to delete it
     if (reminder.userAaid === viewUserAaid) {
-      await storage.entity('reminder').delete(reminderKey);
+      await kvs.entity('reminder').delete(reminderKey);
     } else {
       console.error(`SECURITY ALERT: User ${viewUserAaid} tried to delete reminder for ${reminder.userAaid} with key ${reminderKey}`);
     }
@@ -18,25 +18,25 @@ export async function deleteReminder(reminderKey, viewUserAaid) {
 export async function getYourReminders(viewContext) {
   const allReminders = new Array();
 
-  let result = await storage
+  let result = await kvs
     .entity('reminder')
     .query()
     .index("by-aaid", {
       partition: [viewContext.userAaid]
     })
-    .sort(SortOrder.ASC)
+    .sort(Sort.ASC)
     .getMany();
 
   allReminders.push(...result.results);
 
   while (result.nextCursor) {
-    result = await storage
+    result = await kvs
       .entity('reminder')
       .query()
       .index("by-aaid", {
         partition: [viewContext.userAaid]
       })
-      .sort(SortOrder.ASC)
+      .sort(Sort.ASC)
       .cursor(result.nextCursor)
       .getMany();
 

@@ -37,6 +37,7 @@
     "@forge/api": "^3.1.0",
     "@forge/bridge": "^3.2.0",
     "@forge/events": "^0.8.28",
+    "@forge/kvs": "^1.6.0",
     "@forge/react": "^11.10.0",
     "@forge/resolver": "^1.5.27",
     "@forge/ui": "^1.11.4",
