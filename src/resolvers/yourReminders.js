@@ -25,10 +25,4 @@ resolver.define('deleteReminder', async (req) => {
   }
 });
 
-resolver.define('deleteAllReminders', async () => {
-  return {
-    reminders: await getYourReminders(extractViewContext(req))
-  }
-});
-
 export const yourRemindersHandler = resolver.getDefinitions();
