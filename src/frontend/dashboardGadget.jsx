@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { invoke, view } from "@forge/bridge";
 import ForgeReconciler, { Text, Link, DynamicTable } from "@forge/react";
 import { useEffectAsync } from "../useEffectAsync";
+
+const JIRA_TIMEZONE_SETTINGS_URL = "/secure/ViewPersonalSettings.jspa";
 import moment from 'moment-timezone/builds/moment-timezone-with-data';
 import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
@@ -99,6 +101,11 @@ function View() {
           <DynamicTable head={head} rows={rows} />
           <Text>You have {allReminders.length} reminders.</Text>
         </>
+      )}
+      {isPresent(userTimezone) && (
+        <Text>
+          Times shown in <Link href={JIRA_TIMEZONE_SETTINGS_URL}>{userTimezone}</Link> (your Jira profile timezone).
+        </Text>
       )}
     </>
   );

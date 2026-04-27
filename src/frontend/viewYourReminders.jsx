@@ -12,6 +12,8 @@ import { isPresent } from "ts-is-present";
 import { toDateOutput } from "./dateHelpers";
 import { getSiteInfo } from "./siteInfo";
 
+const JIRA_TIMEZONE_SETTINGS_URL = "/secure/ViewPersonalSettings.jspa";
+
 const App = () => {
   const [allReminders, setAllReminders] = useState(undefined);
   const [siteInfo, setSiteInfo] = useState(undefined);
@@ -116,7 +118,11 @@ const App = () => {
       {isPresent(allReminders) && allReminders.length > 0 && (
         <DynamicTable isFixedSize={true} head={head} rows={rows} />
       )}
-      {/* <Text>{JSON.stringify(allReminders)}</Text> */}
+      {isPresent(userTimezone) && (
+        <Text>
+          Times shown in <Link href={JIRA_TIMEZONE_SETTINGS_URL}>{userTimezone}</Link> (your Jira profile timezone).
+        </Text>
+      )}
     </>
   );
 };
