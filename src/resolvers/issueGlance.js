@@ -41,10 +41,18 @@ function blankToUndefined(inputString) {
   return inputString;
 }
 
+const MAX_MESSAGE_LENGTH = 1024;
+
 resolver.define('createReminder', async (req) => {
   const viewContext = extractViewContext(req);
 
   const { timestamp, issueSummary, message } = req.payload;
+
+  if (isPresent(message) && message.length > MAX_MESSAGE_LENGTH) {
+    return {
+      errors: `Your message is too long (${message.length} characters). Please keep it under ${MAX_MESSAGE_LENGTH} characters.`
+    };
+  }
 
   const currentReminders = await getReminders(viewContext);
   if (currentReminders.length >= 10) {

@@ -118,6 +118,7 @@ const App = () => {
   const [isAddReminderOpen, setAddReminderOpen] = useState(false);
   const [quickSelectValue, setQuickSelectValue] = useState("");
   const [isWebtriggerEnabled, setIsWebtriggerEnabled] = useState(false);
+  const [createError, setCreateError] = useState(undefined);
 
   // Generic Quick Reminder Creation Function
   async function createQuickReminder(timeCalculator, logLabel) {
@@ -148,6 +149,8 @@ const App = () => {
 
   const [expiredRemindersWebtrigger, setExpiredRemindersWebtrigger] =
     useState("...");
+  const MAX_MESSAGE_LENGTH = 1024;
+  const [messageLength, setMessageLength] = useState(0);
   const { handleSubmit, register } = useForm();
   
   useEffectAsync(async () => {
@@ -227,9 +230,10 @@ const App = () => {
     });
 
     if (isPresent(response.errors)) {
-      // TODO How do I flash the errors?
+      return response;
     } else {
       setReminders(response.reminders);
+      return response;
     }
   }
 
@@ -241,8 +245,14 @@ const App = () => {
 
 
   const create = async (data) => {
-    setAddReminderOpen(false);
-    createArbitraryReminder(data);
+    setCreateError(undefined);
+    const response = await createArbitraryReminder(data);
+    if (isPresent(response?.errors)) {
+      setCreateError(response.errors);
+    } else {
+      setAddReminderOpen(false);
+      setMessageLength(0);
+    }
   };
 
   return (
@@ -329,6 +339,13 @@ const App = () => {
             <ModalTitle>Add a reminder</ModalTitle>
           </ModalHeader>
           <ModalBody>
+            {isPresent(createError) && (
+              <Box xcss={sectionMessageStyle}>
+                <SectionMessage appearance="error">
+                  <Text>{createError}</Text>
+                </SectionMessage>
+              </Box>
+            )}
             <Form onSubmit={handleSubmit(create)}>
               <Label labelFor="expiryDate">Expiry date</Label>
               <RequiredAsterisk />
@@ -366,7 +383,11 @@ const App = () => {
                 name="message"
                 placeholder="Optional message to go with your reminder"
                 {...register("message")}
+                onChange={(e) => setMessageLength(String(e.target?.value ?? '').length)}
               />
+              <HelperMessage>
+                {messageLength} / {MAX_MESSAGE_LENGTH} characters
+              </HelperMessage>
               <FormFooter>
                 <Button appearance="primary" type="submit">
                   Save
