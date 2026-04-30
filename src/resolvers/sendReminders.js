@@ -1,6 +1,9 @@
 import Resolver from '@forge/resolver';
-import api, { route } from "@forge/api";
 import kvs from "@forge/kvs";
+import { ForgeFunctionAdapter, asApp, ForgeApiError, NotFoundError } from '@forge-clients/core';
+import { notify } from '@forge-clients/jira/v3';
+
+const adapter = new ForgeFunctionAdapter({ product: 'jira' });
 
 const resolver = new Resolver();
 
@@ -70,32 +73,21 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
 
   try {
     // Attempt to send the notification
-    // console.log(`/rest/api/3/issue/${reminder.issueId}/notify`);
     const subject = `Reminder: [${reminder.issueKey}] ${reminder.issueSummary}`;
     const textBody = generateTextBody(reminder);
     const htmlBody = generateHtmlBody(reminder);
-    const to = {
-      users: [{ accountId: reminder.userAaid }]
-    };
-    const jsonBody = {
-      subject,
-      textBody,
-      htmlBody,
-      to
-    };
-    // console.log(JSON.stringify(jsonBody));
-    const notifyResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${reminder.issueId}/notify`, {
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-        'Accept': 'application/json',
-        'x-atlassian-force-account-id': 'true'
-      },
-      body: JSON.stringify(jsonBody)
+
+    await notify(asApp(adapter), {
+      path: { issueIdOrKey: String(reminder.issueId) },
+      body: {
+        subject,
+        textBody,
+        htmlBody,
+        to: {
+          users: [{ accountId: reminder.userAaid }]
+        }
+      }
     });
-    if (!notifyResponse.ok) {
-      throw new Error(`Did not send reminder for user ${reminder.userAaid} for issueId ${reminder.issueId}: ${notifyResponse.status} - ${await notifyResponse.text()}`);
-    }
 
     console.info(`Sent reminder: ${reminderKey}`);
 
@@ -103,8 +95,17 @@ resolver.define('sendExpiredReminder', async ({ payload, context }) => {
     await kvs.entity('reminder').delete(reminderKey);
     console.info(`Cleared reminder: ${reminderKey}`);
   } catch (e) {
-    // TODO throw an error to trigger the retry logic
-    console.error(`Error sending: ${reminderKey}: ${e}`);
+    if (e instanceof NotFoundError) {
+      // Issue was deleted — no point retrying, remove the reminder
+      console.warn(`Issue ${reminder.issueId} no longer exists; removing stale reminder ${reminderKey}`);
+      await kvs.entity('reminder').delete(reminderKey);
+    } else if (e instanceof ForgeApiError) {
+      console.error(`API error sending reminder ${reminderKey}: ${e.statusCode} - ${e.message}`);
+      // TODO: throw to trigger queue retry logic
+    } else {
+      console.error(`Error sending: ${reminderKey}: ${e}`);
+      // TODO: throw to trigger queue retry logic
+    }
   }
 });
 
