@@ -1,5 +1,5 @@
 {
   "presets": [
-    ["@babel/preset-env", { "targets": { "node": "20" } }]
+    ["@babel/preset-env", { "targets": { "node": "24" } }]
   ]
 }
